@@ -27,7 +27,7 @@ def connect_postgres(
     port: int = 5432,
     time_formats: Optional[List[str]] = None,
     conn_id: str = "default",
-):
+) -> Connection:
     """
     Creates a new PostgreSQL database connection.
 
@@ -35,26 +35,26 @@ def connect_postgres(
     from via your command line.
 
     Args:
-        dbname (str):
+        dbname:
             The name of the database to which you want to connect.
 
-        user (str):
+        user:
             Username with which to log into the PostgreSQL database.
 
-        password (str):
+        password:
             Password with which to log into the PostgreSQL database.
 
-        host (str):
+        host:
             Host of the PostgreSQL database.
 
-        hostaddr (str):
+        hostaddr:
             IP address of the PostgreSQL database.
             This should be in the standard IPv4 address format, e.g., 172.28.40.9.
             If your machine supports IPv6, you can also use those addresses.
             TCP/IP communication is always used when a nonempty string is specified
             for this parameter.
 
-        port(int, optional):
+        port:
             Port of the PostgreSQL database.
 
             The default port used by PostgreSQL is 5432.
@@ -66,7 +66,7 @@ def connect_postgres(
             SELECT setting FROM pg_settings WHERE name = 'port';
             ```
 
-        time_formats (List[str], optional):
+        time_formats:
             The list of formats tried when parsing time stamps.
 
             The formats are allowed to contain the following
@@ -98,9 +98,12 @@ def connect_postgres(
             * %Z - time zone differential in RFC format (GMT or +NNNN)
             * %% - percent sign
 
-        conn_id (str, optional):
+        conn_id:
             The name to be used to reference the connection.
             If you do not pass anything, this will create a new default connection.
+
+    Returns:
+        The connection object.
 
     Note:
         By selecting an existing table of your database in

@@ -24,6 +24,9 @@ def list_connections() -> List[Connection]:
     """
     Returns a list handles to all connections
     that are currently active on the engine.
+
+    Returns:
+        A list of Connection objects.
     """
 
     cmd: Dict[Any, str] = {}

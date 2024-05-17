@@ -25,10 +25,10 @@ def execute(query: str, conn: Optional[Connection] = None):
     get results, use database.get(...) instead.
 
     Args:
-        query (str):
+        query:
             The SQL query to be executed.
 
-        conn ([`Connection`][getml.database.Connection], optional):
+        conn:
             The database connection to be used.
             If you don't explicitly pass a connection,
             the engine will use the default connection.

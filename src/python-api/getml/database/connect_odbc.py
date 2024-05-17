@@ -28,7 +28,7 @@ def connect_odbc(
     text: str = "TEXT",
     time_formats: Optional[List[str]] = None,
     conn_id: str = "default",
-):
+) -> Connection:
     """
     Creates a new ODBC database connection.
 
@@ -39,20 +39,20 @@ def connect_odbc(
     running and that the appropriate ODBC drivers are installed.
 
     Args:
-        server_name (str):
+        server_name:
             The server name, as referenced in your .obdc.ini file.
 
-        user (str, optional):
+        user:
             Username with which to log into the database.
             You do not need to pass this, if it is already contained in your
             .odbc.ini.
 
-        password (str, optional):
+        password:
             Password with which to log into the database.
             You do not need to pass this, if it is already contained in your
             .odbc.ini.
 
-        escape_chars (str, optional):
+        escape_chars:
             ODBC drivers are supposed to support
             escaping table and column names using '"' characters irrespective of the
             syntax in the target database. Unfortunately, not all ODBC drivers
@@ -76,13 +76,13 @@ def connect_odbc(
 
             * If you pass more than two characters, the engine will throw an exception.
 
-        double_precision (str, optional):
+        double_precision:
             The keyword used for double precision columns.
 
-        integer (str, optional):
+        integer:
             The keyword used for integer columns.
 
-        text (str, optional):
+        text:
             The keyword used for text columns.
 
         time_formats (List[str], optional):
@@ -117,9 +117,12 @@ def connect_odbc(
             * %Z - time zone differential in RFC format (GMT or +NNNN)
             * %% - percent sign
 
-        conn_id (str, optional):
+        conn_id:
             The name to be used to reference the connection.
             If you do not pass anything, this will create a new default connection.
+
+    Returns:
+        The connection object.
 
     Note:
         Not supported in the getML community edition.

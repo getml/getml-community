@@ -22,10 +22,10 @@ def drop_table(name: str, conn: Optional[Connection] = None):
     Drops a table from the database.
 
     Args:
-        name (str):
+        name:
             The table to be dropped.
 
-        conn ([`Connection`][getml.database.Connection], optional):
+        conn:
             The database connection to be used.
             If you don't explicitly pass a connection,
             the engine will use the default connection.

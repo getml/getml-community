@@ -27,7 +27,7 @@ def connect_mariadb(
     unix_socket: str = "/var/run/mysqld/mysqld.sock",
     time_formats: Optional[List[str]] = None,
     conn_id: str = "default",
-):
+) -> Connection:
     """
     Creates a new MariaDB database connection.
 
@@ -35,19 +35,19 @@ def connect_mariadb(
     from via your command line.
 
     Args:
-        dbname (str):
+        dbname:
             The name of the database to which you want to connect.
 
-        user (str):
+        user:
             Username with which to log into the MariaDB database.
 
-        password (str):
+        password:
             Password with which to log into the MariaDB database.
 
-        host (str):
+        host:
             Host of the MariaDB database.
 
-        port (int, optional):
+        port:
             Port of the MariaDB database.
 
             The default port for MariaDB is 3306.
@@ -59,7 +59,7 @@ def connect_mariadb(
             ```
             into your MariaDB client.
 
-        unix_socket (str, optional):
+        unix_socket:
             The UNIX socket used to connect to the MariaDB database.
 
             If you do not know which UNIX socket to use, type
@@ -69,7 +69,7 @@ def connect_mariadb(
             ```
             into your MariaDB client.
 
-        time_formats (List[str], optional):
+        time_formats:
             The list of formats tried when parsing time stamps.
 
             The formats are allowed to contain the following
@@ -101,9 +101,12 @@ def connect_mariadb(
             * %Z - time zone differential in RFC format (GMT or +NNNN)
             * %% - percent sign
 
-        conn_id (str, optional):
+        conn_id:
             The name to be used to reference the connection.
             If you do not pass anything, this will create a new default connection.
+
+    Returns:
+        The connection object.
 
     Note:
         By selecting an existing table of your database in

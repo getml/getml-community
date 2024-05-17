@@ -32,37 +32,37 @@ def sniff_csv(
     Sniffs a list of CSV files.
 
     Args:
-        name (str):
+        name:
             Name of the table in which the data is to be inserted.
 
-        fnames (List[str]):
+        fnames:
             The list of CSV file names to be read.
 
-        num_lines_sniffed (int, optional):
+        num_lines_sniffed:
             Number of lines analyzed by the sniffer.
 
-        quotechar (str, optional):
+        quotechar:
             The character used to wrap strings. Default:`"`
 
-        sep (str, optional):
+        sep:
             The separator used for separating fields. Default:`,`
 
-        skip (int, optional):
+        skip:
             Number of lines to skip at the beginning of each
             file (Default: 0).
 
-        colnames (List[str] or None, optional):
+        colnames:
             The first line of a CSV file
             usually contains the column names. When this is not the case, you need to
             explicitly pass them.
 
-        conn ([`Connection`][getml.database.Connection], optional):
+        conn:
             The database connection to be used.
             If you don't explicitly pass a connection,
             the engine will use the default connection.
 
     Returns:
-        str: Appropriate `CREATE TABLE` statement.
+        Appropriate `CREATE TABLE` statement.
     """
 
     conn = conn or Connection()

@@ -32,35 +32,35 @@ def read_s3(
     Reads a list of CSV files located in an S3 bucket.
 
     Args:
-        name (str):
+        name:
             Name of the table in which the data is to be inserted.
 
-        bucket (str):
+        bucket:
             The bucket from which to read the files.
 
-        keys (List[str]):
+        keys:
             The list of keys (files in the bucket) to be read.
 
-        region (str):
+        region:
             The region in which the bucket is located.
 
-        sep (str, optional):
+        sep:
             The separator used for separating fields. Default:`,`
 
-        num_lines_read (int, optional):
+        num_lines_read:
             Number of lines read from each file.
             Set to 0 to read in the entire file.
 
-        skip (int, optional):
+        skip:
             Number of lines to skip at the beginning of each
             file (Default: 0).
 
-        colnames (List[str] or None, optional):
+        colnames:
             The first line of a CSV file
             usually contains the column names. When this is not the case, you need to
             explicitly pass them.
 
-        conn ([`Connection`][getml.database.Connection], optional):
+        conn:
             The database connection to be used.
             If you don't explicitly pass a connection,
             the engine will use the default connection.
