@@ -173,10 +173,10 @@ def launch(
     allow_remote_ips=False,
     home_directory: Optional[str] = None,
     http_port: Optional[int] = None,
-    in_memory=True,
-    install=False,
-    launch_browser=True,
-    log=False,
+    in_memory: bool = True,
+    install: bool = False,
+    launch_browser: bool = True,
+    log: bool = False,
     project_directory: Optional[str] = None,
     proxy_url: Optional[str] = None,
     token: Optional[str] = None,
@@ -185,50 +185,47 @@ def launch(
     Launches the getML engine.
 
     Args:
-      allow_push_notifications (bool):
+      allow_push_notifications:
         Whether you want to allow the getML monitor to send push notifications to your desktop.
 
-      allow_remote_ips (bool):
+      allow_remote_ips:
         Whether you want to allow remote IPs to access the http-port.
 
-      home_directory (str, optional):
+      home_directory:
         The directory which should be treated as the home directory by getML.
         getML will create a hidden folder named '.getML' in said directory.
         All binaries will be installed there.
 
-      http_port (int, optional):
+      http_port:
         The local port of the getML monitor.
         This port can only be accessed from your local computer,
         unless you set `allow_remote_ips=True`.
 
-      in_memory (bool):
+      in_memory:
         Whether you want the engine to process everything in memory.
 
-      install (bool)
+      install:
         Reinstalls getML, even if it is already installed.
 
-      launch_browser (bool):
+      launch_browser:
         Whether you want to automatically launch your browser.
 
-      log (bool):
+      log:
         Whether you want the engine log to appear in the logfile (more detailed logging).
         The engine log also appears in the 'Log' page of the monitor.
 
-      project_directory (str, optional):
+      project_directory:
         The directory in which to store all of your projects.
 
-      proxy_url (str, optional):
+      proxy_url:
         The URL of any proxy server that that redirects to the getML monitor.
 
-      tcp_port (int, optional):
-        Local TCP port which serves as the communication point for the engine.
-        This port can only be accessed from your local computer.
-
-      token (str, optional):
+      token:
         The token used for authentication.
         Authentication is required when remote IPs are allowed to access the monitor.
         If authentication is required and no token is passed,
         a random hexcode will be generated as the token."""
+
     if _is_monitor_alive():
         print("getML engine is already running.")
         return
