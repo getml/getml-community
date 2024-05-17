@@ -127,8 +127,8 @@ class TimeSeries(StarSchema):
 
     def __init__(
         self,
-        time_stamps: str,
         population: Union[DataFrame, View],
+        time_stamps: str,
         alias: Optional[str] = None,
         peripheral: Optional[Dict[str, Union[DataFrame, View]]] = None,
         split: Optional[Union[StringColumn, StringColumnView]] = None,
