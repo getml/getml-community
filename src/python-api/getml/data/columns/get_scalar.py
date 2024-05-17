@@ -7,5 +7,5 @@
 
 
 def _get_scalar(column, index) -> float:
-    index = index if index > 0 else len(column) + index
+    index = index if index >= 0 else len(column) + index
     return column[index : index + 1].to_numpy()[0]
