@@ -1001,7 +1001,7 @@ def _with_column(
     ],
     name: str,
     role: Optional[str] = None,
-    subroles: Optional[List[str]] = None,
+    subroles: Optional[Union[str, List[str]]] = None,
     unit: str = "",
     time_formats: Optional[List[str]] = None,
 ):
@@ -1163,7 +1163,7 @@ def _with_subroles(
     cols: Union[
         str, FloatColumn, StringColumn, List[Union[str, FloatColumn, StringColumn]]
     ],
-    subroles: Union[str, List[str]],
+    subroles: Optional[Union[str, List[str]]] = None,
     append: bool = False,
 ):
 
