@@ -255,7 +255,7 @@ Example:
 
         return output
 
-    def add(self, *placeholders: Union[Placeholder, List[Placeholder]]):
+    def add(self, *placeholders: Placeholder):
         """
         Adds peripheral placeholders to the data model.
 
