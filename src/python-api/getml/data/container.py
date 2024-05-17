@@ -12,7 +12,7 @@ For keeping and versioning data.
 
 from datetime import datetime
 from inspect import cleandoc
-from typing import Dict
+from typing import Dict, Union, Optional
 
 import pandas as pd  # type: ignore
 
@@ -43,47 +43,47 @@ class Container:
 
     - Storing data and allowing you to reproduce previous results.
 
-    Args:
-        population ([`DataFrame`][getml.DataFrame] or [`View`][getml.data.View], optional):
+    Attributes:
+        population:
             The population table defines the
             [statistical population ](https://en.wikipedia.org/wiki/Statistical_population)
             of the machine learning problem and contains the target variables.
 
-        peripheral (dict, optional):
+        peripheral:
             The peripheral tables are joined onto *population* or other
             peripheral tables. Note that you can also pass them using
             [`add`][getml.data.Container.add].
 
-        split ([`StringColumn`][getml.data.columns.StringColumn] or [`StringColumnView`][getml.data.columns.StringColumnView], optional):
+        split:
             Contains information on how you want to split *population* into
             different [`Subset`][getml.data.Subset]s.
             Also refer to [`split`][getml.data.split].
 
-        deep_copy (bool, optional):
+        deep_copy:
             Whether you want to create deep copies or your tables.
 
-        train ([`DataFrame`][getml.DataFrame] or [`View`][getml.data.View], optional):
+        train:
             The population table used in the *train*
             [`Subset`][getml.data.Subset].
             You can either pass *population* and *split* or you can pass
             the subsets separately using *train*, *validation*, *test*
             and *kwargs*.
 
-        validation ([`DataFrame`][getml.DataFrame] or [`View`][getml.data.View], optional):
+        validation:
             The population table used in the *validation*
             [`Subset`][getml.data.Subset].
             You can either pass *population* and *split* or you can pass
             the subsets separately using *train*, *validation*, *test*
             and *kwargs*.
 
-        test ([`DataFrame`][getml.DataFrame] or [`View`][getml.data.View], optional):
+        test:
             The population table used in the *test*
             [`Subset`][getml.data.Subset].
             You can either pass *population* and *split* or you can pass
             the subsets separately using *train*, *validation*, *test*
             and *kwargs*.
 
-        kwargs ([`DataFrame`][getml.DataFrame] or [`View`][getml.data.View], optional):
+        kwargs:
             The population table used in [`Subset`][getml.data.Subset]s
             other than the predefined *train*, *validation* and *test* subsets.
             You can call these subsets anything you want to, and you can access them
@@ -231,16 +231,15 @@ class Container:
 
     def __init__(
         self,
-        population=None,
-        peripheral=None,
-        split=None,
-        deep_copy=False,
-        train=None,
-        validation=None,
-        test=None,
-        **kwargs,
+        population: Optional[Union[DataFrame, View]] = None,
+        peripheral: Optional[Dict[str, Union[DataFrame, View]]] = None,
+        split: Optional[Union[StringColumn, StringColumnView]] = None,
+        deep_copy: Optional[bool] = False,
+        train: Optional[Union[DataFrame, View]] = None,
+        validation: Optional[Union[DataFrame, View]] = None,
+        test: Optional[Union[DataFrame, View]] = None,
+        **kwargs: Optional[Union[DataFrame, View]],
     ):
-
         if population is not None and not isinstance(population, (DataFrame, View)):
             raise TypeError(
                 "'population' must be a getml.DataFrame or a getml.data.View, got "

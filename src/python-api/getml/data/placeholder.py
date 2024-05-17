@@ -13,18 +13,20 @@
 from dataclasses import dataclass, fields
 from inspect import cleandoc
 from textwrap import indent
-from typing import Dict, List, Optional, Sequence, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 from getml.utilities.formatting import _SignatureFormatter
 
-from .helpers import _check_join_key, _handle_on, _handle_ts
+from .helpers import _check_join_key, _handle_on, _handle_ts, OnType
 from .relationship import many_to_many
 from .roles_obj import Roles
 
 # --------------------------------------------------------------------
 
-OnType = Optional[Union[str, Tuple[str, str], List[Union[str, Tuple[str, str]]]]]
 TimeStampsType = Optional[Union[str, Tuple[str, str]]]
+"""
+Types of time stamps used in joins.
+"""
 
 # ------------------------------------------------------------------------------
 
@@ -38,10 +40,16 @@ class Placeholder:
 
     You might also want to refer to [`DataModel`][getml.data.DataModel].
 
-    Args:
-        name (str):
+    Attributes:
+        name:
             The name used for this placeholder. This name will appear
             in the generated SQL code.
+
+        roles:
+            The roles of the columns in this placeholder. If you pass
+            a dictionary, the keys must be the column names and the
+            values must be lists of roles. If you pass a [`Roles`][getml.data.Roles]
+            object, it will be used as is.
 
     Example:
         This example will construct a data model in which the
@@ -305,7 +313,7 @@ class Placeholder:
 
     def join(
         self,
-        right,
+        right: "Placeholder",
         on: OnType = None,
         time_stamps: TimeStampsType = None,
         relationship: str = many_to_many,
@@ -318,34 +326,34 @@ class Placeholder:
         Joins another to placeholder to this placeholder.
 
         Args:
-            right ([`Placeholder`][getml.data.Placeholder]):
+            right:
                 The placeholder you would like to join.
 
-            on (None, string, Tuple[str, str] or List[Union[str, Tuple[str, str]]]):
+            on:
                 The join keys to use. If none is passed, then everything
                 will be joined to everything else.
 
-            time_stamps (string or Tuple[str, str]):
+            time_stamps:
                 The time stamps used to limit the join.
 
-            relationship (str):
+            relationship:
                 The relationship between the two tables. Must be from
                 [`relationship`][getml.data.relationship].
 
-            memory (float):
+            memory:
                 The difference between the time stamps until data is 'forgotten'.
                 Limiting your joins using memory can significantly speed up
                 training time. Also refer to [`time`][getml.data.time].
 
-            horizon (float):
+            horizon:
                 The prediction horizon to apply to this join.
                 Also refer to [`time`][getml.data.time].
 
-            lagged_targets (bool):
+            lagged_targets:
                 Whether you want to allow lagged targets. If this is set to True,
                 you must also pass a positive, non-zero *horizon*.
 
-            upper_time_stamp (str):
+            upper_time_stamp:
                 Name of a time stamp in *right* that serves as an upper limit
                 on the join.
         """

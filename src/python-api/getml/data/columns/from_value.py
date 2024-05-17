@@ -20,6 +20,9 @@ from .columns import FloatColumnView, StringColumnView, BooleanColumnView, _valu
 # -----------------------------------------------------------------------------
 
 ReturnType = Union[BooleanColumnView, StringColumnView, FloatColumnView]
+"""
+Possible return types of the function `from_value`.
+"""
 
 # -----------------------------------------------------------------------------
 
@@ -30,8 +33,11 @@ def from_value(val: Union[bool, str, int, float, np.datetime64]) -> ReturnType:
     value in all of its elements.
 
     Args:
-        val (bool, str or number):
+        val:
             The value you want to insert into your column.
+
+    Returns:
+        The column view containing the value.
     """
     cmd = _value_to_cmd(val)
 

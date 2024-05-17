@@ -9,6 +9,10 @@
 """
 Special container for time series - abstracts away self-joins.
 """
+from typing import Optional, Union, Dict
+
+from getml.data.columns import StringColumn, StringColumnView
+from getml.data.helpers import OnType
 
 from .columns import FloatColumn, FloatColumnView
 from .data_frame import DataFrame
@@ -27,53 +31,55 @@ class TimeSeries(StarSchema):
     [`DataModel`][getml.data.DataModel] thus abstracting away the need to
     differentiate between the concrete data and the abstract data model.
     It also abstracts away the need for
-    [self joins ](https://en.wikipedia.org/wiki/Join_(SQL)#Self-join).
+    [self joins](https://en.wikipedia.org/wiki/Join_(SQL)#Self-join).
 
-    Args:
-        population ([`DataFrame`][getml.DataFrame] or [`View`][getml.data.View]):
+    Attributes:
+        time_stamps:
+            The time stamps used to limit the self-join.
+
+        population:
             The population table defines the
             [statistical population ](https://en.wikipedia.org/wiki/Statistical_population)
             of the machine learning problem and contains the target variables.
 
-        time_stamps (str):
-            The time stamps used to limit the self-join.
-
-        alias (str, optional):
+        alias:
             The alias to be used for the population table. If it isn't set, the 'population'
             will be used as the alias. To explicitly set an alias for the
             peripheral table, use [`with_name`][getml.DataFrame.with_name].
 
-        peripheral (dict, optional):
+        peripheral:
             The peripheral tables are joined onto *population* or other
             peripheral tables. Note that you can also pass them using
             [`add`][getml.data.Container.add].
 
-        split ([`StringColumn`][getml.data.columns.columns.StringColumn] or [`StringColumnView`][getml.data.columns.columns.StringColumnView], optional):
+        split:
             Contains information on how you want to split *population* into
             different [`Subset`][getml.data.Subset] s.
             Also refer to [`split`][getml.data.split].
 
-        deep_copy (bool, optional):
+        deep_copy:
             Whether you want to create deep copies or your tables.
 
-        on (None, string, Tuple[str] or List[Union[str, Tuple[str]]], optional):
+        on:
             The join keys to use. If none is passed, then everything
             will be joined to everything else.
 
-        memory (float, optional):
+        memory:
             The difference between the time stamps until data is 'forgotten'.
             Limiting your joins using memory can significantly speed up
-            training time. Also refer to [`time`][getml.data.time].
+            training time. Provide the value in seconds, alternatively use
+             the convenience functions from [`time`][getml.data.time].
 
-        horizon (float, optional):
+        horizon:
             The prediction horizon to apply to this join.
-            Also refer to [`time`][getml.data.time].
+            Provide the value in seconds, alternatively use
+            the convenience functions from [`time`][getml.data.time].
 
-        lagged_targets (bool, optional):
+        lagged_targets:
             Whether you want to allow lagged targets. If this is set to True,
             you must also pass a positive, non-zero *horizon*.
 
-        upper_time_stamp (str, optional):
+        upper_time_stamp:
             Name of a time stamp in *right_df* that serves as an upper limit
             on the join.
 
@@ -121,18 +127,17 @@ class TimeSeries(StarSchema):
 
     def __init__(
         self,
-        population,
-        time_stamps,
-        alias=None,
-        alias2=None,
-        peripheral=None,
-        split=None,
-        deep_copy=False,
-        on=None,
-        memory=None,
-        horizon=None,
-        lagged_targets=False,
-        upper_time_stamp=None,
+        population: Union[DataFrame, View],
+        time_stamps: str,
+        alias: Optional[str] = None,
+        peripheral: Optional[Dict[str, Union[DataFrame, View]]] = None,
+        split: Optional[Union[StringColumn, StringColumnView]] = None,
+        deep_copy: Optional[bool] = False,
+        on: OnType = None,
+        memory: Optional[float] = None,
+        horizon: Optional[float] = None,
+        lagged_targets: bool = False,
+        upper_time_stamp: Optional[str]=None,
     ):
 
         if not isinstance(population, (DataFrame, View)):

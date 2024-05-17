@@ -21,7 +21,7 @@ from getml.data.helpers import _is_typed_list
 
 
 def random(
-    seed=5849, train=0.8, test=0.2, validation=0, **kwargs: float
+    seed: int=5849, train: float=0.8, test: float=0.2, validation: float=0, **kwargs: float
 ) -> StringColumnView:
     """
     Returns a [`StringColumnView`][getml.data.columns.StringColumnView] that
@@ -29,22 +29,22 @@ def random(
     validation or other sets.
 
     Args:
-        seed (int):
+        seed:
             Seed used for the random number generator.
 
-        train (float, optional):
+        train:
             The share of random samples assigned to
             the training set.
 
-        validation (float, optional):
+        validation:
             The share of random samples assigned to
             the validation set.
 
-        test (float, optional):
+        test:
             The share of random samples assigned to
             the test set.
 
-        kwargs (float, optional):
+        kwargs:
             Any other sets you would like to assign.
             You can name these sets whatever you want to (in our example,
             we called it 'other').

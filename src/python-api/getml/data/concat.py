@@ -21,15 +21,15 @@ from .view import View
 # --------------------------------------------------------------------
 
 
-def concat(name, data_frames: List[Union[DataFrame, View]]):
+def concat(name: str, data_frames: List[Union[DataFrame, View]]):
     """
     Creates a new data frame by concatenating a list of existing ones.
 
     Args:
-        name (str):
+        name:
             Name of the new column.
 
-        data_frames (List[[`DataFrame`][getml.DataFrame] or [`View`][getml.data.View]]):
+        data_frames:
             The data frames to concatenate.
             Must be non-empty. However, it can contain only one data frame.
             Column names and roles must match.

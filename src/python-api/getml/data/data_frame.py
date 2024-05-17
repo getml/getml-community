@@ -13,17 +13,19 @@ import numbers
 import os
 import shutil
 from collections import namedtuple
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, Literal
 
 import numpy as np
 import pandas as pd  # type: ignore
 import pyarrow as pa  # type: ignore
+import pyspark.sql
 
 import getml.communication as comm
 from getml import constants, database
 from getml.constants import COMPARISON_ONLY, TIME_STAMP
 from getml.database.helpers import _retrieve_temp_dir
 from getml.utilities.formatting import _DataFrameFormatter
+from getml.database import Connection
 
 from . import roles as roles_
 from .columns import (
@@ -97,12 +99,12 @@ class DataFrame:
     synchronization with the Python API please see the
     corresponding [User Guide][python-api-lifecycles].
 
-    Args:
-        name (str):
+    Attributes:
+        name:
             Unique identifier used to link the handler with
             the underlying data frame object in the engine.
 
-        roles (dict[str, List[str]] or [`Roles`][getml.data.Roles], optional):
+        roles:
             Maps the [`roles`][getml.data.roles] to the
             column names (see [`colnames`][getml.DataFrame.colnames]).
 
@@ -170,7 +172,7 @@ class DataFrame:
     _numerical_roles = roles_._numerical_roles
     _possible_keys = _categorical_roles + _numerical_roles
 
-    def __init__(self, name, roles=None):
+    def __init__(self, name: str, roles: Union[dict[str, List[str]], Roles] = None):
         # ------------------------------------------------------------
 
         if not isinstance(name, str):
@@ -280,7 +282,7 @@ class DataFrame:
         [`load`][getml.DataFrame.load] method.
 
         Args:
-            mem_only (bool, optional):
+            mem_only:
                 If True, the data frame will not be deleted
                 permanently, but just from memory (RAM).
         """
@@ -471,7 +473,7 @@ class DataFrame:
         _send_numpy_array(col, numpy_array)
 
         if subroles:
-            self._set_subroles(name, subroles, append=False)
+            self._set_subroles(name, append=False, subroles=subroles)
 
         if unit:
             self._set_unit(name, unit)
@@ -606,7 +608,9 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
-    def _set_subroles(self, name: str, subroles: List[str], append: bool):
+    def _set_subroles(
+        self, name: str, append: bool, subroles: Optional[Union[str, List[str]]] = None
+    ):
         if not isinstance(name, str):
             raise TypeError("Parameter 'name' must be a string!")
 
@@ -642,26 +646,34 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
-    def add(self, col, name, role=None, subroles=None, unit="", time_formats=None):
+    def add(
+        self,
+        col: Union[StringColumn, FloatColumn, np.array],
+        name: str,
+        role: Optional[str] = None,
+        subroles: Optional[Union[str, List[str]]] = None,
+        unit: str = "",
+        time_formats: Optional[List[str]] = None,
+    ):
         """Adds a column to the current [`DataFrame`][getml.DataFrame].
 
         Args:
-            col ([`column`][getml.column] or `numpy.ndarray`):
+            col:
                 The column or numpy.ndarray to be added.
 
-            name (str):
+            name:
                 Name of the new column.
 
-            role (str, optional):
-                Role of the new column. Must be from `getml.data.roles`.
+            role:
+                Role of the new column. Must be from [`roles`][getml.data.roles].
 
-            subroles (str, List[str] or None, optional):
+            subroles:
                 Subroles of the new column. Must be from [`subroles`][getml.data.subroles].
 
-            unit (str, optional):
+            unit:
                 Unit of the column.
 
-            time_formats (str, optional):
+            time_formats:
                 Formats to be used to parse the time stamps.
 
                 This is only necessary, if an implicit conversion from
@@ -722,12 +734,11 @@ class DataFrame:
     # ------------------------------------------------------------
 
     @property
-    def colnames(self):
+    def colnames(self) -> List[str]:
         """
         List of the names of all columns.
 
         Returns:
-            List[str]:
                 List of the names of all columns.
         """
         return (
@@ -743,12 +754,11 @@ class DataFrame:
     # ------------------------------------------------------------
 
     @property
-    def columns(self):
+    def columns(self) -> List[str]:
         """
         Alias for [`colnames`][getml.DataFrame.colnames].
 
         Returns:
-            List[str]:
                 List of the names of all columns.
         """
         return self.colnames
@@ -760,11 +770,10 @@ class DataFrame:
         Creates a deep copy of the data frame under a new name.
 
         Args:
-            name (str):
+            name:
                 The name of the new data frame.
 
         Returns:
-            [`DataFrame`][getml.DataFrame]:
                 A handle to the deep copy.
         """
 
@@ -795,12 +804,20 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
-    def drop(self, cols):
+    def drop(
+        self,
+        cols: Union[
+            FloatColumn, StringColumn, str, List[FloatColumn, StringColumn, str]
+        ],
+    ) -> View:
         """Returns a new [`View`][getml.data.View] that has one or several columns removed.
 
         Args:
-            cols (str, FloatColumn, StringColumn, or List[str, FloatColumn, StringColumn]):
+            cols:
                 The columns or the names thereof.
+
+        Returns:
+            A new [`View`][getml.data.View] object with the specified columns removed.
         """
 
         names = _handle_cols(cols)
@@ -829,20 +846,27 @@ class DataFrame:
     # ------------------------------------------------------------
 
     @classmethod
-    def from_arrow(cls, table, name, roles=None, ignore=False, dry=False):
+    def from_arrow(
+        cls,
+        table: pa.Table,
+        name: str,
+        roles: Optional[Union[dict[str, List[str]], Roles]] = None,
+        ignore: bool = False,
+        dry: bool = False,
+    ) -> "DataFrame":
         """Create a DataFrame from an Arrow Table.
 
         This is one of the fastest way to get data into the
         getML engine.
 
         Args:
-            table (pyarrow.Table):
+            table:
                 The table to be read.
 
-            name (str):
+            name:
                 Name of the data frame to be created.
 
-            roles (dict[str, List[str]] or [`Roles`][getml.data.Roles], optional):
+            roles:
                 Maps the [`roles`][getml.data.roles] to the
                 column names (see [`colnames`][getml.DataFrame.colnames]).
 
@@ -853,17 +877,20 @@ class DataFrame:
                 ```
                 Otherwise, you can use the [`Roles`][getml.data.Roles] class.
 
-            ignore (bool, optional):
+            ignore:
                 Only relevant when roles is not None.
                 Determines what you want to do with any colnames not
                 mentioned in roles. Do you want to ignore them (True)
                 or read them in as unused columns (False)?
 
-            dry (bool, optional):
+            dry:
                 If set to True, then the data
                 will not actually be read. Instead, the method will only
                 return the roles it would have used. This can be used
                 to hard-code roles when setting up a pipeline.
+
+        Returns:
+                Handler of the underlying data.
         """
 
         # ------------------------------------------------------------
@@ -908,18 +935,18 @@ class DataFrame:
     @classmethod
     def from_csv(
         cls,
-        fnames,
-        name,
-        num_lines_sniffed=1000,
-        num_lines_read=0,
-        quotechar='"',
-        sep=",",
-        skip=0,
-        colnames=None,
-        roles=None,
-        ignore=False,
-        dry=False,
-        verbose=True,
+        fnames: List[str],
+        name: str,
+        num_lines_sniffed: int = 1000,
+        num_lines_read: int = 0,
+        quotechar: str = '"',
+        sep: str = ",",
+        skip: int = 0,
+        colnames: Optional[List[str]] = None,
+        roles: Optional[Union[dict[str, List[str]], Roles]] = None,
+        ignore: bool = False,
+        dry: bool = False,
+        verbose: bool = True,
     ) -> "DataFrame":
         """Create a DataFrame from CSV files.
 
@@ -929,33 +956,33 @@ class DataFrame:
         [`DataFrame`][getml.DataFrame] handle.
 
         Args:
-            fnames (List[str]):
+            fnames:
                 CSV file paths to be read.
 
-            name (str):
+            name:
                 Name of the data frame to be created.
 
-            num_lines_sniffed (int, optional):
+            num_lines_sniffed:
                 Number of lines analyzed by the sniffer.
 
-            num_lines_read (int, optional):
+            num_lines_read:
                 Number of lines read from each file.
                 Set to 0 to read in the entire file.
 
-            quotechar (str, optional):
+            quotechar:
                 The character used to wrap strings.
 
-            sep (str, optional):
+            sep:
                 The separator used for separating fields.
 
-            skip (int, optional):
+            skip:
                 Number of lines to skip at the beginning of each file.
 
-            colnames (List[str] or None, optional): The first line of a CSV file
+            colnames: The first line of a CSV file
                 usually contains the column names. When this is not the case,
                 you need to explicitly pass them.
 
-            roles (dict[str, List[str]] or [`Roles`][getml.data.Roles], optional):
+            roles:
                 Maps the [`roles`][getml.data.roles] to the
                 column names (see [`colnames`][getml.DataFrame.colnames]).
 
@@ -966,25 +993,23 @@ class DataFrame:
                 ```
                 Otherwise, you can use the [`Roles`][getml.data.Roles] class.
 
-            ignore (bool, optional):
+            ignore:
                 Only relevant when roles is not None.
                 Determines what you want to do with any colnames not
                 mentioned in roles. Do you want to ignore them (True)
                 or read them in as unused columns (False)?
 
-            dry (bool, optional):
+            dry:
                 If set to True, then the data
                 will not actually be read. Instead, the method will only
                 return the roles it would have used. This can be used
                 to hard-code roles when setting up a pipeline.
 
-            verbose (bool, optional):
+            verbose:
                 If True, when fnames are urls, the filenames are
                 printed to stdout during the download.
 
         Returns:
-            [`DataFrame`][getml.DataFrame]:
-
                 Handler of the underlying data.
 
         Note:
@@ -1110,8 +1135,14 @@ class DataFrame:
 
     @classmethod
     def from_db(
-        cls, table_name, name=None, roles=None, ignore=False, dry=False, conn=None
-    ):
+        cls,
+        table_name: str,
+        name: Optional[str] = None,
+        roles: Optional[Union[dict[str, List[str]], Roles]] = None,
+        ignore: bool = False,
+        dry: bool = False,
+        conn: Optional[Connection] = None,
+    ) -> "DataFrame":
         """Create a DataFrame from a table in a database.
 
         It will construct a data frame object in the engine, fill it
@@ -1120,14 +1151,14 @@ class DataFrame:
         corresponding [`DataFrame`][getml.DataFrame] handle.
 
         Args:
-            table_name (str):
+            table_name:
                 Name of the table to be read.
 
-            name (str):
+            name:
                 Name of the data frame to be created. If not passed,
                 then the *table_name* will be used.
 
-            roles (dict[str, List[str]] or [`Roles`][getml.data.Roles], optional):
+            roles:
                 Maps the [`roles`][getml.data.roles] to the
                 column names (see [`colnames`][getml.DataFrame.colnames]).
 
@@ -1138,26 +1169,24 @@ class DataFrame:
                 ```
                 Otherwise, you can use the [`Roles`][getml.data.Roles] class.
 
-            ignore (bool, optional):
+            ignore:
                 Only relevant when roles is not None.
                 Determines what you want to do with any colnames not
                 mentioned in roles. Do you want to ignore them (True)
                 or read them in as unused columns (False)?
 
-            dry (bool, optional):
+            dry:
                 If set to True, then the data
                 will not actually be read. Instead, the method will only
                 return the roles it would have used. This can be used
                 to hard-code roles when setting up a pipeline.
 
-            conn ([`Connection`][getml.database.Connection], optional):
+            conn:
                 The database connection to be used.
                 If you don't explicitly pass a connection, the engine
                 will use the default connection.
 
         Returns:
-            [`DataFrame`][getml.DataFrame]:
-
                 Handler of the underlying data.
 
         Example:
@@ -1226,21 +1255,26 @@ class DataFrame:
 
     @classmethod
     def from_dict(
-        cls, data: Dict[str, List[Any]], name: str, roles=None, ignore=False, dry=False
-    ):
+        cls,
+        data: Dict[str, Union[List[float], List[str]]],
+        name: str,
+        roles: Optional[Union[dict[str, List[str]], Roles]] = None,
+        ignore: bool = False,
+        dry: bool = False,
+    ) -> "DataFrame":
         """Create a new DataFrame from a dict
 
         Args:
-            data (dict):
+            data:
                 The dict containing the data.
                 The data should be in the following format:
                 ```python
                 data = {'col1': [1.0, 2.0, 1.0], 'col2': ['A', 'B', 'C']}
                 ```
-            name (str):
+            name:
                 Name of the data frame to be created.
 
-            roles (dict[str, List[str]] or [`Roles`][getml.data.Roles], optional):
+            roles:
                 Maps the [`roles`][getml.data.roles] to the
                 column names (see [`colnames`][getml.DataFrame.colnames]).
 
@@ -1251,21 +1285,19 @@ class DataFrame:
                 ```
                 Otherwise, you can use the [`Roles`][getml.data.Roles] class.
 
-            ignore (bool, optional):
+            ignore:
                 Only relevant when roles is not None.
                 Determines what you want to do with any colnames not
                 mentioned in roles. Do you want to ignore them (True)
                 or read them in as unused columns (False)?
 
-            dry (bool, optional):
+            dry:
                 If set to True, then the data
                 will not actually be read. Instead, the method will only
                 return the roles it would have used. This can be used
                 to hard-code roles when setting up a pipeline.
 
         Returns:
-            [`DataFrame`][getml.DataFrame]:
-
                 Handler of the underlying data.
         """
 
@@ -1283,7 +1315,14 @@ class DataFrame:
     # --------------------------------------------------------------------
 
     @classmethod
-    def from_json(cls, json_str, name, roles=None, ignore=False, dry=False):
+    def from_json(
+        cls,
+        json_str: str,
+        name: str,
+        roles: Optional[Union[dict[str, List[str]], Roles]] = None,
+        ignore: bool = False,
+        dry: bool = False,
+    ) -> "DataFrame":
         """Create a new DataFrame from a JSON string.
 
         It will construct a data frame object in the engine, fill it
@@ -1291,16 +1330,16 @@ class DataFrame:
         corresponding [`DataFrame`][getml.DataFrame] handle.
 
         Args:
-            json_str (str):
+            json_str:
                 The JSON string containing the data.
                 The json_str should be in the following format:
                 ```python
                 json_str = "{'col1': [1.0, 2.0, 1.0], 'col2': ['A', 'B', 'C']}"
                 ```
-            name (str):
+            name:
                 Name of the data frame to be created.
 
-            roles (dict[str, List[str]] or [`Roles`][getml.data.Roles], optional):
+            roles:
                 Maps the [`roles`][getml.data.roles] to the
                 column names (see [`colnames`][getml.DataFrame.colnames]).
 
@@ -1311,23 +1350,20 @@ class DataFrame:
                 ```
                 Otherwise, you can use the [`Roles`][getml.data.Roles] class.
 
-            ignore (bool, optional):
+            ignore:
                 Only relevant when roles is not None.
                 Determines what you want to do with any colnames not
                 mentioned in roles. Do you want to ignore them (True)
                 or read them in as unused columns (False)?
 
-            dry (bool, optional):
+            dry:
                 If set to True, then the data
                 will not actually be read. Instead, the method will only
                 return the roles it would have used. This can be used
                 to hard-code roles when setting up a pipeline.
 
         Returns:
-            [`DataFrame`][getml.DataFrame]:
-
-        Returns:
-            [`DataFrame`][getml.data.DataFrame]: Handler of the underlying data.
+            Handler of the underlying data.
 
         """
 
@@ -1345,7 +1381,14 @@ class DataFrame:
     # --------------------------------------------------------------------
 
     @classmethod
-    def from_pandas(cls, pandas_df, name, roles=None, ignore=False, dry=False):
+    def from_pandas(
+        cls,
+        pandas_df: pd.DataFrame,
+        name: str,
+        roles: Optional[Union[dict[str, List[str]], Roles]] = None,
+        ignore: bool = False,
+        dry: bool = False,
+    ) -> "DataFrame":
         """Create a DataFrame from a `pandas.DataFrame`.
 
         It will construct a data frame object in the engine, fill it
@@ -1353,13 +1396,13 @@ class DataFrame:
         return a corresponding [`DataFrame`][getml.DataFrame] handle.
 
         Args:
-            pandas_df (pandas.DataFrame):
+            pandas_df:
                 The table to be read.
 
-            name (str):
+            name:
                 Name of the data frame to be created.
 
-            roles (dict[str, List[str]] or [`Roles`][getml.data.Roles], optional):
+            roles:
                 Maps the [`roles`][getml.data.roles] to the
                 column names (see [`colnames`][getml.DataFrame.colnames]).
 
@@ -1370,17 +1413,20 @@ class DataFrame:
                 ```
                 Otherwise, you can use the [`Roles`][getml.data.Roles] class.
 
-            ignore (bool, optional):
+            ignore:
                 Only relevant when roles is not None.
                 Determines what you want to do with any colnames not
                 mentioned in roles. Do you want to ignore them (True)
                 or read them in as unused columns (False)?
 
-            dry (bool, optional):
+            dry:
                 If set to True, then the data
                 will not actually be read. Instead, the method will only
                 return the roles it would have used. This can be used
                 to hard-code roles when setting up a pipeline.
+
+        Returns:
+            Handler of the underlying data.
         """
 
         # ------------------------------------------------------------
@@ -1427,20 +1473,27 @@ class DataFrame:
     # --------------------------------------------------------------------
 
     @classmethod
-    def from_parquet(cls, fname, name, roles=None, ignore=False, dry=False):
+    def from_parquet(
+        cls,
+        fname: str,
+        name: str,
+        roles: Optional[Union[dict[str, List[str]], Roles]] = None,
+        ignore: bool = False,
+        dry: bool = False,
+    ):
         """Create a DataFrame from parquet files.
 
         This is one of the fastest way to get data into the
         getML engine.
 
         Args:
-            fname (str):
+            fname:
                 The path of the parquet file to be read.
 
-            name (str):
+            name:
                 Name of the data frame to be created.
 
-            roles (dict[str, List[str]] or [`Roles`][getml.data.Roles], optional):
+            roles:
                 Maps the [`roles`][getml.data.roles] to the
                 column names (see [`colnames`][getml.DataFrame.colnames]).
 
@@ -1451,17 +1504,20 @@ class DataFrame:
                 ```
                 Otherwise, you can use the [`Roles`][getml.data.Roles] class.
 
-            ignore (bool, optional):
+            ignore:
                 Only relevant when roles is not None.
                 Determines what you want to do with any colnames not
                 mentioned in roles. Do you want to ignore them (True)
                 or read them in as unused columns (False)?
 
-            dry (bool, optional):
+            dry:
                 If set to True, then the data
                 will not actually be read. Instead, the method will only
                 return the roles it would have used. This can be used
                 to hard-code roles when setting up a pipeline.
+
+        Returns:
+            Handler of the underlying data.
         """
 
         # ------------------------------------------------------------
@@ -1501,7 +1557,14 @@ class DataFrame:
     # --------------------------------------------------------------------
 
     @classmethod
-    def from_pyspark(cls, spark_df, name, roles=None, ignore=False, dry=False) -> "DataFrame":
+    def from_pyspark(
+        cls,
+        spark_df: pyspark.sql.DataFrame,
+        name: str,
+        roles: Optional[Union[dict[str, List[str]], Roles]] = None,
+        ignore: bool = False,
+        dry: bool = False,
+    ) -> "DataFrame":
         """Create a DataFrame from a `pyspark.sql.DataFrame`.
 
         It will construct a data frame object in the engine, fill it
@@ -1509,13 +1572,13 @@ class DataFrame:
         return a corresponding [`DataFrame`][getml.DataFrame] handle.
 
         Args:
-            spark_df (pyspark.sql.DataFrame):
+            spark_df:
                 The table to be read.
 
-            name (str):
+            name:
                 Name of the data frame to be created.
 
-            roles (dict[str, List[str]] or [`Roles`][getml.data.Roles], optional):
+            roles:
                 Maps the [`roles`][getml.data.roles] to the
                 column names (see [`colnames`][getml.DataFrame.colnames]).
 
@@ -1527,21 +1590,19 @@ class DataFrame:
 
                 Otherwise, you can use the [`Roles`][getml.data.Roles] class.
 
-            ignore (bool, optional):
+            ignore:
                 Only relevant when roles is not None.
                 Determines what you want to do with any colnames not
                 mentioned in roles. Do you want to ignore them (True)
                 or read them in as unused columns (False)?
 
-            dry (bool, optional):
+            dry:
                 If set to True, then the data
                 will not actually be read. Instead, the method will only
                 return the roles it would have used. This can be used
                 to hard-code roles when setting up a pipeline.
 
         Returns:
-            [`DataFrame`][getml.DataFrame]:
-
                 Handler of the underlying data.
         """
 
@@ -1590,14 +1651,14 @@ class DataFrame:
         keys: List[str],
         region: str,
         name: str,
-        num_lines_sniffed=1000,
-        num_lines_read=0,
-        sep=",",
-        skip=0,
-        colnames=None,
-        roles=None,
-        ignore=False,
-        dry=False,
+        num_lines_sniffed: int = 1000,
+        num_lines_read: int = 0,
+        sep: str = ",",
+        skip: int = 0,
+        colnames: Optional[List[str]] = None,
+        roles: Optional[Union[dict[str, List[str]], Roles]] = None,
+        ignore: bool = False,
+        dry: bool = False,
     ) -> "DataFrame":
         """Create a DataFrame from CSV files located in an S3 bucket.
 
@@ -1607,37 +1668,37 @@ class DataFrame:
         [`DataFrame`][getml.DataFrame] handle.
 
         Args:
-            bucket (str):
+            bucket:
                 The bucket from which to read the files.
 
-            keys (List[str]):
+            keys:
                 The list of keys (files in the bucket) to be read.
 
-            region (str):
+            region:
                 The region in which the bucket is located.
 
-            name (str):
+            name:
                 Name of the data frame to be created.
 
-            num_lines_sniffed (int, optional):
+            num_lines_sniffed:
                 Number of lines analyzed by the sniffer.
 
-            num_lines_read (int, optional):
+            num_lines_read:
                 Number of lines read from each file.
                 Set to 0 to read in the entire file.
 
-            sep (str, optional):
+            sep:
                 The separator used for separating fields.
 
-            skip (int, optional):
+            skip:
                 Number of lines to skip at the beginning of each file.
 
-            colnames (List[str] or None, optional):
+            colnames:
                 The first line of a CSV file
                 usually contains the column names. When this is not the case,
                 you need to explicitly pass them.
 
-            roles (dict[str, List[str]] or [`Roles`][getml.data.Roles], optional):
+            roles:
                 Maps the [`roles`][getml.data.roles] to the
                 column names (see [`colnames`][getml.DataFrame.colnames]).
 
@@ -1648,21 +1709,19 @@ class DataFrame:
                 ```
                 Otherwise, you can use the [`Roles`][getml.data.Roles] class.
 
-            ignore (bool, optional):
+            ignore:
                 Only relevant when roles is not None.
                 Determines what you want to do with any colnames not
                 mentioned in roles. Do you want to ignore them (True)
                 or read them in as unused columns (False)?
 
-            dry (bool, optional):
+            dry:
                 If set to True, then the data
                 will not actually be read. Instead, the method will only
                 return the roles it would have used. This can be used
                 to hard-code roles when setting up a pipeline.
 
         Returns:
-            [`DataFrame`][getml.DataFrame]:
-
                 Handler of the underlying data.
 
         Example:
@@ -1774,10 +1833,10 @@ class DataFrame:
     @classmethod
     def from_view(
         cls,
-        view,
-        name,
-        dry=False,
-    ):
+        view: View,
+        name: str,
+        dry: bool = False,
+    ) -> "DataFrame":
         """Create a DataFrame from a [`View`][getml.data.View].
 
         This classmethod will construct a data
@@ -1786,20 +1845,19 @@ class DataFrame:
         [`DataFrame`][getml.DataFrame] handle.
 
         Args:
-            view ([`View`][getml.data.View]):
+            view:
                 The view from which we want to read the data.
 
-            name (str):
+            name:
                 Name of the data frame to be created.
 
-            dry (bool, optional):
+            dry:
                 If set to True, then the data
                 will not actually be read. Instead, the method will only
                 return the roles it would have used. This can be used
                 to hard-code roles when setting up a pipeline.
 
         Returns:
-            [`DataFrame`][getml.DataFrame]:
                 Handler of the underlying data.
 
 
@@ -1874,7 +1932,6 @@ class DataFrame:
             ```
 
         Returns:
-            [`DataFrame`][getml.DataFrame]:
                 Updated handle the underlying data frame in the getML
                 engine.
 
@@ -1939,12 +1996,11 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
-    def nbytes(self):
+    def nbytes(self) -> np.uint64:
         """Size of the data stored in the underlying data frame in the getML
         engine.
 
         Returns:
-            numpy.uint64:
                 Size of the underlying object in bytes.
 
         """
@@ -1964,21 +2020,23 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
-    def ncols(self):
+    def ncols(self) -> int:
         """
         Number of columns in the current instance.
 
         Returns:
-            int:
                 Overall number of columns
         """
         return len(self.colnames)
 
     # ------------------------------------------------------------
 
-    def nrows(self):
+    def nrows(self) -> int:
         """
         Number of rows in the current instance.
+
+        Returns:
+                Overall number of rows
         """
 
         cmd: Dict[str, Any] = {}
@@ -2002,24 +2060,23 @@ class DataFrame:
 
     # --------------------------------------------------------------------------
 
-    def read_arrow(self, table, append=False):
+    def read_arrow(self, table: pyarrow.Table, append: bool = False) -> "DataFrame":
         """Uploads a `pyarrow.Table`.
 
         Replaces the actual content of the underlying data frame in
         the getML engine with `table`.
 
         Args:
-            table (pyarrow.Table):
+            table:
                 Data the underlying data frame object in the getML
                 engine should obtain.
 
-            append (bool, optional):
+            append:
                 If a data frame object holding the same ``name`` is
                 already present in the getML engine, should the content in
                 `query` be appended or replace the existing data?
 
         Returns:
-            [`DataFrame`][getml.DataFrame]:
                 Current instance.
 
         Note:
@@ -2080,15 +2137,15 @@ class DataFrame:
 
     def read_csv(
         self,
-        fnames,
-        append=False,
-        quotechar='"',
-        sep=",",
-        num_lines_read=0,
-        skip=0,
-        colnames=None,
-        time_formats=None,
-        verbose=True,
+        fnames: List[str],
+        append: bool = False,
+        quotechar: str = '"',
+        sep: str = ",",
+        num_lines_read: int = 0,
+        skip: int = 0,
+        colnames: Optional[List[str]] = None,
+        time_formats: Optional[List[str]] = None,
+        verbose: bool = True,
     ) -> "DataFrame":
         """Read CSV files.
 
@@ -2096,34 +2153,34 @@ class DataFrame:
         header with the column names.
 
         Args:
-            fnames (List[str]):
+            fnames:
                 CSV file paths to be read.
 
-            append (bool, optional):
+            append:
                 If a data frame object holding the same ``name`` is
                 already present in the getML, should the content of
                 the CSV files in `fnames` be appended or replace the
                 existing data?
 
-            quotechar (str, optional):
+            quotechar:
                 The character used to wrap strings.
 
-            sep (str, optional):
+            sep:
                 The separator used for separating fields.
 
-            num_lines_read (int, optional):
+            num_lines_read:
                 Number of lines read from each file.
                 Set to 0 to read in the entire file.
 
-            skip (int, optional):
+            skip:
                 Number of lines to skip at the beginning of each file.
 
-            colnames (List[str] or None, optional):
+            colnames:
                 The first line of a CSV file
                 usually contains the column names.
                 When this is not the case, you need to explicitly pass them.
 
-            time_formats (List[str], optional):
+            time_formats:
                 The list of formats tried when parsing time stamps.
 
                 The formats are allowed to contain the following
@@ -2155,12 +2212,11 @@ class DataFrame:
                 * %Z - time zone differential in RFC format (GMT or +NNNN)
                 * %% - percent sign
 
-            verbose (bool, optional):
+            verbose:
                 If True, when `fnames` are urls, the filenames are printed to
                 stdout during the download.
 
         Returns:
-            [`DataFrame`][getml.DataFrame]:
                 Handler of the underlying data.
 
         """
@@ -2244,22 +2300,27 @@ class DataFrame:
 
     # --------------------------------------------------------------------------
 
-    def read_json(self, json_str, append=False, time_formats=None):
+    def read_json(
+        self,
+        json_str: str,
+        append: bool = False,
+        time_formats: Optional[List[str]] = None,
+    ) -> "DataFrame":
         """Fill from JSON
 
         Fills the data frame with data from a JSON string.
 
         Args:
 
-            json_str (str):
+            json_str:
                 The JSON string containing the data.
 
-            append (bool, optional):
+            append:
                 If a data frame object holding the same ``name`` is
                 already present in the getML, should the content of
                 `json_str` be appended or replace the existing data?
 
-            time_formats (List[str], optional):
+            time_formats:
                 The list of formats tried when parsing time stamps.
                 The formats are allowed to contain the following
                 special characters:
@@ -2291,7 +2352,6 @@ class DataFrame:
                 * %% - percent sign
 
         Returns:
-            [`DataFrame`][getml.DataFrame]:
                 Handler of the underlying data.
 
         Note:
@@ -2358,14 +2418,21 @@ class DataFrame:
         """Read a parquet file.
 
         Args:
-            fname (str):
+            fname:
                 The filepath of the parquet file to be read.
 
-            append (bool, optional):
+            append:
                 If a data frame object holding the same ``name`` is
                 already present in the getML, should the content of
                 the CSV files in `fnames` be appended or replace the
                 existing data?
+
+            verbose:
+                If True, when `fnames` are urls, the filenames are printed to
+                stdout during the download.
+
+        Returns:
+            Handler of the underlying data.
         """
 
         if not isinstance(fname, str):
@@ -2418,44 +2485,44 @@ class DataFrame:
         skip: int = 0,
         colnames: Optional[List[str]] = None,
         time_formats: Optional[List[str]] = None,
-    ):
+    ) -> "DataFrame":
         """Read CSV files from an S3 bucket.
 
         It is assumed that the first line of each CSV file contains a
         header with the column names.
 
         Args:
-            bucket (str):
+            bucket:
                 The bucket from which to read the files.
 
-            keys (List[str]):
+            keys:
                 The list of keys (files in the bucket) to be read.
 
-            region (str):
+            region:
                 The region in which the bucket is located.
 
-            append (bool, optional):
+            append:
                 If a data frame object holding the same ``name`` is
                 already present in the getML, should the content of
                 the CSV files in `fnames` be appended or replace the
                 existing data?
 
-            sep (str, optional):
+            sep:
                 The separator used for separating fields.
 
-            num_lines_read (int, optional):
+            num_lines_read:
                 Number of lines read from each file.
                 Set to 0 to read in the entire file.
 
-            skip (int, optional):
+            skip:
                 Number of lines to skip at the beginning of each file.
 
-            colnames (List[str] or None, optional):
+            colnames:
                 The first line of a CSV file
                 usually contains the column names.
                 When this is not the case, you need to explicitly pass them.
 
-            time_formats (List[str], optional):
+            time_formats:
                 The list of formats tried when parsing time stamps.
 
                 The formats are allowed to contain the following
@@ -2488,7 +2555,6 @@ class DataFrame:
                 * %% - percent sign
 
         Returns:
-            [`DataFrame`][getml.DataFrame]:
                 Handler of the underlying data.
 
         Note:
@@ -2577,17 +2643,16 @@ class DataFrame:
         """Read the data from a [`View`][getml.data.View].
 
         Args:
-            view ([`View`][getml.data.View]):
+            view:
                 The view to read.
 
-            append (bool, optional):
+            append:
                 If a data frame object holding the same ``name`` is
                 already present in the getML, should the content of
                 the CSV files in `fnames` be appended or replace the
                 existing data?
 
         Returns:
-            [`DataFrame`][getml.DataFrame]:
                 Handler of the underlying data.
 
         """
@@ -2615,28 +2680,29 @@ class DataFrame:
 
     # --------------------------------------------------------------------------
 
-    def read_db(self, table_name: str, append: bool = False, conn=None) -> "DataFrame":
+    def read_db(
+        self, table_name: str, append: bool = False, conn: Optional[Connection] = None
+    ) -> "DataFrame":
         """
         Fill from Database.
 
         The DataFrame will be filled from a table in the database.
 
         Args:
-            table_name (str):
+            table_name:
                 Table from which we want to retrieve the data.
 
-            append (bool, optional):
+            append:
                 If a data frame object holding the same ``name`` is
                 already present in the getML, should the content of
                 `table_name` be appended or replace the existing data?
 
-            conn ([`Connection`][getml.database.Connection], optional):
+            conn:
                 The database connection to be used.
                 If you don't explicitly pass a connection,
                 the engine will use the default connection.
 
         Returns:
-            [`DataFrame`][getml.DataFrame]:
                 Handler of the underlying data.
         """
 
@@ -2688,15 +2754,17 @@ class DataFrame:
         the getML engine with `pandas_df`.
 
         Args:
-            pandas_df (pandas.DataFrame):
+            pandas_df:
                 Data the underlying data frame object in the getML
                 engine should obtain.
 
-            append (bool, optional):
+            append:
                 If a data frame object holding the same ``name`` is
                 already present in the getML engine, should the content in
                 `query` be appended or replace the existing data?
 
+        Returns:
+                Handler of the underlying data.
         Note:
             For columns containing `pandas.Timestamp` there can
             occur small inconsistencies in the order of microseconds
@@ -2724,21 +2792,26 @@ class DataFrame:
 
     # --------------------------------------------------------------------------
 
-    def read_pyspark(self, spark_df, append: bool = False) -> "DataFrame":
+    def read_pyspark(
+        self, spark_df: pyspark.sql.DataFrame, append: bool = False
+    ) -> "DataFrame":
         """Uploads a `pyspark.sql.DataFrame`.
 
         Replaces the actual content of the underlying data frame in
         the getML engine with `pandas_df`.
 
         Args:
-            spark_df (pyspark.sql.DataFrame):
+            spark_df:
                 Data the underlying data frame object in the getML
                 engine should obtain.
 
-            append (bool, optional):
+            append:
                 If a data frame object holding the same ``name`` is
                 already present in the getML engine, should the content in
                 `query` be appended or replace the existing data?
+
+        Returns:
+                Handler of the underlying data.
         """
 
         if not isinstance(append, bool):
@@ -2764,27 +2837,31 @@ class DataFrame:
 
     # --------------------------------------------------------------------------
 
-    def read_query(self, query: str, append: bool = False, conn=None) -> "DataFrame":
+    def read_query(
+        self,
+        query: str,
+        append: Optional[bool] = False,
+        conn: Optional[Connection] = None,
+    ) -> "DataFrame":
         """Fill from query
 
         Fills the data frame with data from a table in the database.
 
         Args:
-            query (str):
+            query:
                 The query used to retrieve the data.
 
-            append (bool, optional):
+            append:
                 If a data frame object holding the same ``name`` is
                 already present in the getML engine, should the content in
                 `query` be appended or replace the existing data?
 
-            conn ([`Connection`][getml.database.Connection], optional):
+            conn:
                 The database connection to be used.
                 If you don't explicitly pass a connection,
                 the engine will use the default connection.
 
         Returns:
-            [`DataFrame`][getml.DataFrame]:
                 Handler of the underlying data.
         """
 
@@ -2838,8 +2915,6 @@ class DataFrame:
         methods automatically call [`refresh`][getml.DataFrame.refresh].
 
         Returns:
-            [`DataFrame`][getml.DataFrame]:
-
                 Updated handle the underlying data frame in the getML
                 engine.
 
@@ -2882,28 +2957,38 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
-    def remove_subroles(self, cols):
+    def remove_subroles(
+        self,
+        cols: Union[
+            str, FloatColumn, StringColumn, List[Union[str, FloatColumn, StringColumn]]
+        ],
+    ):
         """Removes all [`subroles`][getml.data.subroles] from one or more columns.
 
         Args:
-            columns (str, FloatColumn, StringColumn, or List[str, FloatColumn, StringColumn]):
+            columns:
                 The columns or the names thereof.
         """
 
         names = _handle_cols(cols)
 
         for name in names:
-            self._set_subroles(name, subroles=[], append=False)
+            self._set_subroles(name, append=False, subroles=[])
 
         self.refresh()
 
     # ------------------------------------------------------------
 
-    def remove_unit(self, cols):
+    def remove_unit(
+        self,
+        cols: Union[
+            str, FloatColumn, StringColumn, List[Union[str, FloatColumn, StringColumn]]
+        ],
+    ):
         """Removes the unit from one or more columns.
 
         Args:
-            columns (str, FloatColumn, StringColumn, or List[str, FloatColumn, StringColumn]):
+            columns:
                 The columns or the names thereof.
         """
 
@@ -2929,7 +3014,6 @@ class DataFrame:
         """Writes the underlying data in the getML engine to disk.
 
         Returns:
-            [`DataFrame`][getml.DataFrame]:
                 The current instance.
 
         """
@@ -2945,7 +3029,14 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
-    def set_role(self, cols, role, time_formats=None):
+    def set_role(
+        self,
+        cols: Union[
+            str, FloatColumn, StringColumn, List[Union[str, FloatColumn, StringColumn]]
+        ],
+        role: str,
+        time_formats: Optional[List[str]] = None,
+    ):
         """Assigns a new role to one or more columns.
 
         When switching from a role based on type float to a role based on type
@@ -2954,13 +3045,13 @@ class DataFrame:
         roles, please refer to the [User Guide][annotating-data].
 
         Args:
-            cols (str, FloatColumn, StringColumn, or List[str, FloatColumn, StringColumn]):
+            cols:
                 The columns or the names of the columns.
 
-            role (str):
+            role:
                 The role to be assigned.
 
-            time_formats (str or List[str], optional):
+            time_formats:
                 Formats to be used to parse the time stamps.
                 This is only necessary, if an implicit conversion from a StringColumn to
                 a time stamp is taking place.
@@ -3026,18 +3117,25 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
-    def set_subroles(self, cols, subroles, append=True):
+    def set_subroles(
+        self,
+        cols: Union[
+            str, FloatColumn, StringColumn, List[Union[str, FloatColumn, StringColumn]]
+        ],
+        subroles: Optional[Union[str, List[str]]] = None,
+        append: Optional[bool] = True,
+    ):
         """Assigns one or several new [`subroles`][getml.data.subroles] to one or more columns.
 
         Args:
-            cols (str, FloatColumn, StringColumn, or List[str, FloatColumn, StringColumn]):
+            cols:
                 The columns or the names thereof.
 
-            subroles (str or List[str]):
+            subroles:
                 The subroles to be assigned.
                 Must be from [`subroles`][getml.data.subroles].
 
-            append (bool, optional):
+            append:
                 Whether you want to append the
                 new subroles to the existing subroles.
         """
@@ -3054,23 +3152,30 @@ class DataFrame:
             raise TypeError("'append' must be a bool.")
 
         for name in names:
-            self._set_subroles(name, subroles, append)
+            self._set_subroles(name, append, subroles)
 
         self.refresh()
 
     # ------------------------------------------------------------
 
-    def set_unit(self, cols, unit, comparison_only=False):
+    def set_unit(
+        self,
+        cols: Union[
+            str, FloatColumn, StringColumn, List[Union[str, FloatColumn, StringColumn]]
+        ],
+        unit: str,
+        comparison_only: bool = False,
+    ):
         """Assigns a new unit to one or more columns.
 
         Args:
-            cols (str, FloatColumn, StringColumn, or List[str, FloatColumn, StringColumn]):
+            cols:
                 The columns or the names thereof.
 
-            unit (str):
+            unit:
                 The unit to be assigned.
 
-            comparison_only (bool):
+            comparison_only:
                 Whether you want the column to
                 be used for comparison only. This means that the column can
                 only be used in comparison to other columns of the same unit.
@@ -3124,16 +3229,14 @@ class DataFrame:
 
     # ----------------------------------------------------------------
 
-    def to_arrow(self):
+    def to_arrow(self) -> pa.Table:
         """Creates a `pyarrow.Table` from the current instance.
 
         Loads the underlying data from the getML engine and constructs
         a `pyarrow.Table`.
 
         Returns:
-            pyarrow.Table:
-                Pyarrow equivalent of the current instance including
-                its underlying data.
+                Pyarrow equivalent of the current instance including its underlying data.
         """
         return _to_arrow(self)
 
@@ -3146,18 +3249,18 @@ class DataFrame:
         Writes the underlying data into a newly created CSV file.
 
         Args:
-            fname (str):
+            fname:
                 The name of the CSV file.
                 The ending ".csv" and an optional batch number will
                 be added automatically.
 
-            quotechar (str, optional):
+            quotechar:
                 The character used to wrap strings.
 
-            sep (str, optional):
+            sep:
                 The character used for separating fields.
 
-            batch_size (int, optional):
+            batch_size:
                 Maximum number of lines per file. Set to 0 to read
                 the entire data frame into a single file.
         """
@@ -3192,18 +3295,18 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
-    def to_db(self, table_name, conn=None):
+    def to_db(self, table_name: str, conn: Optional[Connection] = None):
         """Writes the underlying data into a newly created table in the
         database.
 
         Args:
-            table_name (str):
+            table_name:
                 Name of the table to be created.
 
                 If a table of that name already exists, it will be
                 replaced.
 
-            conn ([`Connection`][getml.database.Connection], optional):
+            conn:
                 The database connection to be used.
                 If you don't explicitly pass a connection,
                 the engine will use the default connection.
@@ -3229,13 +3332,13 @@ class DataFrame:
 
     # ----------------------------------------------------------------
 
-    def to_html(self, max_rows=10):
+    def to_html(self, max_rows: int = 10):
         """
         Represents the data frame in HTML format, optimized for an
         iPython notebook.
 
         Args:
-            max_rows (int):
+            max_rows:
                 The maximum number of rows to be displayed.
         """
 
@@ -3261,14 +3364,13 @@ class DataFrame:
 
     # ----------------------------------------------------------------
 
-    def to_pandas(self):
+    def to_pandas(self) -> pd.DataFrame:
         """Creates a `pandas.DataFrame` from the current instance.
 
         Loads the underlying data from the getML engine and constructs
         `pandas.DataFrame`.
 
         Returns:
-            pandas.DataFrame:
                 Pandas equivalent of the current instance including
                 its underlying data.
 
@@ -3277,16 +3379,20 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
-    def to_parquet(self, fname, compression="snappy"):
+    def to_parquet(
+        self,
+        fname: str,
+        compression: Literal["brotli", "gzip", "lz4", "snappy", "zstd"] = "snappy",
+    ):
         """
         Writes the underlying data into a newly created parquet file.
 
         Args:
-            fname (str):
+            fname:
                 The name of the parquet file.
                 The ending ".parquet" will be added automatically.
 
-            compression (str):
+            compression:
                 The compression format to use.
                 Supported values are "brotli", "gzip", "lz4", "snappy", "zstd"
         """
@@ -3294,18 +3400,17 @@ class DataFrame:
 
     # ----------------------------------------------------------------
 
-    def to_placeholder(self, name=None):
+    def to_placeholder(self, name: Optional[str] = None) -> Placeholder:
         """Generates a [`Placeholder`][getml.data.Placeholder] from the
         current [`DataFrame`][getml.DataFrame].
 
         Args:
-            name (str, optional):
+            name:
                 The name of the placeholder. If no
                 name is passed, then the name of the placeholder will
                 be identical to the name of the current data frame.
 
         Returns:
-            [`Placeholder`][getml.data.Placeholder]:
                 A placeholder with the same name as this data frame.
 
 
@@ -3314,19 +3419,20 @@ class DataFrame:
         return Placeholder(name=name or self.name, roles=self.roles)
 
     # ----------------------------------------------------------------
-
-    def to_pyspark(self, spark, name=None):
+    def to_pyspark(
+        self, spark: pyspark.sql.SparkSession, name: Optional[str] = None
+    ) -> pyspark.sql.DataFrame:
         """Creates a `pyspark.sql.DataFrame` from the current instance.
 
         Loads the underlying data from the getML engine and constructs
         a `pyspark.sql.DataFrame`.
 
         Args:
-            spark (pyspark.sql.SparkSession):
+            spark:
                 The pyspark session in which you want to
                 create the data frame.
 
-            name (str or None):
+            name:
                 The name of the temporary view to be created on top
                 of the `pyspark.sql.DataFrame`,
                 with which it can be referred to
@@ -3336,16 +3442,21 @@ class DataFrame:
                 [`DataFrame`][getml.DataFrame] will be used.
 
         Returns:
-            pyspark.sql.DataFrame:
-                Pyspark equivalent of the current instance including
-                its underlying data.
+                Pyspark equivalent of the current instance including its underlying data.
 
         """
         return _to_pyspark(self, name, spark)
 
     # ------------------------------------------------------------
 
-    def to_s3(self, bucket: str, key: str, region: str, sep=",", batch_size=50000):
+    def to_s3(
+        self,
+        bucket: str,
+        key: str,
+        region: str,
+        sep: Optional[str] = ",",
+        batch_size: Optional[int] = 50000,
+    ):
         """
         Writes the underlying data into a newly created CSV file
         located in an S3 bucket.
@@ -3353,21 +3464,21 @@ class DataFrame:
             Note that S3 is not supported on Windows.
 
         Args:
-            bucket (str):
+            bucket:
                 The bucket from which to read the files.
 
-            key (str):
+            key:
                 The key in the S3 bucket in which you want to
                 write the output. The ending ".csv" and an optional
                 batch number will be added automatically.
 
-            region (str):
+            region:
                 The region in which the bucket is located.
 
-            sep (str, optional):
+            sep:
                 The character used for separating fields.
 
-            batch_size (int, optional):
+            batch_size:
                 Maximum number of lines per file. Set to 0 to read
                 the entire data frame into a single file.
 
@@ -3459,8 +3570,11 @@ class DataFrame:
         subselection of the current instance.
 
         Args:
-            index (int, slice, [`BooleanColumnView`][getml.data.columns.BooleanColumnView] or [`FloatColumnView`][getml.data.columns.FloatColumnView] or [`FloatColumn`][getml.data.columns.FloatColumn]):
+            index:
                 Indicates the rows you want to select.
+
+        Returns:
+                A new [`View`][getml.data.View] containing the selected rows.
 
         Example:
             Generate example data:
@@ -3521,27 +3635,44 @@ class DataFrame:
     # ------------------------------------------------------------
 
     def with_column(
-        self, col, name, role=None, subroles=None, unit="", time_formats=None
+        self,
+        col: Union[
+            bool,
+            str,
+            float,
+            int,
+            np.datetime64,
+            FloatColumn,
+            FloatColumnView,
+            StringColumn,
+            StringColumnView,
+            BooleanColumnView,
+        ],
+        name: str,
+        role: Optional[str] = None,
+        subroles: Optional[Union[str, List[str]]] = None,
+        unit: Optional[str] = "",
+        time_formats: Optional[List[str]] = None,
     ):
         """Returns a new [`View`][getml.data.View] that contains an additional column.
 
         Args:
-            col ([`columns`][getml.columns]):
+            col:
                 The column to be added.
 
-            name (str):
+            name:
                 Name of the new column.
 
-            role (str, optional):
+            role:
                 Role of the new column. Must be from `getml.data.roles`.
 
-            subroles (str, List[str] or None, optional):
+            subroles:
                 Subroles of the new column. Must be from [`subroles`][getml.data.subroles].
 
-            unit (str, optional):
+            unit:
                 Unit of the column.
 
-            time_formats (str, optional):
+            time_formats:
                 Formats to be used to parse the time stamps.
 
                 This is only necessary, if an implicit conversion from
@@ -3594,18 +3725,28 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
-    def with_name(self, name):
+    def with_name(self, name: str) -> View:
         """Returns a new [`View`][getml.data.View] with a new name.
 
         Args:
-            name (str):
+            name:
                 The name of the new view.
+
+        Returns:
+            A new view with the new name.
         """
         return View(base=self, name=name)
 
     # ------------------------------------------------------------
 
-    def with_role(self, cols, role, time_formats=None):
+    def with_role(
+        self,
+        cols: Union[
+            str, FloatColumn, StringColumn, List[Union[str, FloatColumn, StringColumn]]
+        ],
+        role: str,
+        time_formats: Optional[List[str]] = None,
+    ):
         """Returns a new [`View`][getml.data.View] with modified roles.
 
         The difference between [`with_role`][getml.DataFrame.with_role] and
@@ -3622,13 +3763,13 @@ class DataFrame:
         roles, please refer to the [User Guide][annotating-data].
 
         Args:
-            cols (str, FloatColumn, StingColumn, or List[str, FloatColumn, StringColumn]):
+            cols:
                 The columns or the names thereof.
 
-            role (str):
+            role:
                 The role to be assigned.
 
-            time_formats (str or List[str], optional):
+            time_formats:
                 Formats to be used to
                 parse the time stamps.
                 This is only necessary, if an implicit conversion from a StringColumn to
@@ -3638,7 +3779,14 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
-    def with_subroles(self, cols, subroles, append=True):
+    def with_subroles(
+        self,
+        cols: Union[
+            str, FloatColumn, StringColumn, List[Union[str, FloatColumn, StringColumn]]
+        ],
+        subroles: Union[str, List[str]],
+        append: bool = True,
+    ):
         """Returns a new view with one or several new subroles on one or more columns.
 
         The difference between [`with_subroles`][getml.DataFrame.with_subroles] and
@@ -3649,13 +3797,13 @@ class DataFrame:
         like [`set_subroles`][getml.DataFrame.set_subroles] are preferable.
 
         Args:
-            cols (str, FloatColumn, StingColumn, or List[str, FloatColumn, StringColumn]):
+            cols:
                 The columns or the names thereof.
 
-            subroles (str or List[str]):
+            subroles:
                 The subroles to be assigned.
 
-            append (bool, optional):
+            append:
                 Whether you want to append the
                 new subroles to the existing subroles.
         """
@@ -3663,7 +3811,14 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
-    def with_unit(self, cols, unit, comparison_only=False):
+    def with_unit(
+        self,
+        cols: Union[
+            str, FloatColumn, StringColumn, List[Union[str, FloatColumn, StringColumn]]
+        ],
+        unit: str,
+        comparison_only: bool = False,
+    ):
         """Returns a view that contains a new unit on one or more columns.
 
         The difference between [`with_unit`][getml.DataFrame.with_unit] and
@@ -3674,13 +3829,13 @@ class DataFrame:
         like [`set_unit`][getml.DataFrame.set_unit] are preferable.
 
         Args:
-            cols (str, FloatColumn, StingColumn, or List[str, FloatColumn, StringColumn]):
+            cols:
                 The columns or the names thereof.
 
-            unit (str):
+            unit:
                 The unit to be assigned.
 
-            comparison_only (bool):
+            comparison_only:
                 Whether you want the column to
                 be used for comparison only. This means that the column can
                 only be used in comparison to other columns of the same unit.
@@ -3690,7 +3845,7 @@ class DataFrame:
                 we have seen that same bank account number in another table.
 
                 If True, this will also set the
-                [`compare`][getml.data.subroles.only.compare] subrole.  The feature
+                [`compare`][getml.data.subroles.only.compare] subrole. The feature
                 learning algorithms and the feature selectors will interpret this
                 accordingly.
         """

@@ -18,7 +18,7 @@ from getml.engine import is_alive as _is_alive
 # -----------------------------------------------------------------------------
 
 
-def set_s3_access_key_id(value):
+def set_s3_access_key_id(value: str):
     """Sets the Access Key ID to S3.
 
     Notes:
@@ -30,7 +30,7 @@ def set_s3_access_key_id(value):
     this module.
 
     Args:
-        value (str):
+        value:
             The value to which you want to set the Access Key ID.
     """
 
@@ -61,7 +61,7 @@ def set_s3_access_key_id(value):
 # -----------------------------------------------------------------------------
 
 
-def set_s3_secret_access_key(value):
+def set_s3_secret_access_key(value: str):
     """Sets the Secret Access Key to S3.
 
     Notes:
@@ -73,7 +73,7 @@ def set_s3_secret_access_key(value):
     this module.
 
     Args:
-        value (str):
+        value:
             The value to which you want to set the Secret Access Key.
     """
 

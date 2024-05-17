@@ -13,6 +13,10 @@ Special container for star schemata.
 import copy
 from inspect import cleandoc
 from textwrap import indent
+from typing import Union, Optional, Dict
+
+from getml.data.columns import StringColumnView
+from getml.data.placeholder import OnType, TimeStampsType
 
 from .columns import FloatColumn, StringColumn
 from .container import Container
@@ -41,51 +45,51 @@ class StarSchema:
     [`Container`][getml.data.Container] and [`DataModel`][getml.data.DataModel] by directly
     accessing the attributes `container` and `data_model`.
 
-    Args:
-        population ([`DataFrame`][getml.DataFrame] or [`View`][getml.data.View], optional):
+    Attributes:
+        population:
             The population table defines the
             [statistical population ](https://en.wikipedia.org/wiki/Statistical_population)
             of the machine learning problem and contains the target variables.
 
-        alias (str, optional):
+        alias:
             The alias to be used for the population table. This is required,
             if *population* is a [`View`][getml.data.View].
 
-        peripheral (dict, optional):
+        peripheral:
             The peripheral tables are joined onto *population* or other
             peripheral tables. Note that you can also pass them using
             [`join`][getml.data.StarSchema.join].
 
-        split ([`StringColumn`][getml.data.columns.StringColumn] or [`StringColumnView`][getml.data.columns.StringColumnView], optional):
+        split:
             Contains information on how you want to split *population* into
             different [`Subset`][getml.data.Subset] s.
             Also refer to [`split`][getml.data.split].
 
-        deep_copy (bool, optional):
+        deep_copy:
             Whether you want to create deep copies or your tables.
 
-        train ([`DataFrame`][getml.DataFrame] or [`View`][getml.data.View], optional):
+        train:
             The population table used in the *train*
             [`Subset`][getml.data.Subset].
             You can either pass *population* and *split* or you can pass
             the subsets separately using *train*, *validation*, *test*
             and *kwargs*.
 
-        validation ([`DataFrame`][getml.DataFrame] or [`View`][getml.data.View], optional):
+        validation:
             The population table used in the *validation*
             [`Subset`][getml.data.Subset].
             You can either pass *population* and *split* or you can pass
             the subsets separately using *train*, *validation*, *test*
             and *kwargs*.
 
-        test ([`DataFrame`][getml.DataFrame] or [`View`][getml.data.View], optional):
+        test:
             The population table used in the *test*
             [`Subset`][getml.data.Subset].
             You can either pass *population* and *split* or you can pass
             the subsets separately using *train*, *validation*, *test*
             and *kwargs*.
 
-        kwargs ([`DataFrame`][getml.DataFrame] or [`View`][getml.data.View], optional):
+        kwargs:
             The population table used in [`Subset`][getml.data.Subset] s
             other than the predefined *train*, *validation* and *test* subsets.
             You can call these subsets anything you want to and can access them
@@ -208,15 +212,15 @@ class StarSchema:
 
     def __init__(
         self,
-        population=None,
-        alias=None,
-        peripheral=None,
-        split=None,
-        deep_copy=False,
-        train=None,
-        validation=None,
-        test=None,
-        **kwargs,
+        population: Optional[Union[DataFrame, View]] = None,
+        alias: Optional[str] = None,
+        peripheral: Optional[Dict[str, Union[DataFrame, View]]] = None,
+        split: Optional[Union[StringColumn, StringColumnView]] = None,
+        deep_copy: Optional[bool] = False,
+        train: Optional[Union[DataFrame, View]] = None,
+        validation: Optional[Union[DataFrame, View]] = None,
+        test: Optional[Union[DataFrame, View]] = None,
+        **kwargs: Optional[Union[DataFrame, View]]
     ):
         if (population is None or isinstance(population, View)) and alias is None:
             raise ValueError(
@@ -314,30 +318,36 @@ class StarSchema:
         )
 
     @property
-    def container(self):
+    def container(self) -> Container:
         """
         The underlying [`Container`][getml.data.Container].
+
+        Returns:
+            The underlying container.
         """
         return self._container
 
     @property
-    def data_model(self):
+    def data_model(self) -> DataModel:
         """
         The underlying [`DataModel`][getml.data.DataModel].
+
+        Returns:
+            The underlying data model.
         """
         return self._data_model
 
     def join(
         self,
-        right_df,
-        alias=None,
-        on=None,
-        time_stamps=None,
-        relationship=many_to_many,
-        memory=None,
-        horizon=None,
-        lagged_targets=False,
-        upper_time_stamp=None,
+        right_df: Union[DataFrame, View],
+        alias: Optional[str] = None,
+        on: OnType = None,
+        time_stamps: TimeStampsType = None,
+        relationship: str = many_to_many,
+        memory: Optional[float] = None,
+        horizon: Optional[float] = None,
+        lagged_targets: bool = False,
+        upper_time_stamp: Optional[str] = None,
     ):
         """
         Joins a [`DataFrame`][getml.DataFrame] or [`View`][getml.data.View]
@@ -449,38 +459,38 @@ class StarSchema:
             Please also refer to [`relationship`][getml.data.relationship].
 
         Args:
-            right_df ([`DataFrame`][getml.DataFrame] or [`View`][getml.data.View]):
+            right_df:
                 The data frame or view you would like to join.
 
-            alias (str or None):
+            alias:
                 The name as which you want *right_df* to be referred to in
                 the generated SQL code.
 
-            on (None, string, Tuple[str] or List[Union[str, Tuple[str]]]):
+            on:
                 The join keys to use. If none is passed, then everything
                 will be joined to everything else.
 
-            time_stamps (string or Tuple[str]):
+            time_stamps:
                 The time stamps used to limit the join.
 
-            relationship (str):
+            relationship:
                 The relationship between the two tables. Must be from
                 [`relationship`][getml.data.relationship].
 
-            memory (float):
+            memory:
                 The difference between the time stamps until data is 'forgotten'.
                 Limiting your joins using memory can significantly speed up
                 training time. Also refer to [`time`][getml.data.time].
 
-            horizon (float):
+            horizon:
                 The prediction horizon to apply to this join.
                 Also refer to [`time`][getml.data.time].
 
-            lagged_targets (bool):
+            lagged_targets:
                 Whether you want to allow lagged targets. If this is set to True,
                 you must also pass a positive, non-zero *horizon*.
 
-            upper_time_stamp (str):
+            upper_time_stamp:
                 Name of a time stamp in *right_df* that serves as an upper limit
                 on the join.
         """

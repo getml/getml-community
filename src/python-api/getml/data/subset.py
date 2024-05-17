@@ -28,6 +28,16 @@ class Subset:
     It is passed by a [`Container`][getml.data.Container], [`StarSchema`][getml.data.StarSchema]
     and [`TimeSeries`][getml.data.TimeSeries] to the [`Pipeline`][getml.Pipeline].
 
+    Attributes:
+        container_id:
+            The ID of the container the subset belongs to.
+
+        peripheral:
+            A dictionary containing the peripheral tables.
+
+        population:
+            The population table.
+
     Example:
         ```python
         container = getml.data.Container(

@@ -18,13 +18,16 @@ from .container import Container
 from .helpers2 import _load_view
 
 
-def load_container(container_id):
+def load_container(container_id: str) -> Container:
     """
     Loads a container and all associated data frames from disk.
 
     Args:
-        container_id (str):
+        container_id:
             The id of the container you would like to load.
+
+    Returns:
+        The container with the given id.
     """
 
     cmd: Dict[str, Any] = {}

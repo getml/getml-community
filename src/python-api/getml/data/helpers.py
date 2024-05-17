@@ -50,7 +50,9 @@ from .subroles import _all_subroles
 # --------------------------------------------------------------------
 
 OnType = Optional[Union[str, Tuple[str, str], List[Union[str, Tuple[str, str]]]]]
-
+"""
+Types that can be passed to the 'on' argument of the 'join' method.
+"""
 # --------------------------------------------------------------------
 
 
@@ -563,40 +565,39 @@ def _sniff_arrow(table) -> Dict[str, List[str]]:
 
 def _sniff_csv(
     fnames: List[str],
-    num_lines_sniffed: int = 1000,
-    quotechar: str = '"',
-    sep: str = ",",
-    skip: int = 0,
+    num_lines_sniffed: Optional[int] = 1000,
+    quotechar: Optional[str] = '"',
+    sep: Optional[str] = ",",
+    skip: Optional[int] = 0,
     colnames: Optional[List[str]] = None,
 ) -> Dict[str, List[str]]:
     """Sniffs a list of CSV files and returns the result as a dictionary of
     roles.
 
     Args:
-        fnames (List[str]): The list of CSV file names to be read.
+        fnames: The list of CSV file names to be read.
 
-        num_lines_sniffed (int, optional):
+        num_lines_sniffed:
 
             Number of lines analysed by the sniffer.
 
-        quotechar (str, optional):
+        quotechar:
 
             The character used to wrap strings.
 
-        sep (str, optional):
+        sep:
 
             The character used for separating fields.
 
-        skip (int, optional):
+        skip:
             Number of lines to skip at the beginning of each file.
 
-        colnames (List[str] or None, optional): The first line of a CSV file
+        colnames: The first line of a CSV file
             usually contains the column names. When this is not the case, you need to
             explicitly pass them.
 
     Returns:
-        dict: Keyword arguments (kwargs) that can be used to construct
-              a DataFrame.
+        Keyword arguments (kwargs) that can be used to construct a DataFrame.
     """
 
     fnames_ = _retrieve_urls(fnames, verbose=False)
@@ -637,15 +638,14 @@ def _sniff_db(
     Sniffs a table in the database and returns a dictionary of roles.
 
     Args:
-        table_name (str): Name of the table to be sniffed.
+        table_name: Name of the table to be sniffed.
 
-        conn ([`Connection`][getml.database.Connection], optional): The database
+        conn: The database
             connection to be used. If you don't explicitly pass a connection,
             the engine will use the default connection.
 
     Returns:
-        dict: Keyword arguments (kwargs) that can be used to construct
-              a DataFrame.
+        Keyword arguments (kwargs) that can be used to construct a DataFrame.
     """
 
     conn = conn or Connection()
@@ -675,10 +675,10 @@ def _sniff_json(json_str: str) -> Dict[str, List[str]]:
     roles.
 
     Args:
-        json_str (str): The JSON string to be sniffed.
+        json_str: The JSON string to be sniffed.
 
     Returns:
-        dict: Roles that can be used to construct a DataFrame.
+        Roles that can be used to construct a DataFrame.
     """
     json_dict = json.loads(json_str)
 
@@ -711,10 +711,10 @@ def _sniff_pandas(pandas_df: pd.DataFrame) -> Dict[str, List[str]]:
     roles.
 
     Args:
-        pandas_df (pandas.DataFrame): The pandas.DataFrame to be sniffed.
+        pandas_df: The pandas.DataFrame to be sniffed.
 
     Returns:
-        dict: Roles that can be used to construct a DataFrame.
+        Roles that can be used to construct a DataFrame.
     """
     roles: Dict[str, Any] = {}
     roles["unused_float"] = []
@@ -739,39 +739,38 @@ def _sniff_s3(
     bucket: str,
     keys: List[str],
     region: str,
-    num_lines_sniffed: int = 1000,
-    sep: str = ",",
-    skip: int = 0,
+    num_lines_sniffed: Optional[int] = 1000,
+    sep: Optional[str] = ",",
+    skip: Optional[int] = 0,
     colnames: Optional[List[str]] = None,
 ) -> Dict[str, List[str]]:
     """Sniffs a list of CSV files located in an S3 bucket
     and returns the result as a dictionary of roles.
 
     Args:
-        bucket (str):
+        bucket:
             The bucket from which to read the files.
 
-        keys (List[str]): The list of keys (files in the bucket) to be read.
+        keys: The list of keys (files in the bucket) to be read.
 
-        region (str):
+        region:
             The region in which the bucket is located.
 
-        num_lines_sniffed (int, optional):
+        num_lines_sniffed:
             Number of lines analysed by the sniffer.
 
-        sep (str, optional):
+        sep:
             The character used for separating fields.
 
-        skip (int, optional):
+        skip:
             Number of lines to skip at the beginning of each file.
 
-        colnames (List[str] or None, optional): The first line of a CSV file
+        colnames: The first line of a CSV file
             usually contains the column names. When this is not the case, you need to
             explicitly pass them.
 
     Returns:
-        dict: Keyword arguments (kwargs) that can be used to construct
-              a DataFrame.
+        Keyword arguments (kwargs) that can be used to construct a DataFrame.
     """
 
     cmd: Dict[str, Any] = {}
@@ -1002,7 +1001,7 @@ def _with_column(
     ],
     name: str,
     role: Optional[str] = None,
-    subroles: Optional[List[str]] = None,
+    subroles: Optional[Union[str, List[str]]] = None,
     unit: str = "",
     time_formats: Optional[List[str]] = None,
 ):
@@ -1164,7 +1163,7 @@ def _with_subroles(
     cols: Union[
         str, FloatColumn, StringColumn, List[Union[str, FloatColumn, StringColumn]]
     ],
-    subroles: Union[str, List[str]],
+    subroles: Optional[Union[str, List[str]]] = None,
     append: bool = False,
 ):
 

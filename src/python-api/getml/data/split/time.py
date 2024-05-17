@@ -11,7 +11,7 @@ Splits data at random.
 """
 
 import numbers
-from typing import Dict, Optional, Union
+from typing import Dict, Optional, Union, NewType
 
 import numpy as np
 
@@ -21,8 +21,8 @@ from getml.data.data_frame import DataFrame
 from getml.data.helpers import _is_typed_list
 from getml.data.view import View
 
-TimeStampType = Union[float, int, np.datetime64]
-
+TimeStampType = NewType("TimeStampType", Union[float, int, np.datetime64])  # type: ignore # NewType to be python backward compatible
+"""Admissible types for time stamps"""
 
 def time(
     population: DataFrame,
@@ -43,22 +43,22 @@ def time(
     considered to be the training set.
 
     Args:
-        population ([`DataFrame`][getml.DataFrame] or [`View`][getml.data.View]):
+        population:
             The population table you would like to split.
 
-        time_stamp (str):
+        time_stamp:
             The name of the time stamp column in the population table
             you want to use. Ideally, the role of said column would be
             [`time_stamp`][getml.data.roles.time_stamp]. If you want to split on the rowid,
             then pass "rowid" to `time_stamp`.
 
-        validation (float, optional):
+        validation:
             The start date of the validation set.
 
-        test (float, optional):
+        test:
             The start date of the test set.
 
-        kwargs (float, optional):
+        kwargs:
             Any other sets you would like to assign.
             You can name these sets whatever you want to (in our example,
             we called it 'other').
