@@ -19,6 +19,9 @@ import pandas as pd  # type: ignore
 from getml.data import DataFrame
 
 DataFrameT = Union[DataFrame, pd.DataFrame]
+"""
+DataFrame types for builtin demonstration datasets
+"""
 
 VERSION: str = "v1"
 
@@ -78,35 +81,29 @@ def _load_dataset(
     """Helper function to load a dataset
 
     Args:
-        ds_name (str):
+        ds_name:
             name of the dataset
 
-        assets (list):
+        assets:
             CSV files to be loaded from the S3 bucket
 
-        roles (bool):
+        roles:
             Return getml.DataFrame with roles set
 
-        units (bool):
+        units:
             Return getml.DataFrame with units set
 
-        as_pandas (bool):
+        as_pandas:
             Return data as `pandas.DataFrame` s
 
-        as_dict (bool):
-            Return data as dict with `df.name`s as keys and
+        as_dict:
+            Return data as dict with `df.name` as keys and
             `df` as values.
 
     Returns:
-        tuple:
-            Tuple containing (sorted alphabetically by `df.name`s) the data as
-            [`DataFrame`][getml.DataFrame] s or `pandas.DataFrame`s (if `as_pandas`
-            is True) or
+            * Tuple containing (sorted alphabetically by `df.name`) the data as [`DataFrame`][getml.DataFrame] or `pandas.DataFrame` (if `as_pandas` is True) or
 
-        dict:
-            dict containing the with (`df.name`s as keys and `df`s as values) as
-            [`DataFrame`][getml.DataFrame] s or `pandas.DataFrame` s (if `as_pandas`
-            is True) if `as_dict` is `True`.
+            * Dict containing the with (`df.name` as keys and `df` as values) as [`DataFrame`][getml.DataFrame] or `pandas.DataFrame` (if `as_pandas` is True) if `as_dict` is `True`.
     """
     base = f"{BUCKET}/{VERSION}/{ds_name}/preprocessed"
 
@@ -156,7 +153,7 @@ def _load_dataset(
 def load_air_pollution(
     roles: bool = True,
     as_pandas: bool = False,
-) -> Union[DataFrameT]:
+) -> DataFrameT:
     """
     Regression dataset on air pollution in Beijing, China
 
@@ -170,19 +167,18 @@ def load_air_pollution(
     20150257.
 
     Args:
-        as_pandas (bool):
-            Return data as `pandas.DataFrame`s
+        as_pandas:
+            Return data as `pandas.DataFrame`
 
-        roles (bool):
+        roles:
             Return data with roles set
 
     Returns:
-        getml.data.DataFrame:
             A DataFrame holding the data described above.
 
-        The following DataFrames are returned:
+                The following DataFrames are returned:
 
-        * air_pollution
+                    * `air_pollution`
 
     Example:
         ```python
@@ -198,11 +194,11 @@ def load_air_pollution(
     Note:
         Roles can be set ad-hoc by supplying the respective flag. If
         `roles` is `False`, all columns in the returned
-        [`DataFrame`][getml.data.DataFrame]s have roles
+        [`DataFrame`][getml.data.DataFrame] have roles
         [`unused_string`][getml.data.roles.unused_string] or
         [`unused_float`][getml.data.roles.unused_float]. This dataset contains no units.
         Before using them in an analysis, a data model needs to be constructed
-        using [`Placeholder`][getml.data.Placeholder]s.
+        using [`Placeholder`][getml.data.Placeholder].
 
     """
 
@@ -240,31 +236,29 @@ def load_atherosclerosis(
     validation (15%) set.
 
     Args:
-        as_pandas (bool):
+        as_pandas:
             Return data as `pandas.DataFrame` s
 
-        roles (bool):
+        roles:
             Return data with roles set
 
-        as_dict (bool):
-            Return data as dict with `df.name` s as keys and
-            `df` s as values.
+        as_dict:
+            Return data as dict with `df.name` as keys and
+            `df` as values.
 
     Returns:
-        tuple:
-            Tuple containing (sorted alphabetically by `df.name`s) the data as
-            [`DataFrame`][getml.DataFrame] s or `pandas.DataFrame` s (if `as_pandas`
-            is True) or
-        dict:
-            if `as_dict` is `True`: Dictionary containing the data as
-            [`DataFrame`][getml.DataFrame] s or `pandas.DataFrame` s (if `as_pandas`
-            is True). The keys correspond to the name of the DataFrame on the
-            [`engine`][getml.engine].
+            Tuple containing (sorted alphabetically by `df.name`) the data as
+                [`DataFrame`][getml.DataFrame] or `pandas.DataFrame` (if `as_pandas`
+                is True) or
+                if `as_dict` is `True`: Dictionary containing the data as
+                [`DataFrame`][getml.DataFrame] or `pandas.DataFrame` (if `as_pandas`
+                is True). The keys correspond to the name of the DataFrame on the
+                [`engine`][getml.engine].
 
-        The following DataFrames are returned:
+                The following DataFrames are returned:
 
-        * `population`
-        * `contr`
+                - `population`
+                - `contr`
 
     Example:
         ```python
@@ -280,11 +274,11 @@ def load_atherosclerosis(
     Note:
         Roles can be set ad-hoc by supplying the respective flag. If
         `roles` is `False`, all columns in the returned
-        [`DataFrame`][getml.data.DataFrame]s have roles
+        [`DataFrame`][getml.data.DataFrame] have roles
         [`unused_string`][getml.data.roles.unused_string] or
         [`unused_float`][getml.data.roles.unused_float]. This dataset contains no units.
         Before using them in an analysis, a data model needs to be constructed
-        using [`Placeholder`][getml.data.Placeholder]s.
+        using [`Placeholder`][getml.data.Placeholder].
     """
 
     ds_name = "atherosclerosis"
@@ -329,34 +323,33 @@ def load_biodegradability(
     validation (25%) sets.
 
     Args:
-        as_pandas (bool):
-            Return data as `pandas.DataFrame` s
+        as_pandas:
+            Return data as `pandas.DataFrame`
 
-        roles (bool):
+        roles:
             Return data with roles set
 
-        as_dict (bool):
-            Return data as dict with `df.name` s as keys and
-            `df` s as values.
+        as_dict:
+            Return data as dict with `df.name` as keys and
+            `df` as values.
 
     Returns:
-        tuple:
-            Tuple containing (sorted alphabetically by `df.name`s) the data as
-            [`DataFrame`][getml.DataFrame] s or `pandas.DataFrame` s (if `as_pandas`
-            is True) or
-        dict:
-            if `as_dict` is `True`: Dictionary containing the data as
-            [`DataFrame`][getml.DataFrame] s or `pandas.DataFrame` s (if `as_pandas`
-            is True). The keys correspond to the name of the DataFrame on the
-            [`engine`][getml.engine].
+            Tuple containing (sorted alphabetically by `df.name`) the data as
+                [`DataFrame`][getml.DataFrame] or `pandas.DataFrame` (if `as_pandas`
+                is True) or
 
-        The following DataFrames are returned:
+                if `as_dict` is `True`: Dictionary containing the data as
+                [`DataFrame`][getml.DataFrame] or `pandas.DataFrame` (if `as_pandas`
+                is True). The keys correspond to the name of the DataFrame on the
+                [`engine`][getml.engine].
 
-        * `molecule`
-        * `atom`
-        * `bond`
-        * `gmember`
-        * `group`
+                The following DataFrames are returned:
+
+                * `molecule`
+                * `atom`
+                * `bond`
+                * `gmember`
+                * `group`
 
     Example:
         ```python
@@ -368,11 +361,11 @@ def load_biodegradability(
     Note:
         Roles can be set ad-hoc by supplying the respective flag. If
         `roles` is `False`, all columns in the returned
-        [`DataFrame`][getml.data.DataFrame]s have roles
+        [`DataFrame`][getml.data.DataFrame] have roles
         [`unused_string`][getml.data.roles.unused_string] or
         [`unused_float`][getml.data.roles.unused_float]. This dataset contains no units.
         Before using them in an analysis, a data model needs to be constructed
-        using [`Placeholder`][getml.data.Placeholder]s.
+        using [`Placeholder`][getml.data.Placeholder].
     """
 
     ds_name = "biodegradability"
@@ -402,36 +395,34 @@ def load_consumer_expenditures(
     We use this dataset to classify whether an item was purchased as a gift or not.
 
     Args:
-        roles (bool):
+        roles:
             Return data with roles set
 
-        units (bool):
+        units:
             Return data with units set
 
-        as_pandas (bool):
-            Return data as `pandas.DataFrame` s
+        as_pandas:
+            Return data as `pandas.DataFrame`
 
-        as_dict (bool):
-            Return data as dict with `df.name` s as keys and
-            `df` s as values.
+        as_dict:
+            Return data as dict with `df.name` as keys and
+            `df` as values.
 
     Returns:
-        tuple:
-            Tuple containing (sorted alphabetically by `df.name`s) the data as
-            [`DataFrame`][getml.DataFrame] s or `pandas.DataFrame` s (if `as_pandas`
-            is True) or
-        dict:
-            if `as_dict` is `True`: Dictionary containing the data as
-            [`DataFrame`][getml.DataFrame] s or `pandas.DataFrame` s (if `as_pandas`
-            is True). The keys correspond to the name of the DataFrame on the
-            [`engine`][getml.engine].
+            Tuple containing (sorted alphabetically by `df.name`) the data as
+                [`DataFrame`][getml.DataFrame] or `pandas.DataFrame` (if `as_pandas`
+                is True) or
+                if `as_dict` is `True`: Dictionary containing the data as
+                [`DataFrame`][getml.DataFrame] or `pandas.DataFrame` (if `as_pandas`
+                is True). The keys correspond to the name of the DataFrame on the
+                [`engine`][getml.engine].
 
-        The following DataFrames are returned:
+                The following DataFrames are returned:
 
-        * `population`
-        * `expd`
-        * `fmld`
-        * `memd`
+                * `population`
+                * `expd`
+                * `fmld`
+                * `memd`
 
     Example:
         ```python
@@ -446,11 +437,11 @@ def load_consumer_expenditures(
     Note:
         Roles and units can be set ad-hoc by supplying the respective flag. If
         `roles` is `False`, all columns in the returned
-        [`DataFrame`][getml.data.DataFrame]s have roles
+        [`DataFrame`][getml.data.DataFrame] have roles
         [`unused_string`][getml.data.roles.unused_string] or
         [`unused_float`][getml.data.roles.unused_float].
         Before using them in an analysis, a data model needs to be constructed
-        using [`Placeholder`][getml.data.Placeholder]s.
+        using [`Placeholder`][getml.data.Placeholder].
     """
 
     ds_name = "consumer_expenditures"
@@ -468,7 +459,7 @@ def load_interstate94(
     roles: bool = True,
     units: bool = True,
     as_pandas: bool = False,
-) -> Union[DataFrameT]:
+) -> DataFrameT:
     """
     Regression dataset on traffic volume prediction
 
@@ -488,22 +479,21 @@ def load_interstate94(
     * Multiple seasonalities
 
     Args:
-        roles (bool):
+        roles:
             Return data with roles set
 
-        units (bool):
+        units:
             Return data with units set
 
-        as_pandas (bool):
-            Return data as `pandas.DataFrame` s
+        as_pandas:
+            Return data as `pandas.DataFrame`
 
     Returns:
-        getml.data.DataFrame:
             A DataFrame holding the data described above.
 
-        The following DataFrames are returned:
+                The following DataFrames are returned:
 
-        * `traffic`
+                * `traffic`
 
     Example:
         ```python
@@ -517,11 +507,11 @@ def load_interstate94(
     Note:
         Roles and units can be set ad-hoc by supplying the respective flags. If
         `roles` is `False`, all columns in the returned
-        [`DataFrame`][getml.data.DataFrame]s have roles
+        [`DataFrame`][getml.data.DataFrame] have roles
         [`unused_string`][getml.data.roles.unused_string] or
         [`unused_float`][getml.data.roles.unused_float]. Before using them in an
         analysis, a data model needs to be constructed using
-        [`Placeholder`][getml.data.Placeholder]s.
+        [`Placeholder`][getml.data.Placeholder].
     """
 
     ds_name = "interstate94"
@@ -566,37 +556,35 @@ def load_loans(
     The population table is split into a training and a testing set at 80% of the main population.
 
     Args:
-        roles (bool):
+        roles:
             Return data with roles set
 
-        units (bool):
+        units:
             Return data with units set
 
-        as_pandas (bool):
-            Return data as `pandas.DataFrame`s
+        as_pandas:
+            Return data as `pandas.DataFrame`
 
-        as_dict (bool):
-            Return data as dict with `df.name` s as keys and
-            `df` s as values.
+        as_dict:
+            Return data as dict with `df.name` as keys and
+            `df` as values.
 
     Returns:
-        tuple:
-            Tuple containing (sorted alphabetically by `df.name`s) the data as
-            [`DataFrame`][getml.DataFrame] s or `pandas.DataFrame` s (if `as_pandas`
-            is True) or
-        dict:
-            if `as_dict` is `True`: Dictionary containing the data as
-            [`DataFrame`][getml.DataFrame] s or `pandas.DataFrame` s (if `as_pandas`
-            is True). The keys correspond to the name of the DataFrame on the
-            [`engine`][getml.engine].
+            Tuple containing (sorted alphabetically by `df.name`) the data as
+                [`DataFrame`][getml.DataFrame] or `pandas.DataFrame` (if `as_pandas`
+                is True) or
+                if `as_dict` is `True`: Dictionary containing the data as
+                [`DataFrame`][getml.DataFrame] or `pandas.DataFrame` (if `as_pandas`
+                is True). The keys correspond to the name of the DataFrame on the
+                [`engine`][getml.engine].
 
-        The following DataFrames are returned:
+                The following DataFrames are returned:
 
-        * `account`
-        * `loan`
-        * `meta`
-        * `order`
-        * `trans`
+                * `account`
+                * `loan`
+                * `meta`
+                * `order`
+                * `trans`
 
     Example:
         ```python
@@ -611,11 +599,11 @@ def load_loans(
     Note:
         Roles and units can be set ad-hoc by supplying the respective flags. If
         `roles` is `False`, all columns in the returned
-        [`DataFrame`][getml.data.DataFrame]s have roles
+        [`DataFrame`][getml.data.DataFrame] have roles
         [`unused_string`][getml.data.roles.unused_string] or
         [`unused_float`][getml.data.roles.unused_float]. Before using them in an
         analysis, a data model needs to be constructed using
-        [`Placeholder`][getml.data.Placeholder]s.
+        [`Placeholder`][getml.data.Placeholder].
     """
 
     ds_name = "loans"
@@ -649,32 +637,30 @@ def load_occupancy(
     statistical learning models. Energy and Buildings, 112, 28-39.
 
     Args:
-        roles (bool):
+        roles:
             Return data with roles set
 
-        as_pandas (bool):
+        as_pandas:
             Return data as `pandas.DataFrame` s
 
-        as_dict (bool):
-            Return data as dict with `df.name` s as keys and
-            `df` s as values.
+        as_dict:
+            Return data as dict with `df.name` as keys and
+            `df` as values.
 
     Returns:
-        tuple:
-            Tuple containing (sorted alphabetically by `df.name`s) the data as
-            [`DataFrame`][getml.DataFrame]s or `pandas.DataFrame`s (if `as_pandas`
-            is True) or
-        dict:
-            if `as_dict` is `True`: Dictionary containing the data as
-            [`DataFrame`][getml.DataFrame] s or `pandas.DataFrame` s (if `as_pandas`
-            is True). The keys correspond to the name of the DataFrame on the
-            [`engine`][getml.engine].
+            Tuple containing (sorted alphabetically by `df.name`) the data as
+                [`DataFrame`][getml.DataFrame] or `pandas.DataFrame` (if `as_pandas`
+                is True) or
+                if `as_dict` is `True`: Dictionary containing the data as
+                [`DataFrame`][getml.DataFrame] or `pandas.DataFrame` (if `as_pandas`
+                is True). The keys correspond to the name of the DataFrame on the
+                [`engine`][getml.engine].
 
-        The following DataFrames are returned:
+                The following DataFrames are returned:
 
-        * `population_train`
-        * `population_test`
-        * `population_validation`
+                * `population_train`
+                * `population_test`
+                * `population_validation`
 
     Example:
         ```python
@@ -690,11 +676,11 @@ def load_occupancy(
     Note:
         Roles can be set ad-hoc by supplying the respective flag. If
         `roles` is `False`, all columns in the returned
-        [`DataFrame`][getml.data.DataFrame]s have roles
+        [`DataFrame`][getml.data.DataFrame] have roles
         [`unused_string`][getml.data.roles.unused_string] or
         [`unused_float`][getml.data.roles.unused_float]. This dataset contains no units.
         Before using them in an analysis, a data model needs to be constructed
-        using [`Placeholder`][getml.data.Placeholder]s.
+        using [`Placeholder`][getml.data.Placeholder].
     """
 
     ds_name = "occupancy"

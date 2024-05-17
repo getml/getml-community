@@ -122,19 +122,19 @@ def make_categorical(
     ```
 
     Args:
-        n_rows_population (int, optional):
+        n_rows_population:
             Number of rows in the population table.
 
-        n_row_peripheral (int, optional):
+        n_row_peripheral:
             Number of rows in the peripheral table.
 
-        random_state (Optional[int], optional):
+        random_state:
             Seed to initialize the random number generator used for
             the dataset creation. If set to None, the seed will be the
             'microsecond' component of
             `datetime.datetime.now()`.
 
-        population_name (string, optional):
+        population_name:
             Name assigned to the
             [`DataFrame`][getml.DataFrame] holding the population
             table. If set to a name already existing on the getML
@@ -144,7 +144,7 @@ def make_categorical(
             `categorical_population_` and the seed of the random
             number generator.
 
-        peripheral_name (string, optional):
+        peripheral_name:
             Name assigned to the
             [`DataFrame`][getml.DataFrame] holding the peripheral
             table. If set to a name already existing on the getML
@@ -154,14 +154,13 @@ def make_categorical(
             `categorical_peripheral_` and the seed of the random
             number generator.
 
-        aggregation (string, optional):
+        aggregation:
             [`aggregations`][getml.feature_learning.aggregations] used to generate the 'target'
             column.
 
     Returns:
-        tuple:
             * population ([`DataFrame`][getml.DataFrame]): Population table
-            * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
+                * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
     """
 
     if random_state is None:
@@ -290,19 +289,19 @@ def make_discrete(
     ```
 
     Args:
-        n_rows_population (int, optional):
+        n_rows_population:
             Number of rows in the population table.
 
-        n_row_peripheral (int, optional):
+        n_row_peripheral:
             Number of rows in the peripheral table.
 
-        random_state (Optional[int], optional):
+        random_state:
             Seed to initialize the random number generator used for
             the dataset creation. If set to None, the seed will be the
             'microsecond' component of
             `datetime.datetime.now()`.
 
-        population_name (string, optional):
+        population_name:
             Name assigned to the
             [`DataFrame`][getml.DataFrame] holding the population
             table. If set to a name already existing on the getML
@@ -312,7 +311,7 @@ def make_discrete(
             `discrete_population_` and the seed of the random
             number generator.
 
-        peripheral_name (string, optional):
+        peripheral_name:
             Name assigned to the
             [`DataFrame`][getml.DataFrame] holding the peripheral
             table. If set to a name already existing on the getML
@@ -322,14 +321,13 @@ def make_discrete(
             `discrete_peripheral_` and the seed of the random
             number generator.
 
-        aggregation (string, optional):
+        aggregation:
             [aggregations][getml.feature_learning.aggregations] used to generate the 'target'
             column.
 
     Returns:
-        tuple:
             * population ([`DataFrame`][getml.DataFrame]): Population table
-            * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
+                * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
     """
 
     if random_state is None:
@@ -457,19 +455,19 @@ def make_numerical(
     ```
 
     Args:
-        n_rows_population (int, optional):
+        n_rows_population:
             Number of rows in the population table.
 
-        n_row_peripheral (int, optional):
+        n_row_peripheral:
             Number of rows in the peripheral table.
 
-        random_state (Optional[int], optional):
+        random_state:
             Seed to initialize the random number generator used for
             the dataset creation. If set to None, the seed will be the
             'microsecond' component of
             `datetime.datetime.now()`.
 
-        population_name (string, optional):
+        population_name:
             Name assigned to the
             [`DataFrame`][getml.DataFrame] holding the population
             table. If set to a name already existing on the getML
@@ -479,7 +477,7 @@ def make_numerical(
             `numerical_population_` and the seed of the random
             number generator.
 
-        peripheral_name (string, optional):
+        peripheral_name:
             Name assigned to the
             [`DataFrame`][getml.DataFrame] holding the peripheral
             table. If set to a name already existing on the getML
@@ -489,14 +487,13 @@ def make_numerical(
             `numerical_peripheral_` and the seed of the random
             number generator.
 
-        aggregation (string, optional):
+        aggregation:
             [aggregations][getml.feature_learning.aggregations] used to generate the 'target'
             column.
 
     Returns:
-        tuple:
             * population ([`DataFrame`][getml.DataFrame]): Population table
-            * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
+                * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
     """
 
     if random_state is None:
@@ -625,19 +622,19 @@ def make_same_units_categorical(
     ```
 
     Args:
-        n_rows_population (int, optional):
+        n_rows_population:
             Number of rows in the population table.
 
-        n_row_peripheral (int, optional):
+        n_row_peripheral:
             Number of rows in the peripheral table.
 
-        random_state (Optional[int], optional):
+        random_state:
             Seed to initialize the random number generator used for
             the dataset creation. If set to None, the seed will be the
             'microsecond' component of
             `datetime.datetime.now()`.
 
-        population_name (string, optional):
+        population_name:
             Name assigned to the
             [`DataFrame`][getml.DataFrame] holding the population
             table. If set to a name already existing on the getML
@@ -647,7 +644,7 @@ def make_same_units_categorical(
             `make_same_units_categorical_population_` and the seed of the random
             number generator.
 
-        peripheral_name (string, optional):
+        peripheral_name:
             Name assigned to the
             [`DataFrame`][getml.DataFrame] holding the peripheral
             table. If set to a name already existing on the getML
@@ -657,14 +654,13 @@ def make_same_units_categorical(
             `make_same_units_categorical_peripheral_` and the seed of the random
             number generator.
 
-        aggregation (string, optional):
+        aggregation:
             [aggregations][getml.feature_learning.aggregations] used to generate the 'target'
             column.
 
     Returns:
-        tuple:
             * population ([`DataFrame`][getml.DataFrame]): Population table
-            * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
+                * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
     """
 
     if random_state is None:
@@ -821,19 +817,19 @@ def make_same_units_numerical(
     ```
 
     Args:
-        n_rows_population (int, optional):
+        n_rows_population:
             Number of rows in the population table.
 
-        n_row_peripheral (int, optional):
+        n_row_peripheral:
             Number of rows in the peripheral table.
 
-        random_state (Union[int, None], optional):
+        random_state:
             Seed to initialize the random number generator used for
             the dataset creation. If set to None, the seed will be the
             'microsecond' component of
             `datetime.datetime.now()`.
 
-        population_name (string, optional):
+        population_name:
             Name assigned to the
             [`DataFrame`][getml.DataFrame] holding the population
             table. If set to a name already existing on the getML
@@ -843,7 +839,7 @@ def make_same_units_numerical(
             `make_same_units_numerical_population_` and the seed of the random
             number generator.
 
-        peripheral_name (string, optional):
+        peripheral_name:
             Name assigned to
             [`DataFrame`][getml.DataFrame] holding the peripheral
             table. If set to a name already existing on the getML
@@ -853,14 +849,13 @@ def make_same_units_numerical(
             `make_same_units_numerical_peripheral_` and the seed of the random
             number generator.
 
-        aggregation (string, optional):
+        aggregation:
             [aggregations][getml.feature_learning.aggregations] used to generate the 'target'
             column.
 
     Returns:
-        tuple:
             * population ([`DataFrame`][getml.DataFrame]): Population table
-            * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
+                * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
     """
 
     if random_state is None:
@@ -1028,22 +1023,22 @@ def make_snowflake(
     ```
 
     Args:
-        n_rows_population (int, optional):
+        n_rows_population:
             Number of rows in the population table.
 
-        n_row_peripheral1 (int, optional):
+        n_rows_peripheral1:
             Number of rows in the first peripheral table.
 
-        n_row_peripheral2 (int, optional):
+        n_rows_peripheral2:
             Number of rows in the second peripheral table.
 
-        random_state (Union[int, None], optional):
+        random_state:
             Seed to initialize the random number generator used for
             the dataset creation. If set to None, the seed will be the
             'microsecond' component of
             `datetime.datetime.now()`.
 
-        population_name (string, optional):
+        population_name:
             Name assigned to the
             [`DataFrame`][getml.DataFrame] holding the population
             table. If set to a name already existing on the getML
@@ -1053,7 +1048,7 @@ def make_snowflake(
             `snowflake_population_` and the seed of the random
             number generator.
 
-        peripheral_name1 (string, optional):
+        peripheral_name1:
             Name assigned to the
             [`DataFrame`][getml.DataFrame] holding the first
             peripheral table. If set to a name already existing on the
@@ -1063,7 +1058,7 @@ def make_snowflake(
             concatenating `snowflake_peripheral_1_` and the seed of the
             random number generator.
 
-        peripheral_name2 (string, optional):
+        peripheral_name2:
             Name assigned to the
             [`DataFrame`][getml.DataFrame] holding the second
             peripheral table. If set to a name already existing on the
@@ -1073,19 +1068,18 @@ def make_snowflake(
             concatenating `snowflake_peripheral_2_` and the seed of the
             random number generator.
 
-        aggregation1 (string, optional):
+        aggregation1:
             [aggregations][getml.feature_learning.aggregations] used to generate the 'target'
             column in the first peripheral table.
 
-        aggregation2 (string, optional):
+        aggregation2:
             [aggregations][getml.feature_learning.aggregations] used to generate the 'target'
             column in the second peripheral table.
 
     Returns:
-        tuple:
             * population ([`DataFrame`][getml.DataFrame]): Population table
-            * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
-            * peripheral_2 ([`DataFrame`][getml.DataFrame]): Peripheral table
+                * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
+                * peripheral_2 ([`DataFrame`][getml.DataFrame]): Peripheral table
     """
 
     if random_state is None:
