@@ -27,37 +27,37 @@ def read_csv(
     skip: int = 0,
     colnames: Optional[List[str]] = None,
     conn: Optional[Connection] = None,
-):
+) -> None:
     """
     Reads a CSV file into the database.
 
     Args:
-        name (str):
+        name:
             Name of the table in which the data is to be inserted.
 
-        fnames (List[str]):
+        fnames:
             The list of CSV file names to be read.
 
-        quotechar (str, optional):
+        quotechar:
             The character used to wrap strings. Default:`"`
 
-        sep (str, optional):
+        sep
             The separator used for separating fields. Default:`,`
 
-        num_lines_read (int, optional):
+        num_lines_read:
             Number of lines read from each file.
             Set to 0 to read in the entire file.
 
-        skip (int, optional):
+        skip:
             Number of lines to skip at the beginning of each
             file (Default: 0).
 
-        colnames (List[str] or None, optional):
+        colnames:
             The first line of a CSV file
             usually contains the column names. When this is not the case, you need to
             explicitly pass them.
 
-        conn ([`Connection`][getml.database.Connection], optional):
+        conn:
             The database connection to be used.
             If you don't explicitly pass a connection,
             the engine will use the default connection.
@@ -76,10 +76,10 @@ def read_csv(
 
         getml.database.execute(stmt)
 
-        stmt = data.database.read_csv(
-                fnames=["file1.csv", "file2.csv"],
-                name="MY_TABLE",
-                sep=';'
+        data.database.read_csv(
+            fnames=["file1.csv", "file2.csv"],
+            name="MY_TABLE",
+            sep=';'
         )
         ```
 

@@ -20,19 +20,22 @@ import getml.communication as comm
 from .connection import Connection
 
 
-def get(query: str, conn: Optional[Connection] = None):
+def get(query: str, conn: Optional[Connection] = None) -> pd.DataFrame:
     """
     Executes an SQL query on the database and returns the result as
     a pandas dataframe.
 
     Args:
-        query (str):
+        query:
             The SQL query to be executed.
 
-        conn ([`Connection`][getml.database.Connection], optional):
+        conn:
             The database connection to be used.
             If you don't explicitly pass a connection,
             the engine will use the default connection.
+
+    Returns:
+        The result of the query as a pandas dataframe.
     """
 
     conn = conn or Connection()

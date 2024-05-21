@@ -24,7 +24,7 @@ def connect_sqlite3(
     name: str = ":memory:",
     time_formats: Optional[List[str]] = None,
     conn_id: str = "default",
-):
+) -> Connection:
     """Creates a new SQLite3 database connection.
 
     SQLite3 is a popular in-memory database. It is faster than
@@ -34,12 +34,12 @@ def connect_sqlite3(
     of your RAM, especially for large data sets.
 
     Args:
-        name (str, optional):
+        name:
             Name of the sqlite3 file.  If the file does not exist, it
             will be created. Set to ":memory:" for a purely in-memory SQLite3
             database.
 
-        time_formats (List[str], optional):
+        time_formats:
             The list of formats tried when parsing time stamps.
 
             The formats are allowed to contain the following
@@ -71,9 +71,12 @@ def connect_sqlite3(
             * %Z - time zone differential in RFC format (GMT or +NNNN)
             * %% - percent sign
 
-        conn_id (str, optional):
+        conn_id:
             The name to be used to reference the connection.
             If you do not pass anything, this will create a new default connection.
+
+    Returns:
+        The new SQLite3 database connection.
 
     Note:
         By selecting an existing table of your database in

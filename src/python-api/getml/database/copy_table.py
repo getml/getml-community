@@ -27,16 +27,16 @@ def copy_table(
     Copies a table from one database connection to another.
 
     Args:
-        source_conn ([`Connection`][getml.database.Connection]):
+        source_conn:
             The database connection to be copied from.
 
-        target_conn ([`Connection`][getml.database.Connection]):
+        target_conn:
             The database connection to be copied to.
 
-        source_table (str):
+        source_table:
             The name of the table in the source connection.
 
-        target_table (str, optional):
+        target_table:
             The name of the table in the target
             connection. If you do not explicitly pass a target_table, the
             name will be identical to the source_table.

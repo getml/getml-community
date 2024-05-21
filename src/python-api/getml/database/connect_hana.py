@@ -23,36 +23,36 @@ def connect_hana(
     password: str,
     host: str,
     port: int = 39017,
-    default_schema: str = "public",
+    default_schema: Optional[str] = "public",
     ping_interval: int = 0,
     time_formats: Optional[List[str]] = None,
     conn_id: str = "default",
-):
+) -> Connection:
     """
     Creates a new HANA database connection.
 
     Args:
-        user (str):
+        user:
             Username with which to log into the HANA database.
 
-        password (str):
+        password:
             Password with which to log into the HANA database.
 
-        host (str):
+        host:
             Host of the HANA database.
 
-        port (int, optional):
+        port:
             Port of the database.
 
-        default_schema (str, optional):
+        default_schema:
             The schema within the database you want to connect
             use unless another schema is explicitly set.
 
-        ping_interval (int, optional):
+        ping_interval:
             The interval at which you want to ping the database,
             in seconds. Set to 0 for no pings at all.
 
-        time_formats (List[str], optional):
+        time_formats:
             The list of formats tried when parsing time stamps.
 
             The formats are allowed to contain the following
@@ -90,6 +90,9 @@ def connect_hana(
 
     Note:
         Not supported in the getML community edition.
+
+    Returns:
+        The connection object.
     """
 
     time_formats = time_formats or constants.TIME_FORMATS

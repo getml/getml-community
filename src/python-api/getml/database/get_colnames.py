@@ -18,18 +18,21 @@ import getml.communication as comm
 from .connection import Connection
 
 
-def get_colnames(name: str, conn: Optional[Connection] = None):
+def get_colnames(name: str, conn: Optional[Connection] = None) -> list[str]:
     """
     Lists the colnames of a table held in the database.
 
     Args:
-        name (str):
+        name:
             The name of the table in the database.
 
-        conn ([`Connection`][getml.database.Connection], optional):
+        conn:
             The database connection to be used.
             If you don't explicitly pass a connection,
             the engine will use the default connection.
+
+    Returns:
+        A list of strings containing the names of the columns in the table.
     """
 
     conn = conn or Connection()

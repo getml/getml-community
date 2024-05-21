@@ -26,22 +26,22 @@ def connect_bigquery(
     google_application_credentials: Union[str, Path],
     time_formats: Optional[List[str]] = None,
     conn_id: str = "default",
-):
+) -> Connection:
     """
     Creates a new BigQuery database connection.
 
     Args:
-        database_id (str):
+        database_id:
             The ID of the database to connect to.
 
-        project_id (str):
+        project_id:
             The ID of the project to connect to.
 
-        google_application_credentials (str or pathlib.Path):
+        google_application_credentials:
             The path of the Google application credentials.
             (Must be located on the machine hosting the getML engine).
 
-        time_formats (List[str], optional):
+        time_formats:
             The list of formats tried when parsing time stamps.
 
             The formats are allowed to contain the following
@@ -73,12 +73,15 @@ def connect_bigquery(
             * %Z - time zone differential in RFC format (GMT or +NNNN)
             * %% - percent sign
 
-        conn_id (str, optional):
+        conn_id:
             The name to be used to reference the connection.
             If you do not pass anything, this will create a new default connection.
 
     Note:
         Not supported in the getML community edition.
+
+    Returns:
+        The connection object.
     """
 
     time_formats = time_formats or constants.TIME_FORMATS
