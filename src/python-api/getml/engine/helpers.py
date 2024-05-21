@@ -26,11 +26,11 @@ from getml.communication import (
 # --------------------------------------------------------------------
 
 
-def delete_project(name):
+def delete_project(name: str):
     """Deletes a project.
 
     Args:
-        name (str):
+        name:
             Name of your project.
 
     Note:
@@ -44,13 +44,12 @@ def delete_project(name):
 # -----------------------------------------------------------------------------
 
 
-def is_engine_alive():
+def is_engine_alive() -> bool:
     """Checks if the getML engine is running.
 
     Returns:
-        bool:
             True if the getML engine is running and ready to accept
-            commands and False otherwise.
+                commands and False otherwise.
 
     """
 
@@ -80,12 +79,11 @@ is_alive = is_engine_alive
 # -----------------------------------------------------------------------------
 
 
-def list_projects():
+def list_projects() -> list[str]:
     """
     List all projects on the getML engine.
 
     Returns:
-        List[str]:
             Lists the name of all the projects.
     """
     return _list_projects_impl(running_only=False)
@@ -94,12 +92,12 @@ def list_projects():
 # -----------------------------------------------------------------------------
 
 
-def list_running_projects():
+def list_running_projects() -> list[str]:
     """
     List all projects on the getML engine that are currently running.
 
     Returns:
-        List[str]: Lists the name of all the projects currently running.
+        Lists the name of all the projects currently running.
     """
     return _list_projects_impl(running_only=True)
 
@@ -107,15 +105,14 @@ def list_running_projects():
 # -----------------------------------------------------------------------------
 
 
-def set_project(name):
+def set_project(name: str):
     """Creates a new project or loads an existing one.
 
     If there is no project called `name` present on the engine, a new one will
     be created.
 
     Args:
-        name (str):
-            Name of the new project.
+           name: Name of the new project.
     """
     _set_project(name)
 
@@ -138,11 +135,11 @@ def shutdown():
 # --------------------------------------------------------------------
 
 
-def suspend_project(name):
+def suspend_project(name: str):
     """Suspends a project that is currently running.
 
     Args:
-        name (str):
+        name:
             Name of your project.
     """
     _suspend_project(name)
