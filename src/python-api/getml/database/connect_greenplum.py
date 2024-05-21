@@ -27,7 +27,7 @@ def connect_greenplum(
     port: int = 5432,
     time_formats: Optional[List[str]] = None,
     conn_id: str = "default",
-):
+) -> Connection:
     """Creates a new Greenplum database connection.
 
     But first, make sure your database is running, and you can reach it
@@ -96,6 +96,8 @@ def connect_greenplum(
             The name to be used to reference the connection.
             If you do not pass anything, this will create a new default connection.
 
+    Returns:
+        The connection object.
     Note:
         By selecting an existing table of your database in
         [`from_db`][getml.DataFrame.from_db] function, you can create

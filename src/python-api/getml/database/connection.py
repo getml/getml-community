@@ -22,7 +22,7 @@ class Connection:
     """
     A handle to a database connection on the getML engine.
 
-    Args:
+    Attributes:
         conn_id:
             The name you want to use to reference the connection.
             You can call it

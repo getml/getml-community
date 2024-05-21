@@ -27,7 +27,7 @@ def read_s3(
     skip: int = 0,
     colnames: Optional[List[str]] = None,
     conn: Optional[Connection] = None,
-):
+) -> None:
     """
     Reads a list of CSV files located in an S3 bucket.
 
@@ -85,12 +85,12 @@ def read_s3(
 
         getml.database.execute(stmt)
 
-        stmt = data.database.read_s3(
-                bucket="your-bucket-name",
-                keys=["file1.csv", "file2.csv"],
-                region="us-east-2",
-                name="MY_TABLE",
-                sep=';'
+        data.database.read_s3(
+            bucket="your-bucket-name",
+            keys=["file1.csv", "file2.csv"],
+            region="us-east-2",
+            name="MY_TABLE",
+            sep=';'
         )
         ```
         You can also set the access credential as environment variables

@@ -27,7 +27,7 @@ def read_csv(
     skip: int = 0,
     colnames: Optional[List[str]] = None,
     conn: Optional[Connection] = None,
-):
+) -> None:
     """
     Reads a CSV file into the database.
 
@@ -76,10 +76,10 @@ def read_csv(
 
         getml.database.execute(stmt)
 
-        stmt = data.database.read_csv(
-                fnames=["file1.csv", "file2.csv"],
-                name="MY_TABLE",
-                sep=';'
+        data.database.read_csv(
+            fnames=["file1.csv", "file2.csv"],
+            name="MY_TABLE",
+            sep=';'
         )
         ```
 
