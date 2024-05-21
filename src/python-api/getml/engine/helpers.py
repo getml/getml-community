@@ -112,7 +112,7 @@ def set_project(name: str):
     be created.
 
     Args:
-            Name of the new project.
+           name: Name of the new project.
     """
     _set_project(name)
 
