@@ -336,9 +336,7 @@ def load_biodegradability(
     Returns:
             Tuple containing (sorted alphabetically by `df.name`) the data as
                 [`DataFrame`][getml.DataFrame] or `pandas.DataFrame` (if `as_pandas`
-                is True) or
-
-                if `as_dict` is `True`: Dictionary containing the data as
+                is True) or if `as_dict` is `True`: Dictionary containing the data as
                 [`DataFrame`][getml.DataFrame] or `pandas.DataFrame` (if `as_pandas`
                 is True). The keys correspond to the name of the DataFrame on the
                 [`engine`][getml.engine].
