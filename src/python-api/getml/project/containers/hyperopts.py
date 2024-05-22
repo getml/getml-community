@@ -9,6 +9,7 @@
 """
 Container which holds a project's hyperopts.
 """
+from typing import Callable
 
 from getml.hyperopt.helpers import list_hyperopts
 from getml.hyperopt.load_hyperopt import load_hyperopt
@@ -84,12 +85,12 @@ class Hyperopts:
 
     # ----------------------------------------------------------------
 
-    def filter(self, conditional):
+    def filter(self, conditional: Callable) -> "Hyperopts":
         """
         Filters the hyperopts container.
 
         Args:
-            conditional (callable):
+            conditional:
                 A callable that evaluates to a boolean for a given item.
 
         Returns:
@@ -107,17 +108,18 @@ class Hyperopts:
 
     # ----------------------------------------------------------------
 
-    def sort(self, key, descending=False):
+    def sort(self, key: Callable, descending: bool=False) -> "Hyperopts":
         """
         Sorts the hyperopts container.
 
         Args:
-            key (callable, optional):
+            key:
                 A callable that evaluates to a sort key for a given item.
-            descending (bool, optional):
+
+            descending:
                 Whether to sort in descending order.
 
-        Return:
+        Returns:
                 A container of sorted hyperopts.
 
         Example:

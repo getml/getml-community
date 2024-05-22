@@ -9,6 +9,7 @@
 """
 Container for data frames in memory.
 """
+from typing import Callable
 
 from getml.data import DataFrame
 from getml.data.helpers import list_data_frames
@@ -103,14 +104,9 @@ class DataFrames:
 
     # ----------------------------------------------------------------
 
-    def delete(self):
+    def delete(self) -> None:
         """
         Deletes all data frames in the current project.
-
-        Args:
-            mem_only (bool):
-                If called with the `mem_only` option set to True, the data
-                frames will be kept on disk (in the project folder).
         """
 
         for name in self.on_disk:
@@ -119,20 +115,23 @@ class DataFrames:
     # ----------------------------------------------------------------
 
     @property
-    def in_memory(self):
+    def in_memory(self) -> list[str]:
         """
         Returns the names of all data frames currently in memory.
+
+        Returns:
+                The names of all data frames currently in memory.
         """
         return self._in_memory
 
     # ----------------------------------------------------------------
 
-    def filter(self, conditional):
+    def filter(self, conditional: Callable) -> "DataFrames":
         """
         Filters the data frames container.
 
         Args:
-            conditional (callable):
+            conditional:
                 A callable that evaluates to a boolean for a given item.
 
         Returns:
@@ -149,7 +148,7 @@ class DataFrames:
 
     # ----------------------------------------------------------------
 
-    def load(self):
+    def load(self) -> None:
         """
         Loads all data frames stored in the project folder to memory.
         """
@@ -161,7 +160,7 @@ class DataFrames:
     # ----------------------------------------------------------------
 
     @property
-    def on_disk(self):
+    def on_disk(self) -> list[str]:
         """
         Returns the names of all data frames stored in the project folder.
         """
@@ -178,7 +177,7 @@ class DataFrames:
 
     # ----------------------------------------------------------------
 
-    def save(self):
+    def save(self) -> None:
         """
         Saves all data frames currently in memory to disk.
         """
@@ -188,14 +187,15 @@ class DataFrames:
 
     # ----------------------------------------------------------------
 
-    def sort(self, key, descending=False):
+    def sort(self, key: Callable, descending: bool=False) -> "DataFrames":
         """
         Sorts the data frames container.
 
         Args:
-            key (callable, optional):
+            key:
                 A callable that evaluates to a sort key for a given item.
-            descending (bool, optional):
+
+            descending:
                 Whether to sort in descending order.
 
         Return:
@@ -212,7 +212,7 @@ class DataFrames:
 
     # ----------------------------------------------------------------
 
-    def unload(self):
+    def unload(self) -> None:
         """
         Unloads all data frames in the current project from memory.
         """
