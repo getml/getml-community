@@ -12,7 +12,7 @@ A gradient boosting model for predicting classification problems.
 
 import numbers
 from dataclasses import dataclass
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import numpy as np
 
@@ -158,7 +158,7 @@ This hyperparameter can be set by the users or the hyperparameter
 optimization algorithm to avoid overfitting.
 
 Args:
-    colsample_bylevel (float, optional):
+    colsample_bylevel:
         Subsample ratio for the columns used, for each level
         inside a tree.
 
@@ -175,7 +175,7 @@ Args:
 
         Range: (0, 1]
 
-    colsample_bytree (float, optional):
+    colsample_bytree:
         Subsample ratio for the columns used, for each tree.
         This means that for each tree, a subselection
         of the features will be randomly chosen. This hyperparameter
@@ -186,14 +186,14 @@ Args:
 
         Range: (0, 1]
 
-    early_stopping_rounds (int, optional):
+    early_stopping_rounds:
         The number of early_stopping_rounds for which we see
         no improvement on the validation set until we stop
         the training process.
 
         Range: (0, $\infty$]
 
-    gamma (float, optional):
+    gamma:
         Minimum loss reduction required for any update
         to the tree. This means that every potential update
         will first be evaluated for its improvement to the loss
@@ -205,7 +205,7 @@ Args:
 
         Range: [0, $\infty$]
 
-    goss_a (float, optional):
+    goss_a:
         Share of the samples with the largest residuals
         taken for each tree.
 
@@ -214,7 +214,7 @@ Args:
 
         Range: [0, 1]
 
-    goss_b (float, optional):
+    goss_b:
         Share of the samples that are not in the `goss_a`
         percentile of largest residuals randomly sampled
         for each tree.
@@ -224,7 +224,7 @@ Args:
 
         Range: [0, 1]
 
-    learning_rate (float, optional):
+    learning_rate:
         Learning rate for the gradient boosting algorithm.
         When a new tree $\\nabla f_{t,i}$ is trained,
         it will be added to the existing trees
@@ -236,7 +236,7 @@ Args:
 
         Range: [0, 1]
 
-    max_depth (int, optional):
+    max_depth:
         Maximum allowed depth of the trees.
 
         *Decreasing* this hyperparameter reduces the
@@ -244,7 +244,7 @@ Args:
 
         Range: [0, $\infty$]
 
-    min_child_weights (float, optional):
+    min_child_weights:
         Minimum sum of weights needed in each child node for a
         split. The idea here is that any leaf should have
         a minimum number of samples in order to avoid overfitting.
@@ -258,7 +258,7 @@ Args:
 
         Range: [0, $\infty$]
 
-    n_estimators (int, optional):
+    n_estimators:
         Number of estimators (trees).
 
         *Decreasing* this hyperparameter reduces the
@@ -266,13 +266,26 @@ Args:
 
         Range: [10, $\infty$]
 
-    n_jobs (int, optional):
+    n_jobs:
         Number of parallel threads. When set to zero, then
         the optimal number of threads will be inferred automatically.
 
         Range: [0, $\infty$]
 
-    reg_lambda (float, optional):
+    objective:
+        Specify the learning task and the corresponding
+        learning objective.
+
+        Possible values:
+
+        * `reg:logistic`
+        * `reg:squarederror`
+        * `reg:tweedie`
+        * `reg:linear`
+        * `binary:logistic`
+        * `binary:logitraw`
+
+    reg_lambda:
         L2 regularization on the weights. Please refer to
         the introductory remarks to understand how this
         hyperparameter influences your weights.
@@ -282,7 +295,7 @@ Args:
 
         Range: [0, $\infty$]
 
-    seed (int, optional):
+    seed:
         Seed used for random sampling and other random
         factors.
 
@@ -307,12 +320,12 @@ Args:
 
     # ----------------------------------------------------------------
 
-    def validate(self, params=None):
+    def validate(self, params: Optional[dict]=None):
         """Checks both the types and the values of all instance
         variables and raises an exception if something is off.
 
         Args:
-            params (dict, optional): A dictionary containing
+            params: A dictionary containing
                 the parameters to validate. If not is passed,
                 the own parameters will be validated.
 

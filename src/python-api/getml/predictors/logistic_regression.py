@@ -11,6 +11,7 @@ A simple logistic regression model for predicting classification problems.
 """
 
 from dataclasses import dataclass
+from typing import Optional
 
 from .linear_regression import _validate_linear_model_parameters
 from .predictor import _Predictor
@@ -51,12 +52,12 @@ Otherwise, it will be trained using adaptive moments (Adam). BFGS
 is more accurate, but less scalable than Adam.
 
 Args:
-    learning_rate (float, optional):
+    learning_rate:
         The learning rate used for the Adaptive Moments algorithm
         (only relevant when categorical features are
         included). Range: (0, $\infty$]
 
-    reg_lambda (float, optional):
+    reg_lambda:
         L2 regularization parameter. Range: [0, $\infty$]
     """
 
@@ -67,12 +68,12 @@ Args:
 
     # ----------------------------------------------------------------
 
-    def validate(self, params=None):
+    def validate(self, params: Optional[dict]=None):
         """Checks both the types and the values of all instance
         variables and raises an exception if something is off.
 
         Args:
-            params (dict, optional): A dictionary containing
+            params: A dictionary containing
                 the parameters to validate. If not is passed,
                 the own parameters will be validated.
 

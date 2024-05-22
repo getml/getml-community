@@ -11,6 +11,7 @@ A gradient boosting model for predicting regression problems.
 """
 
 from dataclasses import dataclass
+from typing import Optional
 
 from .predictor import _Predictor
 from .xgboost_classifier import _validate_xgboost_parameters
@@ -60,7 +61,7 @@ This hyperparameter can be set by the users or the hyperparameter
 optimization algorithm to avoid overfitting.
 
 Args:
-    booster (string, optional):
+    booster:
         Which base classifier to use.
 
         Possible values:
@@ -71,7 +72,7 @@ Args:
           Please also refer to the remarks on *rate_drop* for further
           explanation on `dart`.
 
-    colsample_bylevel (float, optional):
+    colsample_bylevel:
         Subsample ratio for the columns used, for each level
         inside a tree.
 
@@ -88,7 +89,7 @@ Args:
 
         Range: (0, 1]
 
-    colsample_bytree (float, optional):
+    colsample_bytree:
         Subsample ratio for the columns used, for each tree.
         This means that for each tree, a subselection
         of the features will be randomly chosen. This hyperparameter
@@ -99,7 +100,14 @@ Args:
 
         Range: (0, 1]
 
-    external_memory (bool, optional):
+    early_stopping_rounds:
+        The number of early_stopping_rounds for which we see
+        no improvement on the validation set until we stop
+        the training process.
+
+        Range: (0, $\infty$]
+
+    external_memory:
         When the in_memory flag of the engine is set to False,
         XGBoost can use the external memory functionality.
         This reduces the memory consumption,
@@ -111,7 +119,7 @@ Args:
         (the default value), XGBoost will never use
         external memory.
 
-    gamma (float, optional):
+    gamma:
         Minimum loss reduction required for any update
         to the tree. This means that every potential update
         will first be evaluated for its improvement to the loss
@@ -123,7 +131,7 @@ Args:
 
         Range: [0, $\infty$]
 
-    learning_rate (float, optional):
+    learning_rate:
         Learning rate for the gradient boosting algorithm.
         When a new tree $\\nabla f_{t,i}$ is trained,
         it will be added to the existing trees
@@ -135,7 +143,7 @@ Args:
 
         Range: [0, 1]
 
-    max_delta_step (float, optional):
+    max_delta_step:
         The maximum delta step allowed for the weight estimation
         of each tree.
 
@@ -144,7 +152,7 @@ Args:
 
         Range: [0, $\infty$)
 
-    max_depth (int, optional):
+    max_depth:
         Maximum allowed depth of the trees.
 
         *Decreasing* this hyperparameter reduces the
@@ -152,7 +160,7 @@ Args:
 
         Range: [0, $\infty$]
 
-    min_child_weights (float, optional):
+    min_child_weights:
         Minimum sum of weights needed in each child node for a
         split. The idea here is that any leaf should have
         a minimum number of samples in order to avoid overfitting.
@@ -166,7 +174,7 @@ Args:
 
         Range: [0, $\infty$]
 
-    n_estimators (int, optional):
+    n_estimators:
         Number of estimators (trees).
 
         *Decreasing* this hyperparameter reduces the
@@ -174,7 +182,7 @@ Args:
 
         Range: [10, $\infty$]
 
-    normalize_type (string, optional):
+    normalize_type:
         This determines how to normalize trees during 'dart'.
 
         Possible values:
@@ -190,13 +198,13 @@ Args:
 
         Will be ignored if `booster` is not set to `dart`.
 
-    n_jobs (int, optional):
+    n_jobs:
         Number of parallel threads. When set to zero, then
         the optimal number of threads will be inferred automatically.
 
         Range: [0, $\infty$]
 
-    objective (string, optional):
+    objective:
         Specify the learning task and the corresponding
         learning objective.
 
@@ -204,8 +212,9 @@ Args:
 
         * `reg:squarederror`
         * `reg:tweedie`
+        * 'reg:linear'
 
-    one_drop (bool, optional):
+    one_drop:
         If set to True, then at least one tree will always be
         dropped out. Setting this hyperparameter to *true* reduces
         the likelihood of overfitting.
@@ -215,7 +224,7 @@ Args:
 
         Will be ignored if `booster` is not set to 'dart'.
 
-    rate_drop (float, optional):
+    rate_drop:
         Dropout rate for trees - determines the probability
         that a tree will be dropped out. Dropout is an
         algorithm that enjoys considerable popularity in
@@ -234,7 +243,7 @@ Args:
 
         Will be ignored if `booster` is not set to `dart`.
 
-    reg_alpha (float, optional):
+    reg_alpha:
         L1 regularization on the weights.
 
         *Increasing* this hyperparameter reduces the
@@ -242,7 +251,7 @@ Args:
 
         Range: [0, $\infty$]
 
-    reg_lambda (float, optional):
+    reg_lambda:
         L2 regularization on the weights. Please refer to
         the introductory remarks to understand how this
         hyperparameter influences your weights.
@@ -252,7 +261,7 @@ Args:
 
         Range: [0, $\infty$]
 
-    sample_type (string, optional):
+    sample_type:
         Possible values:
 
         * `uniform`: every tree is equally likely to be dropped
@@ -266,11 +275,11 @@ Args:
 
         Will be ignored if `booster` is not set to 'dart'.
 
-    silent (bool, optional):
+    silent:
         In silent mode, XGBoost will not print out information on
         the training progress.
 
-    skip_drop (float, optional):
+    skip_drop:
         Probability of skipping the dropout during a given
         iteration. Please also refer to the remarks on
         *rate_drop* for further explanation.
@@ -282,7 +291,7 @@ Args:
 
         Range: [0, 1]
 
-    subsample (float, optional):
+    subsample:
         Subsample ratio from the training set. This means
         that for every tree a subselection of *samples*
         from the training set will be included into training.
@@ -322,12 +331,12 @@ Args:
 
     # ----------------------------------------------------------------
 
-    def validate(self, params=None):
+    def validate(self, params: Optional[dict]=None):
         """Checks both the types and the values of all instance
         variables and raises an exception if something is off.
 
         Args:
-            params (dict, optional): A dictionary containing
+            params: A dictionary containing
                 the parameters to validate. If not is passed,
                 the own parameters will be validated.
 
