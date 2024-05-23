@@ -14,12 +14,12 @@ are the recommended way of tuning hyperparameters.
 import copy
 import numbers
 import time
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import getml.communication as comm
 import getml.pipeline
 from getml.data import Container, StarSchema, TimeSeries
-from getml.pipeline import metrics
+from getml.pipeline import metrics, Pipeline
 from getml.pipeline.helpers import _print_time_taken, _transform_peripheral
 
 # -----------------------------------------------------------------------------
@@ -227,14 +227,14 @@ def _tune_predictor(
 
 
 def tune_feature_learners(
-    pipeline,
-    container,
-    train="train",
-    validation="validation",
-    n_iter=0,
-    score=None,
-    num_threads=0,
-):
+    pipeline: Pipeline,
+    container: Container,
+    train:str="train",
+    validation:str="validation",
+    n_iter:int=0,
+    score:Optional[str]=None,
+    num_threads:int=0,
+) -> Pipeline:
     """
     A high-level interface for optimizing the feature learners of a
     [`Pipeline`][getml.pipelines.Pipeline].
@@ -248,45 +248,44 @@ def tune_feature_learners(
     to tuning routines: `hyperopt_tuning`.
 
     Args:
-        pipeline ([`Pipeline`][getml.Pipeline]):
+        pipeline:
             Base pipeline used to derive all models fitted and scored
             during the hyperparameter optimization. It defines the data
             schema and any hyperparameters that are not optimized.
 
-        container ([`Container`][getml.data.Container]):
+        container:
             The data container used for the hyperparameter tuning.
 
-        train (str, optional):
+        train:
             The name of the subset in 'container' used for training.
 
-        validation (str, optional):
+        validation:
             The name of the subset in 'container' used for validation.
 
-        n_iter (int, optional):
+        n_iter:
             The number of iterations.
 
-        score (str, optional):
+        score:
             The score to optimize. Must be from
             [`metrics`][getml.pipeline.metrics].
 
-        num_threads (int, optional):
+        num_threads:
             The number of parallel threads to use. If set to 0,
             the number of threads will be inferred.
+
+    Returns:
+        Pipeline containing tuned versions of the feature learners.
 
     Example:
         We assume that you have already set up your
         [`Pipeline`][getml.Pipeline] and
         [`Container`][getml.data.Container].
 
-
-
-            tuned_pipeline = getml.hyperopt.tune_predictors(
-                pipeline=base_pipeline,
-                container=container)
-
-    Returns:
-        A [`Pipeline`][getml.Pipeline] containing tuned versions
-        of the feature learners.
+        ```python
+        tuned_pipeline = getml.hyperopt.tune_predictors(
+            pipeline=base_pipeline,
+            container=container)
+        ```
 
     Note:
         Not supported in the getML community edition.
@@ -336,14 +335,14 @@ def tune_feature_learners(
 
 
 def tune_predictors(
-    pipeline: getml.pipeline.Pipeline,
-    container: getml.data.Container,
-    train="train",
-    validation="validation",
-    n_iter=0,
-    score=None,
-    num_threads=0,
-):
+    pipeline: Pipeline,
+    container: Container,
+    train:str="train",
+    validation:str="validation",
+    n_iter:int=0,
+    score:Optional[str]=None,
+    num_threads:int=0,
+) -> Pipeline:
     """
     A high-level interface for optimizing the predictors of a
     [`Pipeline`][getml.Pipeline].
@@ -357,28 +356,28 @@ def tune_predictors(
     tuning routines: `hyperopt_tuning`.
 
     Args:
-        pipeline ([`Pipeline`][getml.Pipeline]):
+        pipeline:
             Base pipeline used to derive all models fitted and scored
             during the hyperparameter optimization. It defines the data
             schema and any hyperparameters that are not optimized.
 
-        container ([`Container`][getml.data.Container]):
+        container:
             The data container used for the hyperparameter tuning.
 
-        train (str, optional):
+        train:
             The name of the subset in 'container' used for training.
 
-        validation (str, optional):
+        validation:
             The name of the subset in 'container' used for validation.
 
-        n_iter (int, optional):
+        n_iter:
             The number of iterations.
 
-        score (str, optional):
+        score:
             The score to optimize. Must be from
             [`metrics`][getml.pipeline.metrics].
 
-        num_threads (int, optional):
+        num_threads:
             The number of parallel threads to use. If set to 0,
             the number of threads will be inferred.
 
@@ -387,15 +386,14 @@ def tune_predictors(
         [`Pipeline`][getml.Pipeline] and
         [`Container`][getml.data.Container].
 
-
-
-            tuned_pipeline = getml.hyperopt.tune_predictors(
-                pipeline=base_pipeline,
-                container=container)
+        ```python
+        tuned_pipeline = getml.hyperopt.tune_predictors(
+            pipeline=base_pipeline,
+            container=container)
+        ```
 
     Returns:
-        A [`Pipeline`][getml.Pipeline] containing tuned
-        predictors.
+        Pipeline containing tuned predictors.
 
     Note:
         Not supported in the getML community edition.

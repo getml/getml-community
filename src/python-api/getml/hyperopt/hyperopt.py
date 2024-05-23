@@ -223,20 +223,23 @@ class _Hyperopt:
     # ------------------------------------------------------------
 
     @property
-    def best_pipeline(self):
+    def best_pipeline(self) -> Pipeline:
         """
         The best pipeline that is part of the hyperparameter optimization.
 
         This is always based on the validation
         data you have passed even if you have chosen to
         score the pipeline on other data afterwards.
+
+        Returns:
+            The best pipeline.
         """
         name = self._best_pipeline_name()
         return load(name)
 
     # ------------------------------------------------------------
 
-    def clean_up(self):
+    def clean_up(self) -> None:
         """
         Deletes all pipelines associated with hyperparameter optimization,
         but the best pipeline.
@@ -256,18 +259,21 @@ class _Hyperopt:
         container: Union[Container, StarSchema, TimeSeries],
         train: str = "train",
         validation: str = "validation",
-    ):
+    ) -> "_Hyperopt":
         """Launches the hyperparameter optimization.
 
         Args:
-            container ([`Container`][getml.data.Container]):
+            container:
                 The data container used for the hyperparameter tuning.
 
-            train (str, optional):
+            train:
                 The name of the subset in 'container' used for training.
 
-            validation (str, optional):
+            validation:
                 The name of the subset in 'container' used for validation.
+
+        Returns:
+            The current instance.
         """
 
         if isinstance(container, (StarSchema, TimeSeries)):
@@ -334,6 +340,9 @@ class _Hyperopt:
         """
         Name of the hyperparameter optimization.
         This is used to uniquely identify it on the engine.
+
+        Returns:
+            The name of the hyperparameter optimization.
         """
         return self._id
 
@@ -344,6 +353,9 @@ class _Hyperopt:
         """
         Returns the ID of the hyperparameter optimization.
         The name property is kept for backward compatibility.
+
+        Returns:
+            The name of the hyperparameter optimization.
         """
         return self._id
 
@@ -353,7 +365,6 @@ class _Hyperopt:
         """Reloads the hyperparameter optimization from the engine.
 
         Returns:
-            [`Pipeline`][getml.Pipeline]:
                 Current instance
 
         """
@@ -363,18 +374,24 @@ class _Hyperopt:
     # ------------------------------------------------------------
 
     @property
-    def score(self):
+    def score(self) -> str:
         """
         The score to be optimized.
+
+        Returns:
+            The score to be optimized.
         """
         return self._score
 
     # ------------------------------------------------------------
 
     @property
-    def type(self):
+    def type(self) -> str:
         """
         The algorithm used for the hyperparameter optimization.
+
+        Returns:
+            The algorithm used for the hyperparameter optimization.
         """
         return self._type
 
@@ -389,11 +406,11 @@ class GaussianHyperparameterSearch(_Hyperopt):
     After a burn-in period,
     a Gaussian process is used to pick the most promising
     parameter combination to be evaluated next based on the knowledge gathered
-    throughout previous evaluations. Accessing the quality of potential
+    throughout previous evaluations. Assessing the quality of potential
     combinations will be done using the expected information (EI).
 
     Args:
-        param_space (dict):
+        param_space:
             Dictionary containing numerical arrays of length two
             holding the lower and upper bounds of all parameters which
             will be altered in `pipeline` during the hyperparameter
@@ -402,50 +419,50 @@ class GaussianHyperparameterSearch(_Hyperopt):
             If we have two feature learners and one predictor,
             the hyperparameter space might look like this:
 
-
-
-                param_space = {
-                    "feature_learners": [
-                        {
-                            "num_features": [10, 50],
-                        },
-                        {
-                            "max_depth": [1, 10],
-                            "min_num_samples": [100, 500],
-                            "num_features": [10, 50],
-                            "reg_lambda": [0.0, 0.1],
-                            "shrinkage": [0.01, 0.4]
-                        }],
-                    "predictors": [
-                        {
-                            "reg_lambda": [0.0, 10.0]
-                        }
-                    ]
-                }
+            ```python
+            param_space = {
+                "feature_learners": [
+                    {
+                        "num_features": [10, 50],
+                    },
+                    {
+                        "max_depth": [1, 10],
+                        "min_num_samples": [100, 500],
+                        "num_features": [10, 50],
+                        "reg_lambda": [0.0, 0.1],
+                        "shrinkage": [0.01, 0.4]
+                    }],
+                "predictors": [
+                    {
+                        "reg_lambda": [0.0, 10.0]
+                    }
+                ]
+            }
+            ```
 
             If we only want to optimize the predictor, then
             we can leave out the feature learners.
 
-        pipeline ([`Pipeline`][getml.Pipeline]):
+        pipeline:
             Base pipeline used to derive all models fitted and scored
             during the hyperparameter optimization. Be careful when
             constructing it since only the parameters present in
             `param_space` will be overwritten. It defines the data
             schema and any hyperparameters that are not optimized.
 
-        score (str, optional):
+        score:
             The score to optimize. Must be from
             [`metrics`][getml.pipeline.metrics].
 
-        n_iter (int, optional):
+        n_iter:
             Number of iterations in the hyperparameter optimization
             and thus the number of parameter combinations to draw and
             evaluate. Range: [1, $\infty$]
 
-        seed (int, optional):
+        seed:
             Seed used for the random number generator that underlies
             the sampling procedure to make the calculation
-            reproducable. Due to nature of the underlying algorithm,
+            reproducible. Due to nature of the underlying algorithm,
             this is only the case if the fit is done without
             multithreading. To reflect this, a `seed` of None
             is only allowed to be set
@@ -457,7 +474,7 @@ class GaussianHyperparameterSearch(_Hyperopt):
             1. Internally, a `seed` of None will be mapped to
             5543. Range: [0, $\infty$]
 
-        ratio_iter (float, optional):
+        ratio_iter:
             Ratio of the iterations used for the burn-in.
             For a `ratio_iter` of 1.0, all iterations will be
             spent in the burn-in period resulting in an equivalence of
@@ -472,18 +489,18 @@ class GaussianHyperparameterSearch(_Hyperopt):
             the less likely it is that the Gaussian process gets stuck in
             local minima.
 
-        optimization_algorithm (string, optional):
+        optimization_algorithm:
             Determines the optimization algorithm used for the local
             search in the optimization of the expected information
             (EI). Must be from
             [`optimization`][getml.hyperopt.optimization].
 
-        optimization_burn_in_algorithm (string, optional):
+        optimization_burn_in_algorithm :
             Specifies the algorithm used to draw initial points in the
             burn-in period of the optimization of the expected
             information (EI). Must be from [`burn_in`][getml.hyperopt.burn_in].
 
-        optimization_burn_ins (int, optional):
+        optimization_burn_ins:
             Number of random evaluation points used during the burn-in
             of the minimization of the expected information (EI).
             After the surrogate model - the Gaussian process - was
@@ -494,38 +511,38 @@ class GaussianHyperparameterSearch(_Hyperopt):
             GaussianProcess itself, this requires a burn-in phase.
             Range: [3, $\infty$]
 
-        surrogate_burn_in_algorithm (string, optional):
+        surrogate_burn_in_algorithm:
             Specifies the algorithm used to draw new parameter
             combinations during the burn-in period.
             Must be from [`burn_in`][getml.hyperopt.burn_in].
 
-        gaussian_kernel (string, optional):
+        gaussian_kernel:
             Specifies the 1-dimensional kernel of the Gaussian process
             which will be used along each dimension of the parameter
-            space. All of the choices below will result in continuous
+            space. All the choices below will result in continuous
             sample paths and their main difference is the degree of
             smoothness of the results with 'exp' yielding the least
             and 'gauss' yielding the most smooth paths.
             Must be from [`kernels`][getml.hyperopt.kernels].
 
-        gaussian_optimization_algorithm (string, optional):
-            Determines the optimization algorithm used for the local
-            search in the fitting of the Gaussian process to the
-            previous parameter combinations. Must be from
-            [`optimization`][getml.hyperopt.optimization].
-
-        gaussian_optimization_burn_in_algorithm (string, optional):
+        gaussian_optimization_burn_in_algorithm:
             Specifies the algorithm used to draw new parameter
             combinations during the burn-in period of the optimization
             of the Gaussian process.
             Must be from [`burn_in`][getml.hyperopt.burn_in].
 
-        gaussian_optimization_burn_ins (int, optional):
+        gaussian_optimization_algorithm:
+            Determines the optimization algorithm used for the local
+            search in the fitting of the Gaussian process to the
+            previous parameter combinations. Must be from
+            [`optimization`][getml.hyperopt.optimization].
+
+        gaussian_optimization_burn_ins:
             Number of random evaluation points used during the burn-in
             of the fitting of the Gaussian process. Range: [3,
             $\infty$]
 
-        early_stopping (bool, optional):
+        early_stopping:
             Whether you want to apply early stopping to the predictors.
 
     Note:
@@ -718,20 +735,20 @@ class GaussianHyperparameterSearch(_Hyperopt):
         self,
         param_space: Dict[str, Any],
         pipeline: Pipeline,
-        score=metrics.rmse,
-        n_iter=100,
-        seed=5483,
-        ratio_iter=0.80,
-        optimization_algorithm=nelder_mead,
-        optimization_burn_in_algorithm=latin_hypercube,
-        optimization_burn_ins=500,
-        surrogate_burn_in_algorithm=latin_hypercube,
-        gaussian_kernel=matern52,
-        gaussian_optimization_burn_in_algorithm=latin_hypercube,
-        gaussian_optimization_algorithm=nelder_mead,
-        gaussian_optimization_burn_ins=500,
-        gaussian_nugget=50,
-        early_stopping=True,
+        score:str=metrics.rmse,
+        n_iter:int=100,
+        seed:int=5483,
+        ratio_iter:float=0.80,
+        optimization_algorithm:str=nelder_mead,
+        optimization_burn_in_algorithm:str=latin_hypercube,
+        optimization_burn_ins:int=500,
+        surrogate_burn_in_algorithm:str=latin_hypercube,
+        gaussian_kernel:str=matern52,
+        gaussian_optimization_burn_in_algorithm:str=latin_hypercube,
+        gaussian_optimization_algorithm:str=nelder_mead,
+        gaussian_optimization_burn_ins:int=500,
+        gaussian_nugget:int=50,
+        early_stopping:bool=True,
     ):
         super().__init__(
             param_space=param_space,
@@ -770,7 +787,7 @@ class GaussianHyperparameterSearch(_Hyperopt):
 
     # ------------------------------------------------------------
 
-    def validate(self):
+    def validate(self) -> None:
         """
         Validate the parameters of the hyperparameter optimization.
         """
@@ -797,8 +814,8 @@ class LatinHypercubeSearch(_Hyperopt):
     space, and a random search, which draws completely random samples
     from the hyperparameter space.
 
-    Attributes:
-        param_space (dict):
+    Args:
+        param_space:
             Dictionary containing numerical arrays of length two
             holding the lower and upper bounds of all parameters which
             will be altered in `pipeline` during the hyperparameter
@@ -807,47 +824,47 @@ class LatinHypercubeSearch(_Hyperopt):
             If we have two feature learners and one predictor,
             the hyperparameter space might look like this:
 
-
-
-                param_space = {
-                    "feature_learners": [
-                        {
-                            "num_features": [10, 50],
-                        },
-                        {
-                            "max_depth": [1, 10],
-                            "min_num_samples": [100, 500],
-                            "num_features": [10, 50],
-                            "reg_lambda": [0.0, 0.1],
-                            "shrinkage": [0.01, 0.4]
-                        }],
-                    "predictors": [
-                        {
-                            "reg_lambda": [0.0, 10.0]
-                        }
-                    ]
-                }
+            ```python
+            param_space = {
+                "feature_learners": [
+                    {
+                        "num_features": [10, 50],
+                    },
+                    {
+                        "max_depth": [1, 10],
+                        "min_num_samples": [100, 500],
+                        "num_features": [10, 50],
+                        "reg_lambda": [0.0, 0.1],
+                        "shrinkage": [0.01, 0.4]
+                    }],
+                "predictors": [
+                    {
+                        "reg_lambda": [0.0, 10.0]
+                    }
+                ]
+            }
+            ```
 
             If we only want to optimize the predictor, then
             we can leave out the feature learners.
 
-        pipeline ([`Pipeline`][getml.Pipeline]):
+        pipeline:
             Base pipeline used to derive all models fitted and scored
             during the hyperparameter optimization. Be careful in
             constructing it since only those parameters present in
             `param_space` will be overwritten. It defines the data
             schema and any hyperparameters that are not optimized.
 
-        score (str, optional):
+        score:
             The score to optimize. Must be from
             [`metrics`][getml.pipeline.metrics].
 
-        n_iter (int, optional):
+        n_iter:
             Number of iterations in the hyperparameter optimization
             and thus the number of parameter combinations to draw and
             evaluate. Range: [1, $\infty$]
 
-        seed (int, optional):
+        seed:
             Seed used for the random number generator that underlies
             the sampling procedure to make the calculation
             reproducible. Due to nature of the underlying algorithm
@@ -981,9 +998,9 @@ class LatinHypercubeSearch(_Hyperopt):
         self,
         param_space: Dict[str, Any],
         pipeline: Pipeline,
-        score=metrics.rmse,
-        n_iter=100,
-        seed=5483,
+        score:str=metrics.rmse,
+        n_iter:int=100,
+        seed:int=5483,
         **kwargs,
     ):
         super().__init__(
@@ -1014,7 +1031,7 @@ class LatinHypercubeSearch(_Hyperopt):
 
     # ------------------------------------------------------------
 
-    def validate(self):
+    def validate(self) -> None:
         """
         Validate the parameters of the hyperparameter optimization.
         """
@@ -1040,8 +1057,8 @@ class RandomSearch(_Hyperopt):
     by uniformly drawing a random value in between the lower and upper
     bound for each dimension of `param_space` independently.
 
-    Attributes:
-        param_space (dict):
+    Args:
+        param_space:
             Dictionary containing numerical arrays of length two
             holding the lower and upper bounds of all parameters which
             will be altered in `pipeline` during the hyperparameter
@@ -1050,47 +1067,46 @@ class RandomSearch(_Hyperopt):
             If we have two feature learners and one predictor,
             the hyperparameter space might look like this:
 
-
-
-                param_space = {
-                    "feature_learners": [
-                        {
-                            "num_features": [10, 50],
-                        },
-                        {
-                            "max_depth": [1, 10],
-                            "min_num_samples": [100, 500],
-                            "num_features": [10, 50],
-                            "reg_lambda": [0.0, 0.1],
-                            "shrinkage": [0.01, 0.4]
-                        }],
-                    "predictors": [
-                        {
-                            "reg_lambda": [0.0, 10.0]
-                        }
-                    ]
-                }
-
+            ```python
+            param_space = {
+                "feature_learners": [
+                    {
+                        "num_features": [10, 50],
+                    },
+                    {
+                        "max_depth": [1, 10],
+                        "min_num_samples": [100, 500],
+                        "num_features": [10, 50],
+                        "reg_lambda": [0.0, 0.1],
+                        "shrinkage": [0.01, 0.4]
+                    }],
+                "predictors": [
+                    {
+                        "reg_lambda": [0.0, 10.0]
+                    }
+                ]
+            }
+            ```
             If we only want to optimize the predictor, then
             we can leave out the feature learners.
 
-        pipeline ([`Pipeline`][getml.Pipeline]):
+        pipeline:
             Base pipeline used to derive all models fitted and scored
             during the hyperparameter optimization. Be careful in
             constructing it since only those parameters present in
             `param_space` will be overwritten. It defines the data
             schema and any hyperparameters that are not optimized.
 
-        score (str, optional):
+        score:
             The score to optimize. Must be from
             [`metrics`][getml.pipeline.metrics].
 
-        n_iter (int, optional):
+        n_iter:
             Number of iterations in the hyperparameter optimization
             and thus the number of parameter combinations to draw and
             evaluate. Range: [1, $\infty$]
 
-        seed (int, optional):
+        seed:
             Seed used for the random number generator that underlies
             the sampling procedure to make the calculation
             reproducible. Due to nature of the underlying algorithm
@@ -1107,8 +1123,6 @@ class RandomSearch(_Hyperopt):
 
     Example:
         ```python
-
-
 
         from getml import data
         from getml import datasets
@@ -1227,9 +1241,9 @@ class RandomSearch(_Hyperopt):
         self,
         param_space: Dict[str, Any],
         pipeline: Pipeline,
-        score=metrics.rmse,
-        n_iter=100,
-        seed=5483,
+        score:str=metrics.rmse,
+        n_iter:int=100,
+        seed:int=5483,
         **kwargs,
     ):
         super().__init__(
@@ -1260,7 +1274,7 @@ class RandomSearch(_Hyperopt):
 
     # ------------------------------------------------------------
 
-    def validate(self):
+    def validate(self) -> None:
         """
         Validate the parameters of the hyperparameter optimization.
         """

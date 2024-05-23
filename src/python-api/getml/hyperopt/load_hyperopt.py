@@ -7,12 +7,8 @@
 
 
 """Loads a hyperparameter optimization object from the getML engine into Python."""
-
-from getml.data import Placeholder
-from getml.pipeline import Pipeline
-from getml.predictors import LinearRegression
+from typing import Union
 from getml.pipeline.helpers2 import _make_dummy
-
 
 from .hyperopt import (
     GaussianHyperparameterSearch,
@@ -22,15 +18,15 @@ from .hyperopt import (
 )
 
 
-def load_hyperopt(name):
+def load_hyperopt(name: str) -> Union[GaussianHyperparameterSearch, LatinHypercubeSearch, RandomSearch]:
     """Loads a hyperparameter optimization object from the getML engine into Python.
 
     Args:
-        name (str):
+        name:
             The name of the hyperopt to be loaded.
 
     Returns:
-        A [`GaussianHyperparameterSearch`][getml.hyperopt.GaussianHyperparameterSearch] that is a handler for the pipeline signified by name.
+        The hyperopt object.
 
     Note:
         Not supported in the getML community edition.

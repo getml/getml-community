@@ -50,11 +50,11 @@ def list_hyperopts():
 # --------------------------------------------------------------------
 
 
-def exists(name):
+def exists(name: str) -> bool:
     """Determines whether a hyperopt exists.
 
     Args:
-        name (str): The name of the hyperopt.
+        name: The name of the hyperopt.
 
     Returns:
         A boolean indicating whether a hyperopt named *name* exists.
@@ -68,12 +68,12 @@ def exists(name):
 # --------------------------------------------------------------------
 
 
-def delete(name):
+def delete(name: str) -> None:
     """
     If a hyperopt named 'name' exists, it is deleted.
 
     Args:
-        name (str): The name of the hyperopt.
+        name: The name of the hyperopt.
     """
 
     if not exists(name):
