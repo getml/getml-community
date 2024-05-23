@@ -20,8 +20,6 @@ import pandas as pd  # type: ignore
 import pyarrow
 
 import getml.communication as comm
-import pyspark.sql
-from getml import DataFrame
 from getml.data.columns import StringColumn, StringColumnView
 from getml.database import Connection
 from getml.log import logger
@@ -143,7 +141,7 @@ class View:
 
     def __init__(
         self,
-        base: Union[DataFrame, "View"],
+        base: Union["DataFrame", "View"],
         name: Optional[str] = None,
         subselection: Optional[Union[
             BooleanColumnView, FloatColumn, FloatColumnView
@@ -312,7 +310,7 @@ class View:
     # ------------------------------------------------------------
 
     @property
-    def base(self) -> Union[DataFrame, "View"]:
+    def base(self) -> Union["DataFrame", "View"]:
         """
         The basis on which the view is created. Must be a
         [`DataFrame`][getml.DataFrame] or a [`View`][getml.data.View].
@@ -767,7 +765,7 @@ class View:
 
     # ----------------------------------------------------------------
 
-    def to_pyspark(self, spark: pyspark.sql.SparkSession, name: Optional[str]=None) -> pyspark.sql.DataFrame:
+    def to_pyspark(self, spark: "pyspark.sql.SparkSession", name: Optional[str]=None) -> "pyspark.sql.DataFrame":
         """Creates a `pyspark.sql.DataFrame` from the current instance.
 
         Loads the underlying data from the getML engine and constructs
