@@ -11,7 +11,7 @@ A gradient boosting model for predicting regression problems.
 """
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Literal
 
 from .predictor import _Predictor
 from .xgboost_classifier import _validate_xgboost_parameters
@@ -319,7 +319,7 @@ Args:
     normalize_type: str = "tree"
     num_parallel_tree: int = 1
     n_jobs: int = 1
-    objective: str = "reg:squarederror"
+    objective: Literal["reg:squarederror", "reg:tweedie", "reg:linear"] = "reg:squarederror"
     one_drop: bool = False
     rate_drop: float = 0.0
     reg_alpha: float = 0.0

@@ -12,7 +12,7 @@ A gradient boosting model for predicting classification problems.
 
 import numbers
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Literal
 
 import numpy as np
 
@@ -533,7 +533,7 @@ Args:
     normalize_type: str = "tree"
     num_parallel_tree: int = 1
     n_jobs: int = 1
-    objective: str = "binary:logistic"
+    objective: Literal["reg:logistic", "binary:logistic", "binary:logitraw"] = "binary:logistic"
     one_drop: bool = False
     rate_drop: float = 0.0
     reg_alpha: float = 0.0

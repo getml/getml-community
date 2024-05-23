@@ -12,7 +12,7 @@ A gradient boosting model for predicting classification problems.
 
 import numbers
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Literal
 
 import numpy as np
 
@@ -278,12 +278,8 @@ Args:
 
         Possible values:
 
-        * `reg:logistic`
-        * `reg:squarederror`
-        * `reg:tweedie`
-        * `reg:linear`
         * `binary:logistic`
-        * `binary:logitraw`
+
 
     reg_lambda:
         L2 regularization on the weights. Please refer to
@@ -314,7 +310,7 @@ Args:
     min_child_weights: float = 1.0
     n_estimators: int = 100
     n_jobs: int = 1
-    objective: str = "binary:logistic"
+    objective: Literal["binary:logistic"] = "binary:logistic"
     reg_lambda: float = 1.0
     seed: int = 5843
 

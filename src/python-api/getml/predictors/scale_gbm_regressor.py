@@ -11,6 +11,7 @@ A gradient boosting model for predicting regression problems.
 """
 
 from dataclasses import dataclass
+from typing import Literal
 
 from .predictor import _Predictor
 from .scale_gbm_classifier import _validate_scalegbm_parameters
@@ -211,7 +212,7 @@ Args:
     min_child_weights: float = 1.0
     n_estimators: int = 100
     n_jobs: int = 1
-    objective: str = "reg:squarederror"
+    objective: Literal["reg:squarederror"] = "reg:squarederror"
     reg_lambda: float = 1.0
     seed: int = 5843
 
