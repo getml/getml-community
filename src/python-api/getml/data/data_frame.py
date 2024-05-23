@@ -18,7 +18,6 @@ from typing import Any, Dict, List, Optional, Union, Literal
 import numpy as np
 import pandas as pd  # type: ignore
 import pyarrow as pa  # type: ignore
-import pyspark.sql
 
 import getml.communication as comm
 from getml import constants, database
@@ -807,7 +806,7 @@ class DataFrame:
     def drop(
         self,
         cols: Union[
-            FloatColumn, StringColumn, str, List[FloatColumn, StringColumn, str]
+            FloatColumn, StringColumn, str, List[Union[FloatColumn, StringColumn, str]]
         ],
     ) -> View:
         """Returns a new [`View`][getml.data.View] that has one or several columns removed.
@@ -1559,7 +1558,7 @@ class DataFrame:
     @classmethod
     def from_pyspark(
         cls,
-        spark_df: pyspark.sql.DataFrame,
+        spark_df: "pyspark.sql.DataFrame",
         name: str,
         roles: Optional[Union[dict[str, List[str]], Roles]] = None,
         ignore: bool = False,
@@ -2060,7 +2059,7 @@ class DataFrame:
 
     # --------------------------------------------------------------------------
 
-    def read_arrow(self, table: pyarrow.Table, append: bool = False) -> "DataFrame":
+    def read_arrow(self, table: pa.Table, append: bool = False) -> "DataFrame":
         """Uploads a `pyarrow.Table`.
 
         Replaces the actual content of the underlying data frame in
@@ -2793,7 +2792,7 @@ class DataFrame:
     # --------------------------------------------------------------------------
 
     def read_pyspark(
-        self, spark_df: pyspark.sql.DataFrame, append: bool = False
+        self, spark_df: "pyspark.sql.DataFrame", append: bool = False
     ) -> "DataFrame":
         """Uploads a `pyspark.sql.DataFrame`.
 
@@ -3420,8 +3419,8 @@ class DataFrame:
 
     # ----------------------------------------------------------------
     def to_pyspark(
-        self, spark: pyspark.sql.SparkSession, name: Optional[str] = None
-    ) -> pyspark.sql.DataFrame:
+        self, spark: "pyspark.sql.SparkSession", name: Optional[str] = None
+    ) -> "pyspark.sql.DataFrame":
         """Creates a `pyspark.sql.DataFrame` from the current instance.
 
         Loads the underlying data from the getML engine and constructs
