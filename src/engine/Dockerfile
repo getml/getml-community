@@ -175,7 +175,7 @@ ARG NJOBS XGBOOST_DIR ENGINE_REPO_SOURCE
 ARG CCACHE_DIR="$XGBOOST_DIR/ccache"
 COPY $ENGINE_REPO_SOURCE/dependencies.json ./dependencies.json
 RUN export XGBOOST_VERSION=$(sed -n -e 's/\s*"xgboost".*"\(.*\)".*/\1/p' ./dependencies.json) && \
-    git clone --recurse-submodules --remote-submodules --depth 1 --branch v${XGBOOST_VERSION} https://github.com/dmlc/xgboost $XGBOOST_DIR
+    git clone --recurse-submodules --depth 1 --branch v${XGBOOST_VERSION} https://github.com/dmlc/xgboost $XGBOOST_DIR
 WORKDIR $XGBOOST_DIR/build
 RUN --mount=type=cache,target=$CCACHE_DIR \
     source scl_source enable gcc-toolset-13 \
