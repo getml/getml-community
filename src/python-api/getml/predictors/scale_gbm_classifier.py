@@ -280,7 +280,6 @@ Args:
 
         * `binary:logistic`
 
-
     reg_lambda:
         L2 regularization on the weights. Please refer to
         the introductory remarks to understand how this

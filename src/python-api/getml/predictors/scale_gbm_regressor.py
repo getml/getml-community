@@ -177,12 +177,7 @@ Args:
 
         Possible values:
 
-        * `reg:logistic`
         * `reg:squarederror`
-        * `reg:tweedie`
-        * `reg:linear`
-        * `binary:logistic`
-        * `binary:logitraw`
 
     reg_lambda:
         L2 regularization on the weights. Please refer to
