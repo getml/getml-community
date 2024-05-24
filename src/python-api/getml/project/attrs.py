@@ -11,6 +11,7 @@ Handles access to project-related information.
 """
 
 from sys import modules
+from typing import Optional
 
 import getml.communication as comm
 from getml.engine import is_engine_alive, is_monitor_alive, list_projects
@@ -76,21 +77,21 @@ def _name():
 
 
 @module_function
-def load(bundle, name=None):
+def load(bundle: str, name: Optional[str]=None) -> None:
     """
     Loads a project from a bundle and connects to it.
 
     Args:
-        bundle (str): The `.getml` bundle file to load.
+        bundle: The `.getml` bundle file to load.
 
-        name (str): A name for the project contained in the bundle.
+        name: A name for the project contained in the bundle.
           If None, the name will be extracted from the bundle.
     """
     return comm._load_project(bundle, name)
 
 
 @module_function
-def delete():
+def delete() -> None:
     """
     Deletes the currently connected project. All related pipelines,
     data frames and hyperopts will be irretrievably deleted.
@@ -99,7 +100,7 @@ def delete():
 
 
 @module_function
-def restart():
+def restart() -> None:
     """
     Suspends and then relaunches the currently connected project.
     This will kill all jobs currently running on that process.
@@ -108,23 +109,23 @@ def restart():
 
 
 @module_function
-def save(filename=None, target_dir=None, replace=True):
+def save(filename: Optional[str]=None, target_dir: Optional[str]=None, replace: bool=True) -> None:
     """
     Saves the currently connected project to disk.
 
     Args:
-        filename (str): The name of the `.getml` bundle file
+        filename: The name of the `.getml` bundle file
 
-        target_dir (str): the directory to save the bundle to.
+        target_dir: the directory to save the bundle to.
           If None, the current working directory is used.
 
-        replace (bool): Whether to replace an existing bundle.
+        replace: Whether to replace an existing bundle.
     """
     return comm._save_project(_name(), filename, target_dir, replace)
 
 
 @module_function
-def suspend():
+def suspend() -> None:
     """
     Suspends the currently connected project.
     """
@@ -132,7 +133,7 @@ def suspend():
 
 
 @module_function
-def switch(name):
+def switch(name: str) -> None:
     """Creates a new project or loads an existing one.
 
     If there is no project called `name` present on the engine, a new one will
@@ -140,7 +141,7 @@ def switch(name):
     information.
 
     Args:
-        name (str): Name of the new project.
+        name: Name of the new project.
     """
     comm._set_project(name)
 
