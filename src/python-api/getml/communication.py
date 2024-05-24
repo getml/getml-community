@@ -135,7 +135,7 @@ def _make_error_msg():
 # --------------------------------------------------------------------
 
 
-def engine_exception_handler(msg: str, fallback=""):
+def engine_exception_handler(msg: str, fallback: str="") -> None:
     """Looks at the error message thrown by the engine and decides whether
     to throw a corresponding Exception using the same string or
     altering the message first.
@@ -143,8 +143,9 @@ def engine_exception_handler(msg: str, fallback=""):
     In either way, this function will always throw some sort of Exception.
 
     Args:
-        msg (str): Error message returned by the getML engine.
-        fallback (str):
+        msg: Error message returned by the getML engine.
+
+        fallback:
             If not empty, the default Exception will carry this
             string.
     """
@@ -158,8 +159,17 @@ def engine_exception_handler(msg: str, fallback=""):
 # --------------------------------------------------------------------
 
 
-def recv_data(sock: socket.socket, size: Union[numbers.Real, int]):
-    """Receives data (of any type) sent by the getml engine."""
+def recv_data(sock: socket.socket, size: Union[numbers.Real, int]) -> bytes:
+    """Receives data (of any type) sent by the getml engine.
+
+    Args:
+        sock: The socket to receive the data from.
+
+        size: The size of the data to receive.
+
+    Returns:
+        The received data.
+    """
 
     if not isinstance(sock, socket.socket):
         raise TypeError("'sock' must be a socket.")
@@ -195,9 +205,15 @@ def recv_data(sock: socket.socket, size: Union[numbers.Real, int]):
 # --------------------------------------------------------------------
 
 
-def recv_float_matrix(sock: socket.socket):
+def recv_float_matrix(sock: socket.socket) -> np.ndarray:
     """
     Receives a matrix (type np.float64) from the getml engine.
+
+    Args:
+        sock: The socket to receive the matrix from.
+
+    Returns:
+        The received matrix.
     """
 
     if not isinstance(sock, socket.socket):
@@ -237,9 +253,15 @@ def recv_float_matrix(sock: socket.socket):
 # --------------------------------------------------------------------
 
 
-def recv_bytestring(sock: socket.socket):
+def recv_bytestring(sock: socket.socket) -> bytes:
     """
     Receives a bytestring from the getml engine.
+
+    Args:
+        sock: The socket to receive the bytestring from.
+
+    Returns:
+        The received bytestring.
     """
 
     if not isinstance(sock, socket.socket):
@@ -259,10 +281,16 @@ def recv_bytestring(sock: socket.socket):
 # --------------------------------------------------------------------
 
 
-def recv_string(sock: socket.socket):
+def recv_string(sock: socket.socket) -> str:
     """
     Receives a string from the getml engine
     (an actual string, not a bytestring).
+
+    Args:
+        sock: The socket to receive the string from.
+
+    Returns:
+        The received string.
     """
 
     if not isinstance(sock, socket.socket):
@@ -288,9 +316,15 @@ def recv_string(sock: socket.socket):
 # --------------------------------------------------------------------
 
 
-def recv_string_column(sock: socket.socket):
+def recv_string_column(sock: socket.socket) -> np.ndarray:
     """
     Receives a column of type string from the getml engine
+
+    Args:
+        sock: The socket to receive the column from.
+
+    Returns:
+        A numpy array containing the column.
     """
 
     if not isinstance(sock, socket.socket):
@@ -334,6 +368,12 @@ class _Issue(NamedTuple):
 def recv_issues(sock: socket.socket) -> List[_Issue]:
     """
     Receives a set of warnings to raise from the getml engine.
+
+    Args:
+        sock: The socket to receive the warnings from.
+
+    Returns:
+        A list of warnings.
     """
 
     if not isinstance(sock, socket.socket):
@@ -359,7 +399,7 @@ def recv_issues(sock: socket.socket) -> List[_Issue]:
 # --------------------------------------------------------------------
 
 
-def send(cmd: Dict[str, Any]):
+def send(cmd: Dict[str, Any]) -> None:
     """Sends a command to the getml engine and closes the established
     connection.
 
@@ -380,7 +420,7 @@ def send(cmd: Dict[str, Any]):
     of the socket communication! The engine is quite sensitive and might freeze.
 
     Args:
-        cmd (dict): A dictionary specifying the command the engine is
+        cmd: A dictionary specifying the command the engine is
             supposed to execute. It _must_ contain at least two string
             values with the corresponding keys being named "name_" and
             "type_".
@@ -437,7 +477,7 @@ def send_and_get_socket(cmd: Dict[str, Any]) -> socket.socket:
     handle them and might block.
 
     Args:
-        cmd (dict): A dictionary specifying the command the engine is
+        cmd: A dictionary specifying the command the engine is
             supposed to execute. It _must_ contain at least two string
             values with the corresponding keys being named "name_" and
             "type_"."
@@ -467,10 +507,15 @@ def send_and_get_socket(cmd: Dict[str, Any]) -> socket.socket:
 # --------------------------------------------------------------------
 
 
-def send_string(sock: socket.socket, string: str):
+def send_string(sock: socket.socket, string: str) -> None:
     """
     Sends a string to the getml engine
     (an actual string, not a bytestring).
+
+    Args:
+        sock: The socket to send the string to.
+
+        string: The string to send.
     """
 
     if not isinstance(sock, socket.socket):
@@ -499,6 +544,9 @@ def send_string(sock: socket.socket, string: str):
 def log(sock: socket.socket):
     """
     Prints all the logs received by the socket.
+
+    Args:
+        sock: The socket to receive the logs from.
     """
 
     pbar: Optional[_ProgressBar] = None

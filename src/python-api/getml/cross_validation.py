@@ -11,6 +11,7 @@ Conducts a cross validation.
 """
 
 from copy import deepcopy
+from typing import Union
 
 from getml.pipeline import Pipeline
 from getml.data import DataFrame, View
@@ -18,9 +19,23 @@ from getml.data.split import random
 from getml.pipeline.scores_container import Scores
 
 
-def cross_validation(pipeline, population, peripheral, n_folds=10, seed=5849):
+def cross_validation(pipeline: Pipeline, population: Union[DataFrame, View], peripheral: DataFrame, n_folds: int=10, seed: int=5849) -> Scores:
     """
     Conducts a cross validation.
+
+    Args:
+        pipeline: The pipeline to be cross-validated.
+
+        population: The data to be cross-validated.
+
+        peripheral: The peripheral data to be used during cross-validation.
+
+        n_folds: The number of folds to be used for cross-validation.
+
+        seed: The seed to be used for the random number generator.
+
+    Returns:
+        The scores of the cross-validation.
     """
 
     if not isinstance(pipeline, Pipeline):
