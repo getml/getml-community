@@ -33,15 +33,15 @@ def _retrieve_scripts(folder: str, file_type: str) -> List[str]:
 # ----------------------------------------------------------------------------
 
 
-def execute(conn: sqlite3.Connection, fname: str):
+def execute(conn: sqlite3.Connection, fname: str) -> None:
     """
     Executes an SQL script or several SQL scripts on SQLite3.
 
     Args:
-        conn (sqlite3.Connection):
+        conn:
             A sqlite3 connection created by [`connect`][getml.sqlite3.connect].
 
-        fname (str):
+        fname:
             The names of the SQL script or a folder containing SQL scripts.
             If you decide to pass a folder, the SQL scripts must have the ending '.sql'.
     """

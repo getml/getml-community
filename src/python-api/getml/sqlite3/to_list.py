@@ -24,7 +24,7 @@ def _handle_query(query):
 # ----------------------------------------------------------------------------
 
 
-def to_list(conn, query):
+def to_list(conn: sqlite3.Connection, query: str) -> tuple[list[str], list[list]]:
     """
     Transforms a query or table into a list of lists. Returns
     a tuple which contains the column names and the actual data.
@@ -33,10 +33,13 @@ def to_list(conn, query):
         conn:
             A sqlite3 connection created by [`connect`][getml.sqlite3.connect].
 
-        query (str):
+        query:
             The query used to get the table. You can also
             pass the name of the table, in which case the entire
             table will be imported.
+
+    Returns:
+            The column names and the data as a list of lists.
     """
     # ------------------------------------------------------------
 

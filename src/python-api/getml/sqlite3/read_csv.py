@@ -13,6 +13,7 @@ into sqlite3.
 
 import csv
 import sqlite3
+from typing import Union, Optional, List
 
 from getml.data.helpers import _is_typed_list, _is_non_empty_typed_list
 
@@ -35,53 +36,50 @@ def _read_csv_file(fname, sep, quotechar, header, skip=0):
 
 
 def read_csv(
-    conn,
-    fnames,
-    table_name,
-    header=True,
-    if_exists="append",
-    quotechar='"',
-    sep=",",
-    skip=0,
-    colnames=None,
-):
+    conn: sqlite3.Connection,
+    fnames: Union[str, list[str]],
+    table_name: str,
+    header: bool=True,
+    if_exists: str="append",
+    quotechar: str='"',
+    sep: str=",",
+    skip: int=0,
+    colnames: Optional[List[str]]=None,
+) -> None:
     """
     Reads a list of CSV files and writes them into an sqlite3 table.
 
     Args:
-        conn (sqlite3.Connection):
+        conn:
             A sqlite3 connection created by [`connect`][getml.sqlite3.connect].
 
-        fnames (str or List[str]):
+        fnames:
             The names of the CSV files.
 
-        fnames (str or List[str]):
-            The names of the CSV files.
-
-        table_name (str):
+        table_name:
             The name of the table to write to.
 
-        header (bool):
+        header:
             Whether the csv file contains a header. If True, the first line
             is skipped and column names are inferred accordingly.
 
-        quotechar (str):
+        quotechar:
             The string escape character.
 
-        if_exists (str):
+        if_exists:
             How to behave if the table already exists:
 
             - 'fail': Raise a ValueError.
             - 'replace': Drop the table before inserting new values.
             - 'append': Insert new values to the existing table.
 
-        sep (str):
+        sep:
             The field separator.
 
-        skip (int):
+        skip:
             The number of lines to skip (before a possible header)
 
-        colnames (List[str] or None, optional):
+        colnames:
             The first line of a CSV file
             usually contains the column names. When this is not the case, you can
             explicitly pass them. If you pass colnames, it is assumed that the

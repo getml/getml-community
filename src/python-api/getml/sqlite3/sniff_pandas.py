@@ -21,19 +21,18 @@ from .helpers import _generate_schema, _is_int_type
 # ----------------------------------------------------------------------------
 
 
-def sniff_pandas(table_name: str, data_frame: str) -> str:
+def sniff_pandas(table_name: str, data_frame: pd.DataFrame) -> str:
     """
     Sniffs a pandas data frame.
 
     Args:
-        table_name (str):
+        table_name:
             Name of the table in which the data is to be inserted.
 
-        data_frame (pandas.DataFrame):
+        data_frame:
             The pandas.DataFrame to read into the table.
 
     Returns:
-        str:
             Appropriate `CREATE TABLE` statement.
     """
     # ------------------------------------------------------------
