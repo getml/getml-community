@@ -13,6 +13,7 @@ into sqlite3.
 
 import numbers
 import sqlite3
+from typing import Literal
 
 import pandas as pd  # type: ignore
 
@@ -21,7 +22,7 @@ from .read_list import read_list
 from .sniff_pandas import sniff_pandas
 
 
-def read_pandas(conn, table_name, data_frame, if_exists="append"):
+def read_pandas(conn: sqlite3.Connection, table_name: str, data_frame: pd.DataFrame, if_exists: Literal['fail', 'replace', 'append']="append") -> None:
     """
     Loads a pandas.DataFrame into SQLite3.
 
@@ -29,16 +30,16 @@ def read_pandas(conn, table_name, data_frame, if_exists="append"):
         conn:
             A sqlite3 connection created by [`connect`][getml.sqlite3.connect].
 
-        table_name (str):
+        table_name:
             The name of the table to write to.
 
-        data_frame (pandas.DataFrame):
+        data_frame:
             The pandas.DataFrame to read
             into the table. The column names must match the column
             names of the target table in the SQLite3 database, but
             their order is not important.
 
-        if_exists (str):
+        if_exists:
             How to behave if the table already exists:
 
             - 'fail': Raise a ValueError.

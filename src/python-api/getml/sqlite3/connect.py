@@ -67,7 +67,7 @@ from .var import _Var
 from .variation_coefficient import _VariationCoefficient
 
 
-def connect(database: str):
+def connect(database: str) -> sqlite3.Connection:
     """
     Generates a new sqlite3 connection.
 
@@ -78,9 +78,13 @@ def connect(database: str):
     the Python standard library.
 
     Args:
-        database (str):
+        database:
             Filename of the database. Use ':memory:' to
             create an in-memory database.
+
+    Returns:
+            A new sqlite3 connection with all custom
+                functions and aggregations registered.
     """
 
     if not isinstance(database, str):

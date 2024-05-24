@@ -11,11 +11,12 @@ Reads data into an sqlite3 table.
 """
 
 import sqlite3
+from typing import List, Any
 
 from .helpers import _get_num_columns, _log
 
 
-def read_list(conn, table_name, data):
+def read_list(conn: sqlite3.Connection, table_name: str, data: List[List[Any]]) -> None:
     """
     Reads data into an sqlite3 table.
 
@@ -23,10 +24,10 @@ def read_list(conn, table_name, data):
         conn:
             A sqlite3 connection created by [`connect`][getml.sqlite3.connect].
 
-        table_name (str):
+        table_name:
             The name of the table to write to.
 
-        data (List[List[Object]]):
+        data:
             The data to insert into the table.
             Every list represents one row to be read into the table.
     """

@@ -17,7 +17,7 @@ import pandas as pd  # type: ignore
 from .to_list import to_list
 
 
-def to_pandas(conn, query):
+def to_pandas(conn: sqlite3.Connection, query: str) -> pd.DataFrame:
     """
     Returns a table as a pandas.DataFrame.
 
@@ -25,10 +25,13 @@ def to_pandas(conn, query):
         conn:
             A sqlite3 connection created by [`connect`][getml.sqlite3.connect].
 
-        query (str):
+        query:
             The query used to get the table. You can also
             pass the name of the table, in which case the entire
             table will be imported.
+
+    Returns:
+            The table as a pandas.DataFrame.
     """
     # ------------------------------------------------------------
 

@@ -9,6 +9,7 @@
 """
 Contains utility functions for sniffing sqlite data types from CSV files.
 """
+from typing import Union, Optional, List
 
 import pandas as pd  # type: ignore
 
@@ -20,50 +21,49 @@ from .sniff_pandas import sniff_pandas
 
 
 def sniff_csv(
-    fnames,
-    table_name,
-    header=True,
-    num_lines_sniffed=1000,
-    quotechar='"',
-    sep=",",
-    skip=0,
-    colnames=None,
-):
+    fnames: Union[str, list[str]],
+    table_name: str,
+    header: bool=True,
+    num_lines_sniffed: int=1000,
+    quotechar: str='"',
+    sep: str=",",
+    skip: int=0,
+    colnames: Optional[List[str]]=None,
+) -> str:
     """
     Sniffs a list of csv files.
 
     Args:
-        fnames (List[str]):
+        fnames:
             The list of CSV file names to be read.
 
-        table_name (str):
+        table_name:
             Name of the table in which the data is to be inserted.
 
-        header (bool):
+        header:
             Whether the csv file contains a header. If True, the first line
             is skipped and column names are inferred accordingly.
 
-        num_lines_sniffed (int, optional):
+        num_lines_sniffed:
             Number of lines analyzed by the sniffer.
 
-        quotechar (str, optional):
+        quotechar:
             The character used to wrap strings.
 
-        sep (str, optional):
+        sep:
             The separator used for separating fields.
 
-        skip (int, optional):
+        skip:
             Number of lines to skip at the beginning of each
             file.
 
-        colnames (List[str], optional):
+        colnames:
             The first line of a CSV file
             usually contains the column names. When this is not the case, you can
             explicitly pass them. If you pass colnames, it is assumed that the
             CSV files do not contain a header, thus overriding the 'header' variable.
 
     Returns:
-        str:
             Appropriate `CREATE TABLE` statement.
     """
 
