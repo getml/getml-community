@@ -12,6 +12,7 @@ A simple linear regression model for predicting regression problems.
 
 import numbers
 from dataclasses import dataclass
+from typing import Optional
 
 import numpy as np
 
@@ -50,12 +51,12 @@ If you decide to pass [categorical features][annotating-data-categorical] to the
 numerically. Otherwise, it will be trained arithmetically.
 
 Args:
-    learning_rate (float, optional):
+    learning_rate:
         The learning rate used for training numerically (only
         relevant when categorical features are included). Range:
         (0, $\infty$]
 
-    reg_lambda (float, optional):
+    reg_lambda:
         L2 regularization parameter. Range: [0, $\infty$]
 
 
@@ -69,12 +70,12 @@ Args:
 
     # ----------------------------------------------------------------
 
-    def validate(self, params=None):
+    def validate(self, params: Optional[dict]=None):
         """Checks both the types and the values of all instance
         variables and raises an exception if something is off.
 
         Args:
-            params (dict, optional): A dictionary containing
+            params: A dictionary containing
                 the parameters to validate. If nothing is passed,
                 the default parameters will be validated.
 
@@ -105,7 +106,7 @@ Args:
 # ------------------------------------------------------------------------------
 
 
-def _validate_linear_model_parameters(parameters):
+def _validate_linear_model_parameters(parameters:dict):
     """Checks both the types and values of the `parameters` and raises an
     exception if something is off.
 
