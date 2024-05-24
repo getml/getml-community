@@ -17,15 +17,15 @@ from getml.sqlite3.helpers import _log
 from getml.sqlite3.execute import _retrieve_scripts
 
 
-def execute(spark, fname):
+def execute(spark: "pyspark.sql.session.SparkSession", fname: str) -> None:
     """
     Executes an SQL script or several SQL scripts on Spark.
 
     Args:
-        spark (pyspark.sql.session.SparkSession):
+        spark:
             The spark session.
 
-        fname (str):
+        fname:
             The names of the SQL script or a folder containing SQL scripts.
             If you decide to pass a folder, the SQL scripts must have the ending '.sql'.
     """
