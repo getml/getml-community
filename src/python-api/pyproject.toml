@@ -86,6 +86,22 @@ getml = [
     ".getML/**/*",
 ]
 
+[tool.ruff.lint]
+ignore = [
+  # Allow over
+  "A003",
+  # Allow non-abstract empty methods in abstract base classes
+  "B027",
+  # Allow for string literals in exceptions
+  "EM",
+  # Allow boolean positional values in function calls, like `dict.get(... True)`
+  "FBT003",
+  # Ignore checks for possible passwords
+  "S105", "S106", "S107",
+  # Ignore complexity
+  "C901", "PLR0911", "PLR0912", "PLR0913", "PLR0915",
+]
+
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
