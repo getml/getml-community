@@ -21,7 +21,11 @@ from getml.data.helpers import _is_typed_list
 
 
 def random(
-    seed: int=5849, train: float=0.8, test: float=0.2, validation: float=0, **kwargs: float
+    seed: int = 5849,
+    train: float = 0.8,
+    test: float = 0.2,
+    validation: float = 0,
+    **kwargs: float,
 ) -> StringColumnView:
     """
     Returns a [`StringColumnView`][getml.data.columns.StringColumnView] that

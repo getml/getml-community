@@ -34,7 +34,6 @@ class _Predictor(ABC):
     # ----------------------------------------------------------------
 
     def __post_init__(self):
-
         type(self)._supported_params = set(vars(self).keys())
 
         self.validate()
@@ -58,7 +57,6 @@ class _Predictor(ABC):
         # ------------------------------------------------------------
 
         for kkey in self.__dict__:
-
             if kkey not in other.__dict__:
                 return False
 

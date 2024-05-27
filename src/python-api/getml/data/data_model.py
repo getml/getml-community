@@ -12,7 +12,7 @@ A container for the placeholders.
 
 from copy import deepcopy
 from inspect import cleandoc
-from typing import Union, List
+from typing import List, Union
 
 from getml.utilities.formatting import _Formatter
 
@@ -24,141 +24,141 @@ from .staging import _make_staging_overview
 
 class DataModel:
     """
-Abstract representation of the relationship between tables.
+    Abstract representation of the relationship between tables.
 
-You might also want to refer to [`Placeholder`][getml.data.Placeholder].
+    You might also want to refer to [`Placeholder`][getml.data.Placeholder].
 
-Attributes:
-    population:
-        The placeholder representing the population table,
-        which defines the
-        [statistical population](https://en.wikipedia.org/wiki/Statistical_population)
-        and contains the targets.
+    Attributes:
+        population:
+            The placeholder representing the population table,
+            which defines the
+            [statistical population](https://en.wikipedia.org/wiki/Statistical_population)
+            and contains the targets.
 
-Example:
-    This example will construct a data model in which the
-    'population_table' depends on the 'peripheral_table' via
-    the 'join_key' column. In addition, only those rows in
-    'peripheral_table' for which 'time_stamp' is smaller or
-    equal to the 'time_stamp' in 'population_table' are considered:
-    ```python
-    dm = getml.data.DataModel(
-        population_table.to_placeholder("POPULATION")
-    )
-
-    dm.add(peripheral_table.to_placeholder("PERIPHERAL"))
-
-    dm.POPULATION.join(
-        dm.PERIPHERAL,
-        on="join_key",
-        time_stamps="time_stamp"
-    )
-    ```
-    If you want to add more than one peripheral table, you can
-    use [`to_placeholder`][getml.data.to_placeholder]:
-    ```python
-    dm = getml.data.DataModel(
-        population_table.to_placeholder("POPULATION")
-    )
-
-    dm.add(
-        getml.data.to_placeholder(
-            PERIPHERAL1=peripheral_table_1,
-            PERIPHERAL2=peripheral_table_2,
+    Example:
+        This example will construct a data model in which the
+        'population_table' depends on the 'peripheral_table' via
+        the 'join_key' column. In addition, only those rows in
+        'peripheral_table' for which 'time_stamp' is smaller or
+        equal to the 'time_stamp' in 'population_table' are considered:
+        ```python
+        dm = getml.data.DataModel(
+            population_table.to_placeholder("POPULATION")
         )
-    )
-    ```
-    If the relationship between two tables is many-to-one or one-to-one
-    you should clearly say so:
-    ```python
-    dm.POPULATION.join(
-        dm.PERIPHERAL,
-        on="join_key",
-        time_stamps="time_stamp",
-        relationship=getml.data.relationship.many_to_one,
-    )
-    ```
-    Please also refer to [`relationship`][getml.data.relationship].
 
-    If the join keys or time stamps are named differently in the two
-    different tables, use a tuple:
-    ```python
-    dm.POPULATION.join(
-        dm.PERIPHERAL,
-        on=("join_key", "other_join_key"),
-        time_stamps=("time_stamp", "other_time_stamp"),
-    )
-    ```
-    You can join over more than one join key:
-    ```python
-    dm.POPULATION.join(
-        dm.PERIPHERAL,
-        on=["join_key1", "join_key2", ("join_key3", "other_join_key3")],
-        time_stamps="time_stamp",
-    )
-    ```
-    You can also limit the scope of your joins using *memory*. This
-    can significantly speed up training time. For instance, if you
-    only want to consider data from the last seven days, you could
-    do something like this:
-    ```python
-    dm.POPULATION.join(
-        dm.PERIPHERAL,
-        on="join_key",
-        time_stamps="time_stamp",
-        memory=getml.data.time.days(7),
-    )
-    ```
-    In some use cases, particularly those involving time series, it
-    might be a good idea to use targets from the past. You can activate
-    this using *lagged_targets*. But if you do that, you must
-    also define a prediction *horizon*. For instance, if you want to
-    predict data for the next hour, using data from the last seven days,
-    you could do this:
-    ```python
-    dm.POPULATION.join(
-        dm.PERIPHERAL,
-        on="join_key",
-        time_stamps="time_stamp",
-        lagged_targets=True,
-        horizon=getml.data.time.hours(1),
-        memory=getml.data.time.days(7),
-    )
-    ```
-    Please also refer to [`time`][getml.data.time].
+        dm.add(peripheral_table.to_placeholder("PERIPHERAL"))
 
-    If the join involves many matches, it might be a good idea to set the
-    relationship to [`propositionalization`][getml.data.relationship.propositionalization].
-    This forces the pipeline to always use a propositionalization
-    algorithm for this join, which can significantly speed things up.
-    ```python
-    dm.POPULATION.join(
-        dm.PERIPHERAL,
-        on="join_key",
-        time_stamps="time_stamp",
-        relationship=getml.data.relationship.propositionalization,
+        dm.POPULATION.join(
+            dm.PERIPHERAL,
+            on="join_key",
+            time_stamps="time_stamp"
         )
-    ```
-
-    Please also refer to [`relationship`][getml.data.relationship].
-
-    In some cases, it is necessary to have more than one placeholder
-    on the same table. This is necessary to create more complicated
-    data models. In this case, you can do something like this:
-    ```python
-    dm.add(
-        getml.data.to_placeholder(
-            PERIPHERAL=[peripheral_table]*2,
+        ```
+        If you want to add more than one peripheral table, you can
+        use [`to_placeholder`][getml.data.to_placeholder]:
+        ```python
+        dm = getml.data.DataModel(
+            population_table.to_placeholder("POPULATION")
         )
-    )
 
-    # We can now access our two placeholders like this:
-    placeholder1 = dm.PERIPHERAL[0]
-    placeholder2 = dm.PERIPHERAL[1]
-    ```
-        If you want to check out a real-world example where this
-        is necessary, refer to the
-        [CORA notebook](https://nbviewer.getml.com/github/getml/getml-demo/blob/master/cora.ipynb).
+        dm.add(
+            getml.data.to_placeholder(
+                PERIPHERAL1=peripheral_table_1,
+                PERIPHERAL2=peripheral_table_2,
+            )
+        )
+        ```
+        If the relationship between two tables is many-to-one or one-to-one
+        you should clearly say so:
+        ```python
+        dm.POPULATION.join(
+            dm.PERIPHERAL,
+            on="join_key",
+            time_stamps="time_stamp",
+            relationship=getml.data.relationship.many_to_one,
+        )
+        ```
+        Please also refer to [`relationship`][getml.data.relationship].
+
+        If the join keys or time stamps are named differently in the two
+        different tables, use a tuple:
+        ```python
+        dm.POPULATION.join(
+            dm.PERIPHERAL,
+            on=("join_key", "other_join_key"),
+            time_stamps=("time_stamp", "other_time_stamp"),
+        )
+        ```
+        You can join over more than one join key:
+        ```python
+        dm.POPULATION.join(
+            dm.PERIPHERAL,
+            on=["join_key1", "join_key2", ("join_key3", "other_join_key3")],
+            time_stamps="time_stamp",
+        )
+        ```
+        You can also limit the scope of your joins using *memory*. This
+        can significantly speed up training time. For instance, if you
+        only want to consider data from the last seven days, you could
+        do something like this:
+        ```python
+        dm.POPULATION.join(
+            dm.PERIPHERAL,
+            on="join_key",
+            time_stamps="time_stamp",
+            memory=getml.data.time.days(7),
+        )
+        ```
+        In some use cases, particularly those involving time series, it
+        might be a good idea to use targets from the past. You can activate
+        this using *lagged_targets*. But if you do that, you must
+        also define a prediction *horizon*. For instance, if you want to
+        predict data for the next hour, using data from the last seven days,
+        you could do this:
+        ```python
+        dm.POPULATION.join(
+            dm.PERIPHERAL,
+            on="join_key",
+            time_stamps="time_stamp",
+            lagged_targets=True,
+            horizon=getml.data.time.hours(1),
+            memory=getml.data.time.days(7),
+        )
+        ```
+        Please also refer to [`time`][getml.data.time].
+
+        If the join involves many matches, it might be a good idea to set the
+        relationship to [`propositionalization`][getml.data.relationship.propositionalization].
+        This forces the pipeline to always use a propositionalization
+        algorithm for this join, which can significantly speed things up.
+        ```python
+        dm.POPULATION.join(
+            dm.PERIPHERAL,
+            on="join_key",
+            time_stamps="time_stamp",
+            relationship=getml.data.relationship.propositionalization,
+            )
+        ```
+
+        Please also refer to [`relationship`][getml.data.relationship].
+
+        In some cases, it is necessary to have more than one placeholder
+        on the same table. This is necessary to create more complicated
+        data models. In this case, you can do something like this:
+        ```python
+        dm.add(
+            getml.data.to_placeholder(
+                PERIPHERAL=[peripheral_table]*2,
+            )
+        )
+
+        # We can now access our two placeholders like this:
+        placeholder1 = dm.PERIPHERAL[0]
+        placeholder2 = dm.PERIPHERAL[1]
+        ```
+            If you want to check out a real-world example where this
+            is necessary, refer to the
+            [CORA notebook](https://nbviewer.getml.com/github/getml/getml-demo/blob/master/cora.ipynb).
     """
 
     def __init__(self, population: Union[Placeholder, str]):

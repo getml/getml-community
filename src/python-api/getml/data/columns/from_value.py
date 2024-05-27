@@ -15,7 +15,7 @@ from typing import Union
 
 import numpy as np
 
-from .columns import FloatColumnView, StringColumnView, BooleanColumnView, _value_to_cmd
+from .columns import BooleanColumnView, FloatColumnView, StringColumnView, _value_to_cmd
 
 # -----------------------------------------------------------------------------
 

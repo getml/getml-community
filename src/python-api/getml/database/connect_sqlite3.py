@@ -11,7 +11,6 @@ Creates a new SQLite3 database connection.
 """
 
 import os
-
 from typing import Any, Dict, List, Optional
 
 import getml.communication as comm

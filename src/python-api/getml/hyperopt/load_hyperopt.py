@@ -7,7 +7,9 @@
 
 
 """Loads a hyperparameter optimization object from the getML engine into Python."""
+
 from typing import Union
+
 from getml.pipeline.helpers2 import _make_dummy
 
 from .hyperopt import (
@@ -18,7 +20,9 @@ from .hyperopt import (
 )
 
 
-def load_hyperopt(name: str) -> Union[GaussianHyperparameterSearch, LatinHypercubeSearch, RandomSearch]:
+def load_hyperopt(
+    name: str,
+) -> Union[GaussianHyperparameterSearch, LatinHypercubeSearch, RandomSearch]:
     """Loads a hyperparameter optimization object from the getML engine into Python.
 
     Args:

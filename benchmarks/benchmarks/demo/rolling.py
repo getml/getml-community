@@ -1,6 +1,7 @@
 """
 Utilties for rolling data frames.
 """
+
 import warnings
 from typing import Generic, Iterator, NamedTuple, Optional, TypeVar
 

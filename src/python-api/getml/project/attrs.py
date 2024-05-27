@@ -24,7 +24,6 @@ _props = []
 
 
 def __getattr__(key):
-
     if key in _functions:
         return getattr(modules.get(__name__), key)
 
@@ -77,7 +76,7 @@ def _name():
 
 
 @module_function
-def load(bundle: str, name: Optional[str]=None) -> None:
+def load(bundle: str, name: Optional[str] = None) -> None:
     """
     Loads a project from a bundle and connects to it.
 
@@ -109,7 +108,11 @@ def restart() -> None:
 
 
 @module_function
-def save(filename: Optional[str]=None, target_dir: Optional[str]=None, replace: bool=True) -> None:
+def save(
+    filename: Optional[str] = None,
+    target_dir: Optional[str] = None,
+    replace: bool = True,
+) -> None:
     """
     Saves the currently connected project to disk.
 

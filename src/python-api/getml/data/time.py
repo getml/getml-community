@@ -54,7 +54,7 @@ def minutes(num: float) -> float:
 # --------------------------------------------------------------------------
 
 
-def hours(num: float)  -> float:
+def hours(num: float) -> float:
     """
     Expresses *num* hours in terms of seconds.
 
@@ -139,7 +139,15 @@ def microseconds(num: float) -> float:
 # --------------------------------------------------------------------------
 
 
-def datetime(year: int, month: int, day: int, hour: int=0, minute: int=0, second: int=0, microsecond: int=0) -> float:
+def datetime(
+    year: int,
+    month: int,
+    day: int,
+    hour: int = 0,
+    minute: int = 0,
+    second: int = 0,
+    microsecond: int = 0,
+) -> float:
     """
     Returns the number of seconds since UNIX time (January 1, 1970, 00:00:00).
 

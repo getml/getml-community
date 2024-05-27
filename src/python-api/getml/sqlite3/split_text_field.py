@@ -12,7 +12,6 @@ This can not be called directly from SQLite3. It is
 a helper function.
 """
 
-
 SEPARATORS = ";,.!?-|\t\"\v\f\r\n%'()[]}{"
 
 

@@ -63,7 +63,6 @@ class _FeatureLearner(ABC):
             return False
 
         for kkey in self.__dict__:
-
             if kkey not in other.__dict__:
                 return False
 
@@ -101,7 +100,6 @@ class _FeatureLearner(ABC):
     # ----------------------------------------------------------------
 
     def _getml_deserialize(self) -> Dict[str, Any]:
-
         # To ensure the getML can handle all keys, we have to add
         # a trailing underscore.
         self_dict = self.__dict__

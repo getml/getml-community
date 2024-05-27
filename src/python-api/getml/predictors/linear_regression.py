@@ -26,38 +26,38 @@ from .predictor import _Predictor
 @dataclass(repr=False)
 class LinearRegression(_Predictor):
     """
-Simple predictor for regression problems.
+    Simple predictor for regression problems.
 
-Learns a simple linear relationship using ordinary least squares (OLS)
-regression:
+    Learns a simple linear relationship using ordinary least squares (OLS)
+    regression:
 
-$$
-\hat{y} = w_0 + w_1 * feature_1 + w_2 * feature_2 + ...
-$$
+    $$
+    \hat{y} = w_0 + w_1 * feature_1 + w_2 * feature_2 + ...
+    $$
 
-The weights are optimized by minimizing the squared loss of the
-predictions $\hat{y}$ w.r.t. the [target][annotating-data-target] $y$.
+    The weights are optimized by minimizing the squared loss of the
+    predictions $\hat{y}$ w.r.t. the [target][annotating-data-target] $y$.
 
-$$
-L(y,\hat{y}) = \\frac{1}{n} \sum_{i=1}^{n} (y_i -\hat{y}_i)^2
-$$
+    $$
+    L(y,\hat{y}) = \\frac{1}{n} \sum_{i=1}^{n} (y_i -\hat{y}_i)^2
+    $$
 
-Linear regressions can be trained arithmetically or numerically.
-Training arithmetically is more accurate, but suffers worse
-scalability.
+    Linear regressions can be trained arithmetically or numerically.
+    Training arithmetically is more accurate, but suffers worse
+    scalability.
 
-If you decide to pass [categorical features][annotating-data-categorical] to the
-[`LinearRegression`][getml.predictors.LinearRegression], it will be trained
-numerically. Otherwise, it will be trained arithmetically.
+    If you decide to pass [categorical features][annotating-data-categorical] to the
+    [`LinearRegression`][getml.predictors.LinearRegression], it will be trained
+    numerically. Otherwise, it will be trained arithmetically.
 
-Args:
-    learning_rate:
-        The learning rate used for training numerically (only
-        relevant when categorical features are included). Range:
-        (0, $\infty$]
+    Args:
+        learning_rate:
+            The learning rate used for training numerically (only
+            relevant when categorical features are included). Range:
+            (0, $\infty$]
 
-    reg_lambda:
-        L2 regularization parameter. Range: [0, $\infty$]
+        reg_lambda:
+            L2 regularization parameter. Range: [0, $\infty$]
 
 
 
@@ -70,7 +70,7 @@ Args:
 
     # ----------------------------------------------------------------
 
-    def validate(self, params: Optional[dict]=None):
+    def validate(self, params: Optional[dict] = None):
         """Checks both the types and the values of all instance
         variables and raises an exception if something is off.
 
@@ -106,7 +106,7 @@ Args:
 # ------------------------------------------------------------------------------
 
 
-def _validate_linear_model_parameters(parameters:dict):
+def _validate_linear_model_parameters(parameters: dict):
     """Checks both the types and values of the `parameters` and raises an
     exception if something is off.
 
@@ -137,7 +137,6 @@ def _validate_linear_model_parameters(parameters:dict):
     # ----------------------------------------------------------------
 
     for kkey in parameters:
-
         if kkey not in allowed_parameters:
             raise KeyError("'unknown parameter: " + kkey)
 

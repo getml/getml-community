@@ -8,8 +8,8 @@
 
 """Contains the actual columns."""
 
-from abc import ABC
 import numbers
+from abc import ABC
 from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
@@ -815,7 +815,7 @@ FloatColumnView.__radd__ = _radd  # type: ignore
 # -----------------------------------------------------------------------------
 
 
-def _assert_equal(self, alias: str="new_column"):
+def _assert_equal(self, alias: str = "new_column"):
     """
     ASSERT EQUAL aggregation.
 
@@ -857,7 +857,7 @@ FloatColumnView.atan = _atan  # type: ignore
 # -----------------------------------------------------------------------------
 
 
-def _avg(self, alias: str="new_column"):
+def _avg(self, alias: str = "new_column"):
     """
     AVG aggregation.
 
@@ -970,7 +970,7 @@ FloatColumnView.cos = _cos  # type: ignore
 # -----------------------------------------------------------------------------
 
 
-def _count(self, alias: str="new_column"):
+def _count(self, alias: str = "new_column"):
     """
     COUNT aggregation.
 
@@ -986,7 +986,7 @@ FloatColumnView.count = _count  # type: ignore
 # -----------------------------------------------------------------------------
 
 
-def _count_categorical(self, alias: str="new_column"):
+def _count_categorical(self, alias: str = "new_column"):
     """
     COUNT aggregation.
 
@@ -1002,7 +1002,7 @@ StringColumnView.count = _count_categorical  # type: ignore
 # -----------------------------------------------------------------------------
 
 
-def _count_distinct(self, alias: str="new_column"):
+def _count_distinct(self, alias: str = "new_column"):
     """
     COUNT DISTINCT aggregation.
 
@@ -1289,7 +1289,7 @@ FloatColumnView.__lt__ = _lt  # type: ignore
 # -----------------------------------------------------------------------------
 
 
-def _max(self, alias: str="new_column"):
+def _max(self, alias: str = "new_column"):
     """
     MAX aggregation.
 
@@ -1305,7 +1305,7 @@ FloatColumnView.max = _max  # type: ignore
 # -----------------------------------------------------------------------------
 
 
-def _median(self, alias: str="new_column"):
+def _median(self, alias: str = "new_column"):
     """
     MEDIAN aggregation.
 
@@ -1531,7 +1531,7 @@ FloatColumnView.sqrt = _sqrt  # type: ignore
 # -----------------------------------------------------------------------------
 
 
-def _stddev(self, alias: str="new_column"):
+def _stddev(self, alias: str = "new_column"):
     """
     STDDEV aggregation.
 
@@ -1662,7 +1662,7 @@ StringColumnView.substr = _substr  # type: ignore
 # -----------------------------------------------------------------------------
 
 
-def _sum(self, alias: str="new_column"):
+def _sum(self, alias: str = "new_column"):
     """
     SUM aggregation.
 
@@ -1729,7 +1729,7 @@ BooleanColumnView.as_str = _as_str  # type: ignore
 # -----------------------------------------------------------------------------
 
 
-def _as_ts(self, time_formats: Optional[Union[str, List[str]]]=None):
+def _as_ts(self, time_formats: Optional[Union[str, List[str]]] = None):
     """
     Transforms a categorical column to a time stamp.
 
@@ -1845,7 +1845,7 @@ StringColumnView.update = _update_str  # type: ignore
 # -----------------------------------------------------------------------------
 
 
-def _var(self, alias: str="new_column"):
+def _var(self, alias: str = "new_column"):
     """
     VAR aggregation.
 
@@ -1881,7 +1881,7 @@ FloatColumnView.weekday = _weekday  # type: ignore
 # -----------------------------------------------------------------------------
 
 
-def _with_subroles_float(self, subroles: Union[str, List[str]], append: bool=True):
+def _with_subroles_float(self, subroles: Union[str, List[str]], append: bool = True):
     """
     Returns a new column with new subroles.
 
@@ -1918,7 +1918,7 @@ FloatColumnView.with_subroles = _with_subroles_float  # type: ignore
 # -----------------------------------------------------------------------------
 
 
-def _with_subroles_string(self, subroles: Union[str, List[str]], append: bool=True):
+def _with_subroles_string(self, subroles: Union[str, List[str]], append: bool = True):
     """
     Returns a new column with new subroles.
 

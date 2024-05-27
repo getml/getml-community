@@ -7,7 +7,6 @@ from time import perf_counter
 from typing import Any, Dict, Generator, List, Optional
 
 import numpy as np
-
 from getml import Pipeline
 from getml.pipeline.metrics import _all_metrics
 
@@ -32,7 +31,6 @@ class Row:
     def to_list(
         self, best_runtime: timedelta, best_runtime_per_feature: timedelta
     ) -> List[Any]:
-
         return [
             self.ds_name,
             self.lib_name,
@@ -78,7 +76,6 @@ class Benchmark:
             return super().__getattribute__(lib_name)
 
     def __repr__(self) -> str:
-
         template = "{:15}  {:12}  {:>8}  {:14}  {:14}  {:20}  {:25} {}"
 
         rows = [_make_row(benchmark) for benchmark in self._data.values()]

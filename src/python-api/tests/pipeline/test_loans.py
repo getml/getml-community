@@ -10,7 +10,6 @@ This is an integration test based on
 the loans dataset.
 """
 
-
 import getml as getml
 
 
@@ -24,12 +23,10 @@ def test_loans():
 
     star_schema = _make_star_schema()
 
-    fast_prop = (
-        getml.feature_learning.FastProp(  # pylint: disable=unexpected-keyword-arg
-            aggregation=getml.feature_learning.FastProp.agg_sets.All,
-            loss_function=getml.feature_learning.loss_functions.CrossEntropyLoss,
-            num_threads=1,
-        )
+    fast_prop = getml.feature_learning.FastProp(  # pylint: disable=unexpected-keyword-arg
+        aggregation=getml.feature_learning.FastProp.agg_sets.All,
+        loss_function=getml.feature_learning.loss_functions.CrossEntropyLoss,
+        num_threads=1,
     )
 
     feature_selector = getml.predictors.XGBoostClassifier(n_jobs=1)

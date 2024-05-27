@@ -10,9 +10,9 @@
 Contains the exponentially weighted moving average aggregations.
 """
 
-import numpy as np
 from typing import Optional
 
+import numpy as np
 
 from .helpers import _not_null
 

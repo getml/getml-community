@@ -50,7 +50,6 @@ from getml.preprocessors.preprocessor import _Preprocessor
 
 from .metadata import AllMetadata, Metadata
 
-
 POPULATION = "[POPULATION]"
 """
 Population marker - the names of the population and peripheral
@@ -267,7 +266,7 @@ def _make_id() -> str:
 
 
 def _parse_fe(
-    dict_: Dict[str, Any]
+    dict_: Dict[str, Any],
 ) -> Union[FastProp, Fastboost, Multirel, Relboost, RelMT]:
     kwargs = _remove_trailing_underscores(dict_)
 
@@ -307,7 +306,7 @@ def _parse_metadata(dict_: Dict[str, Any]) -> Metadata:
 
 
 def _parse_pred(
-    dict_: Dict[str, Any]
+    dict_: Dict[str, Any],
 ) -> Union[
     ScaleGBMClassifier,
     ScaleGBMRegressor,
@@ -347,7 +346,7 @@ def _parse_pred(
 
 
 def _parse_preprocessor(
-    dict_: Dict[str, Any]
+    dict_: Dict[str, Any],
 ) -> Union[
     CategoryTrimmer,
     EmailDomain,

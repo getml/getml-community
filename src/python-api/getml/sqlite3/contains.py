@@ -10,7 +10,6 @@
 Checks whether a textfield contains a certain keyword.
 """
 
-
 from .split_text_field import _split_text_field
 
 

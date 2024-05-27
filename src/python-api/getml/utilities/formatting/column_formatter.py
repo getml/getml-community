@@ -24,7 +24,6 @@ from .helpers import _get_column_content
 
 
 class _ColumnFormatter(_DataFrameFormatter):
-
     max_rows = _DataFrameFormatter.max_rows
 
     template = environment.get_template("column.jinja2")

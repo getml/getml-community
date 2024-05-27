@@ -13,7 +13,7 @@ Special container for star schemata.
 import copy
 from inspect import cleandoc
 from textwrap import indent
-from typing import Union, Optional, Dict
+from typing import Dict, Optional, Union
 
 from getml.data.columns import StringColumnView
 from getml.data.placeholder import OnType, TimeStampsType
@@ -220,7 +220,7 @@ class StarSchema:
         train: Optional[Union[DataFrame, View]] = None,
         validation: Optional[Union[DataFrame, View]] = None,
         test: Optional[Union[DataFrame, View]] = None,
-        **kwargs: Optional[Union[DataFrame, View]]
+        **kwargs: Optional[Union[DataFrame, View]],
     ):
         if (population is None or isinstance(population, View)) and alias is None:
             raise ValueError(

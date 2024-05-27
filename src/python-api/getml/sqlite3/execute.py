@@ -14,7 +14,6 @@ import os
 import sqlite3
 from typing import List
 
-
 from .helpers import _log
 
 # ----------------------------------------------------------------------------

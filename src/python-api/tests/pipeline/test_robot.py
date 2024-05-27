@@ -10,7 +10,6 @@ This is an integration test based on
 the robot dataset.
 """
 
-
 import getml as getml
 
 
@@ -40,11 +39,9 @@ def test_robot():
         memory=30,
     )
 
-    fast_prop = (
-        getml.feature_learning.FastProp(  # pylint: disable=unexpected-keyword-arg
-            loss_function=getml.feature_learning.loss_functions.SquareLoss,
-            num_features=10,
-        )
+    fast_prop = getml.feature_learning.FastProp(  # pylint: disable=unexpected-keyword-arg
+        loss_function=getml.feature_learning.loss_functions.SquareLoss,
+        num_features=10,
     )
 
     xgboost = getml.predictors.XGBoostRegressor()

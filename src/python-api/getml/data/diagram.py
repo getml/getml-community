@@ -188,7 +188,6 @@ def _make_label(content, origin):
 
 
 def _make_arrow(label, origin, target):
-
     adj_origin = (origin[0] + TABLE_HEIGHT / 2 - 2, origin[1] + TABLE_WIDTH)
     adj_target = (target[0], target[1] + TABLE_WIDTH / 2 - 2)
     if origin[0] == target[0]:
@@ -242,7 +241,6 @@ def _split_multiple_join_keys(multiple):
 
 
 def _make_join_keys(placeholder, i):
-
     if constants.JOIN_KEY_SEP in placeholder["join_keys_used_"][i]:
         join_keys = _split_multiple_join_keys(placeholder["join_keys_used_"][i])
         other_join_keys = _split_multiple_join_keys(
@@ -262,7 +260,6 @@ def _make_join_keys(placeholder, i):
 
 
 def _make_time_stamps(placeholder, i):
-
     lower = (
         [
             placeholder["other_time_stamps_used_"][i]
@@ -287,7 +284,6 @@ def _make_time_stamps(placeholder, i):
 
 
 def _make_window(diff, ts_used):
-
     if ts_used == constants.ROWID:
         return str(diff) + " time steps"
 
@@ -310,7 +306,6 @@ def _make_window(diff, ts_used):
 
 
 def _make_label_content(placeholder, i):
-
     jk_used = (
         _make_join_keys(placeholder, i)
         if placeholder["join_keys_used_"][i] != constants.NO_JOIN_KEY
@@ -406,7 +401,6 @@ class _Diagram:
         pos0 = 0
 
         for i, rectangle in enumerate(self.rectangles):
-
             if i > 0 and rectangle["depth"] >= self.rectangles[i - 1]["depth"]:
                 pos0 += 110
 

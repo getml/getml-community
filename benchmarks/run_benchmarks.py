@@ -6,18 +6,18 @@ from typing import Callable, Sequence
 
 from benchmarks import (
     benchmark_air_pollution,
-    benchmark_energy,
     benchmark_dodgers,
+    benchmark_energy,
     benchmark_interstate94,
     benchmark_tetuan,
 )
 from benchmarks.drivers import (
-    drive_getml,
     drive_featuretools,
+    drive_getml,
+    drive_kats,
     drive_tsfel,
     drive_tsflex,
     drive_tsfresh,
-    drive_kats,
 )
 
 RUNS = 1

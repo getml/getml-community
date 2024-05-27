@@ -17,8 +17,8 @@ from .aggregations import _Aggregations
 from .aggregations import multirel as multirel_aggregations
 from .fastprop import FastProp
 from .feature_learner import _FeatureLearner
-from .validation import _validate_multirel_parameters
 from .loss_functions import CrossEntropyLoss, SquareLoss
+from .validation import _validate_multirel_parameters
 
 # --------------------------------------------------------------------
 
@@ -26,169 +26,169 @@ from .loss_functions import CrossEntropyLoss, SquareLoss
 @dataclass(repr=False)
 class Multirel(_FeatureLearner):
     """
-Feature learning based on Multi-Relational Decision Tree Learning.
+    Feature learning based on Multi-Relational Decision Tree Learning.
 
-[`Multirel`][getml.feature_learning.Multirel] automates feature learning
-for relational data and time series. It is based on an efficient
-variation of the Multi-Relational Decision Tree Learning (MRDTL).
+    [`Multirel`][getml.feature_learning.Multirel] automates feature learning
+    for relational data and time series. It is based on an efficient
+    variation of the Multi-Relational Decision Tree Learning (MRDTL).
 
-For more information on the underlying feature learning algorithm, check
-out the User guide: [Multirel][feature-engineering-algorithms-multirel].
-
-
-Attributes:
-    aggregation:
-        Mathematical operations used by the automated feature
-        learning algorithm to create new features.
-
-        Must be from [`aggregations`][getml.feature_learning.aggregations].
-
-    allow_sets:
-        Multirel can summarize different categories into sets for
-        producing conditions. When expressed as SQL statements these
-        sets might look like this:
+    For more information on the underlying feature learning algorithm, check
+    out the User guide: [Multirel][feature-engineering-algorithms-multirel].
 
 
+    Attributes:
+        aggregation:
+            Mathematical operations used by the automated feature
+            learning algorithm to create new features.
 
-            t2.category IN ( 'value_1', 'value_2', ... )
+            Must be from [`aggregations`][getml.feature_learning.aggregations].
 
-        This can be very powerful, but it can also produce
-        features that are hard to read and might be prone to
-        overfitting when the `sampling_factor` is too low.
-
-    delta_t:
-        Frequency with which lag variables will be explored in a
-        time series setting. When set to 0.0, there will be no lag
-        variables.
-
-        For more information please refer to
-        :ref:`data_model_time_series`. Range: [0, $\infty$]
-
-    grid_factor:
-        Multirel will try a grid of critical values for your
-        numerical features. A higher `grid_factor` will lead to a
-        larger number of critical values being considered. This
-        can increase the training time, but also lead to more
-        accurate features. Range: (0, $\infty$]
-
-    loss_function:
-        Objective function used by the feature learning algorithm
-        to optimize your features. For regression problems use
-        [`SquareLoss`][getml.feature_learning.loss_functions.SquareLoss] and for
-        classification problems use
-        [`CrossEntropyLoss`][getml.feature_learning.loss_functions.CrossEntropyLoss].
-
-    max_length:
-        The maximum length a subcondition might have. Multirel
-        will create conditions in the form
+        allow_sets:
+            Multirel can summarize different categories into sets for
+            producing conditions. When expressed as SQL statements these
+            sets might look like this:
 
 
 
-            (condition 1.1 AND condition 1.2 AND condition 1.3 )
-            OR ( condition 2.1 AND condition 2.2 AND condition 2.3 )
-            ...
+                t2.category IN ( 'value_1', 'value_2', ... )
 
-        Using this parameter you can set the maximum number of
-        conditions allowed in the brackets. Range: [0, $\infty$]
+            This can be very powerful, but it can also produce
+            features that are hard to read and might be prone to
+            overfitting when the `sampling_factor` is too low.
 
-    min_df:
-        Only relevant for columns with role [`text`][getml.data.roles.text].
-        The minimum
-        number of fields (i.e. rows) in [`text`][getml.data.roles.text] column a
-        given word is required to appear in to be included in the bag of words.
-        Range: [1, $\infty$]
+        delta_t:
+            Frequency with which lag variables will be explored in a
+            time series setting. When set to 0.0, there will be no lag
+            variables.
 
-    min_num_samples:
-        Determines the minimum number of samples a subcondition
-        should apply to in order for it to be considered. Higher
-        values lead to less complex statements and less danger of
-        overfitting. Range: [1, $\infty$]
+            For more information please refer to
+            :ref:`data_model_time_series`. Range: [0, $\infty$]
 
-    num_features:
-        Number of features generated by the feature learning
-        algorithm. Range: [1, $\infty$]
+        grid_factor:
+            Multirel will try a grid of critical values for your
+            numerical features. A higher `grid_factor` will lead to a
+            larger number of critical values being considered. This
+            can increase the training time, but also lead to more
+            accurate features. Range: (0, $\infty$]
 
-    num_subfeatures:
-        The number of subfeatures you would like to extract in a
-        subensemble (for snowflake data model only). See
-        [Snowflake Schema][data-model-snowflake-schema] for more
-        information. Range: [1, $\infty$]
+        loss_function:
+            Objective function used by the feature learning algorithm
+            to optimize your features. For regression problems use
+            [`SquareLoss`][getml.feature_learning.loss_functions.SquareLoss] and for
+            classification problems use
+            [`CrossEntropyLoss`][getml.feature_learning.loss_functions.CrossEntropyLoss].
 
-    num_threads:
-        Number of threads used by the feature learning algorithm. If set to
-        zero or a negative value, the number of threads will be
-        determined automatically by the getML engine. Range:
-        [$0$, $\infty$]
+        max_length:
+            The maximum length a subcondition might have. Multirel
+            will create conditions in the form
 
-    propositionalization:
-        The feature learner used for joins which are flagged to be
-        propositionalized (by setting a join's `relationship` parameter to
-        [`propositionalization`][getml.data.relationship.propositionalization])
 
-    regularization:
-        Most important regularization parameter for the quality of
-        the features produced by Multirel. Higher values will lead
-        to less complex features and less danger of overfitting. A
-        `regularization` of 1.0 is very strong and allows no
-        conditions. Range: [0, 1]
 
-    round_robin:
-        If True, the Multirel picks a different `aggregation`
-        every time a new feature is generated.
+                (condition 1.1 AND condition 1.2 AND condition 1.3 )
+                OR ( condition 2.1 AND condition 2.2 AND condition 2.3 )
+                ...
 
-    sampling_factor:
-        Multirel uses a bootstrapping procedure (sampling with
-        replacement) to train each of the features. The sampling
-        factor is proportional to the share of the samples
-        randomly drawn from the population table every time
-        Multirel generates a new feature. A lower sampling factor
-        (but still greater than 0.0), will lead to less danger of
-        overfitting, less complex statements and faster
-        training. When set to 1.0, roughly 20,000 samples are drawn
-        from the population table. If the population table
-        contains less than 20,000 samples, it will use standard
-        bagging. When set to 0.0, there will be no sampling at
-        all. Range: [0, $\infty$]
+            Using this parameter you can set the maximum number of
+            conditions allowed in the brackets. Range: [0, $\infty$]
 
-    seed:
-        Seed used for the random number generator that underlies
-        the sampling procedure to make the calculation
-        reproducible. Internally, a `seed` of None will be mapped to
-        5543. Range: [0, $\infty$]
+        min_df:
+            Only relevant for columns with role [`text`][getml.data.roles.text].
+            The minimum
+            number of fields (i.e. rows) in [`text`][getml.data.roles.text] column a
+            given word is required to appear in to be included in the bag of words.
+            Range: [1, $\infty$]
 
-    share_aggregations:
-        Every time a new feature is generated, the `aggregation`
-        will be taken from a random subsample of possible
-        aggregations and values to be aggregated. This parameter
-        determines the size of that subsample. Only relevant when
-        `round_robin` is False. Range: [0, 1]
+        min_num_samples:
+            Determines the minimum number of samples a subcondition
+            should apply to in order for it to be considered. Higher
+            values lead to less complex statements and less danger of
+            overfitting. Range: [1, $\infty$]
 
-    share_conditions:
-        Every time a new column is tested for applying conditions,
-        it might be skipped at random. This parameter determines
-        the probability that a column will *not* be
-        skipped. Range: [0, 1]
+        num_features:
+            Number of features generated by the feature learning
+            algorithm. Range: [1, $\infty$]
 
-    shrinkage:
-        Since Multirel works using a gradient-boosting-like
-        algorithm, `shrinkage` (or learning rate) scales down the
-        weights and thus the impact of each new tree. This gives
-        more room for future ones to improve the overall
-        performance of the model in this greedy algorithm. Higher
-        values will lead to more danger of overfitting. Range: [0,
-        1]
+        num_subfeatures:
+            The number of subfeatures you would like to extract in a
+            subensemble (for snowflake data model only). See
+            [Snowflake Schema][data-model-snowflake-schema] for more
+            information. Range: [1, $\infty$]
 
-    silent:
-        Controls the logging during training.
+        num_threads:
+            Number of threads used by the feature learning algorithm. If set to
+            zero or a negative value, the number of threads will be
+            determined automatically by the getML engine. Range:
+            [$0$, $\infty$]
 
-    vocab_size:
-        Determines the maximum number
-        of words that are extracted in total from [`text`][getml.data.roles.text]
-        columns. This can be interpreted as the maximum size of the bag of words.
-        Range: [0, $\infty$]
+        propositionalization:
+            The feature learner used for joins which are flagged to be
+            propositionalized (by setting a join's `relationship` parameter to
+            [`propositionalization`][getml.data.relationship.propositionalization])
 
-Note:
-    Not supported in the getML community edition.
+        regularization:
+            Most important regularization parameter for the quality of
+            the features produced by Multirel. Higher values will lead
+            to less complex features and less danger of overfitting. A
+            `regularization` of 1.0 is very strong and allows no
+            conditions. Range: [0, 1]
+
+        round_robin:
+            If True, the Multirel picks a different `aggregation`
+            every time a new feature is generated.
+
+        sampling_factor:
+            Multirel uses a bootstrapping procedure (sampling with
+            replacement) to train each of the features. The sampling
+            factor is proportional to the share of the samples
+            randomly drawn from the population table every time
+            Multirel generates a new feature. A lower sampling factor
+            (but still greater than 0.0), will lead to less danger of
+            overfitting, less complex statements and faster
+            training. When set to 1.0, roughly 20,000 samples are drawn
+            from the population table. If the population table
+            contains less than 20,000 samples, it will use standard
+            bagging. When set to 0.0, there will be no sampling at
+            all. Range: [0, $\infty$]
+
+        seed:
+            Seed used for the random number generator that underlies
+            the sampling procedure to make the calculation
+            reproducible. Internally, a `seed` of None will be mapped to
+            5543. Range: [0, $\infty$]
+
+        share_aggregations:
+            Every time a new feature is generated, the `aggregation`
+            will be taken from a random subsample of possible
+            aggregations and values to be aggregated. This parameter
+            determines the size of that subsample. Only relevant when
+            `round_robin` is False. Range: [0, 1]
+
+        share_conditions:
+            Every time a new column is tested for applying conditions,
+            it might be skipped at random. This parameter determines
+            the probability that a column will *not* be
+            skipped. Range: [0, 1]
+
+        shrinkage:
+            Since Multirel works using a gradient-boosting-like
+            algorithm, `shrinkage` (or learning rate) scales down the
+            weights and thus the impact of each new tree. This gives
+            more room for future ones to improve the overall
+            performance of the model in this greedy algorithm. Higher
+            values will lead to more danger of overfitting. Range: [0,
+            1]
+
+        silent:
+            Controls the logging during training.
+
+        vocab_size:
+            Determines the maximum number
+            of words that are extracted in total from [`text`][getml.data.roles.text]
+            columns. This can be interpreted as the maximum size of the bag of words.
+            Range: [0, $\infty$]
+
+    Note:
+        Not supported in the getML community edition.
 
     """
 

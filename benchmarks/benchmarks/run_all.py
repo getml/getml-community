@@ -4,8 +4,8 @@ Runs the benchmark scripts
 
 from .benchmarks import benchmark_interstate94
 from .drivers import (
-    drive_getml,
     drive_featuretools,
+    drive_getml,
     drive_tsfel,
     drive_tsflex,
     drive_tsfresh,

@@ -11,15 +11,15 @@ import string
 
 class CellFormatter(string.Formatter):
     """
-    Custom formatter for cells in output columns. Supports all python-native format specs
-    [https://docs.python.org/3/library/string.html#formatspec](https://docs.python.org/3/library/string.html#formatspec) plus the following custom
-    format specs:
+     Custom formatter for cells in output columns. Supports all python-native format specs
+     [https://docs.python.org/3/library/string.html#formatspec](https://docs.python.org/3/library/string.html#formatspec) plus the following custom
+     format specs:
 
-   - `<w_idth>.<p_recision>fd` (float): like `<w>.<p>f`, but the values of a column are
-     decimal point aligned
+    - `<w_idth>.<p_recision>fd` (float): like `<w>.<p>f`, but the values of a column are
+      decimal point aligned
 
-   - `\<w_idth>.<p_recision>d` (str): formats strings (holdings numbers) in a column on
-     the decimal point by taking into account the precision
+    - `\<w_idth>.<p_recision>d` (str): formats strings (holdings numbers) in a column on
+      the decimal point by taking into account the precision
     """
 
     integer_overhang = 1
@@ -27,7 +27,6 @@ class CellFormatter(string.Formatter):
     # ------------------------------------------------------------
 
     def format_field(self, value, format_spec):
-
         if format_spec.endswith("fd"):
             return self._format_float_decimal_point(value, format_spec)
 

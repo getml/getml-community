@@ -12,16 +12,16 @@ Contains custom class for handling the tables of a pipeline.
 from __future__ import annotations
 
 import re
-from typing import Sequence, Optional, Iterator, Union, Tuple, Callable, Any
+from typing import Any, Callable, Iterator, Optional, Sequence, Tuple, Union
 
 import numpy as np
-from numpy.typing import NDArray
 import pandas as pd  # type: ignore
+from numpy.typing import NDArray
 
 from getml.utilities.formatting import _Formatter
 
-from .table import Table
 from .columns import Columns
+from .table import Table
 
 
 class Tables:

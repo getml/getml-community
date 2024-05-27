@@ -11,7 +11,6 @@ Tests the data frames container.
 """
 
 import numpy as np
-
 from getml import data, datasets, engine, project
 
 

@@ -12,9 +12,8 @@ to make sure that saving and loading pipelines
 works as expected.
 """
 
-import numpy as np
-
 import getml as getml
+import numpy as np
 
 
 def test_save_load():
@@ -29,12 +28,10 @@ def test_save_load():
 
     star_schema = _make_star_schema()
 
-    fast_prop = (
-        getml.feature_learning.FastProp(  # pylint: disable=unexpected-keyword-arg
-            aggregation=getml.feature_learning.FastProp.agg_sets.All,
-            loss_function=getml.feature_learning.loss_functions.CrossEntropyLoss,
-            num_threads=1,
-        )
+    fast_prop = getml.feature_learning.FastProp(  # pylint: disable=unexpected-keyword-arg
+        aggregation=getml.feature_learning.FastProp.agg_sets.All,
+        loss_function=getml.feature_learning.loss_functions.CrossEntropyLoss,
+        num_threads=1,
     )
 
     feature_selector = getml.predictors.XGBoostClassifier(n_jobs=1)

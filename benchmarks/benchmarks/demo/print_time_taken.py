@@ -1,5 +1,4 @@
 def _print_time_taken(begin, end):
-
     seconds = end - begin
 
     hours = int(seconds / 3600)

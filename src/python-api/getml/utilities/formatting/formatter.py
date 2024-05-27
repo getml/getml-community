@@ -10,6 +10,7 @@
 Holds Formatter and FormatColumn classes which are used for formatting tabular output
 within the getML python API.
 """
+
 import datetime
 import html
 import itertools as it

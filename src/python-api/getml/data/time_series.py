@@ -9,7 +9,8 @@
 """
 Special container for time series - abstracts away self-joins.
 """
-from typing import Optional, Union, Dict
+
+from typing import Dict, Optional, Union
 
 from getml.data.columns import StringColumn, StringColumnView
 from getml.data.helpers import OnType
@@ -137,9 +138,8 @@ class TimeSeries(StarSchema):
         memory: Optional[float] = None,
         horizon: Optional[float] = None,
         lagged_targets: bool = False,
-        upper_time_stamp: Optional[str]=None,
+        upper_time_stamp: Optional[str] = None,
     ):
-
         if not isinstance(population, (DataFrame, View)):
             raise TypeError(
                 "'population' must be a getml.DataFrame or a getml.data.View"

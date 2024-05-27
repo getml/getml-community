@@ -10,12 +10,12 @@ from typing import Callable, List, Optional, Union, cast
 import numpy as np
 import pandas as pd  # type: ignore
 from pandas.api.types import is_numeric_dtype  # type: ignore
-from tsflex.features.function_wrapper import FuncWrapper
 from tsflex.features import FeatureCollection, MultipleFeatureDescriptors
+from tsflex.features.function_wrapper import FuncWrapper
 
-from .tsflex_aggregations import make_fastprop_aggregations
 from .print_time_taken import _print_time_taken
 from .tsfel_builder import TSFELBuilder
+from .tsflex_aggregations import make_fastprop_aggregations
 
 # ------------------------------------------------------------------
 
@@ -92,7 +92,6 @@ class TsflexBuilder:
         self.num_features_generated = 0
 
     def _extract_features(self, data_frame: pd.DataFrame) -> pd.DataFrame:
-
         fc = FeatureCollection(
             MultipleFeatureDescriptors(
                 functions=[_wrap_aggregation(agg) for agg in self.aggregations],

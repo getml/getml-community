@@ -204,8 +204,8 @@ class Relboost(_FeatureLearner):
         for kkey in params:
             if kkey not in type(self)._supported_params:
                 raise KeyError(
-                        f"Instance variable '{kkey}' is not supported in {self.type}."
-                        )
+                    f"Instance variable '{kkey}' is not supported in {self.type}."
+                )
 
         # ------------------------------------------------------------
 

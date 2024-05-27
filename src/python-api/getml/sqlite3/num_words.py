@@ -10,7 +10,6 @@
 Counts the number of words in a textfield.
 """
 
-
 from .split_text_field import _split_text_field
 
 

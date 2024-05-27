@@ -27,7 +27,6 @@ Example:
 
 """
 
-
 categorical = "categorical"
 """Marks categorical columns.
 

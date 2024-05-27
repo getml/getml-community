@@ -9,6 +9,7 @@
 """
 Container which holds a project's hyperopts.
 """
+
 from typing import Callable
 
 from getml.hyperopt.helpers import list_hyperopts
@@ -108,7 +109,7 @@ class Hyperopts:
 
     # ----------------------------------------------------------------
 
-    def sort(self, key: Callable, descending: bool=False) -> "Hyperopts":
+    def sort(self, key: Callable, descending: bool = False) -> "Hyperopts":
         """
         Sorts the hyperopts container.
 

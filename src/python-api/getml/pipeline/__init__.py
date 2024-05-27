@@ -273,16 +273,15 @@ Example:
     ```
 """
 
-from . import metrics
-from . import dialect
+from . import dialect, metrics
 from .columns import Columns
-from .tables import Tables
 from .features import Features
 from .helpers2 import delete, exists, list_pipelines, load
 from .pipeline import Pipeline
 from .plots import Plots
 from .scores_container import Scores
 from .sql_code import SQLCode
+from .tables import Tables
 
 __all__ = (
     "delete",

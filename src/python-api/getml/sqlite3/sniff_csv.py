@@ -9,11 +9,12 @@
 """
 Contains utility functions for sniffing sqlite data types from CSV files.
 """
-from typing import Union, Optional, List
+
+from typing import List, Optional, Union
 
 import pandas as pd  # type: ignore
 
-from getml.data.helpers import _is_typed_list, _is_non_empty_typed_list
+from getml.data.helpers import _is_non_empty_typed_list, _is_typed_list
 
 from .sniff_pandas import sniff_pandas
 
@@ -23,12 +24,12 @@ from .sniff_pandas import sniff_pandas
 def sniff_csv(
     fnames: Union[str, list[str]],
     table_name: str,
-    header: bool=True,
-    num_lines_sniffed: int=1000,
-    quotechar: str='"',
-    sep: str=",",
-    skip: int=0,
-    colnames: Optional[List[str]]=None,
+    header: bool = True,
+    num_lines_sniffed: int = 1000,
+    quotechar: str = '"',
+    sep: str = ",",
+    skip: int = 0,
+    colnames: Optional[List[str]] = None,
 ) -> str:
     """
     Sniffs a list of csv files.

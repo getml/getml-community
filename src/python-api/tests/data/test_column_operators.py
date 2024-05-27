@@ -8,11 +8,10 @@
 
 import pathlib
 
-import numpy as np
-
 import getml.data as data
 import getml.data.roles as roles
 import getml.engine as engine
+import numpy as np
 
 
 def test_column_operators():

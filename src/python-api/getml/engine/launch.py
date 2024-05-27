@@ -6,16 +6,16 @@
 #
 
 
+import socket
 from datetime import datetime
-from os import makedirs, listdir
+from functools import partial, reduce
+from os import listdir, makedirs
 from os.path import isdir
-from functools import reduce, partial
 from pathlib import Path
 from platform import system
-import socket
 from subprocess import Popen
 from time import sleep
-from typing import List, NamedTuple, Optional, Union, Dict
+from typing import Dict, List, NamedTuple, Optional, Union
 
 from getml.communication import tcp_port
 from getml.version import __version__

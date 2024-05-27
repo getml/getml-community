@@ -246,7 +246,7 @@ Example:
 
     best_pipeline = gaussian_search.best_pipeline
     ```
-    """
+"""
 
 from .helpers import delete, exists, list_hyperopts
 from .hyperopt import GaussianHyperparameterSearch, LatinHypercubeSearch, RandomSearch

@@ -15,10 +15,9 @@ import numbers
 import pathlib
 import socket
 import sys
-from typing import Any, Dict, List, Optional, NamedTuple, Union
+from typing import Any, Dict, List, NamedTuple, Optional, Union
 
 import numpy as np
-
 
 from .progress_bar import _ProgressBar
 from .version import __version__
@@ -135,7 +134,7 @@ def _make_error_msg():
 # --------------------------------------------------------------------
 
 
-def engine_exception_handler(msg: str, fallback: str="") -> None:
+def engine_exception_handler(msg: str, fallback: str = "") -> None:
     """Looks at the error message thrown by the engine and decides whether
     to throw a corresponding Exception using the same string or
     altering the message first.

@@ -10,7 +10,6 @@ This is an integration test based on
 the Interstate94 dataset.
 """
 
-
 import getml as getml
 
 
@@ -44,12 +43,10 @@ def test_interstate94():
         lagged_targets=True,
     )
 
-    fast_prop = (
-        getml.feature_learning.FastProp(  # pylint: disable=unexpected-keyword-arg
-            loss_function=getml.feature_learning.loss_functions.SquareLoss,
-            num_threads=1,
-            num_features=20,
-        )
+    fast_prop = getml.feature_learning.FastProp(  # pylint: disable=unexpected-keyword-arg
+        loss_function=getml.feature_learning.loss_functions.SquareLoss,
+        num_threads=1,
+        num_features=20,
     )
 
     predictor = getml.predictors.XGBoostRegressor()

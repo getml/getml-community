@@ -13,7 +13,7 @@ import numbers
 import os
 from collections import namedtuple
 from copy import deepcopy
-from typing import Any, Dict, List, Optional, Union, Tuple, Literal
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd  # type: ignore
@@ -143,10 +143,10 @@ class View:
         self,
         base: Union["DataFrame", "View"],
         name: Optional[str] = None,
-        subselection: Optional[Union[
-            BooleanColumnView, FloatColumn, FloatColumnView
-        ]] = None,
-        added: Optional[Dict]=None,
+        subselection: Optional[
+            Union[BooleanColumnView, FloatColumn, FloatColumnView]
+        ] = None,
+        added: Optional[Dict] = None,
         dropped: Optional[List[str]] = None,
     ):
         self._added = added
@@ -458,7 +458,7 @@ class View:
 
     # ------------------------------------------------------------
 
-    def nrows(self, force: bool=False) -> Union[int, str]:
+    def nrows(self, force: bool = False) -> Union[int, str]:
         """
         Returns the number of rows in the current instance.
 
@@ -748,7 +748,11 @@ class View:
 
     # ------------------------------------------------------------
 
-    def to_parquet(self, fname: str, compression: Literal["brotli", "gzip", "lz4", "snappy", "zstd"]="snappy"):
+    def to_parquet(
+        self,
+        fname: str,
+        compression: Literal["brotli", "gzip", "lz4", "snappy", "zstd"] = "snappy",
+    ):
         """
         Writes the underlying data into a newly created parquet file.
 
@@ -765,7 +769,9 @@ class View:
 
     # ----------------------------------------------------------------
 
-    def to_pyspark(self, spark: "pyspark.sql.SparkSession", name: Optional[str]=None) -> "pyspark.sql.DataFrame":
+    def to_pyspark(
+        self, spark: "pyspark.sql.SparkSession", name: Optional[str] = None
+    ) -> "pyspark.sql.DataFrame":
         """Creates a `pyspark.sql.DataFrame` from the current instance.
 
         Loads the underlying data from the getML engine and constructs
@@ -893,7 +899,9 @@ class View:
 
     # ------------------------------------------------------------
 
-    def where(self, index: Optional[Union[BooleanColumnView, FloatColumn, FloatColumnView]]) -> "View":
+    def where(
+        self, index: Optional[Union[BooleanColumnView, FloatColumn, FloatColumnView]]
+    ) -> "View":
         """Extract a subset of rows.
 
         Creates a new [`View`][getml.data.View] as a
@@ -966,18 +974,23 @@ class View:
 
     def with_column(
         self,
-        col:Union[
-        bool,
-        str,
-        float,
-        int,
-        np.datetime64,
-        FloatColumn,
-        FloatColumnView,
-        StringColumn,
-        StringColumnView,
-        BooleanColumnView,
-    ], name: str, role: Optional[Union[dict[str, List[str]], Roles]] =None, unit: Optional[str]="", subroles: Optional[Union[str, List[str]]] =None, time_formats: Optional[List[str]] = None,
+        col: Union[
+            bool,
+            str,
+            float,
+            int,
+            np.datetime64,
+            FloatColumn,
+            FloatColumnView,
+            StringColumn,
+            StringColumnView,
+            BooleanColumnView,
+        ],
+        name: str,
+        role: Optional[Union[dict[str, List[str]], Roles]] = None,
+        unit: Optional[str] = "",
+        subroles: Optional[Union[str, List[str]]] = None,
+        time_formats: Optional[List[str]] = None,
     ) -> "View":
         """Returns a new [`View`][getml.data.View] that contains an additional column.
 
@@ -1066,7 +1079,12 @@ class View:
 
     # ------------------------------------------------------------
 
-    def with_role(self, names: Union[str, List[str]], role: str, time_formats: Optional[List[str]]=None) -> "View":
+    def with_role(
+        self,
+        names: Union[str, List[str]],
+        role: str,
+        time_formats: Optional[List[str]] = None,
+    ) -> "View":
         """Returns a new [`View`][getml.data.View] with modified roles.
 
         When switching from a role based on type float to a role based on type
@@ -1094,7 +1112,12 @@ class View:
 
     # ------------------------------------------------------------
 
-    def with_subroles(self, names: Union[str, List[str]], subroles: Union[str, List[str]], append: bool=True):
+    def with_subroles(
+        self,
+        names: Union[str, List[str]],
+        subroles: Union[str, List[str]],
+        append: bool = True,
+    ):
         """Returns a new view with one or several new subroles on one or more columns.
 
         Args:
@@ -1115,7 +1138,9 @@ class View:
 
     # ------------------------------------------------------------
 
-    def with_unit(self, names: Union[str, List[str]], unit: str, comparison_only: bool=False) -> "View":
+    def with_unit(
+        self, names: Union[str, List[str]], unit: str, comparison_only: bool = False
+    ) -> "View":
         """Returns a view that contains a new unit on one or more columns.
 
         Args:

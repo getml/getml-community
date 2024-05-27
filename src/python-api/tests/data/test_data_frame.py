@@ -9,11 +9,10 @@ import json
 import tempfile
 from typing import Any, Dict
 
+import getml
 import numpy as np
 import pandas as pd  # type: ignore
 import pytest
-
-import getml
 
 
 @pytest.fixture

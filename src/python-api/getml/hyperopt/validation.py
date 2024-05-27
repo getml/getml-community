@@ -75,7 +75,6 @@ def _validate_dimension(subspace, original_subspace):
 
 
 def _validate_components(param_space, original_param_space, components, ltype):
-
     if ltype in original_param_space:
         if len(param_space[ltype]) != len(original_param_space[ltype]):
             raise ValueError("Number of " + ltype + " must stay the same.")
@@ -130,7 +129,6 @@ def _validate_components(param_space, original_param_space, components, ltype):
 
 
 def _validate_param_space(kwargs):
-
     # ----------------------------------------------------------------
 
     pipeline = kwargs["pipeline"]

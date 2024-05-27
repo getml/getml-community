@@ -3,20 +3,20 @@ from typing import Optional, Type, Union
 
 import numpy as np
 import pandas as pd  # type: ignore
-from benchmarks.demo import (
-    Benchmark,
-    CesiumMLBuilder,
-    KATSBuilder,
-    FTTimeSeriesBuilder,
-    TSFELBuilder,
-    TsflexBuilder,
-    TSFreshBuilder,
-)
-
 from getml.data import Container, DataFrame, TimeSeries, View, roles
 from getml.data.columns.columns import StringColumnView
 from getml.pipeline.pipeline import Pipeline
 from getml.predictors.xgboost_regressor import XGBoostRegressor
+
+from benchmarks.demo import (
+    Benchmark,
+    CesiumMLBuilder,
+    FTTimeSeriesBuilder,
+    KATSBuilder,
+    TSFELBuilder,
+    TsflexBuilder,
+    TSFreshBuilder,
+)
 
 
 def _drive_wrapper(
@@ -32,7 +32,6 @@ def _drive_wrapper(
     transform_horizon_memory: bool = True,
     strides: Optional[pd.Timedelta] = None,
 ) -> Benchmark:
-
     dfs_pd = time_series.container.to_pandas()
 
     horizon = (
@@ -56,7 +55,7 @@ def _drive_wrapper(
         allow_lagged_targets=time_series.lagged_targets,
         min_chunksize=min_chunksize,
         n_jobs=n_jobs,
-        **kwargs
+        **kwargs,
     )
 
     features_pd = {}

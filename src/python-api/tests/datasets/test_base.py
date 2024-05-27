@@ -6,10 +6,9 @@
 #
 
 
+import getml
 import pandas as pd  # type: ignore
 import pytest
-
-import getml
 
 
 @pytest.fixture

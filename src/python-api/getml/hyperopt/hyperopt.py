@@ -18,7 +18,7 @@ from typing import Any, Dict, List, Union
 import getml.communication as comm
 from getml.data import Container, StarSchema, TimeSeries
 from getml.data.helpers import _remove_trailing_underscores
-from getml.pipeline import delete, exists, load, metrics, Pipeline
+from getml.pipeline import Pipeline, delete, exists, load, metrics
 from getml.pipeline.helpers import _make_id, _print_time_taken, _transform_peripheral
 from getml.utilities.formatting import _SignatureFormatter
 
@@ -310,9 +310,9 @@ class _Hyperopt:
 
         cmd["population_training_df_"] = population_table_training._getml_deserialize()
 
-        cmd[
-            "population_validation_df_"
-        ] = population_table_validation._getml_deserialize()
+        cmd["population_validation_df_"] = (
+            population_table_validation._getml_deserialize()
+        )
 
         cmd["peripheral_dfs_"] = [
             elem._getml_deserialize() for elem in peripheral_tables
@@ -735,20 +735,20 @@ class GaussianHyperparameterSearch(_Hyperopt):
         self,
         param_space: Dict[str, Any],
         pipeline: Pipeline,
-        score:str=metrics.rmse,
-        n_iter:int=100,
-        seed:int=5483,
-        ratio_iter:float=0.80,
-        optimization_algorithm:str=nelder_mead,
-        optimization_burn_in_algorithm:str=latin_hypercube,
-        optimization_burn_ins:int=500,
-        surrogate_burn_in_algorithm:str=latin_hypercube,
-        gaussian_kernel:str=matern52,
-        gaussian_optimization_burn_in_algorithm:str=latin_hypercube,
-        gaussian_optimization_algorithm:str=nelder_mead,
-        gaussian_optimization_burn_ins:int=500,
-        gaussian_nugget:int=50,
-        early_stopping:bool=True,
+        score: str = metrics.rmse,
+        n_iter: int = 100,
+        seed: int = 5483,
+        ratio_iter: float = 0.80,
+        optimization_algorithm: str = nelder_mead,
+        optimization_burn_in_algorithm: str = latin_hypercube,
+        optimization_burn_ins: int = 500,
+        surrogate_burn_in_algorithm: str = latin_hypercube,
+        gaussian_kernel: str = matern52,
+        gaussian_optimization_burn_in_algorithm: str = latin_hypercube,
+        gaussian_optimization_algorithm: str = nelder_mead,
+        gaussian_optimization_burn_ins: int = 500,
+        gaussian_nugget: int = 50,
+        early_stopping: bool = True,
     ):
         super().__init__(
             param_space=param_space,
@@ -998,9 +998,9 @@ class LatinHypercubeSearch(_Hyperopt):
         self,
         param_space: Dict[str, Any],
         pipeline: Pipeline,
-        score:str=metrics.rmse,
-        n_iter:int=100,
-        seed:int=5483,
+        score: str = metrics.rmse,
+        n_iter: int = 100,
+        seed: int = 5483,
         **kwargs,
     ):
         super().__init__(
@@ -1241,9 +1241,9 @@ class RandomSearch(_Hyperopt):
         self,
         param_space: Dict[str, Any],
         pipeline: Pipeline,
-        score:str=metrics.rmse,
-        n_iter:int=100,
-        seed:int=5483,
+        score: str = metrics.rmse,
+        n_iter: int = 100,
+        seed: int = 5483,
         **kwargs,
     ):
         super().__init__(

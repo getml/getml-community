@@ -28,7 +28,6 @@ the analysis and interaction with the database are provided.
 
 """
 
-from .helpers import _load_to_buffer, _retrieve_temp_dir, _retrieve_url, _retrieve_urls
 from .connect_bigquery import connect_bigquery
 from .connect_greenplum import connect_greenplum
 from .connect_hana import connect_hana
@@ -43,6 +42,7 @@ from .drop_table import drop_table
 from .execute import execute
 from .get import get
 from .get_colnames import get_colnames
+from .helpers import _load_to_buffer, _retrieve_temp_dir, _retrieve_url, _retrieve_urls
 from .list_connections import list_connections
 from .list_tables import list_tables
 from .read_csv import read_csv

@@ -14,7 +14,7 @@ not meant to be used by the end user.
 from typing import List, Optional, Tuple
 
 from .placeholder import Join, Placeholder
-from .relationship import many_to_one, one_to_one, _all_relationships
+from .relationship import _all_relationships, many_to_one, one_to_one
 
 # ------------------------------------------------------------------
 

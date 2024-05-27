@@ -13,13 +13,19 @@ Conducts a cross validation.
 from copy import deepcopy
 from typing import Union
 
-from getml.pipeline import Pipeline
 from getml.data import DataFrame, View
 from getml.data.split import random
+from getml.pipeline import Pipeline
 from getml.pipeline.scores_container import Scores
 
 
-def cross_validation(pipeline: Pipeline, population: Union[DataFrame, View], peripheral: DataFrame, n_folds: int=10, seed: int=5849) -> Scores:
+def cross_validation(
+    pipeline: Pipeline,
+    population: Union[DataFrame, View],
+    peripheral: DataFrame,
+    n_folds: int = 10,
+    seed: int = 5849,
+) -> Scores:
     """
     Conducts a cross validation.
 

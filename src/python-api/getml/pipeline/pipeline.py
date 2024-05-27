@@ -19,39 +19,45 @@ import numbers
 import socket
 import time
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Sequence, Union, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 from numpy.typing import NDArray
 
 import getml.communication as comm
 from getml import data
-from getml.data import DataModel, _decode_data_model, _decode_placeholder
+from getml.data import (
+    DataModel,
+    Placeholder,
+    Roles,
+    View,
+    _decode_data_model,
+    _decode_placeholder,
+)
 from getml.data.data_frame import DataFrame
 from getml.data.helpers import (
     _is_subclass_list,
     _is_typed_list,
     _remove_trailing_underscores,
 )
-from getml.data import Placeholder, Roles, View
 from getml.feature_learning import (
-    _FeatureLearner,
-    FastProp,
     Fastboost,
+    FastProp,
     Multirel,
     Relboost,
     RelMT,
+    _FeatureLearner,
 )
 from getml.feature_learning.loss_functions import _classification_loss
 from getml.predictors import (
-    _classification_types,
-    _Predictor,
     LinearRegression,
     LogisticRegression,
-    XGBoostClassifier,
-    XGBoostRegressor,
     ScaleGBMClassifier,
     ScaleGBMRegressor,
+    XGBoostClassifier,
+    XGBoostRegressor,
+    _classification_types,
+    _Predictor,
 )
 from getml.preprocessors import (
     CategoryTrimmer,
@@ -66,7 +72,6 @@ from getml.preprocessors.preprocessor import _Preprocessor
 from getml.utilities.formatting import _SignatureFormatter
 
 from .columns import Columns
-from .tables import Tables
 from .features import Features
 from .helpers import (
     _check_df_types,
@@ -96,6 +101,7 @@ from .metrics import (
 from .plots import Plots
 from .score import ClassificationScore, RegressionScore
 from .scores_container import Scores
+from .tables import Tables
 from .tags import Tags
 
 NOT_FITTED = "NOT FITTED"

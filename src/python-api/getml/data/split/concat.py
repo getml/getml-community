@@ -13,8 +13,8 @@ Concatenates data.
 from typing import Dict, Tuple
 
 from getml.data.columns import StringColumnView
-from getml.data.columns.from_value import from_value
 from getml.data.columns.columns import rowid
+from getml.data.columns.from_value import from_value
 from getml.data.concat import concat as _concat
 from getml.data.data_frame import DataFrame
 from getml.data.helpers import _is_non_empty_typed_list

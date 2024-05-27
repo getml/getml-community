@@ -60,7 +60,6 @@ def _calc_remaining(elapsed_time: float, progress: float) -> str:
 
 
 def _make_time_string(seconds: float) -> str:
-
     hours = int(seconds / 3600)
     seconds -= float(hours * 3600)
 

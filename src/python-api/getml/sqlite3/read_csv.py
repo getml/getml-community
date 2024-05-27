@@ -13,9 +13,9 @@ into sqlite3.
 
 import csv
 import sqlite3
-from typing import Union, Optional, List
+from typing import List, Optional, Union
 
-from getml.data.helpers import _is_typed_list, _is_non_empty_typed_list
+from getml.data.helpers import _is_non_empty_typed_list, _is_typed_list
 
 from .helpers import _create_table, _log
 from .read_list import read_list
@@ -39,12 +39,12 @@ def read_csv(
     conn: sqlite3.Connection,
     fnames: Union[str, list[str]],
     table_name: str,
-    header: bool=True,
-    if_exists: str="append",
-    quotechar: str='"',
-    sep: str=",",
-    skip: int=0,
-    colnames: Optional[List[str]]=None,
+    header: bool = True,
+    if_exists: str = "append",
+    quotechar: str = '"',
+    sep: str = ",",
+    skip: int = 0,
+    colnames: Optional[List[str]] = None,
 ) -> None:
     """
     Reads a list of CSV files and writes them into an sqlite3 table.

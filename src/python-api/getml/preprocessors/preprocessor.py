@@ -17,8 +17,8 @@ from typing import List, Set
 
 import numpy as np
 
-from getml.utilities.formatting import _SignatureFormatter
 from getml.feature_learning.validation import Validator
+from getml.utilities.formatting import _SignatureFormatter
 
 
 @dataclass(repr=False)  # type: ignore

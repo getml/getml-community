@@ -1,8 +1,6 @@
-from datetime import timedelta
 import logging
+from datetime import timedelta
 from typing import Any, Union
-
-from benchmarks.demo import Benchmark
 
 from getml.data.time_series import TimeSeries
 from getml.feature_learning.fastprop import FastProp
@@ -10,6 +8,8 @@ from getml.feature_learning.loss_functions import SquareLoss
 from getml.pipeline.pipeline import Pipeline
 from getml.predictors.xgboost_regressor import XGBoostRegressor
 from getml.preprocessors import Seasonal
+
+from benchmarks.demo import Benchmark
 
 
 def drive_getml(

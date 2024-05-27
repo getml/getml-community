@@ -13,8 +13,8 @@ on Apache Spark.
 
 import os
 
-from getml.sqlite3.helpers import _log
 from getml.sqlite3.execute import _retrieve_scripts
+from getml.sqlite3.helpers import _log
 
 
 def execute(spark: "pyspark.sql.session.SparkSession", fname: str) -> None:
