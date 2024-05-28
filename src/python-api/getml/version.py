@@ -10,7 +10,7 @@ import os
 from pathlib import Path
 
 DEFAULT_VERSION = "0.0.0"
-VERSION_FILE = Path("VERSION")
+VERSION_FILE = Path(__file__).parent / "VERSION"
 
 try:
     __version__ = VERSION_FILE.read_text().strip()
