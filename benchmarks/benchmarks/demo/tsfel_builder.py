@@ -45,7 +45,6 @@ def _aggregate_chunk(
     aggregations: TSFELAggs,
     n_jobs: Optional[int],
 ) -> pd.DataFrame:
-
     orig_colnames = [col for col in chunk.columns if col not in (time_stamp, column_id)]
 
     with warnings.catch_warnings():

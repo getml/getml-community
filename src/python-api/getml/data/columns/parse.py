@@ -8,21 +8,21 @@
 
 """Parses the columns from a cmd"""
 
-from typing import Any, Dict, Union, Type, TypeVar
+from typing import Any, Dict, Type, TypeVar, Union
 
+from .columns import (
+    BooleanColumnView,
+    FloatColumn,
+    FloatColumnView,
+    StringColumn,
+    StringColumnView,
+)
 from .constants import (
     BOOLEAN_COLUMN_VIEW,
     FLOAT_COLUMN,
     FLOAT_COLUMN_VIEW,
     STRING_COLUMN,
     STRING_COLUMN_VIEW,
-)
-from .columns import (
-    FloatColumn,
-    StringColumn,
-    FloatColumnView,
-    StringColumnView,
-    BooleanColumnView,
 )
 
 Coltype = TypeVar(
@@ -41,7 +41,7 @@ def _make_column(cmd: Dict[str, Any], col: Coltype):
 
 
 def _parse(
-    cmd: Dict[str, Any]
+    cmd: Dict[str, Any],
 ) -> Union[
     BooleanColumnView, FloatColumn, FloatColumnView, StringColumn, StringColumnView
 ]:

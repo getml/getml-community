@@ -11,7 +11,7 @@ Splits data at random.
 """
 
 import numbers
-from typing import Dict, Optional, Union, NewType
+from typing import Dict, NewType, Optional, Union
 
 import numpy as np
 
@@ -24,12 +24,13 @@ from getml.data.view import View
 TimeStampType = NewType("TimeStampType", Union[float, int, np.datetime64])  # type: ignore # NewType to be python backward compatible
 """Admissible types for time stamps"""
 
+
 def time(
     population: DataFrame,
     time_stamp: Union[str, FloatColumn, FloatColumnView],
     validation: Optional[TimeStampType] = None,
     test: Optional[TimeStampType] = None,
-    **kwargs: TimeStampType
+    **kwargs: TimeStampType,
 ) -> StringColumnView:
     """
     Returns a [`StringColumnView`][getml.data.columns.StringColumnView] that can be used to divide

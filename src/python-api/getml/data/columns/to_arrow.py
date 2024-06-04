@@ -10,7 +10,6 @@
 Transform column to a pyarrow.ChunkedArray
 """
 
-
 from typing import Any, Dict
 
 import pyarrow as pa  # type: ignore

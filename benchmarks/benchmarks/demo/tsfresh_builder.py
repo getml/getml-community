@@ -10,8 +10,8 @@ from typing import List, Optional
 import numpy as np
 import pandas as pd
 import tsfresh
-from tsfresh.utilities.dataframe_functions import roll_time_series
 from scipy.stats import pearsonr
+from tsfresh.utilities.dataframe_functions import roll_time_series
 
 from .add_original_columns import _add_original_columns
 from .print_time_taken import _print_time_taken

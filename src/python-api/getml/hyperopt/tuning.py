@@ -19,7 +19,7 @@ from typing import Any, Dict, Optional
 import getml.communication as comm
 import getml.pipeline
 from getml.data import Container, StarSchema, TimeSeries
-from getml.pipeline import metrics, Pipeline
+from getml.pipeline import Pipeline, metrics
 from getml.pipeline.helpers import _print_time_taken, _transform_peripheral
 
 # -----------------------------------------------------------------------------
@@ -229,11 +229,11 @@ def _tune_predictor(
 def tune_feature_learners(
     pipeline: Pipeline,
     container: Container,
-    train:str="train",
-    validation:str="validation",
-    n_iter:int=0,
-    score:Optional[str]=None,
-    num_threads:int=0,
+    train: str = "train",
+    validation: str = "validation",
+    n_iter: int = 0,
+    score: Optional[str] = None,
+    num_threads: int = 0,
 ) -> Pipeline:
     """
     A high-level interface for optimizing the feature learners of a
@@ -313,10 +313,9 @@ def tune_feature_learners(
             num_threads=num_threads,
         )
 
-        assert (
-            len(tuned_pipeline.feature_learners) == 1
-        ), "Expected exactly one feature learner, got " + str(
-            len(tuned_pipeline.feature_learners)
+        assert len(tuned_pipeline.feature_learners) == 1, (
+            "Expected exactly one feature learner, got "
+            + str(len(tuned_pipeline.feature_learners))
         )
 
         tuned_feature_learners.append(tuned_pipeline.feature_learners[0])
@@ -337,11 +336,11 @@ def tune_feature_learners(
 def tune_predictors(
     pipeline: Pipeline,
     container: Container,
-    train:str="train",
-    validation:str="validation",
-    n_iter:int=0,
-    score:Optional[str]=None,
-    num_threads:int=0,
+    train: str = "train",
+    validation: str = "validation",
+    n_iter: int = 0,
+    score: Optional[str] = None,
+    num_threads: int = 0,
 ) -> Pipeline:
     """
     A high-level interface for optimizing the predictors of a
@@ -421,9 +420,9 @@ def tune_predictors(
             num_threads=num_threads,
         )
 
-        assert (
-            len(tuned_pipeline.predictors) == 1
-        ), "Expected exactly one predictor, got " + str(len(tuned_pipeline.predictors))
+        assert len(tuned_pipeline.predictors) == 1, (
+            "Expected exactly one predictor, got " + str(len(tuned_pipeline.predictors))
+        )
 
         tuned_predictors.append(tuned_pipeline.predictors[0])
 

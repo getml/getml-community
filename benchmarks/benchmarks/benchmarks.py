@@ -4,12 +4,11 @@ Contains the main benchmark functions
 
 import logging
 import os
-from urllib import request
 from typing import Callable, Sequence
-
-import pandas as pd  # type: ignore
+from urllib import request
 
 import getml
+import pandas as pd  # type: ignore
 
 from .demo import Benchmark
 from .utils import log_run, project
@@ -163,7 +162,6 @@ def benchmark_energy(benchmark_drivers: Sequence[Callable], runs: int = 1) -> Be
 
     for run in range(1, runs + 1):
         with project(f"__benchmark_{ds_name}"):
-
             energy: getml.DataFrame = getml.DataFrame.from_pandas(data_frame, "energy")
             energy.set_role("date", getml.data.roles.time_stamp)
             energy.set_role("Appliances", getml.data.roles.target)
@@ -230,7 +228,6 @@ def benchmark_interstate94(benchmark_drivers: Sequence[Callable], runs=1) -> Ben
             )
 
             for driver in benchmark_drivers:
-
                 with log_run(driver, ds_name, run, runs):
                     try:
                         observer = driver(

@@ -10,7 +10,6 @@
 Transform column to numpy array containing unique values
 """
 
-
 import numpy as np
 
 from .to_arrow import _to_arrow

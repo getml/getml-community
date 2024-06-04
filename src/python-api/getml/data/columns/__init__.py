@@ -93,10 +93,9 @@ from .columns import (
     arange,
     rowid,
 )
-from .random import random
-
 from .from_value import from_value
 from .parse import _parse
+from .random import random
 
 __all__ = (
     "BooleanColumnView",

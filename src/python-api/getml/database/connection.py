@@ -11,7 +11,6 @@ A handle to a database connection on the getML engine.
 """
 
 import json
-
 from typing import Any, Dict
 
 import getml.communication as comm
@@ -41,7 +40,6 @@ class Connection:
         return str(self)
 
     def __str__(self):
-
         cmd: Dict[str, Any] = {}
 
         cmd["name_"] = self.conn_id

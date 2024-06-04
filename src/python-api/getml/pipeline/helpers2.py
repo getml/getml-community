@@ -41,7 +41,6 @@ def _from_json(json_obj: Dict[str, Any]) -> Pipeline:
 
 
 def _refresh_all() -> List[Pipeline]:
-
     cmd: Dict[str, Any] = {}
 
     cmd["type_"] = "Pipeline.refresh_all"

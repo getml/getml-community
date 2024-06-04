@@ -31,14 +31,14 @@ from . import (
     predictors,
     preprocessors,
     project,
-    sqlite3,
     spark,
+    sqlite3,
     utilities,
 )
 from .cross_validation import cross_validation
 from .data import DataFrame
-from .pipeline import Pipeline
 from .engine import set_project
+from .pipeline import Pipeline
 from .version import __version__
 
 # Import subpackages into top-level namespace

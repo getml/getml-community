@@ -106,7 +106,6 @@ def _get_data_frame_content(name, start, length):
 
 
 def _get_view_content(start, length, cols):
-
     cmd: Dict[str, Any] = {}
 
     cmd["type_"] = "View.get_content"

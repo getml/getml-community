@@ -17,7 +17,7 @@ from typing import Dict, List, Optional, Tuple, Union
 
 from getml.utilities.formatting import _SignatureFormatter
 
-from .helpers import _check_join_key, _handle_on, _handle_ts, OnType
+from .helpers import OnType, _check_join_key, _handle_on, _handle_ts
 from .relationship import many_to_many
 from .roles_obj import Roles
 

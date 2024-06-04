@@ -4,13 +4,13 @@ Wrapper around CesiumML
 
 import datetime
 import time
-from typing import Generator, NamedTuple, List
 import warnings
+from typing import Generator, List, NamedTuple
 
-from cesium import featurize  # type: ignore
-from cesium.features import feature_categories  # type: ignore
 import numpy as np
 import pandas as pd  # type: ignore
+from cesium import featurize  # type: ignore
+from cesium.features import feature_categories  # type: ignore
 from pandas.api.types import is_numeric_dtype  # type: ignore
 from scipy.stats import pearsonr  # type: ignore
 

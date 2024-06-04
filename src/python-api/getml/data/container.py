@@ -12,7 +12,7 @@ For keeping and versioning data.
 
 from datetime import datetime
 from inspect import cleandoc
-from typing import Dict, Union, Optional
+from typing import Dict, Optional, Union
 
 import pandas as pd  # type: ignore
 
@@ -460,9 +460,9 @@ class Container:
             cmd["population_"] = self._population._getml_deserialize()
 
         if self._split is not None:
-            cmd[
-                "split_"
-            ] = self._split._getml_deserialize()  # pytype: disable=attribute-error
+            cmd["split_"] = (
+                self._split._getml_deserialize()
+            )  # pytype: disable=attribute-error
 
         cmd["peripheral_"] = {
             k: v._getml_deserialize() for (k, v) in self._peripheral.items()

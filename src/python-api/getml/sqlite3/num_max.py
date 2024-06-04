@@ -12,7 +12,6 @@ NUM_MAX aggregation.
 
 from typing import Optional
 
-
 import numpy as np
 
 from .helpers import _not_null

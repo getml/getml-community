@@ -11,7 +11,7 @@ Reads data into an sqlite3 table.
 """
 
 import sqlite3
-from typing import List, Any
+from typing import Any, List
 
 from .helpers import _get_num_columns, _log
 

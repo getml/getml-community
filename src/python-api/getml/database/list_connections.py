@@ -11,9 +11,8 @@ Returns a list handles to all connections that are currently active on the
 engine.
 """
 
-from typing import Any, Dict, List
-
 import json
+from typing import Any, Dict, List
 
 import getml.communication as comm
 

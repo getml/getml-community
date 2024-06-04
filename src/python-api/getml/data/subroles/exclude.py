@@ -19,7 +19,6 @@ Example:
     ```
 """
 
-
 category_trimmer = "exclude category trimmer"
 """
 The [`CategoryTrimmer`][getml.preprocessors.CategoryTrimmer] preprocessor

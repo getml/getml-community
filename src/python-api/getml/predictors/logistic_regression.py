@@ -23,42 +23,42 @@ from .predictor import _Predictor
 class LogisticRegression(_Predictor):
     """Simple predictor for classification problems.
 
-Learns a simple linear relationship using the sigmoid function:
+    Learns a simple linear relationship using the sigmoid function:
 
-$$
-\hat{y} = \sigma(w_0 + w_1 * feature_1 + w_2 * feature_2 + ...)
-$$
+    $$
+    \hat{y} = \sigma(w_0 + w_1 * feature_1 + w_2 * feature_2 + ...)
+    $$
 
-$\sigma$ denotes the sigmoid function:
+    $\sigma$ denotes the sigmoid function:
 
-$$
-\sigma(z) = \\frac{1}{1 + exp(-z)}
-$$
+    $$
+    \sigma(z) = \\frac{1}{1 + exp(-z)}
+    $$
 
-The weights are optimized by minimizing the cross entropy loss of
-the predictions $\hat{y}$ w.r.t. the [targets][annotating-data-target] $y$.
+    The weights are optimized by minimizing the cross entropy loss of
+    the predictions $\hat{y}$ w.r.t. the [targets][annotating-data-target] $y$.
 
-$$
-L(\hat{y},y) = - y*\log \hat{y} - (1 - y)*\log(1 - \hat{y})
-$$
+    $$
+    L(\hat{y},y) = - y*\log \hat{y} - (1 - y)*\log(1 - \hat{y})
+    $$
 
-Logistic regressions are always trained numerically.
+    Logistic regressions are always trained numerically.
 
-If you decide to pass categorical
-features: `annotating_roles_categorical` to the
-[`LogisticRegression`][getml.predictors.LogisticRegression], it will be trained
-using the Broyden-Fletcher-Goldfarb-Shannon (BFGS) algorithm.
-Otherwise, it will be trained using adaptive moments (Adam). BFGS
-is more accurate, but less scalable than Adam.
+    If you decide to pass categorical
+    features: `annotating_roles_categorical` to the
+    [`LogisticRegression`][getml.predictors.LogisticRegression], it will be trained
+    using the Broyden-Fletcher-Goldfarb-Shannon (BFGS) algorithm.
+    Otherwise, it will be trained using adaptive moments (Adam). BFGS
+    is more accurate, but less scalable than Adam.
 
-Args:
-    learning_rate:
-        The learning rate used for the Adaptive Moments algorithm
-        (only relevant when categorical features are
-        included). Range: (0, $\infty$]
+    Args:
+        learning_rate:
+            The learning rate used for the Adaptive Moments algorithm
+            (only relevant when categorical features are
+            included). Range: (0, $\infty$]
 
-    reg_lambda:
-        L2 regularization parameter. Range: [0, $\infty$]
+        reg_lambda:
+            L2 regularization parameter. Range: [0, $\infty$]
     """
 
     # ----------------------------------------------------------------
@@ -68,7 +68,7 @@ Args:
 
     # ----------------------------------------------------------------
 
-    def validate(self, params: Optional[dict]=None):
+    def validate(self, params: Optional[dict] = None):
         """Checks both the types and the values of all instance
         variables and raises an exception if something is off.
 

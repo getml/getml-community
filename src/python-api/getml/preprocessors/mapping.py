@@ -13,11 +13,11 @@ Contains routines for preprocessing data frames.
 from dataclasses import dataclass, field
 from typing import ClassVar, List
 
-from getml.feature_learning.aggregations import mapping as mapping_aggregations
 from getml.feature_learning.aggregations import _Aggregations
+from getml.feature_learning.aggregations import mapping as mapping_aggregations
 
-from .validate import _validate
 from .preprocessor import _Preprocessor
+from .validate import _validate
 
 
 @dataclass(repr=False)

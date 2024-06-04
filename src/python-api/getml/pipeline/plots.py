@@ -34,7 +34,6 @@ class Plots:
     # ----------------------------------------------------------------
 
     def __init__(self, name: str) -> None:
-
         if not isinstance(name, str):
             raise ValueError("'name' must be a str.")
 

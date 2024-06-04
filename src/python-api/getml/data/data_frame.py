@@ -13,7 +13,7 @@ import numbers
 import os
 import shutil
 from collections import namedtuple
-from typing import Any, Dict, List, Optional, Union, Literal
+from typing import Any, Dict, List, Literal, Optional, Union
 
 import numpy as np
 import pandas as pd  # type: ignore
@@ -22,9 +22,9 @@ import pyarrow as pa  # type: ignore
 import getml.communication as comm
 from getml import constants, database
 from getml.constants import COMPARISON_ONLY, TIME_STAMP
+from getml.database import Connection
 from getml.database.helpers import _retrieve_temp_dir
 from getml.utilities.formatting import _DataFrameFormatter
-from getml.database import Connection
 
 from . import roles as roles_
 from .columns import (

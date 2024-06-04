@@ -34,7 +34,7 @@ import getml.communication as comm
 from getml.data.helpers import _is_typed_list
 from getml.utilities.formatting import _Formatter
 
-from .dialect import sqlite3, _all_dialects
+from .dialect import _all_dialects, sqlite3
 from .feature import Feature
 from .helpers import _attach_empty
 from .sql_code import SQLCode

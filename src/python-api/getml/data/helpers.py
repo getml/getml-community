@@ -96,7 +96,6 @@ def list_data_frames() -> Dict[str, List[str]]:
 
 
 def _check_if_exists(colnames: List[str], all_colnames: List[str]):
-
     for col in colnames:
         if col in all_colnames:
             raise ValueError("Duplicate column: '" + col + "'!")
@@ -127,7 +126,6 @@ def _empty_data_frame() -> str:
 
 
 def _exists_in_memory(name: str) -> bool:
-
     if not isinstance(name, str):
         raise TypeError("'name' must be of type str")
 
@@ -172,7 +170,7 @@ def _get_column(name, columns):
 def _handle_cols(
     cols: Union[
         str, FloatColumn, StringColumn, List[Union[str, FloatColumn, StringColumn]]
-    ]
+    ],
 ) -> List[str]:
     """
     Handles cols as supplied to DataFrame methods. Returns a list of column names.
@@ -190,7 +188,6 @@ def _handle_cols(
     names: List[str] = []
 
     for col in cols:
-
         if isinstance(col, list):
             names.extend(_handle_cols(col))
 
@@ -207,7 +204,7 @@ def _handle_cols(
 
 
 def _handle_multiple_join_keys(
-    join_keys: List[Union[str, Tuple[str, str]]]
+    join_keys: List[Union[str, Tuple[str, str]]],
 ) -> Tuple[str, str]:
     on = [(jk, jk) if isinstance(jk, str) else jk for jk in join_keys]
     left_join_keys = [o[0] for o in on]
@@ -268,7 +265,6 @@ def _is_numerical_type(coltype) -> bool:
 
 
 def _is_subclass_list(some_list, parent) -> bool:
-
     is_subclass_list = isinstance(some_list, list)
 
     is_subclass_list = is_subclass_list and all(
@@ -282,7 +278,6 @@ def _is_subclass_list(some_list, parent) -> bool:
 
 
 def _is_typed_dict(some_dict, key_types, value_types) -> bool:
-
     if not isinstance(key_types, list):
         key_types = [key_types]
 
@@ -306,7 +301,6 @@ def _is_typed_dict(some_dict, key_types, value_types) -> bool:
 
 
 def _is_typed_list(some_list, types) -> bool:
-
     if isinstance(types, list):
         types = tuple(types)
 
@@ -365,7 +359,6 @@ def _make_default_slice(slc, end) -> Tuple[int, int, int]:
 
 
 def _merge_join_keys(join_key: List[str], other_join_key: List[str]) -> Tuple[str, str]:
-
     begin = constants.MULTIPLE_JOIN_KEYS_BEGIN
     end = constants.MULTIPLE_JOIN_KEYS_END
     sep = constants.JOIN_KEY_SEP
@@ -409,11 +402,9 @@ def _modify_pandas_columns(pandas_df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _remove_trailing_underscores(some_dict: Dict[str, Any]) -> Dict[str, Any]:
-
     new_dict: Dict[str, Any] = {}
 
     for kkey in some_dict:
-
         new_key = kkey
 
         if kkey[-1] == "_":
@@ -486,7 +477,6 @@ def _replace_non_alphanumeric_cols(df_or_view):
 def _update_sniffed_roles(
     sniffed_roles: Dict[str, List[str]], roles: Dict[str, List[str]]
 ) -> Dict[str, List[str]]:
-
     # -------------------------------------------------------
 
     if not isinstance(roles, dict):
@@ -506,9 +496,7 @@ def _update_sniffed_roles(
     # -------------------------------------------------------
 
     for new_role in roles:
-
         for colname in roles[new_role]:
-
             for old_role in sniffed_roles:
                 if colname in sniffed_roles[old_role]:
                     sniffed_roles[old_role].remove(colname)
@@ -537,7 +525,6 @@ def _make_table(col, numpy_array) -> pa.Table:
 
 
 def _send_numpy_array(col, numpy_array: np.ndarray):
-
     table = _make_table(col, numpy_array)
 
     with comm.send_and_get_socket(col.cmd) as sock:
@@ -826,7 +813,6 @@ def _sniff_schema(schema: pa.Schema) -> Dict[str, List[str]]:
 
 
 def _check_role(role: str):
-
     correct_role = isinstance(role, str)
     correct_role = correct_role and role in _all_roles
 
@@ -840,7 +826,6 @@ def _check_role(role: str):
 
 
 def _to_arrow(df_or_view: Any) -> pa.Table:
-
     df_or_view.refresh()
 
     cmd: Dict[str, Any] = {}
@@ -866,7 +851,6 @@ def _to_arrow(df_or_view: Any) -> pa.Table:
 
 
 def _to_parquet(df_or_view: Any, fname: str, compression: str):
-
     df_or_view.refresh()
 
     if not isinstance(fname, str):
@@ -918,7 +902,6 @@ def _to_pyspark(df_or_view: Any, name: str, spark: Any):
 
 
 def _transform_col(col, role, is_boolean, is_float, is_string, time_formats):
-
     if (is_boolean or is_float) and role in _categorical_roles:
         return col.as_str()  # pytype: disable=attribute-error
 
@@ -948,7 +931,6 @@ def _transform_timestamps(time_stamps: pd.DataFrame) -> np.ndarray:
     transformed = pd.DataFrame()
 
     for colname in time_stamps.columns:
-
         if pd.api.types.is_numeric_dtype(time_stamps[colname]):
             transformed[colname] = time_stamps[colname]
 
@@ -1005,7 +987,6 @@ def _with_column(
     unit: str = "",
     time_formats: Optional[List[str]] = None,
 ):
-
     # ------------------------------------------------------------
 
     if isinstance(col, (bool, str, int, float, numbers.Number, np.datetime64)):
@@ -1108,7 +1089,6 @@ def _with_role(
     role: str,
     time_formats: Optional[List[str]],
 ):
-
     # ------------------------------------------------------------
 
     time_formats = time_formats or constants.TIME_FORMATS
@@ -1166,7 +1146,6 @@ def _with_subroles(
     subroles: Optional[Union[str, List[str]]] = None,
     append: bool = False,
 ):
-
     names = _handle_cols(cols)
 
     if isinstance(subroles, str):
@@ -1221,7 +1200,6 @@ def _with_unit(
     unit: str,
     comparison_only=False,
 ):
-
     names = _handle_cols(cols)
 
     if not isinstance(unit, str):

@@ -12,8 +12,8 @@ Custom class for handling the SQL code of the features.
 
 from __future__ import annotations
 
-import re
 import os
+import re
 from pathlib import Path
 from typing import Iterator, Sequence, Union
 
@@ -61,7 +61,6 @@ class SQLCode:
         code: Sequence[Union[str, SQLString]],
         dialect: str = sqlite3,
     ) -> None:
-
         if not _is_typed_list(code, str):
             raise TypeError("'code' must be a list of str.")
 
@@ -75,7 +74,6 @@ class SQLCode:
         ]
 
     def __getitem__(self, key: Union[int, slice, str]) -> Union[SQLCode, SQLString]:
-
         if isinstance(key, int):
             return self.code[key]
 

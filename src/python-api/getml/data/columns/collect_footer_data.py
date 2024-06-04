@@ -8,7 +8,6 @@
 
 """Collects the data necessary for displaying the column footer."""
 
-
 from typing import NamedTuple, Optional, Union
 
 from .constants import _views

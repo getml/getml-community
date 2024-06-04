@@ -11,9 +11,9 @@ description = "Python API for getML"
 dynamic = ["version"]
 readme = "README.md"
 requires-python = ">=3.8"
-license = { text = "Elastic License 2.0 (ELv2)" }
-authors = [ { name="getML", email="getml@getml.com" }, ]
-keywords = [ "AutoML", "feature learning" ]
+license = {text = "Elastic License 2.0 (ELv2)"}
+authors = [{name="getML", email="getml@getml.com"},]
+keywords = ["AutoML", "feature learning", "feature engineering"]
 classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
@@ -48,8 +48,8 @@ dependencies = [
 "Source Code" = "https://github.com/getml/getml-community"
 
 [project.optional-dependencies]
-test = [ "pytest", "pyspark" ]
-development = [ "black", "mypy", "pylint" ]
+test = ["pytest", "pyspark"]
+development = ["pyright", "ruff==0.4.5"]
 
 [tool.setuptools]
 packages = [
@@ -76,7 +76,7 @@ packages = [
 ]
 
 [tool.setuptools.dynamic]
-version = { attr = "getml.version.__version__" }
+version = {attr = "getml.version.__version__"}
 
 [tool.setuptools.package-data]
 getml = [
@@ -84,6 +84,22 @@ getml = [
     "py.typed",
     "utilities/templates/*.jinja2",
     ".getML/**/*",
+]
+
+[tool.ruff.lint]
+ignore = [
+  # Allow over
+  "A003",
+  # Allow non-abstract empty methods in abstract base classes
+  "B027",
+  # Allow for string literals in exceptions
+  "EM",
+  # Allow boolean positional values in function calls, like `dict.get(... True)`
+  "FBT003",
+  # Ignore checks for possible passwords
+  "S105", "S106", "S107",
+  # Ignore complexity
+  "C901", "PLR0911", "PLR0912", "PLR0913", "PLR0915",
 ]
 
 [build-system]

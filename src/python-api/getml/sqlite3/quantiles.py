@@ -10,8 +10,9 @@
 Contains the quantile aggregations.
 """
 
-import numpy as np
 from typing import List, Optional
+
+import numpy as np
 
 from .helpers import _not_null
 
@@ -34,9 +35,7 @@ class _Quantile:
         """
         Executed after all values are inserted.
         """
-        return np.quantile(
-            self.values, self.quantile, interpolation="linear"
-        )  # type:ignore
+        return np.quantile(self.values, self.quantile, interpolation="linear")  # type:ignore
 
 
 # ----------------------------------------------------------------------------

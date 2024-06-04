@@ -9,6 +9,7 @@
 """
 Marks the relationship between joins in [`Placeholder`][getml.data.Placeholder]
 """
+
 from typing import Literal, Union
 
 ManyToMany = Literal["many-to-many"]
@@ -72,7 +73,9 @@ within the join and normal algorithms would take
 too long.
 """
 
-_all_relationships_types = Union[ManyToMany, ManyToONE, OneToMany, OneToOne, Propositionalization]
+_all_relationships_types = Union[
+    ManyToMany, ManyToONE, OneToMany, OneToOne, Propositionalization
+]
 _all_relationships = [
     many_to_many,
     many_to_one,

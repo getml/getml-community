@@ -10,11 +10,9 @@ This is an integration test based on
 the Adventure Works dataset.
 """
 
-
-import pandas as pd  # type: ignore
-import numpy as np
-
 import getml
+import numpy as np
+import pandas as pd  # type: ignore
 
 
 def test_adventure_works():
@@ -40,12 +38,10 @@ def test_adventure_works():
 
     trimmer = getml.preprocessors.CategoryTrimmer()
 
-    fast_prop = (
-        getml.feature_learning.FastProp(  # pylint: disable=unexpected-keyword-arg
-            loss_function=getml.feature_learning.loss_functions.CrossEntropyLoss,
-            num_threads=1,
-            num_features=400,
-        )
+    fast_prop = getml.feature_learning.FastProp(  # pylint: disable=unexpected-keyword-arg
+        loss_function=getml.feature_learning.loss_functions.CrossEntropyLoss,
+        num_threads=1,
+        num_features=400,
     )
 
     predictor = getml.predictors.XGBoostClassifier(n_jobs=1)

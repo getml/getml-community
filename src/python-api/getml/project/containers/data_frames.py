@@ -9,6 +9,7 @@
 """
 Container for data frames in memory.
 """
+
 from typing import Callable
 
 from getml.data import DataFrame
@@ -91,7 +92,6 @@ class DataFrames:
     # ----------------------------------------------------------------
 
     def _format(self):
-
         headers = [["name", "rows", "columns", "memory usage"]]
 
         rows = [[df.name, df.nrows(), df.ncols(), df.memory_usage] for df in self.data]
@@ -187,7 +187,7 @@ class DataFrames:
 
     # ----------------------------------------------------------------
 
-    def sort(self, key: Callable, descending: bool=False) -> "DataFrames":
+    def sort(self, key: Callable, descending: bool = False) -> "DataFrames":
         """
         Sorts the data frames container.
 

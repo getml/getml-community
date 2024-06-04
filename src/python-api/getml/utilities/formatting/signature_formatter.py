@@ -127,7 +127,6 @@ class _SignatureFormatter:
     # ------------------------------------------------------------
 
     def _format_black(self, suppress_none=False):
-
         if len(self.params_formatted) + self.value_indent < self.max_width:
             return self.template.format(
                 f"\n{self.value_indentation}" + self.params_formatted + "\n"
@@ -163,7 +162,6 @@ class _SignatureFormatter:
     # ------------------------------------------------------------
 
     def _format_compact(self, suppress_none=False):
-
         # tokenize params regardless of parameter values' depth by splitting
         # params formatted as a single line string on ", "
         params_tokenized = self.params_formatted.split(", ", suppress_none)
@@ -181,7 +179,6 @@ class _SignatureFormatter:
     # ------------------------------------------------------------
 
     def _format(self, suppress_none=False, style=None):
-
         style = style or STYLE
 
         one_line = self.template.format(self.params_formatted, suppress_none)

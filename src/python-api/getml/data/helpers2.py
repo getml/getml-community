@@ -9,7 +9,7 @@
 """Helper functions that depend on the DataFrame class."""
 
 import numbers
-from typing import Any, Dict, Union, List
+from typing import Any, Dict, List, Union
 
 from getml.constants import MULTIPLE_JOIN_KEYS_BEGIN, NO_JOIN_KEY
 from getml.data.columns import (
@@ -361,8 +361,10 @@ def make_target_columns(base: Union[DataFrame, View], colname: str) -> View:
 # --------------------------------------------------------------------
 
 
-def to_placeholder(*args: Union[DataFrame, View, List[Union[DataFrame, View]]],
-                   **kwargs: Union[DataFrame, View, List[Union[DataFrame, View]]]) -> List[Placeholder]:
+def to_placeholder(
+    *args: Union[DataFrame, View, List[Union[DataFrame, View]]],
+    **kwargs: Union[DataFrame, View, List[Union[DataFrame, View]]],
+) -> List[Placeholder]:
     """
     Factory function for extracting placeholders from a
     [`DataFrame`][getml.DataFrame] or [`View`][getml.data.View].

@@ -18,20 +18,20 @@ from .count_below_mean import _CountBelowMean
 from .count_distinct_over_count import _CountDistinctOverCount
 from .email_domain import _email_domain
 from .ewma import (
-    _EWMA1S,
-    _EWMA1M,
-    _EWMA1H,
     _EWMA1D,
+    _EWMA1H,
+    _EWMA1M,
+    _EWMA1S,
     _EWMA7D,
     _EWMA30D,
     _EWMA90D,
     _EWMA365D,
 )
 from .ewma_trend import (
-    _EWMATrend1S,
-    _EWMATrend1M,
-    _EWMATrend1H,
     _EWMATrend1D,
+    _EWMATrend1H,
+    _EWMATrend1M,
+    _EWMATrend1S,
     _EWMATrend7D,
     _EWMATrend30D,
     _EWMATrend90D,

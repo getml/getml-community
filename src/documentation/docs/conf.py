@@ -51,7 +51,7 @@ extensions = [
     "sphinx_rtd_theme",
     "sphinx.ext.autosummary",
     "sphinx_automodapi.automodapi",
-    'sphinx.ext.autosectionlabel'
+    "sphinx.ext.autosectionlabel",
 ]
 
 autosummary_generate = True

@@ -22,7 +22,12 @@ from .read_list import read_list
 from .sniff_pandas import sniff_pandas
 
 
-def read_pandas(conn: sqlite3.Connection, table_name: str, data_frame: pd.DataFrame, if_exists: Literal['fail', 'replace', 'append']="append") -> None:
+def read_pandas(
+    conn: sqlite3.Connection,
+    table_name: str,
+    data_frame: pd.DataFrame,
+    if_exists: Literal["fail", "replace", "append"] = "append",
+) -> None:
     """
     Loads a pandas.DataFrame into SQLite3.
 

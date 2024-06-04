@@ -21,7 +21,6 @@ import getml.communication as comm
 
 
 def _load_to_buffer(url):
-
     pb = comm._ProgressBar()
 
     with request.urlopen(url) as response:

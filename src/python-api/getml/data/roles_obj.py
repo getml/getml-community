@@ -12,7 +12,7 @@ Dataclass for handling the roles.
 
 from dataclasses import dataclass, field, fields
 from inspect import cleandoc
-from typing import List, Dict
+from typing import Dict, List
 
 
 @dataclass

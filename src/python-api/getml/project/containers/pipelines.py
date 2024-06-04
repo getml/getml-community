@@ -10,7 +10,7 @@
 Container which holds all of a project's pipelines.
 """
 
-from typing import Any, List, Callable
+from typing import Any, Callable, List
 
 from getml.pipeline.helpers2 import _refresh_all, list_pipelines
 from getml.pipeline.metrics import accuracy, auc, cross_entropy, mae, rmse, rsquared
@@ -182,7 +182,7 @@ class Pipelines:
 
     # ----------------------------------------------------------------
 
-    def sort(self, key: Callable, descending: bool=False):
+    def sort(self, key: Callable, descending: bool = False):
         """
         Sorts the pipelines container.
 

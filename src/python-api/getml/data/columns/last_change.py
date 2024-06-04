@@ -16,7 +16,6 @@ import getml.communication as comm
 
 
 def _last_change(df_name) -> str:
-
     cmd: Dict[str, Any] = {}
     cmd["type_"] = "DataFrame.last_change"
     cmd["name_"] = df_name

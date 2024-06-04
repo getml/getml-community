@@ -18,7 +18,6 @@ def _avg(arr) -> float:
 
 
 def _count_above_mean(arr) -> float:
-
     if len(arr) == 0:
         return 0.0
 
@@ -33,7 +32,6 @@ def _count_above_mean(arr) -> float:
 
 
 def _count_below_mean(arr) -> float:
-
     if len(arr) == 0:
         return 0.0
 
@@ -52,7 +50,6 @@ def _count_distinct(arr) -> float:
 
 
 def _count_distinct_over_count(arr) -> float:
-
     if len(arr) == 0:
         return np.nan
     count_distinct = float(len(np.unique(arr)))
@@ -60,7 +57,6 @@ def _count_distinct_over_count(arr) -> float:
 
 
 def _count_minus_count_distinct(arr) -> float:
-
     if len(arr) == 0:
         return 0.0
     count_distinct = float(len(np.unique(arr)))
@@ -80,7 +76,6 @@ def _first(arr: pd.Series) -> float:
 
 
 def _kurtosis(arr) -> float:
-
     if len(arr) == 0:
         return np.nan
 
@@ -189,7 +184,6 @@ def _q99(arr) -> float:
 
 
 def _skew(arr) -> float:
-
     if not len(arr) == 0:
         return np.nan
 
@@ -323,7 +317,6 @@ def _ewma(arr, half_life: float) -> float:
 
 
 def _make_ewma_aggs(freq: float) -> List[Callable[[Any], float]]:
-
     t1s = 1.0 / (np.log(0.5) * freq)
     t1m = t1s * 60.0
     t1h = t1m * 60.0
