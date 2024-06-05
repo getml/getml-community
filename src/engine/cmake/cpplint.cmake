@@ -1,0 +1,7 @@
+find_program(CPPLINT cpplint)
+if(CPPLINT)
+  message(STATUS "Found cpplint: ${CPPLINT}. Will be using it to check the code")
+  set(CMAKE_CXX_CPPLINT "${CPPLINT}")
+else()
+  message(STATUS "cpplint not found. Please install it to check the code")
+endif()

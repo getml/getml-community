@@ -9,7 +9,7 @@
 #define COMMANDS_LOGISTICREGRESSIONHYPERPARMAS_HPP_
 
 #include "commands/LinearHyperparams.hpp"
-#include "rfl/Literal.hpp"
+#include <rfl/Literal.hpp>
 
 namespace commands {
 

@@ -1,251 +1,173 @@
 # syntax=docker/dockerfile:1.4
 
 ARG ENGINE_REPO_SOURCE="."
-ARG DEPENDENCY_DIR="/src/dependencies"
 ARG ENGINE_DIR="/src/engine"
-ARG CMAKE_BINARY_DIR="$ENGINE_DIR/build"
-
-ARG ARROW_DIR="$DEPENDENCY_DIR/arrow" \
-    MARIADB_DIR="$DEPENDENCY_DIR/mariadb-connector-c" \
-    POCO_DIR="$DEPENDENCY_DIR/poco" \
-    POSTGRES_DIR="$DEPENDENCY_DIR/postgres" \
-    REFLECTCPP_DIR="$DEPENDENCY_DIR/reflect-cpp" \
-    XGBOOST_DIR="$DEPENDENCY_DIR/xgboost"
 
 
+# ------------------------------------------------------------------------------
+# Base images
 FROM quay.io/pypa/manylinux_2_28_x86_64 as base-amd64
+ENV TARGET_SYSTEM_PROCESSOR=x86_64
+ENV TARGET_TRIPLET=x64-linux-release
 
 FROM quay.io/pypa/manylinux_2_28_aarch64 as base-arm64
+ENV TARGET_SYSTEM_PROCESSOR=aarch64
+ENV TARGET_TRIPLET=aarch64-linux-release
 
 FROM base-${TARGETARCH} as base
 
-FROM base AS engine-base
-ARG NJOBS TARGETARCH
+
+# ------------------------------------------------------------------------------
+# Base image with necessary tools and system libraries
+FROM base AS engine-tools
 RUN dnf groupinstall -y "Development Tools"
 RUN dnf install -y \
     readline-devel \
-    make \
-    ninja-build \
-    wget \
     openssl-devel \
     bison \
     zlib-devel \
     gcc-toolset-13-gcc-c++ \
     flex \
+    zip \
+    perl-IPC-Cmd \
     https://extras.getpagespeed.com/release-latest.rpm
 
+RUN pipx install ninja
 
 RUN git clone --depth 1 --branch v4.9.1 https://github.com/ccache/ccache.git /src/ccache
 RUN source scl_source enable gcc-toolset-13 \
-    && mkdir /src/ccache/build \
-    && cd /src/ccache/build \
-    && cmake -DCMAKE_BUILD_TYPE=Release .. \
-    && make -j ${NJOBS:-$(nproc)} \
-    && make install \
+    && cmake -DCMAKE_BUILD_TYPE=Release -S /src/ccache -B /src/ccache/build -G Ninja \
+    && cmake --build /src/ccache/build \
+    && cmake --install /src/ccache/build \
     && rm -r /src/ccache
 
-WORKDIR ~
+ENV CMAKE_CXX_COMPILER_LAUNCHER=ccache CMAKE_C_COMPILER_LAUNCHER=ccache
+
+ENV VCPKG_FORCE_SYSTEM_BINARIES=1
+ENV VCPKG_ROOT="/src/vcpkg"
+RUN git clone --branch "2024.04.26" https://github.com/microsoft/vcpkg $VCPKG_ROOT \
+    && /src/vcpkg/bootstrap-vcpkg.sh -disableMetrics
 
 
-FROM engine-base AS engine-dependency-arrow-build
-ARG NJOBS ARROW_DIR ENGINE_REPO_SOURCE
-ARG CCACHE_DIR="$ARROW_DIR/ccache"
-COPY $ENGINE_REPO_SOURCE/dependencies.json ./dependencies.json
-RUN export ARROW_VERSION=$(sed -n -e 's/\s*"arrow".*"\(.*\)".*/\1/p' ./dependencies.json) && \
-    git clone --depth 1 --branch apache-arrow-$ARROW_VERSION https://github.com/apache/arrow.git $ARROW_DIR
-WORKDIR $ARROW_DIR/cpp/build
-RUN --mount=type=cache,target=$CCACHE_DIR \
-    source scl_source enable gcc-toolset-13 \
-    && cmake -G Ninja -DARROW_CSV=ON -DARROW_PARQUET=ON -DARROW_WITH_BZ2=ON -DARROW_WITH_ZLIB=ON -DARROW_WITH_LZ4=ON -DARROW_WITH_SNAPPY=ON -DARROW_WITH_ZSTD=ON -DARROW_WITH_BROTLI=ON -DARROW_USE_CCACHE=ON .. \
-    && ninja \
-    && cp -r $ARROW_DIR/cpp/build/ $ARROW_DIR/cpp/release
+WORKDIR /root
 
 
-FROM scratch AS engine-dependency-arrow
-ARG ARROW_DIR
-COPY --from=engine-dependency-arrow-build $ARROW_DIR/cpp/src /arrow/cpp/src/
-COPY --from=engine-dependency-arrow-build $ARROW_DIR/cpp/release/src /arrow/cpp/release/src/
-COPY --from=engine-dependency-arrow-build $ARROW_DIR/cpp/release/release/*.a /arrow/cpp/release/release/
-
-
-FROM engine-base AS engine-dependency-mariadb-build
-ARG NJOBS MARIADB_DIR ENGINE_REPO_SOURCE
-ARG CCACHE_DIR="$MARIADB_DIR/ccache"
-COPY $ENGINE_REPO_SOURCE/dependencies.json ./dependencies.json
-RUN export MARIADB_VERSION=$(sed -n -e 's/\s*"mariadb".*"\(.*\)".*/\1/p' ./dependencies.json) && \
-    git clone --depth 1 --branch v${MARIADB_VERSION} https://github.com/mariadb-corporation/mariadb-connector-c.git $MARIADB_DIR
-WORKDIR $MARIADB_DIR/build
-RUN --mount=type=cache,target=$CCACHE_DIR \
-    source scl_source enable gcc-toolset-13 \
-    && cmake -DCMAKE_BUILD_TYPE=Release -DWITH_OPENSSL=On -DWITH_EXTERNAL_ZLIB=On -DCMAKE_CXX_COMPILER_LAUNCHER=ccache .. \
-    && make -j ${NJOBS:-$(nproc)} \
-    && cp -r $MARIADB_DIR/build $MARIADB_DIR/release
-
-
-FROM scratch AS engine-dependency-mariadb
-ARG MARIADB_DIR
-COPY --from=engine-dependency-mariadb-build $MARIADB_DIR/include /mariadb-connector-c/include/
-COPY --from=engine-dependency-mariadb-build $MARIADB_DIR/release/include /mariadb-connector-c/release/include/
-COPY --from=engine-dependency-mariadb-build $MARIADB_DIR/release/libmariadb/libmariadb.so.3 /mariadb-connector-c/release/libmariadb/
-
-
-FROM scratch AS engine-dependency-mariadb-lib
-ARG MARIADB_DIR
-COPY --from=engine-dependency-mariadb-build $MARIADB_DIR/release/libmariadb/libmariadb.so.3 /lib/
-
-
-FROM engine-base AS engine-dependency-poco-build
-ARG NJOBS POCO_DIR ENGINE_REPO_SOURCE
-ARG CCACHE_DIR="$POCO_DIR/ccache"
-COPY $ENGINE_REPO_SOURCE/dependencies.json ./dependencies.json
-RUN export POCO_VERSION=$(sed -n -e 's/\s*"poco".*"\(.*\)".*/\1/p' ./dependencies.json) && \
-    git clone --depth 1 --branch poco-${POCO_VERSION}-release https://github.com/pocoproject/poco.git $POCO_DIR
-WORKDIR $POCO_DIR/build
-RUN --mount=type=cache,target=$CCACHE_DIR \
-    source scl_source enable gcc-toolset-13 \
-    && cmake -DBUILD_SHARED_LIBS=NO -DCMAKE_CXX_COMPILER_LAUNCHER=ccache .. \
-    && cmake --build . --config Release -j ${NJOBS:-$(nproc)} \
-    && cp -r $POCO_DIR/build $POCO_DIR/release
-
-
-FROM scratch AS engine-dependency-poco
-ARG POCO_DIR
-COPY --from=engine-dependency-poco-build $POCO_DIR/Crypto/include /poco/Crypto/include
-COPY --from=engine-dependency-poco-build $POCO_DIR/JSON/include /poco/JSON/include
-COPY --from=engine-dependency-poco-build $POCO_DIR/Net/include /poco/Net/include
-COPY --from=engine-dependency-poco-build $POCO_DIR/NetSSL_OpenSSL/include /poco/NetSSL_OpenSSL/include
-COPY --from=engine-dependency-poco-build $POCO_DIR/Foundation/include /poco/Foundation/include
-COPY --from=engine-dependency-poco-build $POCO_DIR/release/build/lib/libPocoNetSSL.a \
-                                         $POCO_DIR/release/build/lib/libPocoCrypto.a \
-                                         $POCO_DIR/release/build/lib/libPocoNet.a \
-                                         $POCO_DIR/release/build/lib/libPocoUtil.a \
-                                         $POCO_DIR/release/build/lib/libPocoJSON.a \
-                                         $POCO_DIR/release/build/lib/libPocoXML.a \
-                                         $POCO_DIR/release/build/lib/libPocoFoundation.a \
-                                         /poco/release/build/lib/
-
-
-FROM engine-base AS engine-dependency-postgres-build
-ARG NJOBS POSTGRES_DIR ENGINE_REPO_SOURCE
-ARG CCACHE_DIR="$POSTGRES_DIR/ccache"
-COPY $ENGINE_REPO_SOURCE/dependencies.json ./dependencies.json
-RUN export POSTGRES_VERSION=$(sed -n -e 's/\s*"postgres".*"\(.*\)\.\(.*\)".*/REL_\1_\2/p' ./dependencies.json) && \
-    git clone --depth 1 --branch $POSTGRES_VERSION https://github.com/postgres/postgres.git $POSTGRES_DIR
-WORKDIR $POSTGRES_DIR/build
-RUN --mount=type=cache,target=$CCACHE_DIR \
-    source scl_source enable gcc-toolset-13 \
-    && ../configure --prefix=$PWD CC="ccache gcc" \
-    && make -j ${NJOBS:-$(nproc)} \
-    && make install \
-    && cp -r $POSTGRES_DIR/build $POSTGRES_DIR/release
-
-
-FROM scratch AS engine-dependency-postgres
-ARG POSTGRES_DIR
-COPY --from=engine-dependency-postgres-build $POSTGRES_DIR/release/include /postgres/release/include/
-COPY --from=engine-dependency-postgres-build $POSTGRES_DIR/release/lib/libpq.a \
-                                             $POSTGRES_DIR/release/lib/libpgport.a \
-                                             $POSTGRES_DIR/release/lib/libpgcommon.a \
-                                             /postgres/release/lib/
-
-
-FROM engine-base AS engine-dependency-reflectcpp-build
-ARG NJOBS REFLECTCPP_DIR ENGINE_REPO_SOURCE
-ARG CCACHE_DIR="$REFLECTCPP_DIR/ccache"
-COPY $ENGINE_REPO_SOURCE/dependencies.json ./dependencies.json
-RUN export REFLECTCPP_VERSION=$(sed -n -e 's/\s*"reflect-cpp".*"\(.*\)".*/\1/p' ./dependencies.json) && \
-    git clone https://github.com/getml/reflect-cpp.git $REFLECTCPP_DIR
-RUN git -C $REFLECTCPP_DIR checkout 648d628de57211d2eda8fba07140b1d35503cfde
-WORKDIR $REFLECTCPP_DIR
-RUN --mount=type=cache,target=$CCACHE_DIR \
-    source scl_source enable gcc-toolset-13 \
-    && cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
-    && cmake --build build -j ${NJOBS:-$(nproc)} \
-    && cp -r $REFLECTCPP_DIR/build $REFLECTCPP_DIR/release
-
-
-FROM scratch AS engine-dependency-reflectcpp
-ARG REFLECTCPP_DIR
-COPY --from=engine-dependency-reflectcpp-build $REFLECTCPP_DIR/include /reflect-cpp/include/
-COPY --from=engine-dependency-reflectcpp-build $REFLECTCPP_DIR/build/libreflectcpp.a /reflect-cpp/build/
-
-
-FROM engine-base AS engine-dependency-xgboost-build
-ARG NJOBS XGBOOST_DIR ENGINE_REPO_SOURCE
-ARG CCACHE_DIR="$XGBOOST_DIR/ccache"
-COPY $ENGINE_REPO_SOURCE/dependencies.json ./dependencies.json
-RUN export XGBOOST_VERSION=$(sed -n -e 's/\s*"xgboost".*"\(.*\)".*/\1/p' ./dependencies.json) && \
-    git clone --recurse-submodules --depth 1 --branch v${XGBOOST_VERSION} https://github.com/dmlc/xgboost $XGBOOST_DIR
-WORKDIR $XGBOOST_DIR/build
-RUN --mount=type=cache,target=$CCACHE_DIR \
-    source scl_source enable gcc-toolset-13 \
-    && cmake -DCMAKE_CXX_COMPILER_LAUNCHER=ccache .. \
-    && make -j ${NJOBS:-$(nproc)} \
-    && cp -r $XGBOOST_DIR/build $XGBOOST_DIR/release
-
-
-FROM scratch AS engine-dependency-xgboost
-ARG XGBOOST_DIR
-COPY --from=engine-dependency-xgboost-build $XGBOOST_DIR/include /xgboost/include/
-COPY --from=engine-dependency-xgboost-build $XGBOOST_DIR/rabit/include /xgboost/rabit/include/
-COPY --from=engine-dependency-xgboost-build $XGBOOST_DIR/lib/libxgboost.so /xgboost/lib/
-
-
-FROM scratch AS engine-dependency-xgboost-lib
-ARG XGBOOST_DIR
-COPY --from=engine-dependency-xgboost-build $XGBOOST_DIR/lib/libxgboost.so /lib/
-
-
-FROM scratch AS engine-dependencies
-ARG DEPENDENCY_DIR
-COPY --from=engine-dependency-arrow . /dependencies
-COPY --from=engine-dependency-mariadb . /dependencies
-COPY --from=engine-dependency-poco . /dependencies
-COPY --from=engine-dependency-postgres . /dependencies
-COPY --from=engine-dependency-reflectcpp . /dependencies
-COPY --from=engine-dependency-xgboost . /dependencies
-
-
-FROM engine-base AS engine-build
-ARG NJOBS DEPENDENCY_DIR ENGINE_REPO_SOURCE ENGINE_DIR
-ARG PROFILING_MODE=OFF DEBUG_MODE=OFF
-ARG ARROW_DIR MARIADB_DIR POSTGRES_DIR POCO_DIR REFLECTCPP_DIR XGBOOST_DIR CMAKE_BINARY_DIR
-
-ARG CCACHE_DIR="$ENGINE_DIR/ccache" \
-    ENGINE_SRC_SOURCE="$ENGINE_REPO_SOURCE/src" \
-    ENGINE_INCLUDE_SOURCE="$ENGINE_REPO_SOURCE/include" \
-    ENGINE_CMAKEFILE_SOURCE="$ENGINE_REPO_SOURCE/CMakeLists.txt" \
-    ENGINE_DEPENDENCIES_FILE_SOURCE="$ENGINE_REPO_SOURCE/dependencies.json"
-
-COPY $ENGINE_SRC_SOURCE $ENGINE_DIR/src
-COPY $ENGINE_INCLUDE_SOURCE $ENGINE_DIR/include
-COPY $ENGINE_CMAKEFILE_SOURCE $ENGINE_DIR/CMakeLists.txt
-COPY $ENGINE_DEPENDENCIES_FILE_SOURCE $ENGINE_DIR/dependencies.json
-
-WORKDIR $ENGINE_DIR/build
-
-RUN --mount=type=cache,target=$CCACHE_DIR,sharing=locked \
-    --mount=type=bind,target=$DEPENDENCY_DIR,from=engine-dependencies,source=dependencies \
-    source scl_source enable gcc-toolset-13 \
-    && cmake $ENGINE_DIR \
-    -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-    && make -j ${NJOBS:-$(nproc)}
-
-
-FROM scratch AS package
-ARG VERSION="unknown"
+# ------------------------------------------------------------------------------
+# Image with necessary library dependencies
+FROM engine-tools AS engine-dependencies
+ARG ENGINE_REPO_SOURCE
 ARG ENGINE_DIR
+ENV CCACHE_PATH="/root/.cache/ccache"
+ENV ENGINE_BUILD_PATH="$ENGINE_DIR/build/engine-release-vcpkg-${TARGET_SYSTEM_PROCESSOR}-linux-build"
+ARG VCPKG_INSTALLED_PATH=$ENGINE_BUILD_PATH/vcpkg_installed
+
+RUN mkdir -p $ENGINE_DIR $ENGINE_DIR/overlay-ports $ENGINE_DIR/overlay-triplets
+COPY $ENGINE_REPO_SOURCE/vcpkg.json $ENGINE_REPO_SOURCE/vcpkg-configuration.json $ENGINE_DIR
+COPY $ENGINE_REPO_SOURCE/overlay-ports $ENGINE_DIR/overlay-ports
+COPY $ENGINE_REPO_SOURCE/overlay-triplets $ENGINE_DIR/overlay-triplets
+
+WORKDIR $ENGINE_DIR
+
+RUN --mount=type=cache,target=$CCACHE_PATH,sharing=locked \
+    --mount=type=cache,target=$VCPKG_ROOT/buildtrees,sharing=locked \
+    --mount=type=cache,target=$VCPKG_ROOT/downloads,sharing=locked \
+    --mount=type=cache,target=$VCPKG_ROOT/installed,sharing=locked \
+    --mount=type=cache,target=$VCPKG_ROOT/packages,sharing=locked \
+    --mount=type=cache,target=/root/.cache/vcpkg,sharing=locked \
+    source scl_source enable gcc-toolset-13 \
+    && $VCPKG_ROOT/vcpkg install --triplet=$TARGET_TRIPLET --x-install-root=$VCPKG_INSTALLED_PATH
+
+
+# ------------------------------------------------------------------------------
+# Image building the engine
+FROM engine-dependencies AS engine-build
+
+ENV VCPKG_INSTALL_OPTIONS="--no-downloads --only-binarycaching"
+ARG VERSION="0.0.0"
+ENV GETML_VERSION=$VERSION
+
+COPY $ENGINE_REPO_SOURCE $ENGINE_DIR
+
+RUN --mount=type=cache,target=$CCACHE_PATH,sharing=locked \
+    --mount=type=cache,target=$VCPKG_ROOT/buildtrees,sharing=locked,from=engine-dependencies \
+    --mount=type=cache,target=$VCPKG_ROOT/downloads,sharing=locked,from=engine-dependencies \
+    --mount=type=cache,target=$VCPKG_ROOT/installed,sharing=locked,from=engine-dependencies \
+    --mount=type=cache,target=$VCPKG_ROOT/packages,sharing=locked,from=engine-dependencies \
+    --mount=type=cache,target=/root/.cache/vcpkg,sharing=locked,from=engine-dependencies \
+    source scl_source enable gcc-toolset-13 \
+    && cmake --workflow --preset release-vcpkg-${TARGET_SYSTEM_PROCESSOR}-linux
+
+
+# ------------------------------------------------------------------------------
+# Image with the built engine at /engine-package
+FROM engine-build AS engine-package
+
 ARG TARGETARCH
-ARG TARGETOS
-ARG PACKAGE_NAME="getml-$VERSION-$TARGETARCH-$TARGETOS"
-COPY --from=engine-build $ENGINE_DIR/build/bin/engine /$PACKAGE_NAME/bin/engine
-COPY --from=base \
-    /lib64/libssl.so.1.1 \
-    /lib64/libcrypto.so.1.1 \
-    /lib64/libz.so.1 \
-    /lib64/libzstd.so.1 \
-    /lib64/libstdc++.so.6 \
-    /lib64/libgomp.so.1 \
-    /lib64/libgcc_s.so.1 /$PACKAGE_NAME/lib/
-COPY --from=engine-dependency-mariadb-lib ./lib /$PACKAGE_NAME/lib/
-COPY --from=engine-dependency-xgboost-lib ./lib /$PACKAGE_NAME/lib/
+ARG PACKAGE_NAME="getml-$GETML_VERSION-$TARGETARCH-linux"
+ARG ENGINE_PACKAGE_TGZ="engine-$GETML_VERSION-Linux-$TARGET_SYSTEM_PROCESSOR.tar.gz"
+ARG ENGINE_PACKAGE_TZST="engine-$GETML_VERSION-Linux-$TARGET_SYSTEM_PROCESSOR.tar.zst"
+
+RUN mkdir -p /engine-package/$PACKAGE_NAME/ \
+    && cp $ENGINE_BUILD_PATH/package/$ENGINE_PACKAGE_TGZ /engine-package/ \
+    && cp $ENGINE_BUILD_PATH/package/$ENGINE_PACKAGE_TZST /engine-package/ \
+    && tar -xzf $ENGINE_BUILD_PATH/package/$ENGINE_PACKAGE_TGZ -C /engine-package/$PACKAGE_NAME/ --strip-components=1
+
+
+# ------------------------------------------------------------------------------
+# Image with the final package for output to host
+FROM scratch AS package
+COPY --from=engine-package /engine-package/* /
+
+
+# ------------------------------------------------------------------------------
+# Image running the engine - on top of almalinux
+FROM almalinux:9.4-minimal AS engine-run-almalinux
+RUN mkdir /opt/getml
+COPY --from=engine-package /engine-package/* /opt/getml
+COPY <<EOF /opt/getml/config.json
+    {
+        "engine": {
+            "port": 1708
+        },
+        "monitor": {
+            "allowPushNotifications": true,
+            "allowRemoteIPs": false,
+            "launchBrowser": true,
+            "log": false,
+            "httpPort": 1709,
+            "proxyUrl": "",
+            "tcpPort": 1711
+        },
+        "inMemory": true,
+        "projectDirectory": "../projects/"
+    }
+EOF
+WORKDIR /opt/getml/bin
+CMD ["./engine" , "--project=QUICK_TEST"]
+
+
+# ------------------------------------------------------------------------------
+# Image running the engine - on top of debian
+FROM debian:12.5-slim AS engine-run-debian
+RUN mkdir /opt/getml
+COPY --from=engine-package /engine-package/* /opt/getml
+COPY <<EOF /opt/getml/config.json
+    {
+        "engine": {
+            "port": 1708
+        },
+        "monitor": {
+            "allowPushNotifications": true,
+            "allowRemoteIPs": false,
+            "launchBrowser": true,
+            "log": false,
+            "httpPort": 1709,
+            "proxyUrl": "",
+            "tcpPort": 1711
+        },
+        "inMemory": true,
+        "projectDirectory": "../projects/"
+    }
+EOF
+WORKDIR /opt/getml/bin
+CMD ["./engine" , "--project=QUICK_TEST"]

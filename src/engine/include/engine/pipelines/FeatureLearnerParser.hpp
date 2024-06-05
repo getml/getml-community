@@ -11,7 +11,7 @@
 #include "commands/FeatureLearner.hpp"
 #include "featurelearners/AbstractFeatureLearner.hpp"
 #include "featurelearners/FeatureLearnerParams.hpp"
-#include "rfl/Ref.hpp"
+#include <rfl/Ref.hpp>
 
 namespace engine {
 namespace pipelines {

@@ -8,7 +8,7 @@
 #ifndef ENGINE_PIPELINES_PURPOSE_HPP_
 #define ENGINE_PIPELINES_PURPOSE_HPP_
 
-#include "rfl/Literal.hpp"
+#include <rfl/Literal.hpp>
 
 namespace engine {
 namespace pipelines {

@@ -22,12 +22,12 @@
 #include "featurelearners/AbstractFeatureLearner.hpp"
 #include "helpers/StringReplacer.hpp"
 #include "predictors/Predictor.hpp"
-#include "rfl/Field.hpp"
-#include "rfl/as.hpp"
-#include "rfl/json.hpp"
-#include "rfl/make_named_tuple.hpp"
-#include "rfl/replace.hpp"
-#include "rfl/to_named_tuple.hpp"
+#include <rfl/Field.hpp>
+#include <rfl/as.hpp>
+#include <rfl/json.hpp>
+#include <rfl/make_named_tuple.hpp>
+#include <rfl/replace.hpp>
+#include <rfl/to_named_tuple.hpp>
 
 namespace engine {
 namespace pipelines {

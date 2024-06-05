@@ -23,7 +23,7 @@
 #include "debug/debug.hpp"
 #include "engine/config/config.hpp"
 #include "engine/handlers/ArrowHandler.hpp"
-#include "rfl/json.hpp"
+#include <rfl/json.hpp>
 
 namespace engine {
 namespace handlers {

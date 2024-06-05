@@ -175,12 +175,7 @@ class Aggregations {
   template <class IteratorType>
   static Float ewma(const Float _half_life, IteratorType _begin,
                     IteratorType _end) {
-#if (defined(_WIN32) || defined(_WIN64) || defined(__APPLE__))
     const Float log05 = std::log(0.5);
-#else
-    constexpr Float log05 = std::log(0.5);
-#endif
-
     const auto get_first = [_half_life, log05](const Float _init,
                                                const auto& _pair) -> Float {
       if (NullChecker::is_null(_pair.second)) [[unlikely]] {
@@ -214,7 +209,7 @@ class Aggregations {
   template <class IteratorType>
   static Float ewma_trend(const Float _half_life, IteratorType _begin,
                           IteratorType _end) {
-    constexpr Float log05 = std::log(0.5);
+    const Float log05 = std::log(0.5);
 
     const auto second_is_not_null = [](const auto& _pair) -> bool {
       return !NullChecker::is_null(_pair.second);

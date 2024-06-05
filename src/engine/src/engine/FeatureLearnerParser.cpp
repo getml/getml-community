@@ -12,7 +12,7 @@
 #include "fastprop/Hyperparameters.hpp"
 #include "fastprop/algorithm/FastProp.hpp"
 #include "featurelearners/FeatureLearner.hpp"
-#include "rfl/visit.hpp"
+#include <rfl/visit.hpp>
 
 namespace engine {
 namespace pipelines {
