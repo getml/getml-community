@@ -14,7 +14,7 @@
 #include "metrics/Scorer.hpp"
 #include "metrics/Scores.hpp"
 #include "metrics/Summarizer.hpp"
-#include "rfl/Field.hpp"
+#include <rfl/Field.hpp>
 
 namespace engine {
 namespace pipelines {

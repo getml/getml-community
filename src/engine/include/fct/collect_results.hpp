@@ -17,7 +17,7 @@
 
 #include "fct/ranges.hpp"
 #include "multithreading/multithreading.hpp"
-#include "rfl/Result.hpp"
+#include <rfl/Result.hpp>
 
 namespace fct {
 namespace collect_results {

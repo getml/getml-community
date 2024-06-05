@@ -9,7 +9,7 @@
 #define DATABASE_SQLITE3_HPP_
 
 extern "C" {
-#include <sqlite3/sqlite3.h>
+#include <sqlite3.h>
 }
 
 #include <memory>
@@ -25,7 +25,7 @@ extern "C" {
 #include "database/TableContent.hpp"
 #include "io/io.hpp"
 #include "multithreading/multithreading.hpp"
-#include "rfl/Ref.hpp"
+#include <rfl/Ref.hpp>
 
 namespace database {
 

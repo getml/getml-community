@@ -12,8 +12,8 @@
 #include <vector>
 
 #include "fastprop/algorithm/algorithm.hpp"
-#include "rfl/Field.hpp"
-#include "rfl/NamedTuple.hpp"
+#include <rfl/Field.hpp>
+#include <rfl/NamedTuple.hpp>
 #include "transpilation/SQLDialectGenerator.hpp"
 
 namespace fastprop {

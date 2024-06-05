@@ -8,7 +8,7 @@
 #ifndef FASTPROP_ENUMS_DATAUSED_HPP_
 #define FASTPROP_ENUMS_DATAUSED_HPP_
 
-#include "rfl/Literal.hpp"
+#include <rfl/Literal.hpp>
 
 namespace fastprop {
 namespace enums {

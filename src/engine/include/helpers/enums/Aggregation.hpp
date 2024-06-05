@@ -8,7 +8,7 @@
 #ifndef HELPERS_ENUMS_AGGREGATION_HPP_
 #define HELPERS_ENUMS_AGGREGATION_HPP_
 
-#include "rfl/Literal.hpp"
+#include <rfl/Literal.hpp>
 
 namespace helpers {
 namespace enums {

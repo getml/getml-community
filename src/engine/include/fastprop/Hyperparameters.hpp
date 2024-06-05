@@ -11,8 +11,8 @@
 #include "fastprop/Float.hpp"
 #include "fastprop/Int.hpp"
 #include "fastprop/enums/Aggregation.hpp"
-#include "rfl/Field.hpp"
-#include "rfl/Literal.hpp"
+#include <rfl/Field.hpp>
+#include <rfl/Literal.hpp>
 
 namespace fastprop {
 

@@ -16,10 +16,10 @@
 #include "featurelearners/Int.hpp"
 #include "helpers/Placeholder.hpp"
 #include "helpers/Schema.hpp"
-#include "rfl/Field.hpp"
-#include "rfl/NamedTuple.hpp"
-#include "rfl/Ref.hpp"
-#include "rfl/TaggedUnion.hpp"
+#include <rfl/Field.hpp>
+#include <rfl/NamedTuple.hpp>
+#include <rfl/Ref.hpp>
+#include <rfl/TaggedUnion.hpp>
 
 namespace featurelearners {
 

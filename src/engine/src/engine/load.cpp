@@ -17,7 +17,7 @@
 #include "engine/pipelines/load_fitted.hpp"
 #include "helpers/Loader.hpp"
 #include "metrics/metrics.hpp"
-#include "rfl/Field.hpp"
+#include <rfl/Field.hpp>
 
 namespace engine {
 namespace pipelines {

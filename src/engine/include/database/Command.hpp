@@ -12,10 +12,10 @@
 #include <string>
 #include <vector>
 
-#include "rfl/Field.hpp"
-#include "rfl/Literal.hpp"
-#include "rfl/TaggedUnion.hpp"
-#include "rfl/define_named_tuple.hpp"
+#include <rfl/Field.hpp>
+#include <rfl/Literal.hpp>
+#include <rfl/TaggedUnion.hpp>
+#include <rfl/define_named_tuple.hpp>
 
 namespace database {
 

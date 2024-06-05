@@ -14,9 +14,9 @@
 #include "commands/DataFramesOrViews.hpp"
 #include "communication/communication.hpp"
 #include "featurelearners/FitParams.hpp"
-#include "rfl/Field.hpp"
-#include "rfl/Flatten.hpp"
-#include "rfl/NamedTuple.hpp"
+#include <rfl/Field.hpp>
+#include <rfl/Flatten.hpp>
+#include <rfl/NamedTuple.hpp>
 
 namespace featurelearners {
 

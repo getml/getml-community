@@ -7,7 +7,7 @@
 
 #include "commands/ProjectCommand.hpp"
 
-#include "rfl/json.hpp"
+#include <rfl/json.hpp>
 
 namespace commands {
 

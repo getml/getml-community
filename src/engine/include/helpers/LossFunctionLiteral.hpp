@@ -1,7 +1,7 @@
 #ifndef HELPERS_LOSSFUNCTIONLITERAL_HPP_
 #define HELPERS_LOSSFUNCTIONLITERAL_HPP_
 
-#include "rfl/Literal.hpp"
+#include <rfl/Literal.hpp>
 
 namespace helpers {
 
