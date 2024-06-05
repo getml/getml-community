@@ -8,8 +8,8 @@
 #ifndef COMMANDS_BASICCOMMAND_HPP_
 #define COMMANDS_BASICCOMMAND_HPP_
 
-#include "rfl/Field.hpp"
-#include "rfl/NamedTuple.hpp"
+#include <rfl/Field.hpp>
+#include <rfl/NamedTuple.hpp>
 
 namespace commands {
 

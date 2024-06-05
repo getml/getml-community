@@ -20,8 +20,8 @@
 #include "predictors/Encoding.hpp"
 #include "predictors/FloatFeature.hpp"
 #include "predictors/IntFeature.hpp"
-#include "rfl/Field.hpp"
-#include "rfl/NamedTuple.hpp"
+#include <rfl/Field.hpp>
+#include <rfl/NamedTuple.hpp>
 
 namespace predictors {
 

@@ -17,8 +17,8 @@
 #include "communication/communication.hpp"
 #include "containers/containers.hpp"
 #include "featurelearners/Int.hpp"
-#include "rfl/Field.hpp"
-#include "rfl/NamedTuple.hpp"
+#include <rfl/Field.hpp>
+#include <rfl/NamedTuple.hpp>
 
 namespace featurelearners {
 

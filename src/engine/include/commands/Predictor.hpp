@@ -11,7 +11,7 @@
 #include "commands/LinearRegressionHyperparams.hpp"
 #include "commands/LogisticRegressionHyperparams.hpp"
 #include "commands/XGBoostHyperparams.hpp"
-#include "rfl/TaggedUnion.hpp"
+#include <rfl/TaggedUnion.hpp>
 
 namespace commands {
 

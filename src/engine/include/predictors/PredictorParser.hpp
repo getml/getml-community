@@ -15,8 +15,8 @@
 #include "predictors/Predictor.hpp"
 #include "predictors/PredictorHyperparams.hpp"
 #include "predictors/PredictorImpl.hpp"
-#include "rfl/Ref.hpp"
-#include "rfl/json.hpp"
+#include <rfl/Ref.hpp>
+#include <rfl/json.hpp>
 
 namespace predictors {
 

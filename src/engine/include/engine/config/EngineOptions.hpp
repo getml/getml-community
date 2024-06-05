@@ -10,8 +10,8 @@
 
 #include <string>
 
-#include "rfl/Field.hpp"
-#include "rfl/NamedTuple.hpp"
+#include <rfl/Field.hpp>
+#include <rfl/NamedTuple.hpp>
 
 namespace engine {
 namespace config {

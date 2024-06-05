@@ -14,7 +14,7 @@
 #include "metrics/Float.hpp"
 #include "metrics/MetricImpl.hpp"
 #include "multithreading/multithreading.hpp"
-#include "rfl/Field.hpp"
+#include <rfl/Field.hpp>
 
 namespace metrics {
 

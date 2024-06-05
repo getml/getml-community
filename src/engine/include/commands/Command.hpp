@@ -16,10 +16,10 @@
 #include "commands/PipelineCommand.hpp"
 #include "commands/ProjectCommand.hpp"
 #include "commands/ViewCommand.hpp"
-#include "rfl/Field.hpp"
-#include "rfl/Literal.hpp"
-#include "rfl/NamedTuple.hpp"
-#include "rfl/json.hpp"
+#include <rfl/Field.hpp>
+#include <rfl/Literal.hpp>
+#include <rfl/NamedTuple.hpp>
+#include <rfl/json.hpp>
 
 namespace commands {
 

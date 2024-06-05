@@ -19,7 +19,7 @@
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/Schema.hpp"
 #include "helpers/enums/Aggregation.hpp"
-#include "rfl/Ref.hpp"
+#include <rfl/Ref.hpp>
 #include "transpilation/FeatureTableParams.hpp"
 #include "transpilation/HumanReadableTrimming.hpp"
 #include "transpilation/SQLDialectGenerator.hpp"

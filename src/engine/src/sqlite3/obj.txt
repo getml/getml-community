@@ -1,4 +1,0 @@
-set(
-    SQLITE3_OBJ 
-    ${SQLITE3_SOURCE_DIRECTORY}/sqlite3.c
-)

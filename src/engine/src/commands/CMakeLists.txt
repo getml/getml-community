@@ -1,0 +1,23 @@
+add_library(
+  commands
+  OBJECT
+  BooleanColumnView.cpp
+  ColumnCommand.cpp
+  Command.cpp
+  DatabaseCommand.cpp
+  DataFrameCommand.cpp
+  DataModel.cpp
+  Fingerprint.cpp
+  FloatColumnOrFloatColumnView.cpp
+  PipelineCommand.cpp
+  ProjectCommand.cpp
+  StringColumnOrStringColumnView.cpp
+  ViewCommand.cpp
+)
+
+target_link_libraries(
+  commands
+  PUBLIC
+  reflectcpp::reflectcpp
+  xgboost::xgboost
+)

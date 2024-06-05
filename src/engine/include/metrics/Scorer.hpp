@@ -18,7 +18,7 @@
 #include "metrics/RMSE.hpp"
 #include "metrics/RSquared.hpp"
 #include "metrics/Scores.hpp"
-#include "rfl/define_named_tuple.hpp"
+#include <rfl/define_named_tuple.hpp>
 
 namespace metrics {
 

@@ -21,9 +21,9 @@
 #include "predictors/Predictor.hpp"
 #include "predictors/PredictorImpl.hpp"
 #include "predictors/StandardScaler.hpp"
-#include "rfl/NamedTuple.hpp"
-#include "rfl/Ref.hpp"
-#include "rfl/from_named_tuple.hpp"
+#include <rfl/NamedTuple.hpp>
+#include <rfl/Ref.hpp>
+#include <rfl/from_named_tuple.hpp>
 
 namespace predictors {
 

@@ -1,0 +1,19 @@
+add_library(
+  fastprop
+  OBJECT
+  AbstractFeature.cpp
+  Aggregator.cpp
+  Condition.cpp
+  ConditionParser.cpp
+  FastProp.cpp
+  FastPropContainer.cpp
+  Maker.cpp
+  RSquared.cpp
+  SQLMaker.cpp
+)
+
+target_link_libraries(
+  fastprop
+  PUBLIC
+  reflectcpp::reflectcpp
+)

@@ -15,7 +15,7 @@
 #include "engine/pipelines/FittedPipeline.hpp"
 #include "engine/pipelines/Pipeline.hpp"
 #include "fct/collect.hpp"
-#include "rfl/replace.hpp"
+#include <rfl/replace.hpp>
 #include "transpilation/SQLGenerator.hpp"
 
 namespace engine {
