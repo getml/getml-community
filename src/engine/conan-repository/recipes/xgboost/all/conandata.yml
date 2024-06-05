@@ -1,0 +1,4 @@
+sources:
+  git:
+    url:
+      - "https://github.com/dmlc/xgboost.git"

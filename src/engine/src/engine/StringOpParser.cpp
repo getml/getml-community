@@ -10,7 +10,7 @@
 #include "engine/handlers/BoolOpParser.hpp"
 #include "engine/handlers/FloatOpParser.hpp"
 #include "engine/utils/Aggregations.hpp"
-#include "rfl/visit.hpp"
+#include <rfl/visit.hpp>
 
 namespace engine {
 namespace handlers {

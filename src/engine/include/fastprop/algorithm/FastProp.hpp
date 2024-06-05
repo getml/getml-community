@@ -27,9 +27,9 @@
 #include "helpers/VocabularyContainer.hpp"
 #include "helpers/VocabularyTree.hpp"
 #include "multithreading/multithreading.hpp"
-#include "rfl/Field.hpp"
-#include "rfl/NamedTuple.hpp"
-#include "rfl/Ref.hpp"
+#include <rfl/Field.hpp>
+#include <rfl/NamedTuple.hpp>
+#include <rfl/Ref.hpp>
 #include "transpilation/SQLDialectParser.hpp"
 
 namespace fastprop {

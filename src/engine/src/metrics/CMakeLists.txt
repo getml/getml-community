@@ -1,0 +1,20 @@
+add_library(
+  metrics
+  OBJECT
+  Accuracy.cpp
+  AUC.cpp
+  CrossEntropy.cpp
+  MAE.cpp
+  RMSE.cpp
+  RSquared.cpp
+  Scorer.cpp
+  Scores.cpp
+  Summarizer.cpp
+)
+
+target_link_libraries(
+  metrics
+  PUBLIC
+  reflectcpp::reflectcpp
+  Poco::Foundation
+)

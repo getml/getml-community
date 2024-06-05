@@ -1,5 +1,0 @@
-set(
-    MEMMAP_OBJ
-    ${MEMMAP_SOURCE_DIRECTORY}/FreeBlocksTracker.cpp
-    ${MEMMAP_SOURCE_DIRECTORY}/Pool.cpp
-)

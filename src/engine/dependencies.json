@@ -1,8 +1,0 @@
-{
-	"mariadb": "3.2.5",
-	"poco": "1.13.3",
-	"postgres": "15.4",
-	"xgboost": "1.5.1",
-	"arrow": "15.0.2",
-	"reflect-cpp": "0.8.0"
-}

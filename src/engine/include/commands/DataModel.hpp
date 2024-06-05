@@ -14,10 +14,10 @@
 #include "commands/Float.hpp"
 #include "commands/Roles.hpp"
 #include "helpers/Placeholder.hpp"
-#include "rfl/Field.hpp"
-#include "rfl/Literal.hpp"
-#include "rfl/define_named_tuple.hpp"
-#include "rfl/json.hpp"
+#include <rfl/Field.hpp>
+#include <rfl/Literal.hpp>
+#include <rfl/define_named_tuple.hpp>
+#include <rfl/json.hpp>
 
 namespace commands {
 

@@ -27,7 +27,7 @@
 #include "predictors/IntFeature.hpp"
 #include "predictors/PredictorImpl.hpp"
 #include "predictors/XGBoostIteratorDense.hpp"
-#include "rfl/Ref.hpp"
+#include <rfl/Ref.hpp>
 
 namespace predictors {
 

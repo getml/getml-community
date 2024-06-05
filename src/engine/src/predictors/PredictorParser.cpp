@@ -10,7 +10,7 @@
 #include "predictors/LinearRegression.hpp"
 #include "predictors/LogisticRegression.hpp"
 #include "predictors/XGBoostPredictor.hpp"
-#include "rfl/visit.hpp"
+#include <rfl/visit.hpp>
 
 namespace predictors {
 

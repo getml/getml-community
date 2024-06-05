@@ -10,7 +10,7 @@
 
 #include "commands/NotSupportedInCommunity.hpp"
 #include "fastprop/Hyperparameters.hpp"
-#include "rfl/TaggedUnion.hpp"
+#include <rfl/TaggedUnion.hpp>
 
 namespace commands {
 

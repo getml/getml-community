@@ -15,7 +15,7 @@
 #include "metrics/MetricImpl.hpp"
 #include "metrics/Scores.hpp"
 #include "multithreading/multithreading.hpp"
-#include "rfl/NamedTuple.hpp"
+#include <rfl/NamedTuple.hpp>
 
 namespace metrics {
 
