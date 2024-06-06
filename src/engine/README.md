@@ -209,6 +209,29 @@ $ cmake --preset debug-vcpkg -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=mold -DCMAKE_SHA
 Especially `mold` is very fast and can be used as a drop-in replacement for `ld` while developing.
 
 
+### Limiting the number of jobs or theads used by the build
+
+Use the environment variable `CMAKE_BUILD_PARALLEL_LEVEL` to limit the number of jobs or threads used by the build.
+
+```bash
+$ CMAKE_BUILD_PARALLEL_LEVEL=4 cmake --workflow --preset debug-vcpkg
+```
+
+This is especially useful when building on a machine with limited resources.
+
+For Docker, this can be achieved by setting the `--build-arg` flag with the `NJOBS` variable.
+
+```bash
+$ docker build \
+  -f Dockerfile \
+  --target package \
+  --build-arg VERSION=1.5.0 \
+  --build-arg NJOBS=4 \
+  --output type=local,dest=$(pwd)/build-docker \
+  .
+```
+
+
 ### Debian
 
 #### OpenMP

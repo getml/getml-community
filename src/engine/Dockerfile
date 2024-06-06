@@ -6,11 +6,14 @@ ARG ENGINE_DIR="/src/engine"
 
 # ------------------------------------------------------------------------------
 # Base images
-FROM quay.io/pypa/manylinux_2_28_x86_64 as base-amd64
+# Tags are available at:
+# - https://quay.io/repository/pypa/manylinux_2_28_x86_64?tab=tags
+# - https://quay.io/repository/pypa/manylinux_2_28_aarch64?tab=tags
+FROM quay.io/pypa/manylinux_2_28_x86_64:2024-06-03-e195670 as base-amd64
 ENV TARGET_SYSTEM_PROCESSOR=x86_64
 ENV TARGET_TRIPLET=x64-linux-release
 
-FROM quay.io/pypa/manylinux_2_28_aarch64 as base-arm64
+FROM quay.io/pypa/manylinux_2_28_aarch64:2024-06-03-e195670 as base-arm64
 ENV TARGET_SYSTEM_PROCESSOR=aarch64
 ENV TARGET_TRIPLET=aarch64-linux-release
 
@@ -84,6 +87,7 @@ FROM engine-dependencies AS engine-build
 
 ENV VCPKG_INSTALL_OPTIONS="--no-downloads --only-binarycaching"
 ARG VERSION="0.0.0"
+ARG NJOBS
 ENV GETML_VERSION=$VERSION
 
 COPY $ENGINE_REPO_SOURCE $ENGINE_DIR
@@ -95,6 +99,7 @@ RUN --mount=type=cache,target=$CCACHE_PATH,sharing=locked \
     --mount=type=cache,target=$VCPKG_ROOT/packages,sharing=locked,from=engine-dependencies \
     --mount=type=cache,target=/root/.cache/vcpkg,sharing=locked,from=engine-dependencies \
     source scl_source enable gcc-toolset-13 \
+    && if [ -n "$NJOBS" ]; then export CMAKE_BUILD_PARALLEL_LEVEL="$NJOBS"; fi \
     && cmake --workflow --preset release-vcpkg-${TARGET_SYSTEM_PROCESSOR}-linux
 
 
@@ -120,7 +125,7 @@ COPY --from=engine-package /engine-package/* /
 
 
 # ------------------------------------------------------------------------------
-# Image running the engine - on top of almalinux
+# Image testing running the engine - on top of almalinux
 FROM almalinux:9.4-minimal AS engine-run-almalinux
 RUN mkdir /opt/getml
 COPY --from=engine-package /engine-package/* /opt/getml
@@ -147,7 +152,7 @@ CMD ["./engine" , "--project=QUICK_TEST"]
 
 
 # ------------------------------------------------------------------------------
-# Image running the engine - on top of debian
+# Image testing running the engine - on top of debian
 FROM debian:12.5-slim AS engine-run-debian
 RUN mkdir /opt/getml
 COPY --from=engine-package /engine-package/* /opt/getml
