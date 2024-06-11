@@ -145,10 +145,12 @@ Usage:
   build <subcommand> [options]
 
 Subcommands:
-  [a]ll       Build all (whole package, ref. [p]ackage)
+  [a]ll       Build all (whole package, [p]ackage + [py]thon API + tar+gz [ar]chive)
   [c]li       Build cli
   [e]ngine    Build engine
-  [p]ackage   Build package
+  [p]ackage   Export runable [e]ngine + [c]li package
+  [py]thon    Package Python API
+  [ar]chive   Create tar.gz archive of [p]ackage
 
 Options:
   -b <args>   Specify build args (-b KEY=VALUE); passed to docker build
@@ -163,8 +165,8 @@ Most of the time you probably want to build the (C++) engine:
 ```
 
 If you are calling `getml build package` all build artifacts will be packaged
-inside the specified output folder. Further, a tarball
-(`getml-<version>-<arch>-linux.tar.gz`) will be created inside the folder.
+inside the specified output folder.
+With `archive` a compressed tarball (`getml-<version>-<arch>-linux.tar.gz`) will be created inside the folder.
 
 ### Build options
 #### `-b <args>`: Build args 

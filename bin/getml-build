@@ -2,8 +2,6 @@
 
 bin_dir=$(dirname -- "$(realpath -- "$0")")
 
-[[ $(arch) = "aarch64" || $(arch) = "arm64" ]] && arch=arm64 || arch=x64
-
 parse_opt_multiple_args() {
   while [[ ${OPTIND} -le $# && ${!OPTIND:0:1} != "-" ]]; do
     OPTARG[i]=${!OPTIND}
@@ -28,11 +26,12 @@ show_help() {
 		  build <subcommand> [options]
 
 		Subcommands:
-		  [a]ll       Build all (whole package, ref. [p]ackage)
+		  [a]ll       Build all (whole package, [p]ackage + [py]thon API + tar+gz [ar]chive)
 		  [c]li       Build cli
 		  [e]ngine    Build engine
-		  [p]ackage   Build package
-		  [w]heel     Build wheel
+		  [p]ackage   Export runable [e]ngine + [c]li package
+		  [py]thon    Package Python API
+		  [ar]chive   Create tar.gz archive of [p]ackage
 
 		Options:
 		  -b <args>   Specify build args (-b KEY=VALUE); passed to docker build
@@ -74,7 +73,7 @@ fi
 while [[ "$#" -gt 0 ]]; do
   case $1 in
     a | all)
-      target="package"
+      target="all"
       ;;
     c | cli)
       target="cli"
@@ -85,8 +84,11 @@ while [[ "$#" -gt 0 ]]; do
     p | package)
       target="package"
       ;;
-    w | wheel)
-      target="wheel"
+    py | python)
+      target="python"
+      ;;
+    ar | chive)
+      target="archive"
       ;;
     --)
       shift
@@ -113,13 +115,4 @@ done
     --set $target.output=$output \
     $build_args \
     "${@}"
-
-  if [[ $target = "package" ]]; then
-    package=$(find $output -type d -name "getml-${VERSION}-*" -maxdepth 1 | sort | tail -1)
-    tarball=$(basename $package).tar
-    docker buildx bake $target \
-      --set $target.output=type=tar,dest=$output/$tarball \
-      $build_args \
-      "${@}"
-  fi
 )

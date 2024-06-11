@@ -12,7 +12,7 @@ target "cli" {
 
 target "engine" {
   dockerfile = "src/engine/Dockerfile"
-  target = "package"
+  target = "engine-package"
   args = {
     ENGINE_REPO_SOURCE="src/engine",
     VERSION="${VERSION}"
@@ -23,18 +23,40 @@ target "package" {
   contexts = {
     engine-build = "target:engine"
   }
-  target = "package"
+  target = "export"
   output = ["build"]
   args = {
     VERSION="${VERSION}"
   }
 }
 
-target "wheel" {
+target "python" {
   contexts = {
     engine-build = "target:engine"
   }
-  target = "wheel"
+  target = "python"
+  output = ["build"]
+  args = {
+    VERSION="${VERSION}"
+  }
+}
+
+target "archive" {
+  contexts = {
+    engine-build = "target:engine"
+  }
+  target = "archive"
+  output = ["build"]
+  args = {
+    VERSION="${VERSION}"
+  }
+}
+
+target "all" {
+  contexts = {
+    engine-build = "target:engine"
+  }
+  target = "all"
   output = ["build"]
   args = {
     VERSION="${VERSION}"
