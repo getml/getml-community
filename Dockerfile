@@ -16,43 +16,47 @@ FROM scratch AS cli
 ARG PACKAGE_NAME
 COPY --from=cli-build /cli/release/getml-cli $PACKAGE_NAME/getML
 
-FROM scratch AS engine
-ARG PACKAGE_NAME
-COPY --from=engine-build /$PACKAGE_NAME/bin $PACKAGE_NAME/bin
-COPY --from=engine-build /$PACKAGE_NAME/lib $PACKAGE_NAME/lib
-
 FROM scratch AS export
 ARG PACKAGE_NAME
 COPY --from=cli / .
-COPY --from=engine / .
+COPY --from=engine-build engine-package/$PACKAGE_NAME $PACKAGE_NAME
 COPY LICENSE.txt $PACKAGE_NAME
 COPY src/package-build-imports $PACKAGE_NAME
 
-FROM python:3.11-slim AS wheel-base-arm64
+FROM python:3.11-slim AS python-base-arm64
 ARG WHEEL_PLATFORM="manylinux_2_28_aarch64"
 
-FROM python:3.11-slim AS wheel-base-amd64
+FROM python:3.11-slim AS python-base-amd64
 ARG WHEEL_PLATFORM="manylinux_2_28_x86_64"
 
-FROM wheel-base-$TARGETARCH AS wheel-build
+FROM python-base-$TARGETARCH AS python-build
 ARG PACKAGE_NAME
 ARG VERSION
-WORKDIR /wheel/src
+WORKDIR /python-api/src
+RUN pip install hatch
 COPY src/python-api/ .
 COPY VERSION ./getml/VERSION
 # the binaries are not present yet, so the general `any` wheel will contain no binaries
-RUN pip wheel --no-deps --wheel-dir /wheel/dist .
-RUN mkdir -p /wheel/src/getml/.getML
+RUN hatch build
+RUN mkdir -p /python-api/src/getml/.getML
 COPY --from=export /$PACKAGE_NAME ./getml/.getML
-# now the binaries are present, we set the platform accordingly
-RUN pip wheel --no-deps --wheel-dir /wheel/dist \
-    --config-settings --build-option=--plat-name \
-    --config-settings --build-option=$WHEEL_PLATFORM .
+# now the binaries are present, the platform tag is set accordingly by hatch
+RUN hatch build -t wheel
 
-FROM scratch AS wheel
+FROM scratch AS python
 ARG PACKAGE_NAME
-COPY --from=wheel-build /wheel/dist $PACKAGE_NAME/wheel
+COPY --from=python-build python-api/src/dist $PACKAGE_NAME/python-api
 
-FROM scratch AS package
+FROM alpine AS archive-build
+ARG PACKAGE_NAME
+COPY --from=export / /$PACKAGE_NAME
+RUN mkdir /out
+RUN tar czf /out/$PACKAGE_NAME.tar.gz $PACKAGE_NAME
+
+FROM scratch AS archive
+COPY --from=archive-build /out/ .
+
+FROM scratch AS all
 COPY --from=export / .
-COPY --from=wheel / .
+COPY --from=python / .
+COPY --from=archive / .

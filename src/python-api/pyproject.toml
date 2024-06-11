@@ -5,6 +5,10 @@
 # for details.
 #
 
+[build-system]
+requires = ["wheel", "hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
 [project]
 name = "getml"
 description = "Python API for getML"
@@ -40,6 +44,33 @@ dependencies = [
     "scipy",
 ]
 
+[tool.hatch.version]
+source = "code"
+path = "getml/version.py"
+expression = "__version__"
+
+[tool.hatch.envs.default]
+installer = "uv"
+dependencies = [
+  "pyright",
+  "ruff==0.4.5",
+  "uv"
+]
+
+[tool.hatch.build]
+include = [
+    "getml",
+    "VERSION",
+    "getml/utilities/templates/*.jinja2",
+]
+exclude = ["tests"]
+
+[tool.hatch.build.target.wheel]
+include = [".getML/**/*"]
+
+[tool.hatch.build.targets.wheel.hooks.custom]
+path = "hatch_build.py"
+
 [project.urls]
 "Hompage" = "https://getml.com"
 "Documentation" = "https://docs.getml.com/latest"
@@ -50,41 +81,6 @@ dependencies = [
 [project.optional-dependencies]
 test = ["pytest", "pyspark"]
 development = ["pyright", "ruff==0.4.5"]
-
-[tool.setuptools]
-packages = [
-    "getml",
-    "getml.data",
-    "getml.data.columns",
-    "getml.data.split",
-    "getml.data.subroles",
-    "getml.database",
-    "getml.datasets",
-    "getml.engine",
-    "getml.feature_learning",
-    "getml.hyperopt",
-    "getml.pipeline",
-    "getml.pipeline",
-    "getml.predictors",
-    "getml.preprocessors",
-    "getml.project",
-    "getml.project.containers",
-    "getml.sqlite3",
-    "getml.utilities",
-    "getml.utilities.formatting",
-    "getml.utilities.templates"
-]
-
-[tool.setuptools.dynamic]
-version = {attr = "getml.version.__version__"}
-
-[tool.setuptools.package-data]
-getml = [
-    "VERSION",
-    "py.typed",
-    "utilities/templates/*.jinja2",
-    ".getML/**/*",
-]
 
 [tool.ruff.lint]
 ignore = [
@@ -102,6 +98,3 @@ ignore = [
   "C901", "PLR0911", "PLR0912", "PLR0913", "PLR0915",
 ]
 
-[build-system]
-requires = ["setuptools>=61.0", "wheel"]
-build-backend = "setuptools.build_meta"

@@ -24,6 +24,7 @@
 /**/cmake_build/
 /**/build/
 /**/bin/
+!bin/
 
 /**/linux/version.sh
 /**/macos/version.sh
