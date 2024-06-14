@@ -19,9 +19,9 @@ import string
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
-import pandas as pd  # type: ignore
-import pyarrow as pa  # type: ignore
-from pyarrow import parquet  # type: ignore
+import pandas as pd
+import pyarrow as pa
+from pyarrow import parquet
 
 import getml.communication as comm
 from getml import constants
@@ -609,7 +609,7 @@ def _sniff_csv(
         msg = comm.recv_string(sock)
         if msg != "Success!":
             sock.close()
-            raise IOError(msg)
+            raise OSError(msg)
         roles = comm.recv_string(sock)
 
     return json.loads(roles)
@@ -652,34 +652,6 @@ def _sniff_db(
         roles = comm.recv_string(sock)
 
     return json.loads(roles)
-
-
-# --------------------------------------------------------------------
-
-
-def _sniff_json(json_str: str) -> Dict[str, List[str]]:
-    """Sniffs a JSON str and returns the result as a dictionary of
-    roles.
-
-    Args:
-        json_str: The JSON string to be sniffed.
-
-    Returns:
-        Roles that can be used to construct a DataFrame.
-    """
-    json_dict = json.loads(json_str)
-
-    roles: Dict[str, List[str]] = {}
-    roles["unused_float"] = []
-    roles["unused_string"] = []
-
-    for cname, col in json_dict.items():
-        if _is_numerical_type(np.array(col).dtype):
-            roles["unused_float"].append(cname)
-        else:
-            roles["unused_string"].append(cname)
-
-    return roles
 
 
 # --------------------------------------------------------------------
@@ -781,7 +753,7 @@ def _sniff_s3(
         msg = comm.recv_string(sock)
         if msg != "Success!":
             sock.close()
-            raise IOError(msg)
+            raise OSError(msg)
         roles = comm.recv_string(sock)
 
     return json.loads(roles)
@@ -914,55 +886,6 @@ def _transform_col(col, role, is_boolean, is_float, is_string, time_formats):
         return col.as_num()  # pytype: disable=attribute-error
 
     return col
-
-
-# --------------------------------------------------------------------
-
-
-def _transform_timestamps(time_stamps: pd.DataFrame) -> np.ndarray:
-    """Transforming a time stamp using to_numeric
-    will result in the number of nanoseconds since
-    the beginning of UNIX time. We want the number of seconds since
-    UNIX time."""
-
-    if not isinstance(time_stamps, pd.DataFrame):
-        raise TypeError("'time_stamps' must be a pandas.DataFrame!")
-
-    transformed = pd.DataFrame()
-
-    for colname in time_stamps.columns:
-        if pd.api.types.is_numeric_dtype(time_stamps[colname]):
-            transformed[colname] = time_stamps[colname]
-
-        elif pd.api.types.is_datetime64_ns_dtype(time_stamps[colname]):
-            transformed[colname] = (
-                time_stamps[[colname]]
-                .apply(pd.to_datetime, errors="coerce")
-                .apply(pd.to_numeric, errors="coerce")
-                .apply(lambda val: val / 1.0e9)[colname]
-            )
-
-        else:
-            raise TypeError(
-                """
-                Column '"""
-                + colname
-                + """' has the wrong type!
-
-                If you want to send a numpy array or a column in a
-                pandas.DataFrame to the engine as a time_stamp, its
-                type must either be numerical or numpy.datetime64.
-
-                To fix this problem, you can do one of the following:
-                1) Read it in as an unused_string and then use
-                   set_role(...) to make it a time stamp. (You might
-                   have to explicitly set time_formats.)
-
-                2) Cast your column or array as a numerical value
-                   or a numpy.datetime64."""
-            )
-
-    return transformed.values
 
 
 # --------------------------------------------------------------------

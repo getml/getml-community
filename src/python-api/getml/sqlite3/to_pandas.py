@@ -12,7 +12,7 @@ Returns a table as a pandas.DataFrame.
 
 import sqlite3
 
-import pandas as pd  # type: ignore
+import pandas as pd
 
 from .to_list import to_list
 

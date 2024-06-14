@@ -11,13 +11,19 @@ This module is useful for productionizing pipelines
 on Apache Spark.
 """
 
+from __future__ import annotations
+
 import os
+from typing import TYPE_CHECKING
 
 from getml.sqlite3.execute import _retrieve_scripts
 from getml.sqlite3.helpers import _log
 
+if TYPE_CHECKING:
+    import pyspark.sql.session
 
-def execute(spark: "pyspark.sql.session.SparkSession", fname: str) -> None:
+
+def execute(spark: pyspark.sql.session.SparkSession, fname: str) -> None:
     """
     Executes an SQL script or several SQL scripts on Spark.
 
@@ -46,7 +52,7 @@ def execute(spark: "pyspark.sql.session.SparkSession", fname: str) -> None:
 
     _log("Executing " + fname + "...")
 
-    with open(fname, "rt", encoding="utf-8") as sql_files:
+    with open(fname, encoding="utf-8") as sql_files:
         queries = sql_files.read().split(";")
 
     for query in queries:

@@ -11,6 +11,8 @@ Holds Formatter and FormatColumn classes which are used for formatting tabular o
 within the getML python API.
 """
 
+from __future__ import annotations
+
 import datetime
 import html
 import itertools as it
@@ -40,8 +42,8 @@ def _clip_lines(lines, max_cols):
         lines_clipped = []
         ellipses = ["..." if row[0].strip() else "   " for row in lines]
         for line, ellipsis in zip(lines, ellipses):
-            line = list(line)
-            lines_clipped.append(line[:threshold] + [ellipsis] + line[-threshold:])
+            line_ = list(line)
+            lines_clipped.append(line_[:threshold] + [ellipsis] + line_[-threshold:])
         return lines_clipped
     return lines
 
@@ -505,7 +507,7 @@ class _FormatColumn:
 
     # ------------------------------------------------------------
 
-    def _clip(self, ellipses="...") -> "_FormatColumn":
+    def _clip(self, ellipses="...") -> _FormatColumn:
         column_clipped = deepcopy(self)
         if self.n_cells > self.max_cells:
             head = self.data[: self.max_cells // 2]

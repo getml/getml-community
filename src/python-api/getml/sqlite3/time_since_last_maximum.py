@@ -12,8 +12,6 @@ TIME_SINCE_LAST_MAXIMUM aggregation.
 
 import functools
 
-import numpy as np
-
 from .helpers import _not_null
 
 # ----------------------------------------------------------------------------

@@ -52,6 +52,7 @@ __all__ = (
     "ScaleGBMRegressor",
     "LinearRegression",
     "LogisticRegression",
+    "_Predictor",
     "XGBoostClassifier",
     "XGBoostRegressor",
 )

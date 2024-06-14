@@ -12,7 +12,7 @@ Contains utility functions for sniffing sqlite data types from CSV files.
 
 from typing import List, Optional, Union
 
-import pandas as pd  # type: ignore
+import pandas as pd
 
 from getml.data.helpers import _is_non_empty_typed_list, _is_typed_list
 
@@ -22,7 +22,7 @@ from .sniff_pandas import sniff_pandas
 
 
 def sniff_csv(
-    fnames: Union[str, list[str]],
+    fnames: Union[str, List[str]],
     table_name: str,
     header: bool = True,
     num_lines_sniffed: int = 1000,

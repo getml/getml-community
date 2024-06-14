@@ -19,7 +19,7 @@ import numbers
 import socket
 import time
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -29,7 +29,6 @@ from getml import data
 from getml.data import (
     DataModel,
     Placeholder,
-    Roles,
     View,
     _decode_data_model,
     _decode_placeholder,
@@ -511,7 +510,7 @@ class Pipeline:
             ]
         ] = None,
         loss_function: Optional[str] = None,
-        tags: Optional[list[str]] = None,
+        tags: Optional[List[str]] = None,
         include_categorical: bool = False,
         share_selected_features: float = 0.5,
     ) -> None:
@@ -836,7 +835,7 @@ class Pipeline:
 
     # ----------------------------------------------------------------
 
-    def _parse_cmd(self, json_obj: Dict[str, Any]) -> "Pipeline":
+    def _parse_cmd(self, json_obj: Dict[str, Any]) -> Pipeline:
         ptype = json_obj["type_"]
 
         del json_obj["type_"]
@@ -878,7 +877,7 @@ class Pipeline:
 
         kwargs = _remove_trailing_underscores(json_obj)
 
-        self.__init__(  # type: ignore
+        self.__init__(
             data_model=data_model,
             peripheral=peripheral,
             preprocessors=preprocessors,
@@ -894,7 +893,7 @@ class Pipeline:
 
     # ----------------------------------------------------------------
 
-    def _parse_json_obj(self, all_json_objs: Dict[str, Any]) -> "Pipeline":
+    def _parse_json_obj(self, all_json_objs: Dict[str, Any]) -> Pipeline:
         obj = all_json_objs["obj"]
 
         scores = all_json_objs["scores"]
@@ -937,7 +936,7 @@ class Pipeline:
 
     # ------------------------------------------------------------
 
-    def _send(self, additional_tags: Optional[List[str]] = None) -> "Pipeline":
+    def _send(self, additional_tags: Optional[List[str]] = None) -> Pipeline:
         self._validate()
 
         self._id = _make_id()
@@ -1169,7 +1168,6 @@ class Pipeline:
             deploy (bool): If `True`, the deployment of the pipeline
                 will be triggered.
         """
-
         self._check_whether_fitted()
 
         if not isinstance(deploy, bool):
@@ -1211,7 +1209,7 @@ class Pipeline:
         ] = None,
         validation_table: Optional[Union[DataFrame, View, data.Subset]] = None,
         check: bool = True,
-    ) -> "Pipeline":
+    ) -> Pipeline:
         """Trains the feature learning algorithms, feature selectors
         and predictors.
 
@@ -1495,7 +1493,7 @@ class Pipeline:
 
     # ------------------------------------------------------------
 
-    def refresh(self) -> "Pipeline":
+    def refresh(self) -> Pipeline:
         """Reloads the pipeline from the engine.
 
         This discards all local changes you have made since the

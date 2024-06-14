@@ -12,9 +12,9 @@ Load preprocessed datasets
 import json
 import warnings
 from typing import Dict, List, Optional, Tuple, Union
-from urllib.request import urlopen  # type: ignore
+from urllib.request import urlopen
 
-import pandas as pd  # type: ignore
+import pandas as pd
 
 from getml.data import DataFrame
 

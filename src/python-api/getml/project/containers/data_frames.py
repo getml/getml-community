@@ -10,7 +10,9 @@
 Container for data frames in memory.
 """
 
-from typing import Callable
+from __future__ import annotations
+
+from typing import Callable, List
 
 from getml.data import DataFrame
 from getml.data.helpers import list_data_frames
@@ -115,7 +117,7 @@ class DataFrames:
     # ----------------------------------------------------------------
 
     @property
-    def in_memory(self) -> list[str]:
+    def in_memory(self) -> List[str]:
         """
         Returns the names of all data frames currently in memory.
 
@@ -126,7 +128,7 @@ class DataFrames:
 
     # ----------------------------------------------------------------
 
-    def filter(self, conditional: Callable) -> "DataFrames":
+    def filter(self, conditional: Callable) -> DataFrames:
         """
         Filters the data frames container.
 
@@ -160,7 +162,7 @@ class DataFrames:
     # ----------------------------------------------------------------
 
     @property
-    def on_disk(self) -> list[str]:
+    def on_disk(self) -> List[str]:
         """
         Returns the names of all data frames stored in the project folder.
         """
@@ -187,7 +189,7 @@ class DataFrames:
 
     # ----------------------------------------------------------------
 
-    def sort(self, key: Callable, descending: bool = False) -> "DataFrames":
+    def sort(self, key: Callable, descending: bool = False) -> DataFrames:
         """
         Sorts the data frames container.
 

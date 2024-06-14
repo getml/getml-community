@@ -12,8 +12,6 @@ TIME_SINCE_FIRST_MINIMUM aggregation.
 
 import functools
 
-import numpy as np
-
 from .helpers import _not_null
 
 # ----------------------------------------------------------------------------

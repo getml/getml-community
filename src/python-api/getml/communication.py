@@ -79,7 +79,7 @@ def is_monitor_alive() -> bool:
 class _GetmlEncoder(json.JSONEncoder):
     """Enables a custom serialization of the getML classes."""
 
-    def default(self, obj):
+    def default(self, obj):  # type: ignore
         """Checks for the particular type of the provided object and
         deserializes it into an escaped string.
 
@@ -152,7 +152,7 @@ def engine_exception_handler(msg: str, fallback: str = "") -> None:
     if not fallback:
         fallback = msg
 
-    raise IOError(fallback)
+    raise OSError(fallback)
 
 
 # --------------------------------------------------------------------
@@ -188,7 +188,7 @@ def recv_data(sock: socket.socket, size: Union[numbers.Real, int]) -> bytes:
         chunk = sock.recv(current_chunk_size)
 
         if not chunk:
-            raise IOError(
+            raise OSError(
                 """The getML engine died unexpectedly.
                     If this wasn't done on purpose, please get in contact
                     with our support or file a bug report."""
@@ -198,7 +198,7 @@ def recv_data(sock: socket.socket, size: Union[numbers.Real, int]) -> bytes:
 
         bytes_received += np.uint64(len(chunk))
 
-    return "".encode().join(data)
+    return b"".join(data)
 
 
 # --------------------------------------------------------------------
@@ -653,7 +653,7 @@ def _load_project(bundle: str, name=None):
     if msg != "Success!":
         engine_exception_handler(msg)
 
-    global port
+    global port  # noqa:PLW0603
     port = int(recv_string(sock))
 
     proj_name = _get_project_name()
@@ -833,7 +833,7 @@ def _set_project(name: str, restart: bool = False):
     if msg != "Success!":
         engine_exception_handler(msg)
 
-    global port
+    global port  # noqa:PLW0603
 
     port = int(recv_string(sock))
 
@@ -869,7 +869,7 @@ def _shutdown():
         try:
             with socket.create_connection(("localhost", tcp_port), timeout=5.0):
                 pass
-        except:
+        except:  # noqa: E722
             return
 
 

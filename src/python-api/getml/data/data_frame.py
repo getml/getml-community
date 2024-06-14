@@ -8,16 +8,18 @@
 
 """Handler for the data stored in the getML engine."""
 
+from __future__ import annotations
+
 import json
 import numbers
 import os
 import shutil
 from collections import namedtuple
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Union
 
 import numpy as np
-import pandas as pd  # type: ignore
-import pyarrow as pa  # type: ignore
+import pandas as pd
+import pyarrow as pa
 
 import getml.communication as comm
 from getml import constants, database
@@ -53,14 +55,12 @@ from .helpers import (
     _sniff_arrow,
     _sniff_csv,
     _sniff_db,
-    _sniff_json,
     _sniff_pandas,
     _sniff_parquet,
     _sniff_s3,
     _to_arrow,
     _to_parquet,
     _to_pyspark,
-    _transform_timestamps,
     _update_sniffed_roles,
     _with_column,
     _with_role,
@@ -70,6 +70,10 @@ from .helpers import (
 from .placeholder import Placeholder
 from .roles_obj import Roles
 from .view import View
+
+if TYPE_CHECKING:
+    import pyspark.sql
+    from getml.data.data_frame import DataFrame
 
 # --------------------------------------------------------------------
 
@@ -171,7 +175,9 @@ class DataFrame:
     _numerical_roles = roles_._numerical_roles
     _possible_keys = _categorical_roles + _numerical_roles
 
-    def __init__(self, name: str, roles: Union[dict[str, List[str]], Roles] = None):
+    def __init__(
+        self, name: str, roles: Optional[Union[Dict[str, List[str]], Roles]] = None
+    ):
         # ------------------------------------------------------------
 
         if not isinstance(name, str):
@@ -195,7 +201,7 @@ class DataFrame:
                 raise ValueError(msg.format(key, self._possible_keys))
             if not _is_typed_list(val, str):
                 raise TypeError(
-                    "'{}' must be None, an empty list, or a list of str.".format(key)
+                    f"'{key}' must be None, an empty list, or a list of str."
                 )
 
         # ------------------------------------------------------------
@@ -764,7 +770,7 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
-    def copy(self, name: str) -> "DataFrame":
+    def copy(self, name: str) -> DataFrame:
         """
         Creates a deep copy of the data frame under a new name.
 
@@ -849,10 +855,10 @@ class DataFrame:
         cls,
         table: pa.Table,
         name: str,
-        roles: Optional[Union[dict[str, List[str]], Roles]] = None,
+        roles: Optional[Union[Dict[str, List[str]], Roles]] = None,
         ignore: bool = False,
         dry: bool = False,
-    ) -> "DataFrame":
+    ) -> DataFrame:
         """Create a DataFrame from an Arrow Table.
 
         This is one of the fastest way to get data into the
@@ -942,11 +948,11 @@ class DataFrame:
         sep: str = ",",
         skip: int = 0,
         colnames: Optional[List[str]] = None,
-        roles: Optional[Union[dict[str, List[str]], Roles]] = None,
+        roles: Optional[Union[Dict[str, List[str]], Roles]] = None,
         ignore: bool = False,
         dry: bool = False,
         verbose: bool = True,
-    ) -> "DataFrame":
+    ) -> DataFrame:
         """Create a DataFrame from CSV files.
 
         The getML engine will construct a data
@@ -1137,11 +1143,11 @@ class DataFrame:
         cls,
         table_name: str,
         name: Optional[str] = None,
-        roles: Optional[Union[dict[str, List[str]], Roles]] = None,
+        roles: Optional[Union[Dict[str, List[str]], Roles]] = None,
         ignore: bool = False,
         dry: bool = False,
         conn: Optional[Connection] = None,
-    ) -> "DataFrame":
+    ) -> DataFrame:
         """Create a DataFrame from a table in a database.
 
         It will construct a data frame object in the engine, fill it
@@ -1257,10 +1263,10 @@ class DataFrame:
         cls,
         data: Dict[str, Union[List[float], List[str]]],
         name: str,
-        roles: Optional[Union[dict[str, List[str]], Roles]] = None,
+        roles: Optional[Union[Dict[str, List[str]], Roles]] = None,
         ignore: bool = False,
         dry: bool = False,
-    ) -> "DataFrame":
+    ) -> DataFrame:
         """Create a new DataFrame from a dict
 
         Args:
@@ -1318,10 +1324,10 @@ class DataFrame:
         cls,
         json_str: str,
         name: str,
-        roles: Optional[Union[dict[str, List[str]], Roles]] = None,
+        roles: Optional[Union[Dict[str, List[str]], Roles]] = None,
         ignore: bool = False,
         dry: bool = False,
-    ) -> "DataFrame":
+    ) -> DataFrame:
         """Create a new DataFrame from a JSON string.
 
         It will construct a data frame object in the engine, fill it
@@ -1384,10 +1390,10 @@ class DataFrame:
         cls,
         pandas_df: pd.DataFrame,
         name: str,
-        roles: Optional[Union[dict[str, List[str]], Roles]] = None,
+        roles: Optional[Union[Dict[str, List[str]], Roles]] = None,
         ignore: bool = False,
         dry: bool = False,
-    ) -> "DataFrame":
+    ) -> DataFrame:
         """Create a DataFrame from a `pandas.DataFrame`.
 
         It will construct a data frame object in the engine, fill it
@@ -1476,7 +1482,7 @@ class DataFrame:
         cls,
         fname: str,
         name: str,
-        roles: Optional[Union[dict[str, List[str]], Roles]] = None,
+        roles: Optional[Union[Dict[str, List[str]], Roles]] = None,
         ignore: bool = False,
         dry: bool = False,
     ):
@@ -1558,12 +1564,12 @@ class DataFrame:
     @classmethod
     def from_pyspark(
         cls,
-        spark_df: "pyspark.sql.DataFrame",
+        spark_df: pyspark.sql.DataFrame,
         name: str,
-        roles: Optional[Union[dict[str, List[str]], Roles]] = None,
+        roles: Optional[Union[Dict[str, List[str]], Roles]] = None,
         ignore: bool = False,
         dry: bool = False,
-    ) -> "DataFrame":
+    ) -> DataFrame:
         """Create a DataFrame from a `pyspark.sql.DataFrame`.
 
         It will construct a data frame object in the engine, fill it
@@ -1655,10 +1661,10 @@ class DataFrame:
         sep: str = ",",
         skip: int = 0,
         colnames: Optional[List[str]] = None,
-        roles: Optional[Union[dict[str, List[str]], Roles]] = None,
+        roles: Optional[Union[Dict[str, List[str]], Roles]] = None,
         ignore: bool = False,
         dry: bool = False,
-    ) -> "DataFrame":
+    ) -> DataFrame:
         """Create a DataFrame from CSV files located in an S3 bucket.
 
         This classmethod will construct a data
@@ -1835,7 +1841,7 @@ class DataFrame:
         view: View,
         name: str,
         dry: bool = False,
-    ) -> "DataFrame":
+    ) -> DataFrame:
         """Create a DataFrame from a [`View`][getml.data.View].
 
         This classmethod will construct a data
@@ -1900,7 +1906,7 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
-    def load(self) -> "DataFrame":
+    def load(self) -> DataFrame:
         """Loads saved data from disk.
 
         The data frame object holding the same name as the current
@@ -2059,7 +2065,7 @@ class DataFrame:
 
     # --------------------------------------------------------------------------
 
-    def read_arrow(self, table: pa.Table, append: bool = False) -> "DataFrame":
+    def read_arrow(self, table: pa.Table, append: bool = False) -> DataFrame:
         """Uploads a `pyarrow.Table`.
 
         Replaces the actual content of the underlying data frame in
@@ -2145,7 +2151,7 @@ class DataFrame:
         colnames: Optional[List[str]] = None,
         time_formats: Optional[List[str]] = None,
         verbose: bool = True,
-    ) -> "DataFrame":
+    ) -> DataFrame:
         """Read CSV files.
 
         It is assumed that the first line of each CSV file contains a
@@ -2304,7 +2310,7 @@ class DataFrame:
         json_str: str,
         append: bool = False,
         time_formats: Optional[List[str]] = None,
-    ) -> "DataFrame":
+    ) -> DataFrame:
         """Fill from JSON
 
         Fills the data frame with data from a JSON string.
@@ -2413,7 +2419,7 @@ class DataFrame:
         fname: str,
         append: bool = False,
         verbose: bool = True,
-    ) -> "DataFrame":
+    ) -> DataFrame:
         """Read a parquet file.
 
         Args:
@@ -2484,7 +2490,7 @@ class DataFrame:
         skip: int = 0,
         colnames: Optional[List[str]] = None,
         time_formats: Optional[List[str]] = None,
-    ) -> "DataFrame":
+    ) -> DataFrame:
         """Read CSV files from an S3 bucket.
 
         It is assumed that the first line of each CSV file contains a
@@ -2638,7 +2644,7 @@ class DataFrame:
         self,
         view: View,
         append: bool = False,
-    ) -> "DataFrame":
+    ) -> DataFrame:
         """Read the data from a [`View`][getml.data.View].
 
         Args:
@@ -2681,7 +2687,7 @@ class DataFrame:
 
     def read_db(
         self, table_name: str, append: bool = False, conn: Optional[Connection] = None
-    ) -> "DataFrame":
+    ) -> DataFrame:
         """
         Fill from Database.
 
@@ -2746,7 +2752,7 @@ class DataFrame:
 
     # --------------------------------------------------------------------------
 
-    def read_pandas(self, pandas_df: pd.DataFrame, append: bool = False) -> "DataFrame":
+    def read_pandas(self, pandas_df: pd.DataFrame, append: bool = False) -> DataFrame:
         """Uploads a `pandas.DataFrame`.
 
         Replaces the actual content of the underlying data frame in
@@ -2792,8 +2798,8 @@ class DataFrame:
     # --------------------------------------------------------------------------
 
     def read_pyspark(
-        self, spark_df: "pyspark.sql.DataFrame", append: bool = False
-    ) -> "DataFrame":
+        self, spark_df: pyspark.sql.DataFrame, append: bool = False
+    ) -> DataFrame:
         """Uploads a `pyspark.sql.DataFrame`.
 
         Replaces the actual content of the underlying data frame in
@@ -2841,7 +2847,7 @@ class DataFrame:
         query: str,
         append: Optional[bool] = False,
         conn: Optional[Connection] = None,
-    ) -> "DataFrame":
+    ) -> DataFrame:
         """Fill from query
 
         Fills the data frame with data from a table in the database.
@@ -2905,7 +2911,7 @@ class DataFrame:
 
     # --------------------------------------------------------------------------
 
-    def refresh(self) -> "DataFrame":
+    def refresh(self) -> DataFrame:
         """Aligns meta-information of the current instance with the
         corresponding data frame in the getML engine.
 
@@ -3009,7 +3015,7 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
-    def save(self) -> "DataFrame":
+    def save(self) -> DataFrame:
         """Writes the underlying data in the getML engine to disk.
 
         Returns:
@@ -3419,8 +3425,8 @@ class DataFrame:
 
     # ----------------------------------------------------------------
     def to_pyspark(
-        self, spark: "pyspark.sql.SparkSession", name: Optional[str] = None
-    ) -> "pyspark.sql.DataFrame":
+        self, spark: pyspark.sql.SparkSession, name: Optional[str] = None
+    ) -> pyspark.sql.DataFrame:
         """Creates a `pyspark.sql.DataFrame` from the current instance.
 
         Loads the underlying data from the getML engine and constructs

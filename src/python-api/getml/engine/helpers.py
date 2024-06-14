@@ -12,7 +12,7 @@ Contains various helper functions related to the getML engine.
 
 import json
 import socket
-from typing import Dict
+from typing import Dict, List
 
 import getml.communication as comm
 from getml.communication import (
@@ -79,7 +79,7 @@ is_alive = is_engine_alive
 # -----------------------------------------------------------------------------
 
 
-def list_projects() -> list[str]:
+def list_projects() -> List[str]:
     """
     List all projects on the getML engine.
 
@@ -92,7 +92,7 @@ def list_projects() -> list[str]:
 # -----------------------------------------------------------------------------
 
 
-def list_running_projects() -> list[str]:
+def list_running_projects() -> List[str]:
     """
     List all projects on the getML engine that are currently running.
 

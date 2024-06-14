@@ -83,6 +83,8 @@ from .launch import launch
 __all__ = (
     "delete_project",
     "is_alive",
+    "is_engine_alive",
+    "is_monitor_alive",
     "launch",
     "list_projects",
     "list_running_projects",

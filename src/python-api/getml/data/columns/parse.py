@@ -8,7 +8,7 @@
 
 """Parses the columns from a cmd"""
 
-from typing import Any, Dict, Type, TypeVar, Union
+from typing import Any, Dict, TypeVar, Union
 
 from .columns import (
     BooleanColumnView,

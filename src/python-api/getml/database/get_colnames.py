@@ -11,14 +11,14 @@ Lists the colnames of a table held in the database.
 """
 
 import json
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import getml.communication as comm
 
 from .connection import Connection
 
 
-def get_colnames(name: str, conn: Optional[Connection] = None) -> list[str]:
+def get_colnames(name: str, conn: Optional[Connection] = None) -> List[str]:
     """
     Lists the colnames of a table held in the database.
 

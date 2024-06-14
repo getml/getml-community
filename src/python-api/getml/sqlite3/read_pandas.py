@@ -15,7 +15,7 @@ import numbers
 import sqlite3
 from typing import Literal
 
-import pandas as pd  # type: ignore
+import pandas as pd
 
 from .helpers import _create_table, _get_colnames, _log
 from .read_list import read_list

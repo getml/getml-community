@@ -40,7 +40,7 @@ def _compare_join(join1: Join, join2: Join) -> bool:
 
 
 def _compare_joins(pair1: Pair, pair2: Pair) -> bool:
-    return all((_compare_join(j1, j2) for (j1, j2) in zip(pair1[1], pair2[1])))
+    return all(_compare_join(j1, j2) for (j1, j2) in zip(pair1[1], pair2[1]))
 
 
 # ------------------------------------------------------------------
@@ -133,7 +133,7 @@ def _make_staging_overview(placeholder: Placeholder) -> List[List[str]]:
     """
     list_of_pairs = _make_list_of_pairs(placeholder)
     peripheral = list_of_pairs[1:]
-    peripheral.sort(key=lambda l: l[0][0])
+    peripheral.sort(key=lambda pairs: pairs[0][0])
     peripheral = _remove_duplicates(peripheral)
     list_of_names = [list_of_pairs[0][0]] + [p[0] for p in peripheral]
     return [

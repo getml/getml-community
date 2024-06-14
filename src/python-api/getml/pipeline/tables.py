@@ -12,10 +12,10 @@ Contains custom class for handling the tables of a pipeline.
 from __future__ import annotations
 
 import re
-from typing import Any, Callable, Iterator, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Dict, Iterator, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
-import pandas as pd  # type: ignore
+import pandas as pd
 from numpy.typing import NDArray
 
 from getml.utilities.formatting import _Formatter
@@ -74,7 +74,7 @@ class Tables:
 
     def __getitem__(
         self, key: Union[str, int, slice, Union[NDArray[np.int_], NDArray[np.bool_]]]
-    ) -> Union[Table, Tables, list[Table]]:
+    ) -> Union[Table, Tables, List[Table]]:
         if not self.data:
             raise AttributeError("Tables container not fully initialized.")
 
@@ -146,14 +146,14 @@ class Tables:
         tables = []
 
         for table_target in self._targets:
-            importances: dict[str, float] = {
+            importances: Dict[str, float] = {
                 column.table: 0.0
                 for column in self._columns
                 if column.target == table_target
             }
 
-            targets: dict[str, str] = {}
-            markers: dict[str, str] = {}
+            targets: Dict[str, str] = {}
+            markers: Dict[str, str] = {}
 
             for column in self._columns:
                 if column.target == table_target:
@@ -255,7 +255,7 @@ class Tables:
     # ----------------------------------------------------------------
 
     @property
-    def names(self) -> list[str]:
+    def names(self) -> List[str]:
         """
         Holds the names of a [`Pipeline`][getml.Pipeline]'s tables.
 
@@ -332,7 +332,7 @@ class Tables:
     # ----------------------------------------------------------------
 
     @property
-    def targets(self) -> list[str]:
+    def targets(self) -> List[str]:
         """
         Holds the targets of a [`Pipeline`][getml.Pipeline]'s tables.
 

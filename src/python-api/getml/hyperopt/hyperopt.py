@@ -10,6 +10,8 @@
 Contains hyperparameter optimization routines.
 """
 
+from __future__ import annotations
+
 import copy
 import json
 import time
@@ -172,7 +174,7 @@ class _Hyperopt:
 
     # ----------------------------------------------------------------
 
-    def _parse_json_obj(self, json_obj: Dict[str, Any]) -> "_Hyperopt":
+    def _parse_json_obj(self, json_obj: Dict[str, Any]) -> _Hyperopt:
         pipeline = self.pipeline._parse_cmd(json_obj["pipeline_"])
 
         del json_obj["pipeline_"]
@@ -259,7 +261,7 @@ class _Hyperopt:
         container: Union[Container, StarSchema, TimeSeries],
         train: str = "train",
         validation: str = "validation",
-    ) -> "_Hyperopt":
+    ) -> _Hyperopt:
         """Launches the hyperparameter optimization.
 
         Args:
@@ -361,7 +363,7 @@ class _Hyperopt:
 
     # ------------------------------------------------------------
 
-    def refresh(self) -> "_Hyperopt":
+    def refresh(self) -> _Hyperopt:
         """Reloads the hyperparameter optimization from the engine.
 
         Returns:

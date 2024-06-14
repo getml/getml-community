@@ -10,7 +10,6 @@
 Special container for star schemata.
 """
 
-import copy
 from inspect import cleandoc
 from textwrap import indent
 from typing import Dict, Optional, Union

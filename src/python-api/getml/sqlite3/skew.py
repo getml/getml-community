@@ -11,7 +11,7 @@ SKEW aggregation.
 """
 
 import numpy as np
-from scipy.stats import skew  # type: ignore
+from scipy.stats import skew
 
 from .helpers import _not_null
 

@@ -11,7 +11,7 @@ Feature learning based on propositionalization.
 """
 
 from dataclasses import dataclass, field
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional
 
 from .aggregations import _Aggregations
 from .aggregations import fastprop as fastprop_aggregations

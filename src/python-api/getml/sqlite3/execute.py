@@ -65,7 +65,7 @@ def execute(conn: sqlite3.Connection, fname: str) -> None:
 
     _log("Executing " + fname + "...")
 
-    with open(fname, "rt", encoding="utf-8") as sqlfile:
+    with open(fname, encoding="utf-8") as sqlfile:
         queries = sqlfile.read().split(";")
 
     for query in queries:

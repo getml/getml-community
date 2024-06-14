@@ -19,7 +19,7 @@ from copy import deepcopy
 from typing import Any, Callable, Dict, Iterator, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
-import pandas as pd  # type: ignore
+import pandas as pd
 from numpy.typing import NDArray
 
 import getml.communication as comm

@@ -12,8 +12,6 @@ FIRST aggregation.
 
 import functools
 
-import numpy as np
-
 from .helpers import _not_null
 
 # ----------------------------------------------------------------------------

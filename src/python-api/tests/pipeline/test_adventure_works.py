@@ -12,7 +12,7 @@ the Adventure Works dataset.
 
 import getml
 import numpy as np
-import pandas as pd  # type: ignore
+import pandas as pd
 
 
 def test_adventure_works():
