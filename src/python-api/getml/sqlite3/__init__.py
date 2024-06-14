@@ -84,3 +84,15 @@ from .sniff_csv import sniff_csv
 from .sniff_pandas import sniff_pandas
 from .to_list import to_list
 from .to_pandas import to_pandas
+
+__all__ = [
+    "connect",
+    "execute",
+    "read_csv",
+    "read_list",
+    "read_pandas",
+    "sniff_csv",
+    "sniff_pandas",
+    "to_list",
+    "to_pandas",
+]

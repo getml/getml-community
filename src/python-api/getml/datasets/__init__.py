@@ -29,3 +29,20 @@ from .samples_generator import (
     make_same_units_numerical,
     make_snowflake,
 )
+
+__all__ = [
+    "load_air_pollution",
+    "load_atherosclerosis",
+    "load_biodegradability",
+    "load_consumer_expenditures",
+    "load_interstate94",
+    "load_loans",
+    "load_occupancy",
+    "_aggregate",
+    "make_categorical",
+    "make_discrete",
+    "make_numerical",
+    "make_same_units_categorical",
+    "make_same_units_numerical",
+    "make_snowflake",
+]

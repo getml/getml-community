@@ -11,6 +11,7 @@ Returns a table as a list of lists.
 """
 
 import sqlite3
+from typing import List, Tuple
 
 # ----------------------------------------------------------------------------
 
@@ -24,7 +25,7 @@ def _handle_query(query):
 # ----------------------------------------------------------------------------
 
 
-def to_list(conn: sqlite3.Connection, query: str) -> tuple[list[str], list[list]]:
+def to_list(conn: sqlite3.Connection, query: str) -> Tuple[List[str], List[list]]:
     """
     Transforms a query or table into a list of lists. Returns
     a tuple which contains the column names and the actual data.

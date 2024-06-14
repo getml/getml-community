@@ -11,7 +11,7 @@ from typing import Any, Dict
 
 import getml
 import numpy as np
-import pandas as pd  # type: ignore
+import pandas as pd
 import pytest
 
 

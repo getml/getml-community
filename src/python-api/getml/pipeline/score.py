@@ -13,7 +13,7 @@ from datetime import datetime
 # --------------------------------------------------------------------
 
 
-@dataclass  # type: ignore
+@dataclass
 class Score(ABC):
     date_time: datetime
     set_used: str

@@ -11,7 +11,7 @@ KURTOSIS aggregation.
 """
 
 import numpy as np
-from scipy.stats import kurtosis  # type: ignore
+from scipy.stats import kurtosis
 
 from .helpers import _not_null
 

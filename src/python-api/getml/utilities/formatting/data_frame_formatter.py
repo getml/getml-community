@@ -10,7 +10,6 @@
 Holds the DataFrameFormatter.
 """
 
-import itertools as it
 import re
 from collections import namedtuple
 from copy import deepcopy
@@ -23,10 +22,8 @@ from getml.data.roles import (
     join_key,
     numerical,
     target,
-    text,
     time_stamp,
     unused_float,
-    unused_string,
 )
 
 from ..templates import environment

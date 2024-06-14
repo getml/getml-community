@@ -12,18 +12,28 @@ This module helps you handle your current project.
 
 from sys import modules
 from types import ModuleType
+from typing import TYPE_CHECKING
 
 from getml.engine import is_alive
 
 from .attrs import __getattr__, _all
-from .containers import DataFrames, Hyperopts, Pipelines
+
+
+if TYPE_CHECKING:
+    from .containers import DataFrames, Hyperopts, Pipelines
+    from .attrs import load, delete, restart, save, suspend, switch  # noqa: F401
+
+    data_frames: DataFrames
+    hyperopts: Hyperopts
+    pipelines: Pipelines
+    name: str
 
 
 def __dir__():
     return _all
 
 
-__all__ = _all + ["DataFrames", "Hyperopts", "Pipelines"] + ["__getattr__"]
+__all__ = _all + ["DataFrames", "Hyperopts", "Pipelines"] + ["__getattr__"]  # noqa: PLE0605
 
 
 class ProjectModule(ModuleType):

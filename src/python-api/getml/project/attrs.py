@@ -11,16 +11,16 @@ Handles access to project-related information.
 """
 
 from sys import modules
-from typing import Optional
+from typing import List, Optional
 
 import getml.communication as comm
 from getml.engine import is_engine_alive, is_monitor_alive, list_projects
 
 from .containers import DataFrames, Hyperopts, Pipelines
 
-_functions = []
+_functions: List[str] = []
 
-_props = []
+_props: List[str] = []
 
 
 def __getattr__(key):

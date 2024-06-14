@@ -37,7 +37,7 @@ def _read_csv_file(fname, sep, quotechar, header, skip=0):
 
 def read_csv(
     conn: sqlite3.Connection,
-    fnames: Union[str, list[str]],
+    fnames: Union[str, List[str]],
     table_name: str,
     header: bool = True,
     if_exists: str = "append",

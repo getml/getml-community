@@ -46,8 +46,8 @@ def _generate_schema(name, sql_types):
     )
 
     for type_, colnames in sql_types.items():
-        colnames = [f'"{name}"' for name in colnames]
-        cols.extend([f"{name:{max_width+2}} {type_}" for name in colnames])
+        colnames_ = [f'"{name}"' for name in colnames]
+        cols.extend([f"{name:{max_width+2}} {type_}" for name in colnames_])
 
     col_lines = ",\n    ".join(cols)
 

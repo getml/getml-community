@@ -124,4 +124,4 @@ class _ColumnFormatter(_DataFrameFormatter):
     # ------------------------------------------------------------
 
     def _render_body(self, as_html=False):
-        return super(_ColumnFormatter, self)._render_body(as_html)
+        return super()._render_body(as_html)

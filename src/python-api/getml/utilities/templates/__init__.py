@@ -10,7 +10,7 @@
 Manages jinja2 templates.
 """
 
-from jinja2 import Environment, PackageLoader  # type: ignore
+from jinja2 import Environment, PackageLoader
 
 loader = PackageLoader("getml", "utilities/templates")
 environment = Environment(loader=loader)

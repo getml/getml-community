@@ -12,8 +12,8 @@ Base class - not meant for the end user.
 
 import numbers
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field, fields
-from typing import List, Set
+from dataclasses import dataclass, fields
+from typing import List
 
 import numpy as np
 
@@ -21,7 +21,7 @@ from getml.feature_learning.validation import Validator
 from getml.utilities.formatting import _SignatureFormatter
 
 
-@dataclass(repr=False)  # type: ignore
+@dataclass(repr=False)
 class _Preprocessor(ABC):
     """
     Base class - not meant for the end user.

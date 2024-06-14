@@ -8,15 +8,17 @@
 
 """Contains the view."""
 
+from __future__ import annotations
+
 import json
 import numbers
 import os
 from collections import namedtuple
 from copy import deepcopy
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Tuple, Union
 
 import numpy as np
-import pandas as pd  # type: ignore
+import pandas as pd
 import pyarrow
 
 import getml.communication as comm
@@ -49,6 +51,10 @@ from .roles import (
     unused_string,
 )
 from .roles_obj import Roles
+
+if TYPE_CHECKING:
+    from getml.data import DataFrame
+    import pyspark.sql
 
 # --------------------------------------------------------------------
 
@@ -141,7 +147,7 @@ class View:
 
     def __init__(
         self,
-        base: Union["DataFrame", "View"],
+        base: Union[DataFrame, View],
         name: Optional[str] = None,
         subselection: Optional[
             Union[BooleanColumnView, FloatColumn, FloatColumnView]
@@ -310,7 +316,7 @@ class View:
     # ------------------------------------------------------------
 
     @property
-    def base(self) -> Union["DataFrame", "View"]:
+    def base(self) -> Union[DataFrame, View]:
         """
         The basis on which the view is created. Must be a
         [`DataFrame`][getml.DataFrame] or a [`View`][getml.data.View].
@@ -381,7 +387,7 @@ class View:
 
     # ------------------------------------------------------------
 
-    def drop(self, cols: Union[str, List[str]]) -> "View":
+    def drop(self, cols: Union[str, List[str]]) -> View:
         """Returns a new [`View`][getml.data.View] that has one or several columns removed.
 
         Args:
@@ -504,7 +510,7 @@ class View:
 
     # --------------------------------------------------------------------------
 
-    def refresh(self) -> "View":
+    def refresh(self) -> View:
         """Aligns meta-information of the current instance with the
         corresponding data frame in the getML engine.
 
@@ -770,8 +776,8 @@ class View:
     # ----------------------------------------------------------------
 
     def to_pyspark(
-        self, spark: "pyspark.sql.SparkSession", name: Optional[str] = None
-    ) -> "pyspark.sql.DataFrame":
+        self, spark: pyspark.sql.SparkSession, name: Optional[str] = None
+    ) -> pyspark.sql.DataFrame:
         """Creates a `pyspark.sql.DataFrame` from the current instance.
 
         Loads the underlying data from the getML engine and constructs
@@ -901,7 +907,7 @@ class View:
 
     def where(
         self, index: Optional[Union[BooleanColumnView, FloatColumn, FloatColumnView]]
-    ) -> "View":
+    ) -> View:
         """Extract a subset of rows.
 
         Creates a new [`View`][getml.data.View] as a
@@ -991,7 +997,7 @@ class View:
         unit: Optional[str] = "",
         subroles: Optional[Union[str, List[str]]] = None,
         time_formats: Optional[List[str]] = None,
-    ) -> "View":
+    ) -> View:
         """Returns a new [`View`][getml.data.View] that contains an additional column.
 
         Args:
@@ -1065,7 +1071,7 @@ class View:
 
     # ------------------------------------------------------------
 
-    def with_name(self, name: str) -> "View":
+    def with_name(self, name: str) -> View:
         """Returns a new [`View`][getml.data.View] with a new name.
 
         Args:
@@ -1084,7 +1090,7 @@ class View:
         names: Union[str, List[str]],
         role: str,
         time_formats: Optional[List[str]] = None,
-    ) -> "View":
+    ) -> View:
         """Returns a new [`View`][getml.data.View] with modified roles.
 
         When switching from a role based on type float to a role based on type
@@ -1140,7 +1146,7 @@ class View:
 
     def with_unit(
         self, names: Union[str, List[str]], unit: str, comparison_only: bool = False
-    ) -> "View":
+    ) -> View:
         """Returns a view that contains a new unit on one or more columns.
 
         Args:

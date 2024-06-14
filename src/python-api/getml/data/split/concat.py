@@ -10,7 +10,7 @@
 Concatenates data.
 """
 
-from typing import Dict, Tuple
+from typing import Tuple
 
 from getml.data.columns import StringColumnView
 from getml.data.columns.columns import rowid

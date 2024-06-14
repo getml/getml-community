@@ -14,7 +14,7 @@ from datetime import datetime
 from inspect import cleandoc
 from typing import Dict, Optional, Union
 
-import pandas as pd  # type: ignore
+import pandas as pd
 
 import getml.communication as comm
 from getml.data.columns import StringColumn, StringColumnView, from_value

@@ -23,7 +23,7 @@ from getml.utilities.formatting import _SignatureFormatter
 # --------------------------------------------------------------------
 
 
-@dataclass(repr=False)  # type: ignore
+@dataclass(repr=False)
 class _Predictor(ABC):
     """
     Base class. Should not ever be directly initialized!

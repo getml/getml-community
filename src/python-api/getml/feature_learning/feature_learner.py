@@ -24,7 +24,7 @@ from .validation import Validator
 # --------------------------------------------------------------------
 
 
-@dataclass  # type: ignore
+@dataclass
 class _FeatureLearner(ABC):
     """
     Base class. Should not ever be directly initialized!

@@ -12,7 +12,7 @@ Contains utility functions for siffing sqlite data types from pandas DataFrames.
 
 from typing import Dict, List
 
-import pandas as pd  # type: ignore
+import pandas as pd
 
 from getml.data.helpers import _is_numerical_type
 

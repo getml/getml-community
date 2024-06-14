@@ -13,7 +13,7 @@ a pandas dataframe.
 
 from typing import Any, Dict, Optional
 
-import pandas as pd  # type: ignore
+import pandas as pd
 
 import getml.communication as comm
 

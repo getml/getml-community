@@ -13,9 +13,9 @@ import datetime
 from typing import Optional, Tuple
 
 import numpy as np
-import pandas as pd  # type: ignore
+import pandas as pd
 
-import getml.data as data
+from getml import data
 from getml.data.data_frame import DataFrame
 from getml.feature_learning import aggregations
 
