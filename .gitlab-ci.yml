@@ -16,7 +16,7 @@ lint:
   rules:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
       changes:
-        - "src/python-api/*"
+        - "src/python-api/**/*"
     - if: $CI_COMMIT_REF_PROTECTED == "true"
     - if: $CI_COMMIT_TAG
   script:
