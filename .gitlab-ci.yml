@@ -2,25 +2,30 @@ stages:
   - lint
 
 lint:
-  image: registry.gitlab.com/getml/all/build-images/python:3.12
+  image: python:$VERSION
   stage: lint
   cache:
     when: always
     paths:
       - .cache/pip
+  parallel:
+    matrix:
+      - VERSION: ["3.8", "3.9", "3.10", "3.11", "3.12"]
   variables:
     PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   rules:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
       changes:
-        compare_to: "refs/heads/main"
-        paths:
-          - "src/python-api/*"
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+        - "src/python-api/*"
+    - if: $CI_COMMIT_REF_PROTECTED == "true"
     - if: $CI_COMMIT_TAG
   script:
-    - pip install ruff==0.4.5
+    - cd $CI_PROJECT_DIR/src/python-api
+    - pip install hatch
+    - hatch config set dirs.env.virtual .venv 
+    - hatch env create
+    - source "$(hatch env find)/bin/activate"
     - EXIT_STATUS=0
     - ruff check . || EXIT_STATUS=$?
-    - if [ "$EXIT_STATUS" != "0" ]; then echo "ignoring errors for now"; fi
-    - ruff format check .
+    - ruff format --check . || EXIT_STATUS=$?
+    - if [ "$EXIT_STATUS" != "0" ]; then exit 1; fi
