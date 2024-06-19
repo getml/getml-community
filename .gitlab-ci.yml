@@ -1,9 +1,5 @@
-stages:
-  - lint
-
-lint:
+.job_template: &job_definition
   image: python:$VERSION
-  stage: lint
   cache:
     when: always
     paths:
@@ -19,13 +15,32 @@ lint:
         - "src/python-api/**/*"
     - if: $CI_COMMIT_REF_PROTECTED == "true"
     - if: $CI_COMMIT_TAG
-  script:
+
+.default_scripts: &setup_python_venv
     - cd $CI_PROJECT_DIR/src/python-api
     - pip install hatch
     - hatch config set dirs.env.virtual .venv 
     - hatch env create
     - source "$(hatch env find)/bin/activate"
+
+stages:
+  - lint
+  - import-test
+
+lint:
+  stage: lint
+  <<: *job_definition
+  script:
+    - *setup_python_venv
     - EXIT_STATUS=0
     - ruff check . || EXIT_STATUS=$?
     - ruff format --check . || EXIT_STATUS=$?
     - if [ "$EXIT_STATUS" != "0" ]; then exit 1; fi
+
+import-test:
+  stage: import-test
+  <<: *job_definition
+  needs: ["lint"]
+  script:
+    - *setup_python_venv
+    - pytest ./tests/unit/test_import_all.py
