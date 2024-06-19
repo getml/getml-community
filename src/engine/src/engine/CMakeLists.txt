@@ -59,7 +59,7 @@ target_link_libraries(
   xgboost::xgboost
   Poco::Net
   Poco::Foundation
-  $<IF:$<BOOL:${ARROW_BUILD_STATIC}>,Arrow::arrow_static,Arrow::arrow_shared>
-  $<IF:$<BOOL:${ARROW_BUILD_STATIC}>,Parquet::parquet_static,Parquet::parquet_shared>
+  arrow::arrow
+  parquet::parquet
   SQLite::SQLite3
 )

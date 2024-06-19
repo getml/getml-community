@@ -15,4 +15,5 @@ target_link_libraries(
   Poco::Net
   reflectcpp::reflectcpp
   xgboost::xgboost
+  $<$<BOOL:${USE_CONAN}>:yyjson::yyjson>
 )
