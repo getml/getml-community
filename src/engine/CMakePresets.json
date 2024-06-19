@@ -12,8 +12,8 @@
       "displayName": "Base",
       "description": "Base configuration",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/${sourceDirName}-${presetName}-build",
-      "installDir": "${sourceDir}/build/${sourceDirName}-${presetName}-install",
+      "binaryDir": "${sourceDir}/build/${presetName}-build",
+      "installDir": "${sourceDir}/build/${presetName}-install",
       "cacheVariables": {
         "CMAKE_CXX_FLAGS": "-fdiagnostics-color=always",
         "CMAKE_CXX_FLAGS_RELEASE": "-O2",
@@ -108,10 +108,10 @@
       }
     },
     {
-      "name": "release-native-conan",
-      "displayName": "Release native (conan)",
-      "description": "Release configuration with native optimizations using conan",
-      "inherits": "release-native",
+      "name": "release-conan",
+      "displayName": "Release (conan)",
+      "description": "Release configuration using conan",
+      "inherits": "release",
       "cacheVariables": {
         "USE_CONAN": true
       }
@@ -169,10 +169,10 @@
       }
     },
     {
-      "name": "debug-full-conan",
-      "displayName": "Debug with full information (conan)",
-      "description": "Debug configuration with full debug information using conan",
-      "inherits": "debug-full",
+      "name": "debug-conan",
+      "displayName": "Debug (conan)",
+      "description": "Debug configuration using conan",
+      "inherits": "debug",
       "cacheVariables": {
         "USE_CONAN": true
       }
@@ -240,11 +240,11 @@
       "configurePreset": "release-vcpkg-aarch64-linux-crosscompile"
     },
     {
-      "name": "release-native-conan",
-      "displayName": "Release native (conan)",
-      "description": "Release build with native optimizations using conan",
-      "inherits": "release-native",
-      "configurePreset": "release-native-conan"
+      "name": "release-conan",
+      "displayName": "Release (conan)",
+      "description": "Release build using conan",
+      "inherits": "release",
+      "configurePreset": "release-conan"
     },
     {
       "name": "debug",
@@ -280,11 +280,11 @@
       "configurePreset": "debug-vcpkg-aarch64-linux"
     },
     {
-      "name": "debug-full-conan",
-      "displayName": "Debug full (conan)",
-      "description": "Debug build with full debug information using conan",
-      "inherits": "debug-full",
-      "configurePreset": "debug-full-conan"
+      "name": "debug-conan",
+      "displayName": "Debug (conan)",
+      "description": "Debug build using conan",
+      "inherits": "debug",
+      "configurePreset": "debug-conan"
     }
   ],
   "testPresets": [],
@@ -356,10 +356,10 @@
       ]
     },
     {
-      "name": "release-native-conan",
-      "displayName": "Release native (conan)",
-      "description": "Release native package using conan",
-      "configurePreset": "release-native-conan"
+      "name": "release-conan",
+      "displayName": "Release (conan)",
+      "description": "Release package using conan",
+      "configurePreset": "release-conan"
     }
   ],
   "workflowPresets": [
@@ -516,21 +516,21 @@
       ]
     },
     {
-      "name": "release-native-conan",
-      "displayName": "Release native (conan)",
-      "description": "Release workflow with native optimizations using conan",
+      "name": "release-conan",
+      "displayName": "Release (conan)",
+      "description": "Release workflow using conan",
       "steps": [
         {
           "type": "configure",
-          "name": "release-native-conan"
+          "name": "release-conan"
         },
         {
           "type": "build",
-          "name": "release-native-conan"
+          "name": "release-conan"
         },
         {
           "type": "package",
-          "name": "release-native-conan"
+          "name": "release-conan"
         }
       ]
     },
@@ -625,17 +625,17 @@
       ]
     },
     {
-      "name": "debug-full-conan",
-      "displayName": "Debug with full debug information (conan)",
-      "description": "Debug workflow with full debug information using conan",
+      "name": "debug-conan",
+      "displayName": "Debug (conan)",
+      "description": "Debug workflow using conan",
       "steps": [
         {
           "type": "configure",
-          "name": "debug-full-conan"
+          "name": "debug-conan"
         },
         {
           "type": "build",
-          "name": "debug-full-conan"
+          "name": "debug-conan"
         }
       ]
     }
