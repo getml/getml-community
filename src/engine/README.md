@@ -41,13 +41,13 @@ Available configure presets:
   "release-vcpkg-x86_64-linux"               - Release (x86_64-linux) (vcpkg)
   "release-vcpkg-aarch64-linux"              - Release (aarch64-linux) (vcpkg)
   "release-vcpkg-aarch64-linux-crosscompile" - Release (aarch64-linux) (vcpkg) (crosscompile)
-  "release-native-conan"                     - Release native (conan)
+  "release-conan"                            - Release (conan)
   "debug"                                    - Debug
   "debug-full"                               - Debug with full information
   "debug-vcpkg"                              - Debug (vcpkg)
   "debug-full-vcpkg"                         - Debug with full information (vcpkg)
   "debug-vcpkg-aarch64-linux"                - Debug (aarch64-linux) (vcpkg)
-  "debug-full-conan"                         - Debug with full information (conan)
+  "debug-conan"                              - Debug (conan)
 ```
 
 
@@ -66,13 +66,13 @@ Available build presets:
   "release-vcpkg-x86_64-linux"               - Release (x86_64-linux) (vcpkg)
   "release-vcpkg-aarch64-linux"              - Release (aarch64-linux) (vcpkg)
   "release-vcpkg-aarch64-linux-crosscompile" - Release (aarch64-linux) (vcpkg) (crosscompile)
-  "release-native-conan"                     - Release native (conan)
+  "release-conan"                            - Release (conan)
   "debug"                                    - Debug
   "debug-full"                               - Debug with full information
   "debug-vcpkg"                              - Debug (vcpkg)
   "debug-full-vcpkg"                         - Debug full (vcpkg)
   "debug-vcpkg-aarch64-linux"                - Debug (aarch64-linux) (vcpkg)
-  "debug-full-conan"                         - Debug full (conan)
+  "debug-conan"                              - Debug (conan)
 ```
 
 
@@ -91,7 +91,7 @@ Available package presets:
   "release-vcpkg-x86_64-linux"               - Release (x86_64-linux) (vcpkg)
   "release-vcpkg-aarch64-linux"              - Release (aarch64-linux) (vcpkg)
   "release-vcpkg-aarch64-linux-crosscompile" - Release (aarch64-linux) (vcpkg) (crosscompile)
-  "release-native-conan"                     - Release native (conan)
+  "release-conan"                            - Release (conan)
 ```
 
 
@@ -109,14 +109,14 @@ Available workflow presets:
   "release-original-vcpkg"                   - Release (original) (vcpkg)
   "release-vcpkg-x86_64-linux"               - Release (x86_64-linux) (vcpkg)
   "release-vcpkg-aarch64-linux"              - Release (aarch64-linux) (vcpkg)
-  "release-native-conan"                     - Release native (conan)
+  "release-conan"                            - Release (conan)
   "debug"                                    - Debug
   "debug-full"                               - Debug with full information
   "debug-vcpkg"                              - Debug (vcpkg)
   "debug-full-vcpkg"                         - Debug with full debug information (vcpkg)
   "debug-vcpkg-aarch64-linux"                - Debug (aarch64-linux) (vcpkg)
   "release-vcpkg-aarch64-linux-crosscompile" - Release (aarch64-linux) (vcpkg) (crosscompile)
-  "debug-full-conan"                         - Debug with full debug information (conan)
+  "debug-conan"                              - Debug (conan)
 ```
 
 
@@ -148,8 +148,8 @@ $ VCPKG_ROOT=$PATH_TO/vcpkg cmake --workflow --preset release-vcpkg
 Make sure to install conan: [https://conan.io/](https://conan.io/)
 
 ```bash
-$ CONAN_BINARY=conan cmake --workflow --preset debug-full-conan
-$ CONAN_BINARY=conan cmake --workflow --preset release-native-conan
+$ CONAN_BINARY=$(which conan) cmake --workflow --preset debug-conan
+$ CONAN_BINARY=$(which conan) cmake --workflow --preset release-conan
 ```
 
 

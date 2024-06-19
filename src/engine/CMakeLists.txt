@@ -12,7 +12,7 @@ get_version()
 project(
   engine
   VERSION ${GETML_VERSION}
-  DESCRIPTION "Engine for GETML"
+  DESCRIPTION "Engine for GetML"
   HOMEPAGE_URL "https://www.getml.com/"
   LANGUAGES CXX
 )
@@ -46,7 +46,6 @@ find_package(Arrow REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(OpenMP REQUIRED)
 find_package(xgboost REQUIRED)
-find_package(reflectcpp REQUIRED)
 
 
 if(NOT ${USE_VCPKG} AND NOT ${USE_CONAN})
@@ -59,8 +58,23 @@ if(NOT ${USE_VCPKG} AND NOT ${USE_CONAN})
   pkg_check_modules(libmariadb REQUIRED IMPORTED_TARGET libmariadb)
   add_library(libmariadb::libmariadb ALIAS PkgConfig::libmariadb)
 
+  message(STATUS "-> Arrow")
+  if(${ARROW_BUILD_STATIC})
+    add_library(arrow::arrow ALIAS Arrow::arrow_static)
+  else()
+    add_library(arrow::arrow ALIAS Arrow::arrow_shared)
+  endif()
+
   message(STATUS "-> Parquet")
   find_package(Parquet REQUIRED)
+  if(${ARROW_BUILD_STATIC})
+    add_library(parquet::parquet ALIAS Parquet::parquet_static)
+  else()
+    add_library(parquet::parquet ALIAS Parquet::parquet_shared)
+  endif()
+
+  message(STATUS "-> reflect-cpp")
+  find_package(reflectcpp REQUIRED)
 
 elseif(${USE_VCPKG})
 
@@ -70,8 +84,23 @@ elseif(${USE_VCPKG})
   find_package(unofficial-libmariadb REQUIRED)
   add_library(libmariadb::libmariadb ALIAS unofficial::libmariadb)
 
+  message(STATUS "-> Arrow")
+  if(${ARROW_BUILD_STATIC})
+    add_library(arrow::arrow ALIAS Arrow::arrow_static)
+  else()
+    add_library(arrow::arrow ALIAS Arrow::arrow_shared)
+  endif()
+
   message(STATUS "-> Parquet")
   find_package(Parquet REQUIRED)
+  if(${ARROW_BUILD_STATIC})
+    add_library(parquet::parquet ALIAS Parquet::parquet_static)
+  else()
+    add_library(parquet::parquet ALIAS Parquet::parquet_shared)
+  endif()
+
+  message(STATUS "-> reflect-cpp")
+  find_package(reflectcpp REQUIRED)
 
 elseif(${USE_CONAN})
 
@@ -82,11 +111,12 @@ elseif(${USE_CONAN})
   add_library(libmariadb::libmariadb ALIAS mariadb-connector-c::mariadb-connector-c)
 
   message(STATUS "-> Parquet")
-  add_library(Parquet::parquet_static ALIAS arrow::libparquet)
-  add_library(Parquet::parquet_shared ALIAS arrow::libparquet)
+  add_library(parquet::parquet ALIAS Parquet::parquet_static)
 
-  add_library(Arrow::arrow_static ALIAS arrow::libarrow)
-  add_library(Arrow::arrow_shared ALIAS arrow::libarrow)
+  message(STATUS "-> reflect-cpp")
+  find_package(reflect-cpp REQUIRED)
+  add_library(reflectcpp::reflectcpp ALIAS reflect-cpp::reflect-cpp)
+  find_package(yyjson REQUIRED)
 
 else()
   message(FATAL_ERROR "No package manager specified. Please set either USE_VCPKG or USE_CONAN, or none to use system packages.")

@@ -31,18 +31,17 @@ function(install_local_conan_repository)
     remote list
     OUTPUT_VARIABLE CONAN_REMOTES
   )
-  set(LOCAL_ENGINE_CONAN_REPOSITORY_NAME "local-engine-conan-repository")
   set(LOCAL_ENGINE_CONAN_REPOSITORY "${CMAKE_SOURCE_DIR}/conan-repository")
-  if(${CONAN_REMOTES} MATCHES ".*${LOCAL_ENGINE_CONAN_REPOSITORY_NAME}: ${LOCAL_ENGINE_CONAN_REPOSITORY}.*")
-    message(STATUS "Conan remote already added: ${LOCAL_ENGINE_CONAN_REPOSITORY_NAME} at ${LOCAL_ENGINE_CONAN_REPOSITORY}")
+  if("${CONAN_REMOTES}" MATCHES ".*${LOCAL_ENGINE_CONAN_REPOSITORY}: ${LOCAL_ENGINE_CONAN_REPOSITORY}.*")
+    message(STATUS "Conan remote already added: ${LOCAL_ENGINE_CONAN_REPOSITORY} at ${LOCAL_ENGINE_CONAN_REPOSITORY}")
   else()
     execute_process(
       COMMAND ${CONAN_EXECUTABLE}
       remote add
-      ${LOCAL_ENGINE_CONAN_REPOSITORY_NAME}
+      ${LOCAL_ENGINE_CONAN_REPOSITORY}
       ${LOCAL_ENGINE_CONAN_REPOSITORY}
     )
-    message(STATUS "Conan remote added: ${LOCAL_ENGINE_CONAN_REPOSITORY_NAME} at ${LOCAL_ENGINE_CONAN_REPOSITORY}")
+    message(STATUS "Conan remote added: ${LOCAL_ENGINE_CONAN_REPOSITORY} at ${LOCAL_ENGINE_CONAN_REPOSITORY}")
   endif()
 
 endfunction(install_local_conan_repository)

@@ -37,7 +37,7 @@ RUN dnf install -y \
 
 RUN pipx install ninja
 
-RUN git clone --depth 1 --branch v4.9.1 https://github.com/ccache/ccache.git /src/ccache
+RUN git clone --depth 1 --branch v4.10 https://github.com/ccache/ccache.git /src/ccache
 RUN source scl_source enable gcc-toolset-13 \
     && cmake -DCMAKE_BUILD_TYPE=Release -S /src/ccache -B /src/ccache/build -G Ninja \
     && cmake --build /src/ccache/build \
@@ -61,8 +61,8 @@ FROM engine-tools AS engine-dependencies
 ARG ENGINE_REPO_SOURCE
 ARG ENGINE_DIR
 ENV CCACHE_PATH="/root/.cache/ccache"
-ENV ENGINE_BUILD_PATH="$ENGINE_DIR/build/engine-release-vcpkg-${TARGET_SYSTEM_PROCESSOR}-linux-build"
-ARG VCPKG_INSTALLED_PATH=$ENGINE_BUILD_PATH/vcpkg_installed
+ENV ENGINE_BUILD_PATH="$ENGINE_DIR/build/release-vcpkg-${TARGET_SYSTEM_PROCESSOR}-linux-build"
+ARG VCPKG_INSTALLED_PATH="$ENGINE_BUILD_PATH/vcpkg_installed"
 
 RUN mkdir -p $ENGINE_DIR $ENGINE_DIR/overlay-ports $ENGINE_DIR/overlay-triplets
 COPY $ENGINE_REPO_SOURCE/vcpkg.json $ENGINE_REPO_SOURCE/vcpkg-configuration.json $ENGINE_DIR
@@ -71,13 +71,15 @@ COPY $ENGINE_REPO_SOURCE/overlay-triplets $ENGINE_DIR/overlay-triplets
 
 WORKDIR $ENGINE_DIR
 
-RUN --mount=type=cache,target=$CCACHE_PATH,sharing=locked \
+RUN --mount=type=cache,target=$CCACHE_PATH \
     --mount=type=cache,target=$VCPKG_ROOT/buildtrees,sharing=locked \
     --mount=type=cache,target=$VCPKG_ROOT/downloads,sharing=locked \
     --mount=type=cache,target=$VCPKG_ROOT/installed,sharing=locked \
     --mount=type=cache,target=$VCPKG_ROOT/packages,sharing=locked \
     --mount=type=cache,target=/root/.cache/vcpkg,sharing=locked \
+    --mount=type=cache,target=$ENGINE_BUILD_PATH,sharing=locked \
     source scl_source enable gcc-toolset-13 \
+    && export CMAKE_C_COMPILER_LAUNCHER=ccache CMAKE_CXX_COMPILER_LAUNCHER=ccache \
     && $VCPKG_ROOT/vcpkg install --triplet=$TARGET_TRIPLET --x-install-root=$VCPKG_INSTALLED_PATH
 
 
@@ -89,18 +91,24 @@ ENV VCPKG_INSTALL_OPTIONS="--no-downloads --only-binarycaching"
 ARG VERSION="0.0.0"
 ARG NJOBS
 ENV GETML_VERSION=$VERSION
+ARG ENGINE_PRESET="release-vcpkg-${TARGET_SYSTEM_PROCESSOR}-linux"
+ARG ENGINE_REPO_SOURCE
+ARG ENGINE_DIR
 
 COPY $ENGINE_REPO_SOURCE $ENGINE_DIR
 
-RUN --mount=type=cache,target=$CCACHE_PATH,sharing=locked \
+RUN --mount=type=cache,target=$CCACHE_PATH,from=engine-dependencies,id="$CCACHE-engine-community" \
     --mount=type=cache,target=$VCPKG_ROOT/buildtrees,sharing=locked,from=engine-dependencies \
     --mount=type=cache,target=$VCPKG_ROOT/downloads,sharing=locked,from=engine-dependencies \
     --mount=type=cache,target=$VCPKG_ROOT/installed,sharing=locked,from=engine-dependencies \
     --mount=type=cache,target=$VCPKG_ROOT/packages,sharing=locked,from=engine-dependencies \
     --mount=type=cache,target=/root/.cache/vcpkg,sharing=locked,from=engine-dependencies \
+    --mount=type=cache,target=$ENGINE_BUILD_PATH,sharing=locked,from=engine-dependencies \
     source scl_source enable gcc-toolset-13 \
     && if [ -n "$NJOBS" ]; then export CMAKE_BUILD_PARALLEL_LEVEL="$NJOBS"; fi \
-    && cmake --workflow --preset release-vcpkg-${TARGET_SYSTEM_PROCESSOR}-linux
+    && ccache --zero-stats \
+    && cmake --workflow --preset ${ENGINE_PRESET}  \
+    && ccache --show-stats -v -v
 
 
 # ------------------------------------------------------------------------------
@@ -112,7 +120,8 @@ ARG PACKAGE_NAME="getml-$GETML_VERSION-$TARGETARCH-linux"
 ARG ENGINE_PACKAGE_TGZ="engine-$GETML_VERSION-Linux-$TARGET_SYSTEM_PROCESSOR.tar.gz"
 ARG ENGINE_PACKAGE_TZST="engine-$GETML_VERSION-Linux-$TARGET_SYSTEM_PROCESSOR.tar.zst"
 
-RUN mkdir -p /engine-package/$PACKAGE_NAME/ \
+RUN --mount=type=cache,target=$ENGINE_BUILD_PATH,sharing=locked,from=engine-dependencies \
+    mkdir -p /engine-package/$PACKAGE_NAME/ \
     && cp $ENGINE_BUILD_PATH/package/$ENGINE_PACKAGE_TGZ /engine-package/ \
     && cp $ENGINE_BUILD_PATH/package/$ENGINE_PACKAGE_TZST /engine-package/ \
     && tar -xzf $ENGINE_BUILD_PATH/package/$ENGINE_PACKAGE_TGZ -C /engine-package/$PACKAGE_NAME/ --strip-components=1

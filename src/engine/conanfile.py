@@ -16,8 +16,9 @@ class Engine(ConanFile):
     url = "https://github.com/getml/getml-community/"
 
     def requirements(self):
+        self.requires("boost/1.84.0", override=True)
         self.requires(
-            "arrow/16.0.0",
+            "arrow/16.1.0",
             options={
                 "parquet": True,
                 "with_boost": True,
@@ -30,7 +31,7 @@ class Engine(ConanFile):
         self.requires("sqlite3/3.45.0")
         self.requires("gperftools/2.15")
         self.requires("libunwind/1.8.1")
-        self.requires("reflectcpp/0.10.0")
+        self.requires("reflect-cpp/0.11.0", options={"with_json": True})
         self.requires("xgboost/2.0.3")
 
     def generate(self):
