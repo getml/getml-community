@@ -1,5 +1,0 @@
-sphinx>=3.0
-sphinxcontrib-httpdomain
-sphinx_automodapi
-getml
-

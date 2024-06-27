@@ -24,12 +24,22 @@
     - source "$(hatch env find)/bin/activate"
 
 stages:
+  - dummy
   - lint
   - import-test
+
+dummy:
+  stage: dummy
+  needs: []
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+  script:
+    - echo "I run to pass pipeline validation in merge requests for non python parts"
 
 lint:
   stage: lint
   <<: *job_definition
+  needs: []
   script:
     - *setup_python_venv
     - EXIT_STATUS=0
