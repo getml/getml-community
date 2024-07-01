@@ -374,28 +374,24 @@ ColumnView<T> ColumnView<T>::from_boolean_subselection(
   const auto value_func = [_data, _indices, ix, next, find_next](
                               const size_t _i) mutable -> std::optional<T> {
     if (_i == next) [[likely]] {
-        const auto new_ix = find_next(ix, 0);
-        if (!new_ix) {
-          return std::nullopt;
-        }
-        ix = *new_ix;
+      const auto new_ix = find_next(ix, 0);
+      if (!new_ix) {
+        return std::nullopt;
       }
-    else if (_i < next)
-      [[unlikely]] {
-        const auto new_ix = find_next(0, _i);
-        if (!new_ix) {
-          return std::nullopt;
-        }
-        ix = *new_ix;
+      ix = *new_ix;
+    } else if (_i < next) [[unlikely]] {
+      const auto new_ix = find_next(0, _i);
+      if (!new_ix) {
+        return std::nullopt;
       }
-    else if (_i > next)
-      [[unlikely]] {
-        const auto new_ix = find_next(ix, _i - next);
-        if (!new_ix) {
-          return std::nullopt;
-        }
-        ix = *new_ix;
+      ix = *new_ix;
+    } else if (_i > next) [[unlikely]] {
+      const auto new_ix = find_next(ix, _i - next);
+      if (!new_ix) {
+        return std::nullopt;
       }
+      ix = *new_ix;
+    }
 
     next = _i + 1;
 
@@ -441,7 +437,7 @@ ColumnView<T> ColumnView<T>::from_numerical_subselection(
     return *d;
   };
 
-  return ColumnView<T>(value_func, _indices.nrows(), _data.subroles(),
+  return ColumnView<T>(value_func, NOT_KNOWABLE, _data.subroles(),
                        _data.unit());
 }
 
