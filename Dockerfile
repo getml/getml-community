@@ -19,7 +19,7 @@ COPY --from=cli-build /cli/release/getml-cli $PACKAGE_NAME/getML
 FROM scratch AS export
 ARG PACKAGE_NAME
 COPY --from=cli / .
-COPY --from=engine-build engine-package/$PACKAGE_NAME $PACKAGE_NAME
+COPY --from=engine-build . .
 COPY LICENSE.txt $PACKAGE_NAME
 COPY src/package-build-imports $PACKAGE_NAME
 
