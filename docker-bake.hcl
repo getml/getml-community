@@ -12,7 +12,8 @@ target "cli" {
 
 target "engine" {
   dockerfile = "src/engine/Dockerfile"
-  target = "engine-package"
+  target = "package"
+  output = ["build"]
   args = {
     ENGINE_REPO_SOURCE="src/engine",
     VERSION="${VERSION}"
