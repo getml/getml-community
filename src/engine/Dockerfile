@@ -118,19 +118,16 @@ FROM engine-build AS engine-package
 ARG TARGETARCH
 ARG PACKAGE_NAME="getml-$GETML_VERSION-$TARGETARCH-linux"
 ARG ENGINE_PACKAGE_TGZ="engine-$GETML_VERSION-Linux-$TARGET_SYSTEM_PROCESSOR.tar.gz"
-ARG ENGINE_PACKAGE_TZST="engine-$GETML_VERSION-Linux-$TARGET_SYSTEM_PROCESSOR.tar.zst"
 
 RUN --mount=type=cache,target=$ENGINE_BUILD_PATH,sharing=locked,from=engine-dependencies \
     mkdir -p /engine-package/$PACKAGE_NAME/ \
-    && cp $ENGINE_BUILD_PATH/package/$ENGINE_PACKAGE_TGZ /engine-package/ \
-    && cp $ENGINE_BUILD_PATH/package/$ENGINE_PACKAGE_TZST /engine-package/ \
     && tar -xzf $ENGINE_BUILD_PATH/package/$ENGINE_PACKAGE_TGZ -C /engine-package/$PACKAGE_NAME/ --strip-components=1
 
 
 # ------------------------------------------------------------------------------
 # Image with the final package for output to host
 FROM scratch AS package
-COPY --from=engine-package /engine-package/* /
+COPY --from=engine-package /engine-package/ /
 
 
 # ------------------------------------------------------------------------------
