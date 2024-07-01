@@ -88,7 +88,9 @@ pyspark = ["pyspark"]
 target-version = "py38"
 
 [tool.ruff.lint]
-select = ["PL", "UP"]
+preview = true
+explicit-preview-rules = true
+select = ["PL", "UP", "CPY001"]
 ignore = [
   # Allow over
   "A003",
