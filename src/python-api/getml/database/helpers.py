@@ -15,40 +15,38 @@ from pathlib import Path
 from urllib import request
 from urllib.parse import urlparse
 
+from rich import print
+
 import getml.communication as comm
+from getml.progress_bar import _Progress
 
 # -----------------------------------------------------------------------------
 
 
 def _load_to_buffer(url):
-    pb = comm._ProgressBar()
-
     with request.urlopen(url) as response:
-        length = response.getheader("content-length")
-        block_size = 8192
+        with _Progress(progress_type="Download") as progress:
+            length = response.getheader("content-length")
+            block_size = 8192
 
-        if length:
-            length = int(length)
-            block_size = max(4096, length // 100)
+            if length:
+                length = int(length)
+                block_size = max(4096, length // 100)
 
-        buffer = io.BytesIO()
+            buffer = io.BytesIO()
+            finished = 0
 
-        pb.show(0)
+            progress.new("", total=length)
+            while True:
+                block = response.read(block_size)
+                if not block:
+                    progress.update_if_possible(completed=length)
+                    break
+                finished += len(block)
+                buffer.write(block)
+                progress.update_if_possible(completed=finished)
 
-        finished = 0
-
-        while True:
-            block = response.read(block_size)
-            if not block:
-                break
-            finished += len(block)
-            buffer.write(block)
-            percent = int((finished / length) * 100)
-            pb.show(percent)
-
-        print()
-
-        return buffer
+            return buffer
 
 
 # --------------------------------------------------------------------

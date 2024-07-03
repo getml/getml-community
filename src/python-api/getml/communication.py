@@ -18,8 +18,9 @@ import sys
 from typing import Any, Dict, List, NamedTuple, Optional, Union
 
 import numpy as np
+from rich import print
+from getml.progress_bar import _Progress
 
-from .progress_bar import _ProgressBar
 from .version import __version__
 
 # --------------------------------------------------------------------
@@ -548,28 +549,21 @@ def log(sock: socket.socket):
         sock: The socket to receive the logs from.
     """
 
-    pbar: Optional[_ProgressBar] = None
+    with _Progress() as progress:
+        while True:
+            msg = recv_string(sock)
 
-    while True:
-        msg = recv_string(sock)
+            if msg[:5] != "log: ":
+                return msg
 
-        if msg[:5] != "log: ":
-            if pbar is not None:
-                pbar.close()
-            return msg
+            msg = msg[5:]
 
-        msg = msg[5:]
+            if "Progress: " in msg:
+                msg = msg.split("Progress: ")[1].split("%")[0]
 
-        if "Progress: " in msg:
-            msg = msg.split("Progress: ")[1].split("%")[0]
-            progress = int(msg)
-            if pbar is not None:
-                pbar.show(progress)
-            continue
-
-        if pbar is not None:
-            pbar.close()
-        pbar = _ProgressBar(description=msg)
+                progress.update_if_possible(completed=int(msg))
+            else:
+                progress.new(msg)
 
 
 # --------------------------------------------------------------------
@@ -608,7 +602,7 @@ def _delete_project(name: str):
 # --------------------------------------------------------------------
 
 
-def _get_project_name():
+def _get_project_name() -> str:
     cmd: Dict[str, Any] = {}
     cmd["type_"] = "project_name"
     cmd["name_"] = ""

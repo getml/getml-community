@@ -17,6 +17,7 @@ from urllib.request import urlopen
 import pandas as pd
 
 from getml.data import DataFrame
+from rich import print
 
 DataFrameT = Union[DataFrame, pd.DataFrame]
 """

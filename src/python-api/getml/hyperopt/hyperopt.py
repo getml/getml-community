@@ -17,6 +17,8 @@ import json
 import time
 from typing import Any, Dict, List, Union
 
+from rich import print
+
 import getml.communication as comm
 from getml.data import Container, StarSchema, TimeSeries
 from getml.data.helpers import _remove_trailing_underscores

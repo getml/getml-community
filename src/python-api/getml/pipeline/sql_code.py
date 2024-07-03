@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Iterator, Sequence, Union
 
 import numpy as np
+from rich import print
 
 from getml.data.helpers import _is_typed_list
 
