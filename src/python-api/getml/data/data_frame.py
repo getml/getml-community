@@ -940,7 +940,7 @@ class DataFrame:
     @classmethod
     def from_csv(
         cls,
-        fnames: List[str],
+        fnames: Union[List[str], str],
         name: str,
         num_lines_sniffed: int = 1000,
         num_lines_read: int = 0,

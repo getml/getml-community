@@ -23,6 +23,7 @@ from typing import Any, Dict, List, Optional, Sequence, Union
 
 import numpy as np
 from numpy.typing import NDArray
+from rich import print
 
 import getml.communication as comm
 from getml import data

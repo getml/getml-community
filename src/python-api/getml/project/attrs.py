@@ -13,6 +13,8 @@ Handles access to project-related information.
 from sys import modules
 from typing import List, Optional
 
+from rich import print
+
 import getml.communication as comm
 from getml.engine import is_engine_alive, is_monitor_alive, list_projects
 

@@ -13,6 +13,8 @@ Conducts a cross validation.
 from copy import deepcopy
 from typing import Union
 
+from rich import print
+
 from getml.data import DataFrame, View
 from getml.data.split import random
 from getml.pipeline import Pipeline

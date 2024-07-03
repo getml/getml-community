@@ -18,6 +18,7 @@ from copy import deepcopy
 from typing import Any, Dict, List, Optional, Sequence, Union
 
 import numpy as np
+from rich import print
 
 from getml.data import DataFrame, Placeholder, Roles, View
 from getml.data.helpers import _is_typed_list, _remove_trailing_underscores

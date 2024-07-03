@@ -17,6 +17,8 @@ from subprocess import Popen
 from time import sleep
 from typing import Dict, List, NamedTuple, Optional, Union
 
+from rich import print
+
 from getml.communication import tcp_port
 from getml.version import __version__
 

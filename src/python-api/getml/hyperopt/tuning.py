@@ -16,6 +16,8 @@ import numbers
 import time
 from typing import Any, Dict, Optional
 
+from rich import print
+
 import getml.communication as comm
 import getml.pipeline
 from getml.data import Container, StarSchema, TimeSeries
@@ -35,13 +37,13 @@ def _infer_score(pipeline):
 
 
 def _make_final_pipeline(
-    pipeline,
+    pipeline: Pipeline,
     tuned_feature_learners,
     tuned_predictors,
     container,
     train,
     validation,
-):
+) -> Pipeline:
     print("Building final pipeline...")
     print()
 
@@ -71,7 +73,7 @@ def _tune(
     n_iter=111,
     score=metrics.rmse,
     num_threads=0,
-):
+) -> Pipeline:
     """
     Internal base tuning function that is called by other tuning functions.
     """
@@ -149,7 +151,7 @@ def _tune_feature_learner(
     n_iter,
     score,
     num_threads,
-):
+) -> Pipeline:
     if feature_learner.type not in [
         "Fastboost",
         "FastProp",
@@ -183,7 +185,7 @@ def _tune_predictor(
     n_iter,
     score,
     num_threads,
-):
+) -> Pipeline:
     if "ScaleGBM" in predictor.type:
         return _tune(
             "ScaleGBM",

@@ -39,8 +39,9 @@ classifiers = [
 dependencies = [
     "pandas",
     "pyarrow~=16.0",
-    "numpy>=1.22",
+    "numpy~=1.22",
     "jinja2",
+    "rich~=13.0",
     "scipy",
 ]
 
