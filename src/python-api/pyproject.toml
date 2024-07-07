@@ -42,8 +42,18 @@ dependencies = [
     "numpy~=1.22",
     "jinja2",
     "rich~=13.0",
-    "scipy",
 ]
+
+[project.urls]
+"Hompage" = "https://getml.com"
+"Documentation" = "https://docs.getml.com/latest"
+"Bug Tracker" = "https://github.com/getml/getml-community/issues"
+"Download" = "https://getml.com/product/download/"
+"Source Code" = "https://github.com/getml/getml-community"
+
+[project.optional-dependencies]
+scipy = ["scipy"]
+pyspark = ["pyspark"]
 
 [tool.hatch.version]
 source = "code"
@@ -74,16 +84,6 @@ include = [".getML/**/*"]
 
 [tool.hatch.build.targets.wheel.hooks.custom]
 path = "hatch_build.py"
-
-[project.urls]
-"Hompage" = "https://getml.com"
-"Documentation" = "https://docs.getml.com/latest"
-"Bug Tracker" = "https://github.com/getml/getml-community/issues"
-"Download" = "https://getml.com/product/download/"
-"Source Code" = "https://github.com/getml/getml-community"
-
-[project.optional-dependencies]
-pyspark = ["pyspark"]
 
 [tool.ruff]
 target-version = "py38"

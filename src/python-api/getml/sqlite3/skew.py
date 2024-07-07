@@ -11,13 +11,13 @@ SKEW aggregation.
 """
 
 import numpy as np
-from scipy.stats import skew
 
-from .helpers import _not_null
+from .helpers import _not_null, _try_import_scipy
 
 
 class _Skew:
     def __init__(self):
+        self._scipy = _try_import_scipy()
         self.values = []
 
     def step(self, value):
@@ -39,4 +39,4 @@ class _Skew:
         if np.unique(self.values).shape[0] == 1:
             return 0.0
 
-        return skew(self.values)
+        return self._scipy.stats.skew(self.values)

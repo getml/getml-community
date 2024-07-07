@@ -10,13 +10,12 @@
 MODE aggregation.
 """
 
-from scipy import stats
-
-from .helpers import _not_null
+from .helpers import _not_null, _try_import_scipy
 
 
 class _Mode:
     def __init__(self):
+        self._scipy = _try_import_scipy()
         self.values = []
 
     def step(self, value):
@@ -32,7 +31,7 @@ class _Mode:
         """
         if not self.values:
             return None
-        result = stats.mode(self.values, keepdims=True)[0][0]
+        result = self._scipy.stats.mode(self.values, keepdims=True)[0][0]
         try:
             return float(result)
         except ValueError:
