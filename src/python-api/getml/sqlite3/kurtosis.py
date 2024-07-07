@@ -11,13 +11,13 @@ KURTOSIS aggregation.
 """
 
 import numpy as np
-from scipy.stats import kurtosis
 
-from .helpers import _not_null
+from .helpers import _not_null, _try_import_scipy
 
 
 class _Kurtosis:
     def __init__(self):
+        self._scipy = _try_import_scipy()
         self.values = []
 
     def step(self, value):
@@ -39,4 +39,4 @@ class _Kurtosis:
         if np.unique(self.values).shape[0] == 1:
             return 0.0
 
-        return kurtosis(self.values, fisher=False)
+        return self._scipy.stats.kurtosis(self.values, fisher=False)

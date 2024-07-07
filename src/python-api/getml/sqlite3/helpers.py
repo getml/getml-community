@@ -10,11 +10,24 @@
 Contains simple helper functions for the sqlite3 module
 """
 
+import importlib
 import logging
 from inspect import cleandoc
 from typing import Optional
 
 import numpy as np
+
+# ----------------------------------------------------------------------------
+
+
+def _try_import_scipy():
+    try:
+        return importlib.import_module("scipy")
+    except ImportError:
+        raise ImportError(
+            "The 'scipy' package is required for custom sqlite3 aggregations."
+        )
+
 
 # ----------------------------------------------------------------------------
 
