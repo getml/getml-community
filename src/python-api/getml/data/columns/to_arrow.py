@@ -19,7 +19,7 @@ import getml.communication as comm
 
 def _to_arrow(self: Any, unique: bool = False) -> pa.ChunkedArray:
     """
-    Transform column to numpy array
+    Transform column to arrow array
     """
 
     typename = type(self).__name__.replace("View", "")

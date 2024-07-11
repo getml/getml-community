@@ -158,18 +158,6 @@ from .subset import Subset
 from .time_series import TimeSeries
 from .view import View
 
-
-# # monkey-patch View class to avoid circular dependencies
-def _to_df(view, name):
-    """Creates a [`DataFrame`][getml.DataFrame] from the view."""
-    view.check()
-    view = view.refresh()
-    df = DataFrame(name)
-    return df.read_view(view)
-
-
-View.to_df = _to_df  # type: ignore
-
 __all__ = (
     "access",
     "Container",

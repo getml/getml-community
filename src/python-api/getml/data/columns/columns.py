@@ -65,9 +65,9 @@ class _View(ABC):
 
 
 def arange(
-    start: float = 0.0,
-    stop: Optional[float] = None,
-    step: float = 1.0,
+    start: Union[numbers.Real, float] = 0.0,
+    stop: Optional[Union[numbers.Real, float]] = None,
+    step: Union[numbers.Real, float] = 1.0,
 ):
     """
     Returns evenly spaced variables, within a given interval.

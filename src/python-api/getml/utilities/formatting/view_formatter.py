@@ -98,6 +98,8 @@ class _ViewFormatter(_DataFrameFormatter):
     # ------------------------------------------------------------
 
     def _add_index(self, headers):
+        if not self.data:
+            return _ViewFormatColumn(headers=headers, cells=[], max_cells=0, n_cells=0)
         index_column = _ViewFormatColumn(
             headers=headers,
             cells=list(range(len(self.data[0]))),
