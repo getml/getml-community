@@ -13,8 +13,8 @@ Returns the length of the column
 import numpy as np
 
 
-def _length(self) -> np.int32:
-    length = self.length
+def _length(col) -> np.int32:
+    length = col.length
     if isinstance(length, str):
         raise ValueError(
             "The length is either infinite or cannot "

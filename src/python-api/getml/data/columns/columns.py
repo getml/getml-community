@@ -8,13 +8,17 @@
 
 """Contains the actual columns."""
 
+from __future__ import annotations
+
 import numbers
 from abc import ABC
-from typing import Any, Dict, List, Optional, Union
+from inspect import cleandoc
+from typing import Any, Dict, List, Optional, Union, get_args
 
 import numpy as np
 
 from getml.constants import TIME_FORMATS
+from getml.data import roles
 
 from .aggregation import Aggregation
 from .collect_footer_data import _collect_footer_data
@@ -42,24 +46,20 @@ from .unit import _unit
 
 # -----------------------------------------------------------------------------
 
+TYPE_MISSMATCH_ERROR_MSG_TEMPLATE = cleandoc(
+    """
+    Can only compare {col_type} with: {operand_types}.
 
-# For typing only
-class _View(ABC):
-    cmd: Dict[str, Any]
-
+    You can explicitly cast columns via `.as_num()` or `.as_str()`.
+    """
+)
 
 # -----------------------------------------------------------------------------
 
-OperandType = Union[
-    bool,
-    str,
-    float,
-    int,
-    np.datetime64,
-    _Column,
-    _View,
-]
-OptionalOperandType = Optional[OperandType]
+
+class _View(ABC):
+    cmd: Dict[str, Any]
+
 
 # -----------------------------------------------------------------------------
 
@@ -157,7 +157,7 @@ def _value_to_cmd(val: OperandType):
         cmd["type_"] = STRING_COLUMN_VIEW
         return cmd
 
-    if isinstance(val, (numbers.Number, float, int)):
+    if isinstance(val, (numbers.Real, float, int)):
         cmd["type_"] = FLOAT_COLUMN_VIEW
         cmd["value_"] = float(val)  # type: ignore
         return cmd
@@ -166,7 +166,6 @@ def _value_to_cmd(val: OperandType):
         return _value_to_cmd(np.datetime64(val).astype("datetime64[s]").astype(float))
 
     assert False, "Calling _value_to_cmd on an unknown type"
-    return None
 
 
 # -----------------------------------------------------------------------------
@@ -253,8 +252,8 @@ class BooleanColumnView(_View):
     def __init__(
         self,
         operator: str,
-        operand1: OptionalOperandType,
-        operand2: OptionalOperandType,
+        operand1: Optional[OperandType],
+        operand2: Optional[OperandType],
     ):
         self.cmd: Dict[str, Any] = {}
 
@@ -324,13 +323,13 @@ class BooleanColumnView(_View):
         self,
         operand: OperandType,
     ):
-        if isinstance(operand, (bool, str, numbers.Number, float, int, np.datetime64)):
+        if isinstance(operand, (bool, str, numbers.Real, np.datetime64)):
             return _value_to_cmd(operand)
 
         if not hasattr(operand, "cmd"):
             raise TypeError(
                 """Operand for a BooleanColumnView must be a
-                boolean, string, a number, a numpy.datetime64
+                boolean, string, a Real, a numpy.datetime64
                 or a getml.data.Column!"""
             )
 
@@ -696,8 +695,8 @@ class FloatColumnView(_View):
     def __init__(
         self,
         operator: str,
-        operand1: Optional[Union[float, int, np.datetime64, _Column, _View]],
-        operand2: Optional[Union[float, int, np.datetime64, _Column, _View]],
+        operand1: Optional[FloatOperandType],
+        operand2: Optional[FloatOperandType],
     ):
         self.cmd: Dict[str, Any] = {}
 
@@ -713,8 +712,8 @@ class FloatColumnView(_View):
 
     # -----------------------------------------------------------------------------
 
-    def _parse_operand(self, operand: Union[float, int, np.datetime64, _Column, _View]):
-        if isinstance(operand, (numbers.Number, int, float, np.datetime64)):
+    def _parse_operand(self, operand: FloatOperandType):
+        if isinstance(operand, (numbers.Real, np.datetime64)):
             return _value_to_cmd(operand)
 
         if not hasattr(operand, "cmd"):
@@ -762,8 +761,10 @@ class FloatColumnView(_View):
 
 # -----------------------------------------------------------------------------
 
-NumericOperandType = Union[float, int, np.datetime64, FloatColumn, FloatColumnView]
+FloatOperandType = Union[numbers.Real, np.datetime64, FloatColumn, FloatColumnView]
 StringOperandType = Union[str, StringColumn, StringColumnView]
+
+OperandType = Union[FloatOperandType, StringOperandType, BooleanColumnView]
 
 # -----------------------------------------------------------------------------
 
@@ -1034,7 +1035,16 @@ FloatColumnView.day = _day  # type: ignore
 # -----------------------------------------------------------------------------
 
 
-def _eq_num(self, other: Any):
+def _eq_num(self, other: FloatOperandType):
+    if not isinstance(other, FloatOperandType):
+        raise TypeError(
+            TYPE_MISSMATCH_ERROR_MSG_TEMPLATE.format(
+                col_type=f"{type(self)!r}",
+                operand_types=", ".join(
+                    f"{op_type!r}" for op_type in get_args(FloatOperandType)
+                ),
+            )
+        )
     return BooleanColumnView(
         operator="num_equal_to",
         operand1=self,
@@ -1042,7 +1052,17 @@ def _eq_num(self, other: Any):
     )
 
 
-def _eq_str(self, other: Any):
+def _eq_str(self, other: StringOperandType):
+    if not isinstance(other, StringOperandType):
+        msg = TYPE_MISSMATCH_ERROR_MSG_TEMPLATE.format(
+            col_type=f"{type(self)!r}",
+            operand_types=", ".join(
+                f"{op_type!r}" for op_type in get_args(StringOperandType)
+            ),
+        )
+        if getattr(self, "role", None) == roles.join_key:
+            msg += "\n\nHint: join_keys are always StringColumn(View)s."
+        raise TypeError(msg)
     return BooleanColumnView(
         operator="str_equal_to",
         operand1=self,
@@ -1445,11 +1465,11 @@ FloatColumnView.__neg__ = _neg  # type: ignore
 # -----------------------------------------------------------------------------
 
 
-def _pow(self, other: NumericOperandType):
+def _pow(self, other: FloatOperandType):
     return FloatColumnView(operator="pow", operand1=self, operand2=other)
 
 
-def _rpow(self, other: NumericOperandType):
+def _rpow(self, other: FloatOperandType):
     return FloatColumnView(operator="pow", operand1=other, operand2=self)
 
 
@@ -1748,7 +1768,7 @@ StringColumnView.as_ts = _as_ts  # type: ignore
 # -----------------------------------------------------------------------------
 
 
-def _truediv(self, other: NumericOperandType):
+def _truediv(self, other: FloatOperandType):
     return FloatColumnView(
         operator="divides",
         operand1=self,
@@ -1756,7 +1776,7 @@ def _truediv(self, other: NumericOperandType):
     )
 
 
-def _rtruediv(self, other: NumericOperandType):
+def _rtruediv(self, other: FloatOperandType):
     return FloatColumnView(
         operator="divides",
         operand1=other,
@@ -1787,7 +1807,7 @@ StringColumn.unit = _unit  # type: ignore
 # -----------------------------------------------------------------------------
 
 
-def _update_float(self, condition: BooleanColumnView, values: NumericOperandType):
+def _update_float(self, condition: BooleanColumnView, values: FloatOperandType):
     """
     Returns an updated version of this column.
 
