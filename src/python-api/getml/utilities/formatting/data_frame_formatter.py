@@ -161,9 +161,12 @@ class _DataFrameFormatter(_Formatter):
         }
 
         head = _get_data_frame_content(name=df.name, start=0, length=num_head)["data"]
-        tail = _get_data_frame_content(
-            name=df.name, start=int(self.n_rows - num_tail), length=num_tail
-        )["data"]
+        if num_tail > 0:
+            tail = _get_data_frame_content(
+                name=df.name, start=int(self.n_rows - num_tail), length=num_tail
+            )["data"]
+        else:
+            tail = []
 
         rows = head + tail
 

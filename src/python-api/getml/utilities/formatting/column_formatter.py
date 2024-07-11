@@ -55,16 +55,15 @@ class _ColumnFormatter(_DataFrameFormatter):
             length=num_head,
         )["data"]
 
-        tail = (
-            _get_column_content(
+        if num_tail > 0 and "View" not in self.coltype:
+            tail = _get_column_content(
                 col=col.cmd,
                 coltype=self.coltype.replace("View", ""),
                 start=int(self.n_rows - num_tail),
                 length=num_tail,
             )["data"]
-            if "View" not in self.coltype
-            else []
-        )
+        else:
+            tail = []
 
         cells = [cell[0] for cell in head + tail]
 

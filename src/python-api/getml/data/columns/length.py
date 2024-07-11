@@ -13,7 +13,7 @@ Returns the length of the column
 import numpy as np
 
 
-def _length(col) -> np.int32:
+def _length(col) -> int:
     length = col.length
     if isinstance(length, str):
         raise ValueError(

@@ -40,7 +40,7 @@ class _ViewFormatter(_DataFrameFormatter):
 
         self.n_rows: Optional[int] = int(view.nrows()) if nrows_is_known else None
 
-        if self.n_rows:
+        if self.n_rows is not None:
             num_head = min(num_head, self.n_rows)
 
         cols = [view[colname].cmd for colname in view.colnames]
