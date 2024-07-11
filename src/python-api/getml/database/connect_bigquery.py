@@ -105,6 +105,6 @@ def connect_bigquery(
         comm.send_string(sock, "")
         msg = comm.recv_string(sock)
         if msg != "Success!":
-            comm.engine_exception_handler(msg)
+            comm.handle_engine_exception(msg)
 
     return Connection(conn_id=conn_id)

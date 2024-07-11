@@ -1749,7 +1749,7 @@ BooleanColumnView.as_str = _as_str  # type: ignore
 # -----------------------------------------------------------------------------
 
 
-def _as_ts(self, time_formats: Optional[Union[str, List[str]]] = None):
+def _as_ts(self, time_formats: Optional[Union[str, Iterable[str]]] = None):
     """
     Transforms a categorical column to a time stamp.
 

@@ -23,9 +23,10 @@ from typing import Any, Dict, List, NamedTuple, Optional, Union
 import numpy as np
 from rich import print
 
+from getml.exceptions import handle_engine_exception
+from getml.helpers import _is_iterable_not_str
 from getml.progress_bar import _Progress
-
-from .version import __version__
+from getml.version import __version__
 
 # --------------------------------------------------------------------
 
@@ -155,8 +156,10 @@ class _GetmlEncoder(json.JSONEncoder):
             return obj._getml_deserialize()
         if isinstance(obj, np.integer):
             return int(obj)
-        elif isinstance(obj, np.floating):
+        if isinstance(obj, np.floating):
             return float(obj)
+        if _is_iterable_not_str(obj):
+            return list(obj)
 
         return json.JSONEncoder.default(self, obj)
 
@@ -172,30 +175,6 @@ def _make_error_msg() -> str:
             projects="\n".join(_list_projects_impl(running_only=False))
         )
         return msg
-
-
-# --------------------------------------------------------------------
-
-
-def engine_exception_handler(msg: str, fallback: str = "") -> None:
-    """Looks at the error message thrown by the engine and decides whether
-    to throw a corresponding Exception using the same string or
-    altering the message first.
-
-    In either way, this function will always throw some sort of Exception.
-
-    Args:
-        msg: Error message returned by the getML engine.
-
-        fallback:
-            If not empty, the default Exception will carry this
-            string.
-    """
-
-    if not fallback:
-        fallback = msg
-
-    raise OSError(fallback)
 
 
 # --------------------------------------------------------------------
@@ -490,7 +469,7 @@ def send(cmd: Dict[str, Any]) -> None:
     sock.close()
 
     if msg != "Success!":
-        engine_exception_handler(msg)
+        handle_engine_exception(msg)
 
 
 # --------------------------------------------------------------------
@@ -655,7 +634,7 @@ def _delete_project_with_retry(name: str, retries: int, delay: float):
         with send_and_get_socket(cmd, tcp_port) as sock:
             msg = recv_string(sock)
             if msg != "Success!":
-                engine_exception_handler(msg)
+                handle_engine_exception(msg)
 
         sleep(delay)
 
@@ -711,7 +690,7 @@ def _load_project(bundle: Union[PathLike, str], name: Optional[str] = None):
     msg = log(sock)
 
     if msg != "Success!":
-        engine_exception_handler(msg)
+        handle_engine_exception(msg)
 
     global port  # noqa:PLW0603
     port = int(recv_string(sock))
@@ -747,7 +726,7 @@ def _list_projects_impl(running_only: bool) -> List[str]:
     msg = recv_string(sock)
 
     if msg != "Success!":
-        engine_exception_handler(msg)
+        handle_engine_exception(msg)
 
     json_str = recv_string(sock)
 
@@ -843,7 +822,7 @@ def _save_project(
     msg = recv_string(sock)
 
     if msg != "Success!":
-        engine_exception_handler(msg)
+        handle_engine_exception(msg)
 
     bundle = recv_bytes(sock)
 
@@ -892,7 +871,7 @@ def _set_project(name: str, restart: bool = False):
     msg = log(sock)
 
     if msg != "Success!":
-        engine_exception_handler(msg)
+        handle_engine_exception(msg)
 
     global port  # noqa:PLW0603
 
@@ -959,6 +938,6 @@ def _suspend_project(name: str):
     msg = recv_string(sock)
 
     if msg != "Success!":
-        engine_exception_handler(msg)
+        handle_engine_exception(msg)
 
     sock.close()

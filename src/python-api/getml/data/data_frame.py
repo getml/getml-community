@@ -5,7 +5,6 @@
 # for details.
 #
 
-
 """Handler for the data stored in the getML engine."""
 
 from __future__ import annotations
@@ -14,22 +13,42 @@ import json
 import numbers
 import os
 import shutil
+import warnings
 from collections import namedtuple
-from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Hashable,
+    Iterable,
+    Iterator,
+    List,
+    Literal,
+    Optional,
+    Union,
+    cast,
+    overload,
+)
 
 import numpy as np
 import pandas as pd
 import pyarrow as pa
+import pyarrow.csv as pa_csv
+import pyarrow.parquet as pq
 
 import getml.communication as comm
 from getml import constants, database
-from getml.constants import COMPARISON_ONLY, TIME_STAMP
-from getml.database import Connection
-from getml.database.helpers import _retrieve_temp_dir
-from getml.utilities.formatting import _DataFrameFormatter
-
-from . import roles as roles_
-from .columns import (
+from getml.constants import COMPARISON_ONLY, DEFAULT_BATCH_SIZE, TIME_STAMP
+from getml.data import roles as roles_
+from getml.data._io.arrow import (
+    read_arrow_batches,
+    sniff_arrow,
+    to_arrow,
+    to_arrow_batches,
+)
+from getml.data._io.csv import sniff_csv, to_csv
+from getml.data._io.parquet import sniff_parquet, to_parquet
+from getml.data.columns import (
     BooleanColumnView,
     FloatColumn,
     FloatColumnView,
@@ -38,38 +57,37 @@ from .columns import (
     arange,
     rowid,
 )
-from .columns.last_change import _last_change
-from .helpers import (
+from getml.data.columns.last_change import _last_change
+from getml.data.helpers import (
     _check_if_exists,
     _empty_data_frame,
     _exists_in_memory,
     _get_column,
     _handle_cols,
     _is_non_empty_typed_list,
-    _is_numerical_type,
-    _is_typed_list,
-    _modify_pandas_columns,
-    _retrieve_urls,
+    _is_numerical_type_numpy,
+    _iter_batches,
+    _prepare_roles,
     _send_numpy_array,
-    _sniff_arrow,
-    _sniff_csv,
     _sniff_db,
     _sniff_pandas,
-    _sniff_parquet,
     _sniff_s3,
-    _to_arrow,
-    _to_parquet,
     _to_pyspark,
-    _update_sniffed_roles,
-    _where,
     _with_column,
     _with_role,
     _with_subroles,
     _with_unit,
 )
-from .placeholder import Placeholder
-from .roles_obj import Roles
-from .view import View
+from getml.data.placeholder import Placeholder
+from getml.data.roles import sets as roles_sets
+from getml.data.roles.container import Roles
+from getml.data.roles.types import Role
+from getml.data.subroles.types import Subrole
+from getml.data.view import View
+from getml.database import Connection
+from getml.database.helpers import _retrieve_temp_dir, _retrieve_urls
+from getml.helpers import _is_iterable_not_str
+from getml.utilities.formatting import _DataFrameFormatter
 
 if TYPE_CHECKING:
     import pyspark.sql
@@ -172,12 +190,12 @@ class DataFrame:
 
     """
 
-    _categorical_roles = roles_._categorical_roles
-    _numerical_roles = roles_._numerical_roles
-    _possible_keys = _categorical_roles + _numerical_roles
+    _categorical_roles = roles_sets.categorical
+    _numerical_roles = roles_sets.numerical
+    _all_roles = roles_sets.all_
 
     def __init__(
-        self, name: str, roles: Optional[Union[Dict[str, List[str]], Roles]] = None
+        self, name: str, roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None
     ):
         # ------------------------------------------------------------
 
@@ -186,76 +204,52 @@ class DataFrame:
 
         vars(self)["name"] = name
 
-        # ------------------------------------------------------------
+        if roles is None:
+            roles = {}
 
-        roles = roles.to_dict() if isinstance(roles, Roles) else roles
-
-        roles = roles or dict()
-
-        if not isinstance(roles, dict):
-            raise TypeError("'roles' must be dict or a getml.data.Roles object")
-
-        for key, val in roles.items():
-            if key not in self._possible_keys:
-                msg = "'{}' is not a proper role and will be ignored\n"
-                msg += "Possible roles are: {}"
-                raise ValueError(msg.format(key, self._possible_keys))
-            if not _is_typed_list(val, str):
-                raise TypeError(
-                    f"'{key}' must be None, an empty list, or a list of str."
-                )
-
-        # ------------------------------------------------------------
-
-        join_keys = roles.get("join_key", [])
-        time_stamps = roles.get("time_stamp", [])
-        categorical = roles.get("categorical", [])
-        numerical = roles.get("numerical", [])
-        targets = roles.get("target", [])
-        text = roles.get("text", [])
-        unused_floats = roles.get("unused_float", [])
-        unused_strings = roles.get("unused_string", [])
+        if isinstance(roles, dict):
+            roles = Roles.from_dict(roles)
 
         # ------------------------------------------------------------
 
         vars(self)["_categorical_columns"] = [
             StringColumn(name=cname, role=roles_.categorical, df_name=self.name)
-            for cname in categorical
+            for cname in roles.categorical
         ]
 
         vars(self)["_join_key_columns"] = [
             StringColumn(name=cname, role=roles_.join_key, df_name=self.name)
-            for cname in join_keys
+            for cname in roles.join_key
         ]
 
         vars(self)["_numerical_columns"] = [
             FloatColumn(name=cname, role=roles_.numerical, df_name=self.name)
-            for cname in numerical
+            for cname in roles.numerical
         ]
 
         vars(self)["_target_columns"] = [
             FloatColumn(name=cname, role=roles_.target, df_name=self.name)
-            for cname in targets
+            for cname in roles.target
         ]
 
         vars(self)["_text_columns"] = [
             StringColumn(name=cname, role=roles_.text, df_name=self.name)
-            for cname in text
+            for cname in roles.text
         ]
 
         vars(self)["_time_stamp_columns"] = [
             FloatColumn(name=cname, role=roles_.time_stamp, df_name=self.name)
-            for cname in time_stamps
+            for cname in roles.time_stamp
         ]
 
         vars(self)["_unused_float_columns"] = [
             FloatColumn(name=cname, role=roles_.unused_float, df_name=self.name)
-            for cname in unused_floats
+            for cname in roles.unused_float
         ]
 
         vars(self)["_unused_string_columns"] = [
             StringColumn(name=cname, role=roles_.unused_string, df_name=self.name)
-            for cname in unused_strings
+            for cname in roles.unused_string
         ]
 
         # ------------------------------------------------------------
@@ -336,7 +330,7 @@ class DataFrame:
 
     # ----------------------------------------------------------------
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Union[FloatColumn, StringColumn]:
         try:
             return self[name]
         except KeyError:
@@ -344,14 +338,41 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
-    def __getitem__(self, name):
+    @overload
+    def __getitem__(self, name: str) -> Union[FloatColumn, StringColumn]: ...
+
+    @overload
+    def __getitem__(
+        self,
+        name: Union[
+            Iterable[str],
+            numbers.Real,
+            slice,
+            BooleanColumnView,
+            FloatColumn,
+            FloatColumnView,
+        ],
+    ) -> View: ...
+
+    def __getitem__(
+        self,
+        name: Union[
+            str,
+            Iterable[str],
+            numbers.Real,
+            slice,
+            BooleanColumnView,
+            FloatColumn,
+            FloatColumnView,
+        ],
+    ) -> Union[FloatColumn, StringColumn, View]:
         if isinstance(
             name,
             (numbers.Integral, slice, BooleanColumnView, FloatColumn, FloatColumnView),
         ):
             return self.where(index=name)
 
-        if isinstance(name, list):
+        if _is_iterable_not_str(name):
             not_in_colnames = set(name) - set(self.colnames)
             if not_in_colnames:
                 raise KeyError(f"{list(not_in_colnames)} not found.")
@@ -363,7 +384,7 @@ class DataFrame:
         if col is not None:
             return col
 
-        raise KeyError("Column named '" + name + "' not found.")
+        raise KeyError(f"Column named '{name}' not found.")
 
     # ------------------------------------------------------------
 
@@ -375,14 +396,19 @@ class DataFrame:
 
         return cmd
 
+    # ------------------------------------------------------------
+
+    def _dir(self) -> List[str]:
+        return sorted(set(dir(type(self)) + list(self.__dict__) + self.colnames))
+
     # ----------------------------------------------------------------
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.nrows()
 
     # ----------------------------------------------------------------
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         if not _exists_in_memory(self.name):
             return _empty_data_frame()
 
@@ -394,12 +420,12 @@ class DataFrame:
 
     # ----------------------------------------------------------------
 
-    def _repr_html_(self):
+    def _repr_html_(self) -> str:
         return self.to_html()
 
     # ------------------------------------------------------------
 
-    def __setattr__(self, name, value):
+    def __setattr__(self, name, value) -> None:
         if name in vars(self):
             vars(self)[name] = value
         else:
@@ -407,7 +433,7 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
-    def __setitem__(self, name, col):
+    def __setitem__(self, name, col) -> None:
         self.add(col, name)
 
     # ------------------------------------------------------------
@@ -427,7 +453,7 @@ class DataFrame:
             comm.recv_issues(sock)
             msg = comm.recv_string(sock)
             if msg != "Success!":
-                comm.engine_exception_handler(msg)
+                comm.handle_engine_exception(msg)
 
         self.refresh()
 
@@ -449,7 +475,7 @@ class DataFrame:
             comm.recv_issues(sock)
             msg = comm.recv_string(sock)
             if msg != "Success!":
-                comm.engine_exception_handler(msg)
+                comm.handle_engine_exception(msg)
 
         self.refresh()
 
@@ -465,7 +491,7 @@ class DataFrame:
         if role is None:
             temp_df = pd.DataFrame()
             temp_df["column"] = numpy_array
-            if _is_numerical_type(temp_df.dtypes[0]):
+            if _is_numerical_type_numpy(temp_df.dtypes[0]):
                 role = roles_.unused_float
             else:
                 role = roles_.unused_string
@@ -566,7 +592,7 @@ class DataFrame:
         msg = comm.recv_string(sock)
 
         if msg != "Success!":
-            comm.engine_exception_handler(msg)
+            comm.handle_engine_exception(msg)
 
     # ------------------------------------------------------------
 
@@ -615,7 +641,10 @@ class DataFrame:
     # ------------------------------------------------------------
 
     def _set_subroles(
-        self, name: str, append: bool, subroles: Optional[Union[str, List[str]]] = None
+        self,
+        name: str,
+        append: bool,
+        subroles: Optional[Union[Subrole, Iterable[str]]] = None,
     ):
         if not isinstance(name, str):
             raise TypeError("Parameter 'name' must be a string!")
@@ -654,12 +683,12 @@ class DataFrame:
 
     def add(
         self,
-        col: Union[StringColumn, FloatColumn, np.array],
+        col: Union[StringColumn, FloatColumn, np.ndarray],
         name: str,
-        role: Optional[str] = None,
-        subroles: Optional[Union[str, List[str]]] = None,
+        role: Optional[Role] = None,
+        subroles: Optional[Union[Role, Iterable[str]]] = None,
         unit: str = "",
-        time_formats: Optional[List[str]] = None,
+        time_formats: Optional[Iterable[str]] = None,
     ):
         """Adds a column to the current [`DataFrame`][getml.DataFrame].
 
@@ -734,7 +763,7 @@ class DataFrame:
     # ------------------------------------------------------------
 
     @property
-    def _categorical_names(self):
+    def _categorical_names(self) -> List[str]:
         return [col.name for col in self._categorical_columns]
 
     # ------------------------------------------------------------
@@ -813,7 +842,10 @@ class DataFrame:
     def drop(
         self,
         cols: Union[
-            FloatColumn, StringColumn, str, List[Union[FloatColumn, StringColumn, str]]
+            FloatColumn,
+            StringColumn,
+            str,
+            Union[Iterable[FloatColumn], Iterable[StringColumn], Iterable[str]],
         ],
     ) -> View:
         """Returns a new [`View`][getml.data.View] that has one or several columns removed.
@@ -827,9 +859,6 @@ class DataFrame:
         """
 
         names = _handle_cols(cols)
-
-        if not _is_typed_list(names, str):
-            raise TypeError("'cols' must be a string or a list of strings.")
 
         return View(base=self, dropped=names)
 
@@ -851,15 +880,35 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
+    @overload
+    @classmethod
+    def from_arrow(
+        table: pa.Table,
+        name: str,
+        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        ignore: bool = False,
+        dry: bool = False,
+    ) -> DataFrame: ...
+
+    @overload
+    @classmethod
+    def from_arrow(
+        table: pa.Table,
+        name: str,
+        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        ignore: bool = False,
+        dry: Literal[True] = True,
+    ) -> Roles: ...
+
     @classmethod
     def from_arrow(
         cls,
         table: pa.Table,
         name: str,
-        roles: Optional[Union[Dict[str, List[str]], Roles]] = None,
+        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
         ignore: bool = False,
-        dry: bool = False,
-    ) -> DataFrame:
+        dry: Literal[False] = False,
+    ) -> Union[DataFrame, Roles]:
         """Create a DataFrame from an Arrow Table.
 
         This is one of the fastest way to get data into the
@@ -867,7 +916,7 @@ class DataFrame:
 
         Args:
             table:
-                The table to be read.
+                The arrow tablelike to be read.
 
             name:
                 Name of the data frame to be created.
@@ -890,19 +939,14 @@ class DataFrame:
                 or read them in as unused columns (False)?
 
             dry:
-                If set to True, then the data
-                will not actually be read. Instead, the method will only
-                return the roles it would have used. This can be used
-                to hard-code roles when setting up a pipeline.
+                If set to True, the data will not be read. Instead, the method
+                will return the inffered roles.
 
         Returns:
                 Handler of the underlying data.
         """
 
         # ------------------------------------------------------------
-
-        if not isinstance(table, pa.Table):
-            raise TypeError("'table' must be of type pyarrow.Table.")
 
         if not isinstance(name, str):
             raise TypeError("'name' must be str.")
@@ -919,15 +963,10 @@ class DataFrame:
 
         # ------------------------------------------------------------
 
-        roles = roles.to_dict() if isinstance(roles, Roles) else roles
+        sniffed_roles = sniff_arrow(table)
 
-        if roles is None or not ignore:
-            sniffed_roles = _sniff_arrow(table)
-
-            if roles is None:
-                roles = sniffed_roles
-            else:
-                roles = _update_sniffed_roles(sniffed_roles, roles)
+        if not ignore:
+            roles = _prepare_roles(roles, sniffed_roles)
 
         if dry:
             return roles
@@ -938,22 +977,54 @@ class DataFrame:
 
     # --------------------------------------------------------------------
 
-    @classmethod
+    @overload
     def from_csv(
-        cls,
-        fnames: Union[List[str], str],
+        fnames: Union[str, Iterable[str]],
         name: str,
-        num_lines_sniffed: int = 1000,
+        num_lines_sniffed: None = None,
         num_lines_read: int = 0,
         quotechar: str = '"',
         sep: str = ",",
         skip: int = 0,
-        colnames: Optional[List[str]] = None,
-        roles: Optional[Union[Dict[str, List[str]], Roles]] = None,
+        colnames: Optional[Iterable[str]] = None,
+        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
         ignore: bool = False,
         dry: bool = False,
         verbose: bool = True,
-    ) -> DataFrame:
+    ) -> DataFrame: ...
+
+    @overload
+    def from_csv(
+        fnames: Union[str, Iterable[str]],
+        name: str,
+        num_lines_sniffed: None = None,
+        num_lines_read: int = 0,
+        quotechar: str = '"',
+        sep: str = ",",
+        skip: int = 0,
+        colnames: Optional[Iterable[str]] = None,
+        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        ignore: bool = False,
+        dry: Literal[True] = True,
+        verbose: bool = True,
+    ) -> Roles: ...
+
+    @classmethod
+    def from_csv(
+        cls,
+        fnames: Union[str, Iterable[str]],
+        name: str,
+        num_lines_sniffed: None = None,
+        num_lines_read: int = 0,
+        quotechar: str = '"',
+        sep: str = ",",
+        skip: int = 0,
+        colnames: Optional[Iterable[str]] = None,
+        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        ignore: bool = False,
+        dry: Literal[False] = False,
+        verbose: bool = True,
+    ) -> Union[DataFrame, Roles]:
         """Create a DataFrame from CSV files.
 
         The getML engine will construct a data
@@ -1006,10 +1077,8 @@ class DataFrame:
                 or read them in as unused columns (False)?
 
             dry:
-                If set to True, then the data
-                will not actually be read. Instead, the method will only
-                return the roles it would have used. This can be used
-                to hard-code roles when setting up a pipeline.
+                If set to True, the data will not be read. Instead, the method
+                will return the inffered roles.
 
             verbose:
                 If True, when fnames are urls, the filenames are
@@ -1017,6 +1086,10 @@ class DataFrame:
 
         Returns:
                 Handler of the underlying data.
+
+
+        Deprecated:
+            1.5: The `num_lines_sniffed` parameter is deprecated.
 
         Note:
             It is assumed that the first line of each CSV file
@@ -1065,7 +1138,13 @@ class DataFrame:
 
         """
 
-        if not isinstance(fnames, list):
+        if num_lines_sniffed is not None:
+            warnings.warn(
+                "The 'num_lines_sniffed' parameter is deprecated and will be ignored.",
+                DeprecationWarning,
+            )
+
+        if isinstance(fnames, str):
             fnames = [fnames]
 
         if not _is_non_empty_typed_list(fnames, str):
@@ -1073,9 +1152,6 @@ class DataFrame:
 
         if not isinstance(name, str):
             raise TypeError("'name' must be str.")
-
-        if not isinstance(num_lines_sniffed, numbers.Real):
-            raise TypeError("'num_lines_sniffed' must be a real number")
 
         if not isinstance(num_lines_read, numbers.Real):
             raise TypeError("'num_lines_read' must be a real number")
@@ -1105,22 +1181,15 @@ class DataFrame:
 
         fnames = _retrieve_urls(fnames, verbose=verbose)
 
-        roles = roles.to_dict() if isinstance(roles, Roles) else roles
-
-        if roles is None or not ignore:
-            sniffed_roles = _sniff_csv(
-                fnames=fnames,
-                num_lines_sniffed=int(num_lines_sniffed),
-                quotechar=quotechar,
-                sep=sep,
-                skip=int(skip),
-                colnames=colnames,
-            )
-
-            if roles is None:
-                roles = sniffed_roles
-            else:
-                roles = _update_sniffed_roles(sniffed_roles, roles)
+        sniffed_roles = sniff_csv(
+            fnames=fnames,
+            quotechar=quotechar,
+            sep=sep,
+            skip=int(skip),
+            colnames=colnames,
+        )
+        if not ignore:
+            roles = _prepare_roles(roles, sniffed_roles)
 
         if dry:
             return roles
@@ -1139,16 +1208,40 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
+    @overload
+    @classmethod
+    def from_db(
+        cls,
+        table_name: str,
+        name: str,
+        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        ignore: bool = False,
+        dry: bool = False,
+        conn: Optional[Connection] = None,
+    ) -> DataFrame: ...
+
+    @overload
+    @classmethod
+    def from_db(
+        cls,
+        table_name: str,
+        name: str,
+        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        ignore: bool = False,
+        dry: Literal[True] = True,
+        conn: Optional[Connection] = None,
+    ) -> Roles: ...
+
     @classmethod
     def from_db(
         cls,
         table_name: str,
         name: Optional[str] = None,
-        roles: Optional[Union[Dict[str, List[str]], Roles]] = None,
+        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
         ignore: bool = False,
-        dry: bool = False,
+        dry: Literal[False] = False,
         conn: Optional[Connection] = None,
-    ) -> DataFrame:
+    ) -> Union[DataFrame, Roles]:
         """Create a DataFrame from a table in a database.
 
         It will construct a data frame object in the engine, fill it
@@ -1182,10 +1275,8 @@ class DataFrame:
                 or read them in as unused columns (False)?
 
             dry:
-                If set to True, then the data
-                will not actually be read. Instead, the method will only
-                return the roles it would have used. This can be used
-                to hard-code roles when setting up a pipeline.
+                If set to True, the data will not be read. Instead, the method
+                will return the inffered roles.
 
             conn:
                 The database connection to be used.
@@ -1240,15 +1331,10 @@ class DataFrame:
 
         # ------------------------------------------------------------
 
-        roles = roles.to_dict() if isinstance(roles, Roles) else roles
+        sniffed_roles = _sniff_db(table_name, conn)
 
-        if roles is None or not ignore:
-            sniffed_roles = _sniff_db(table_name, conn)
-
-            if roles is None:
-                roles = sniffed_roles
-            else:
-                roles = _update_sniffed_roles(sniffed_roles, roles)
+        if not ignore:
+            roles = _prepare_roles(roles, sniffed_roles)
 
         if dry:
             return roles
@@ -1259,15 +1345,37 @@ class DataFrame:
 
     # --------------------------------------------------------------------
 
+    @overload
     @classmethod
     def from_dict(
         cls,
-        data: Dict[str, Union[List[float], List[str]]],
+        data: Dict[Hashable, Iterable[Any]],
         name: str,
-        roles: Optional[Union[Dict[str, List[str]], Roles]] = None,
+        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        ignore: bool = False,
+        dry: Literal[False] = False,
+    ) -> DataFrame: ...
+
+    @overload
+    @classmethod
+    def from_dict(
+        cls,
+        data: Dict[Hashable, Iterable[Any]],
+        name: str,
+        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        ignore: bool = False,
+        dry: Literal[True] = True,
+    ) -> Roles: ...
+
+    @classmethod
+    def from_dict(
+        cls,
+        data: Dict[Hashable, Iterable[Any]],
+        name: str,
+        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
         ignore: bool = False,
         dry: bool = False,
-    ) -> DataFrame:
+    ) -> Union[DataFrame, Roles]:
         """Create a new DataFrame from a dict
 
         Args:
@@ -1298,11 +1406,8 @@ class DataFrame:
                 or read them in as unused columns (False)?
 
             dry:
-                If set to True, then the data
-                will not actually be read. Instead, the method will only
-                return the roles it would have used. This can be used
-                to hard-code roles when setting up a pipeline.
-
+                If set to True, the data will not be read. Instead, the method
+                will return the inffered roles.
         Returns:
                 Handler of the underlying data.
         """
@@ -1320,15 +1425,37 @@ class DataFrame:
 
     # --------------------------------------------------------------------
 
+    @overload
     @classmethod
     def from_json(
         cls,
         json_str: str,
         name: str,
-        roles: Optional[Union[Dict[str, List[str]], Roles]] = None,
+        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        ignore: bool = False,
+        dry: Literal[False] = False,
+    ) -> DataFrame: ...
+
+    @overload
+    @classmethod
+    def from_json(
+        cls,
+        json_str: str,
+        name: str,
+        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        ignore: bool = False,
+        dry: Literal[True] = True,
+    ) -> Roles: ...
+
+    @classmethod
+    def from_json(
+        cls,
+        json_str: str,
+        name: str,
+        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
         ignore: bool = False,
         dry: bool = False,
-    ) -> DataFrame:
+    ) -> Union[DataFrame, Roles]:
         """Create a new DataFrame from a JSON string.
 
         It will construct a data frame object in the engine, fill it
@@ -1363,10 +1490,8 @@ class DataFrame:
                 or read them in as unused columns (False)?
 
             dry:
-                If set to True, then the data
-                will not actually be read. Instead, the method will only
-                return the roles it would have used. This can be used
-                to hard-code roles when setting up a pipeline.
+                If set to True, the data will not be read. Instead, the method
+                will return the inffered roles.
 
         Returns:
             Handler of the underlying data.
@@ -1386,15 +1511,37 @@ class DataFrame:
 
     # --------------------------------------------------------------------
 
+    @overload
     @classmethod
     def from_pandas(
         cls,
         pandas_df: pd.DataFrame,
         name: str,
-        roles: Optional[Union[Dict[str, List[str]], Roles]] = None,
+        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
         ignore: bool = False,
         dry: bool = False,
-    ) -> DataFrame:
+    ) -> DataFrame: ...
+
+    @overload
+    @classmethod
+    def from_pandas(
+        cls,
+        pandas_df: pd.DataFrame,
+        name: str,
+        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        ignore: bool = False,
+        dry: Literal[True] = True,
+    ) -> Roles: ...
+
+    @classmethod
+    def from_pandas(
+        cls,
+        pandas_df: pd.DataFrame,
+        name: str,
+        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        ignore: bool = False,
+        dry: Literal[False] = False,
+    ) -> Union[DataFrame, Roles]:
         """Create a DataFrame from a `pandas.DataFrame`.
 
         It will construct a data frame object in the engine, fill it
@@ -1426,10 +1573,8 @@ class DataFrame:
                 or read them in as unused columns (False)?
 
             dry:
-                If set to True, then the data
-                will not actually be read. Instead, the method will only
-                return the roles it would have used. This can be used
-                to hard-code roles when setting up a pipeline.
+                If set to True, the data will not be read. Instead, the method
+                will return the inffered roles.
 
         Returns:
             Handler of the underlying data.
@@ -1455,38 +1600,54 @@ class DataFrame:
 
         # ------------------------------------------------------------
 
-        pandas_df_modified = _modify_pandas_columns(pandas_df)
+        sniffed_roles = _sniff_pandas(pandas_df)
 
-        # ------------------------------------------------------------
-
-        roles = roles.to_dict() if isinstance(roles, Roles) else roles
-
-        if roles is None or not ignore:
-            sniffed_roles = _sniff_pandas(pandas_df_modified)
-
-            if roles is None:
-                roles = sniffed_roles
-            else:
-                roles = _update_sniffed_roles(sniffed_roles, roles)
+        if not ignore:
+            roles = _prepare_roles(roles, sniffed_roles)
 
         if dry:
             return roles
 
         data_frame = cls(name, roles)
 
-        return data_frame.read_pandas(pandas_df=pandas_df_modified, append=False)
+        return data_frame.read_pandas(pandas_df=pandas_df, append=False)
 
     # --------------------------------------------------------------------
+
+    @overload
+    @classmethod
+    def from_parquet(
+        cls,
+        fnames: Union[str, Iterable[str]],
+        name: str,
+        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        ignore: bool = False,
+        dry: bool = False,
+        colnames: Iterable[str] = (),
+    ) -> DataFrame: ...
+
+    @overload
+    @classmethod
+    def from_parquet(
+        cls,
+        fnames: Union[str, Iterable[str]],
+        name: str,
+        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        ignore: bool = False,
+        dry: Literal[True] = True,
+        colnames: Iterable[str] = (),
+    ) -> Roles: ...
 
     @classmethod
     def from_parquet(
         cls,
-        fname: str,
+        fnames: Union[str, Iterable[str]],
         name: str,
-        roles: Optional[Union[Dict[str, List[str]], Roles]] = None,
+        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
         ignore: bool = False,
-        dry: bool = False,
-    ):
+        dry: Literal[False] = False,
+        colnames: Iterable[str] = (),
+    ) -> Union[DataFrame, Roles]:
         """Create a DataFrame from parquet files.
 
         This is one of the fastest way to get data into the
@@ -1517,16 +1678,17 @@ class DataFrame:
                 or read them in as unused columns (False)?
 
             dry:
-                If set to True, then the data
-                will not actually be read. Instead, the method will only
-                return the roles it would have used. This can be used
-                to hard-code roles when setting up a pipeline.
+                If set to True, the data will not be read. Instead, the method
+                will return the inffered roles.
 
         Returns:
             Handler of the underlying data.
         """
 
         # ------------------------------------------------------------
+
+        if isinstance(fnames, str):
+            fnames = [fnames]
 
         if not isinstance(name, str):
             raise TypeError("'name' must be str.")
@@ -1543,34 +1705,51 @@ class DataFrame:
 
         # ------------------------------------------------------------
 
-        roles = roles.to_dict() if isinstance(roles, Roles) else roles
+        sniffed_roles = sniff_parquet(fnames, colnames)
 
-        if roles is None or not ignore:
-            sniffed_roles = _sniff_parquet(fname)
-
-            if roles is None:
-                roles = sniffed_roles
-            else:
-                roles = _update_sniffed_roles(sniffed_roles, roles)
+        if not ignore:
+            roles = _prepare_roles(roles, sniffed_roles)
 
         if dry:
             return roles
 
         data_frame = cls(name, roles)
 
-        return data_frame.read_parquet(fname=fname, append=False)
+        return data_frame.read_parquet(fnames=fnames, append=False, colnames=colnames)
 
     # --------------------------------------------------------------------
+
+    @overload
+    @classmethod
+    def from_pyspark(
+        cls,
+        spark_df: pyspark.sql.DataFrame,
+        name: str,
+        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        ignore: bool = False,
+        dry: bool = False,
+    ) -> DataFrame: ...
+
+    @overload
+    @classmethod
+    def from_pyspark(
+        cls,
+        spark_df: pyspark.sql.DataFrame,
+        name: str,
+        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        ignore: bool = False,
+        dry: Literal[True] = True,
+    ) -> Roles: ...
 
     @classmethod
     def from_pyspark(
         cls,
         spark_df: pyspark.sql.DataFrame,
         name: str,
-        roles: Optional[Union[Dict[str, List[str]], Roles]] = None,
+        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
         ignore: bool = False,
-        dry: bool = False,
-    ) -> DataFrame:
+        dry: Literal[False] = False,
+    ) -> Union[DataFrame, Roles]:
         """Create a DataFrame from a `pyspark.sql.DataFrame`.
 
         It will construct a data frame object in the engine, fill it
@@ -1603,10 +1782,8 @@ class DataFrame:
                 or read them in as unused columns (False)?
 
             dry:
-                If set to True, then the data
-                will not actually be read. Instead, the method will only
-                return the roles it would have used. This can be used
-                to hard-code roles when setting up a pipeline.
+                If set to True, the data will not be read. Instead, the method
+                will return the inffered roles.
 
         Returns:
                 Handler of the underlying data.
@@ -1629,17 +1806,12 @@ class DataFrame:
 
         # ------------------------------------------------------------
 
-        roles = roles.to_dict() if isinstance(roles, Roles) else roles
+        head = spark_df.limit(2).toPandas()
 
-        if roles is None or not ignore:
-            head = spark_df.limit(2).toPandas()
+        sniffed_roles = _sniff_pandas(head)
 
-            sniffed_roles = _sniff_pandas(head)
-
-            if roles is None:
-                roles = sniffed_roles
-            else:
-                roles = _update_sniffed_roles(sniffed_roles, roles)
+        if not ignore:
+            roles = _prepare_roles(roles, sniffed_roles)
 
         if dry:
             return roles
@@ -1650,22 +1822,57 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
+    @overload
     @classmethod
     def from_s3(
         cls,
         bucket: str,
-        keys: List[str],
+        keys: Iterable[str],
         region: str,
         name: str,
         num_lines_sniffed: int = 1000,
         num_lines_read: int = 0,
         sep: str = ",",
         skip: int = 0,
-        colnames: Optional[List[str]] = None,
-        roles: Optional[Union[Dict[str, List[str]], Roles]] = None,
+        colnames: Optional[Iterable[str]] = None,
+        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
         ignore: bool = False,
         dry: bool = False,
-    ) -> DataFrame:
+    ) -> DataFrame: ...
+
+    @overload
+    def from_s3(
+        cls,
+        bucket: str,
+        keys: Iterable[str],
+        region: str,
+        name: str,
+        num_lines_sniffed: int = 1000,
+        num_lines_read: int = 0,
+        sep: str = ",",
+        skip: int = 0,
+        colnames: Optional[Iterable[str]] = None,
+        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        ignore: bool = False,
+        dry: Literal[True] = True,
+    ) -> Roles: ...
+
+    @classmethod
+    def from_s3(
+        cls,
+        bucket: str,
+        keys: Iterable[str],
+        region: str,
+        name: str,
+        num_lines_sniffed: int = 1000,
+        num_lines_read: int = 0,
+        sep: str = ",",
+        skip: int = 0,
+        colnames: Optional[Iterable[str]] = None,
+        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        ignore: bool = False,
+        dry: Literal[False] = False,
+    ) -> Union[DataFrame, Roles]:
         """Create a DataFrame from CSV files located in an S3 bucket.
 
         This classmethod will construct a data
@@ -1722,10 +1929,8 @@ class DataFrame:
                 or read them in as unused columns (False)?
 
             dry:
-                If set to True, then the data
-                will not actually be read. Instead, the method will only
-                return the roles it would have used. This can be used
-                to hard-code roles when setting up a pipeline.
+                If set to True, the data will not be read. Instead, the method
+                will return the inffered roles.
 
         Returns:
                 Handler of the underlying data.
@@ -1800,23 +2005,17 @@ class DataFrame:
                 "'colnames' must be either be None or a non-empty list of str."
             )
 
-        roles = roles.to_dict() if isinstance(roles, Roles) else roles
+        sniffed_roles = _sniff_s3(
+            bucket=bucket,
+            keys=keys,
+            region=region,
+            num_lines_sniffed=int(num_lines_sniffed),
+            sep=sep,
+            skip=int(skip),
+            colnames=colnames,
+        )
 
-        if roles is None or not ignore:
-            sniffed_roles = _sniff_s3(
-                bucket=bucket,
-                keys=keys,
-                region=region,
-                num_lines_sniffed=int(num_lines_sniffed),
-                sep=sep,
-                skip=int(skip),
-                colnames=colnames,
-            )
-
-            if roles is None:
-                roles = sniffed_roles
-            else:
-                roles = _update_sniffed_roles(sniffed_roles, roles)
+        roles = _prepare_roles(roles, sniffed_roles, ignore)
 
         if dry:
             return roles
@@ -1836,13 +2035,31 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
+    @overload
     @classmethod
     def from_view(
         cls,
         view: View,
         name: str,
         dry: bool = False,
-    ) -> DataFrame:
+    ) -> DataFrame: ...
+
+    @overload
+    @classmethod
+    def from_view(
+        cls,
+        view: View,
+        name: str,
+        dry: Literal[True] = True,
+    ) -> Roles: ...
+
+    @classmethod
+    def from_view(
+        cls,
+        view: View,
+        name: str,
+        dry: Literal[False] = False,
+    ) -> Union[DataFrame, Roles]:
         """Create a DataFrame from a [`View`][getml.data.View].
 
         This classmethod will construct a data
@@ -1858,10 +2075,8 @@ class DataFrame:
                 Name of the data frame to be created.
 
             dry:
-                If set to True, then the data
-                will not actually be read. Instead, the method will only
-                return the roles it would have used. This can be used
-                to hard-code roles when setting up a pipeline.
+                If set to True, the data will not be read. Instead, the method
+                will return an empty data frame with the roles set as inferred.
 
         Returns:
                 Handler of the underlying data.
@@ -1884,7 +2099,7 @@ class DataFrame:
         if dry:
             return view.roles
 
-        data_frame = cls(name)
+        data_frame = cls(name, view.roles)
 
         # ------------------------------------------------------------
 
@@ -1892,8 +2107,13 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
+    def iter_batches(self, batch_size: int = DEFAULT_BATCH_SIZE) -> Iterator[View]:
+        yield from _iter_batches(self, batch_size)
+
+    # ------------------------------------------------------------
+
     @property
-    def _join_key_names(self):
+    def _join_key_names(self) -> Iterable[str]:
         return [col.name for col in self._join_key_columns]
 
     # ------------------------------------------------------------
@@ -2018,7 +2238,8 @@ class DataFrame:
         with comm.send_and_get_socket(cmd) as sock:
             msg = comm.recv_string(sock)
             if msg != "Found!":
-                comm.engine_exception_handler(msg)
+                sock.close()
+                comm.handle_engine_exception(msg)
             nbytes = comm.recv_string(sock)
 
         return np.uint64(nbytes)
@@ -2051,7 +2272,8 @@ class DataFrame:
         with comm.send_and_get_socket(cmd) as sock:
             msg = comm.recv_string(sock)
             if msg != "Found!":
-                comm.engine_exception_handler(msg)
+                sock.close()
+                comm.handle_engine_exception(msg)
             nrows = comm.recv_string(sock)
 
         return int(nrows)
@@ -2064,19 +2286,22 @@ class DataFrame:
 
     # --------------------------------------------------------------------------
 
-    def read_arrow(self, table: pa.Table, append: bool = False) -> DataFrame:
-        """Uploads a `pyarrow.Table`.
+    def read_arrow(
+        self,
+        table: Union[pa.RecordBatch, pa.Table, Iterable[pa.RecordBatch]],
+        append: bool = False,
+    ) -> DataFrame:
+        """Uploads a `pyarrow.Table` or `pyarrow.RecordBatch` to the getML engine.
 
         Replaces the actual content of the underlying data frame in
         the getML engine with `table`.
 
         Args:
             table:
-                Data the underlying data frame object in the getML
-                engine should obtain.
+                The arrow tablelike to be read as a `DataFrame`.
 
             append:
-                If a data frame object holding the same ``name`` is
+                If a data frame object holding the same `name` is
                 already present in the getML engine, should the content in
                 `query` be appended or replace the existing data?
 
@@ -2092,8 +2317,7 @@ class DataFrame:
 
         # ------------------------------------------------------------
 
-        if not isinstance(table, pa.Table):
-            raise TypeError("'table' must be of type pyarrow.Table.")
+        batches = to_arrow_batches(table)
 
         if not isinstance(append, bool):
             raise TypeError("'append' must be bool.")
@@ -2108,32 +2332,9 @@ class DataFrame:
                 from_pandas(...)."""
             )
 
-        cmd: Dict[str, Any] = {}
+        # ------------------------------------------------------------
 
-        cmd["type_"] = "DataFrame.from_arrow"
-        cmd["name_"] = self.name
-
-        cmd["append_"] = append
-
-        cmd["categorical_"] = self._categorical_names
-        cmd["join_keys_"] = self._join_key_names
-        cmd["numerical_"] = self._numerical_names
-        cmd["targets_"] = self._target_names
-        cmd["text_"] = self._text_names
-        cmd["time_stamps_"] = self._time_stamp_names
-        cmd["unused_floats_"] = self._unused_float_names
-        cmd["unused_strings_"] = self._unused_string_names
-
-        with comm.send_and_get_socket(cmd) as sock:
-            with sock.makefile(mode="wb") as sink:
-                batches = table.to_batches()
-                with pa.ipc.new_stream(sink, table.schema) as writer:
-                    for batch in batches:
-                        writer.write_batch(batch)
-            msg = comm.recv_string(sock)
-
-        if msg != "Success!":
-            comm.engine_exception_handler(msg)
+        read_arrow_batches(batches, table.schema, self, append)
 
         return self.refresh()
 
@@ -2141,14 +2342,14 @@ class DataFrame:
 
     def read_csv(
         self,
-        fnames: List[str],
+        fnames: Iterable[str],
         append: bool = False,
         quotechar: str = '"',
         sep: str = ",",
         num_lines_read: int = 0,
         skip: int = 0,
-        colnames: Optional[List[str]] = None,
-        time_formats: Optional[List[str]] = None,
+        colnames: Optional[Iterable[str]] = None,
+        time_formats: Optional[Iterable[str]] = None,
         verbose: bool = True,
     ) -> DataFrame:
         """Read CSV files.
@@ -2227,7 +2428,7 @@ class DataFrame:
 
         time_formats = time_formats or constants.TIME_FORMATS
 
-        if not isinstance(fnames, list):
+        if isinstance(fnames, str):
             fnames = [fnames]
 
         if not _is_non_empty_typed_list(fnames, str):
@@ -2272,33 +2473,27 @@ class DataFrame:
 
         fnames_ = _retrieve_urls(fnames, verbose)
 
-        cmd: Dict[str, Any] = {}
+        readers = (
+            pa_csv.open_csv(
+                fname,
+                read_options=pa_csv.ReadOptions(
+                    skip_rows=skip,
+                    column_names=colnames,
+                    autogenerate_column_names=False,
+                ),
+                parse_options=pa_csv.ParseOptions(
+                    delimiter=sep,
+                    quote_char=quotechar,
+                    ignore_empty_lines=True,
+                ),
+            )
+            for fname in fnames_
+        )
 
-        cmd["type_"] = "DataFrame.read_csv"
-        cmd["name_"] = self.name
-
-        cmd["fnames_"] = fnames_
-
-        cmd["append_"] = append
-        cmd["num_lines_read_"] = num_lines_read
-        cmd["quotechar_"] = quotechar
-        cmd["sep_"] = sep
-        cmd["skip_"] = skip
-        cmd["time_formats_"] = time_formats
-
-        if colnames is not None:
-            cmd["colnames_"] = colnames
-
-        cmd["categorical_"] = self._categorical_names
-        cmd["join_keys_"] = self._join_key_names
-        cmd["numerical_"] = self._numerical_names
-        cmd["targets_"] = self._target_names
-        cmd["text_"] = self._text_names
-        cmd["time_stamps_"] = self._time_stamp_names
-        cmd["unused_floats_"] = self._unused_float_names
-        cmd["unused_strings_"] = self._unused_string_names
-
-        comm.send(cmd)
+        for batches in readers:
+            read_arrow_batches(batches, batches.schema, self, append)
+            if not append:
+                append = True
 
         return self
 
@@ -2308,7 +2503,7 @@ class DataFrame:
         self,
         json_str: str,
         append: bool = False,
-        time_formats: Optional[List[str]] = None,
+        time_formats: Optional[Iterable[str]] = None,
     ) -> DataFrame:
         """Fill from JSON
 
@@ -2407,7 +2602,7 @@ class DataFrame:
             msg = comm.recv_string(sock)
 
         if msg != "Success!":
-            comm.engine_exception_handler(msg)
+            comm.handle_engine_exception(msg)
 
         return self
 
@@ -2415,9 +2610,10 @@ class DataFrame:
 
     def read_parquet(
         self,
-        fname: str,
+        fnames: Union[str, Iterable[str]],
         append: bool = False,
         verbose: bool = True,
+        colnames: Iterable[str] = (),
     ) -> DataFrame:
         """Read a parquet file.
 
@@ -2439,11 +2635,14 @@ class DataFrame:
             Handler of the underlying data.
         """
 
-        if not isinstance(fname, str):
-            raise TypeError("'fname' must be str.")
+        if isinstance(fnames, str):
+            fnames = [fnames]
 
         if not isinstance(append, bool):
             raise TypeError("'append' must be bool.")
+
+        if not colnames:
+            colnames = self.colnames
 
         if self.ncols() == 0:
             raise Exception(
@@ -2453,26 +2652,19 @@ class DataFrame:
                 from_parquet(...)."""
             )
 
-        fname_ = _retrieve_urls([fname], verbose)[0]
+        fnames = _retrieve_urls(fnames, verbose)
 
-        cmd: Dict[str, Any] = {}
+        readers = (pq.ParquetFile(fname) for fname in fnames)
 
-        cmd["type_"] = "DataFrame.read_parquet"
-        cmd["name_"] = self.name
-
-        cmd["fname_"] = fname_
-        cmd["append_"] = append
-
-        cmd["categorical_"] = self._categorical_names
-        cmd["join_keys_"] = self._join_key_names
-        cmd["numerical_"] = self._numerical_names
-        cmd["targets_"] = self._target_names
-        cmd["text_"] = self._text_names
-        cmd["time_stamps_"] = self._time_stamp_names
-        cmd["unused_floats_"] = self._unused_float_names
-        cmd["unused_strings_"] = self._unused_string_names
-
-        comm.send(cmd)
+        for reader in readers:
+            read_arrow_batches(
+                reader.iter_batches(columns=colnames),
+                reader.schema_arrow,
+                self,
+                append,
+            )
+            if not append:
+                append = True
 
         return self
 
@@ -2481,14 +2673,14 @@ class DataFrame:
     def read_s3(
         self,
         bucket: str,
-        keys: List[str],
+        keys: Iterable[str],
         region: str,
         append: bool = False,
         sep: str = ",",
         num_lines_read: int = 0,
         skip: int = 0,
-        colnames: Optional[List[str]] = None,
-        time_formats: Optional[List[str]] = None,
+        colnames: Optional[Iterable[str]] = None,
+        time_formats: Optional[Iterable[str]] = None,
     ) -> DataFrame:
         """Read CSV files from an S3 bucket.
 
@@ -2567,7 +2759,7 @@ class DataFrame:
 
         time_formats = time_formats or constants.TIME_FORMATS
 
-        if not isinstance(keys, list):
+        if isinstance(keys, str):
             keys = [keys]
 
         if not isinstance(bucket, str):
@@ -2790,7 +2982,7 @@ class DataFrame:
                 from_pandas(...)."""
             )
 
-        table = pa.Table.from_pandas(_modify_pandas_columns(pandas_df))
+        table = pa.Table.from_pandas(pandas_df)
 
         return self.read_arrow(table, append=append)
 
@@ -2932,11 +3124,11 @@ class DataFrame:
             msg = comm.recv_string(sock)
 
         if msg[0] != "{":
-            comm.engine_exception_handler(msg)
+            comm.handle_engine_exception(msg)
 
         roles = json.loads(msg)
 
-        self.__init__(name=self.name, roles=roles)  # type: ignore
+        self.__init__(name=cast(str, self.name), roles=roles)
 
         return self
 
@@ -2949,14 +3141,14 @@ class DataFrame:
         in this DataFrame.
         """
         return Roles(
-            categorical=self._categorical_names,
-            join_key=self._join_key_names,
-            numerical=self._numerical_names,
-            target=self._target_names,
-            text=self._text_names,
-            time_stamp=self._time_stamp_names,
-            unused_float=self._unused_float_names,
-            unused_string=self._unused_string_names,
+            categorical=tuple(self._categorical_names),
+            join_key=tuple(self._join_key_names),
+            numerical=tuple(self._numerical_names),
+            target=tuple(self._target_names),
+            text=tuple(self._text_names),
+            time_stamp=tuple(self._time_stamp_names),
+            unused_float=tuple(self._unused_float_names),
+            unused_string=tuple(self._unused_string_names),
         )
 
     # ------------------------------------------------------------
@@ -3039,7 +3231,7 @@ class DataFrame:
             str, FloatColumn, StringColumn, List[Union[str, FloatColumn, StringColumn]]
         ],
         role: str,
-        time_formats: Optional[List[str]] = None,
+        time_formats: Optional[Iterable[str]] = None,
     ):
         """Assigns a new role to one or more columns.
 
@@ -3103,10 +3295,9 @@ class DataFrame:
             if nname not in self.colnames:
                 raise ValueError("No column called '" + nname + "' found.")
 
-        if role not in self._possible_keys:
+        if role not in self._all_roles:
             raise ValueError(
-                "'role' must be one of the following values: "
-                + str(self._possible_keys)
+                "'role' must be one of the following values: " + str(self._all_roles)
             )
 
         # ------------------------------------------------------------
@@ -3126,7 +3317,7 @@ class DataFrame:
         cols: Union[
             str, FloatColumn, StringColumn, List[Union[str, FloatColumn, StringColumn]]
         ],
-        subroles: Optional[Union[str, List[str]]] = None,
+        subroles: Optional[Union[Subrole, Iterable[str]]] = None,
         append: Optional[bool] = True,
     ):
         """Assigns one or several new [`subroles`][getml.data.subroles] to one or more columns.
@@ -3242,12 +3433,17 @@ class DataFrame:
         Returns:
                 Pyarrow equivalent of the current instance including its underlying data.
         """
-        return _to_arrow(self)
+        return to_arrow(self)
 
     # ------------------------------------------------------------
 
     def to_csv(
-        self, fname: str, quotechar: str = '"', sep: str = ",", batch_size: int = 0
+        self,
+        fname: str,
+        quotechar: str = '"',
+        sep: str = ",",
+        batch_size: int = DEFAULT_BATCH_SIZE,
+        quoting_style: str = "needed",
     ):
         """
         Writes the underlying data into a newly created CSV file.
@@ -3267,35 +3463,29 @@ class DataFrame:
             batch_size:
                 Maximum number of lines per file. Set to 0 to read
                 the entire data frame into a single file.
+
+            quoting_style (str):
+                The quoting style to use. Delegated to pyarrow.
+
+                The following values are accepted:
+                - `"needed"` (default): only enclose values in quotes when needed.
+                - `"all_valid"`: enclose all valid values in quotes; nulls are not
+                  quoted.
+                - `"none"`: do not enclose any values in quotes; values containing
+                  special characters (such as quotes, cell delimiters or line
+                  endings) will raise an error.
+
+        Deprecated:
+           1.5: The `quotechar` parameter is deprecated.
         """
 
-        self.refresh()
+        if quotechar != '"':
+            warnings.warn(
+                "'quotechar' is deprecated, use 'quoting_style' instead.",
+                DeprecationWarning,
+            )
 
-        if not isinstance(fname, str):
-            raise TypeError("'fname' must be of type str")
-
-        if not isinstance(quotechar, str):
-            raise TypeError("'quotechar' must be of type str")
-
-        if not isinstance(sep, str):
-            raise TypeError("'sep' must be of type str")
-
-        if not isinstance(batch_size, numbers.Real):
-            raise TypeError("'batch_size' must be a real number")
-
-        fname_ = os.path.abspath(fname)
-
-        cmd: Dict[str, Any] = {}
-
-        cmd["type_"] = "DataFrame.to_csv"
-        cmd["name_"] = self.name
-
-        cmd["fname_"] = fname_
-        cmd["quotechar_"] = quotechar
-        cmd["sep_"] = sep
-        cmd["batch_size_"] = batch_size
-
-        comm.send(cmd)
+        to_csv(self, fname, sep, batch_size, quoting_style)
 
     # ------------------------------------------------------------
 
@@ -3379,7 +3569,7 @@ class DataFrame:
                 its underlying data.
 
         """
-        return _to_arrow(self).to_pandas()
+        return to_arrow(self).to_pandas()
 
     # ------------------------------------------------------------
 
@@ -3400,7 +3590,7 @@ class DataFrame:
                 The compression format to use.
                 Supported values are "brotli", "gzip", "lz4", "snappy", "zstd"
         """
-        _to_parquet(self, fname, compression)
+        to_parquet(self, fname, compression)
 
     # ----------------------------------------------------------------
 
@@ -3621,8 +3811,20 @@ class DataFrame:
             ```
 
         """
+        if isinstance(index, numbers.Integral):
+            index = index if int(index) > 0 else len(self) + index
+            selector = arange(int(index), int(index) + 1)
+            return View(base=self, subselection=selector)
 
-        return _where(self, index)
+        if isinstance(index, slice):
+            start, stop, _ = _make_default_slice(index, len(self))
+            selector = arange(start, stop, index.step)
+            return View(base=self, subselection=selector)
+
+        if isinstance(index, (BooleanColumnView, FloatColumn, FloatColumnView)):
+            return View(base=self, subselection=index)
+
+        raise TypeError("Unsupported type for a subselection: " + type(index).__name__)
 
     # ------------------------------------------------------------
 
@@ -3641,10 +3843,10 @@ class DataFrame:
             BooleanColumnView,
         ],
         name: str,
-        role: Optional[str] = None,
-        subroles: Optional[Union[str, List[str]]] = None,
-        unit: Optional[str] = "",
-        time_formats: Optional[List[str]] = None,
+        role: Optional[Role] = None,
+        subroles: Optional[Union[Subrole, Iterable[str]]] = None,
+        unit: str = "",
+        time_formats: Optional[Iterable[str]] = None,
     ):
         """Returns a new [`View`][getml.data.View] that contains an additional column.
 
@@ -3734,10 +3936,13 @@ class DataFrame:
     def with_role(
         self,
         cols: Union[
-            str, FloatColumn, StringColumn, List[Union[str, FloatColumn, StringColumn]]
+            str,
+            FloatColumn,
+            StringColumn,
+            Union[Iterable[str], List[FloatColumn], List[StringColumn]],
         ],
-        role: str,
-        time_formats: Optional[List[str]] = None,
+        role: Role,
+        time_formats: Optional[Iterable[str]] = None,
     ):
         """Returns a new [`View`][getml.data.View] with modified roles.
 
@@ -3774,9 +3979,12 @@ class DataFrame:
     def with_subroles(
         self,
         cols: Union[
-            str, FloatColumn, StringColumn, List[Union[str, FloatColumn, StringColumn]]
+            str,
+            FloatColumn,
+            StringColumn,
+            Union[Iterable[str], List[FloatColumn], List[StringColumn]],
         ],
-        subroles: Union[str, List[str]],
+        subroles: Union[Subrole, Iterable[str]],
         append: bool = True,
     ):
         """Returns a new view with one or several new subroles on one or more columns.
@@ -3806,7 +4014,10 @@ class DataFrame:
     def with_unit(
         self,
         cols: Union[
-            str, FloatColumn, StringColumn, List[Union[str, FloatColumn, StringColumn]]
+            str,
+            FloatColumn,
+            StringColumn,
+            Union[Iterable[str], List[FloatColumn], List[StringColumn]],
         ],
         unit: str,
         comparison_only: bool = False,
@@ -3842,18 +4053,3 @@ class DataFrame:
                 accordingly.
         """
         return _with_unit(self, cols, unit, comparison_only)
-
-
-# --------------------------------------------------------------------
-
-
-_all_attr = DataFrame("dummy").__dir__()
-
-
-def _custom_dir(self):
-    return _all_attr + self.colnames
-
-
-DataFrame.__dir__ = _custom_dir  # type: ignore
-
-# --------------------------------------------------------------------

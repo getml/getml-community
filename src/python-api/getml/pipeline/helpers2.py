@@ -49,7 +49,7 @@ def _refresh_all() -> List[Pipeline]:
     with comm.send_and_get_socket(cmd) as sock:
         msg = comm.recv_string(sock)
         if msg != "Success!":
-            comm.engine_exception_handler(msg)
+            comm.handle_engine_exception(msg)
         json_str = comm.recv_string(sock)
 
     json_obj = json.loads(json_str)
@@ -83,7 +83,7 @@ def list_pipelines() -> List[str]:
     with comm.send_and_get_socket(cmd) as sock:
         msg = comm.recv_string(sock)
         if msg != "Success!":
-            comm.engine_exception_handler(msg)
+            comm.handle_engine_exception(msg)
         json_str = comm.recv_string(sock)
 
     return json.loads(json_str)["names"]

@@ -14,7 +14,7 @@ from typing import Dict, List
 
 import pandas as pd
 
-from getml.data.helpers import _is_numerical_type
+from getml.data.helpers import _is_numerical_type_numpy
 
 from .helpers import _generate_schema, _is_int_type
 
@@ -54,7 +54,7 @@ def sniff_pandas(table_name: str, data_frame: pd.DataFrame) -> str:
         if _is_int_type(ctype):
             sql_types["INTEGER"].append(cname)
             continue
-        if _is_numerical_type(ctype):
+        if _is_numerical_type_numpy(ctype):
             sql_types["REAL"].append(cname)
         else:
             sql_types["TEXT"].append(cname)

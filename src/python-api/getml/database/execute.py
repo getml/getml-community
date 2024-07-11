@@ -46,4 +46,4 @@ def execute(query: str, conn: Optional[Connection] = None):
         msg = comm.recv_string(sock)
 
     if msg != "Success!":
-        comm.engine_exception_handler(msg)
+        comm.handle_engine_exception(msg)

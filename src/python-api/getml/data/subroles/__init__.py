@@ -5,7 +5,6 @@
 # for details.
 #
 
-
 """Subroles allow for more fine-granular control of how certain columns
 will be used by the pipeline.
 
@@ -31,10 +30,6 @@ Example:
     ```
 """
 
-from .exclude import _all_exclude
-from .include import _all_include
-from .only import _all_only
-
-_all_subroles = _all_exclude + _all_include + _all_only
+from getml.data.subroles import exclude, include, only
 
 __all__ = ("exclude", "include", "only")

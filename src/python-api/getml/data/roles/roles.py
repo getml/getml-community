@@ -5,6 +5,18 @@
 # for details.
 #
 
+from typing import Final, get_args
+
+from getml.data.roles.types import (
+    Categorical,
+    JoinKey,
+    Numerical,
+    Target,
+    Text,
+    TimeStamp,
+    UnusedFloat,
+    UnusedString,
+)
 
 """A role determines if and how
 [`columns`][getml.data.columns] are handled during the construction of the
@@ -27,7 +39,7 @@ Example:
 
 """
 
-categorical = "categorical"
+categorical: Final[Categorical] = get_args(Categorical)[0]
 """Marks categorical columns.
 
 This role tells the getML engine to include the associated
@@ -39,7 +51,7 @@ categories are encoded as integer instead of strings in your provided
 data set.
 """
 
-join_key = "join_key"
+join_key: Final[JoinKey] = get_args(JoinKey)[0]
 """Marks join keys.
 
 Role required to establish a relation between two
@@ -57,7 +69,7 @@ the feature learning algorithm.
 
 """
 
-numerical = "numerical"
+numerical: Final[Numerical] = get_args(Numerical)[0]
 """Marks numerical columns.
 
 This role tells the getML engine to include the associated
@@ -70,7 +82,7 @@ total amount of rainfall, or a discrete one, like the number of sugary
 mulberries one has eaten since lunch.
 """
 
-target = "target"
+target: Final[Target] = get_args(Target)[0]
 """
 Marks the column(s) we would like to predict.
 
@@ -87,7 +99,7 @@ For classification problems, target variables can only assume the values
 0 or 1. Target variables can never be `NULL`.
 """
 
-text = "text"
+text: Final[Text] = get_args(Text)[0]
 """Marks text columns.
 
 This role tells the getML engine to include the associated
@@ -100,7 +112,7 @@ as a whole. Instead, the feature learners have to apply
 basic text mining techniques before they are able to use them.
 """
 
-time_stamp = "time_stamp"
+time_stamp: Final[TimeStamp] = get_args(TimeStamp)[0]
 """
 Marks time stamps.
 
@@ -186,32 +198,16 @@ Note:
     UNIX time (1970-01-01T00:00:00).
 """
 
-unused_float = "unused_float"
+unused_float: Final[UnusedFloat] = get_args(UnusedFloat)[0]
 """Marks a [`FloatColumn`][getml.data.columns.columns.FloatColumn] as unused.
 
 The associated [`column`][getml.data.columns.columns] will be neither used in the
 data model nor during feature learning or prediction.
 """
 
-unused_string = "unused_string"
+unused_string: Final[UnusedString] = get_args(UnusedString)[0]
 """Marks a [`StringColumn`][getml.data.columns.columns.StringColumn] as unused.
 
 The associated [`column`][getml.data.columns.columns] will be neither used in the
 data model nor during feature learning or prediction.
 """
-
-_categorical_roles = [
-    categorical,
-    join_key,
-    text,
-    unused_string,
-]
-
-_numerical_roles = [
-    numerical,
-    target,
-    time_stamp,
-    unused_float,
-]
-
-_all_roles = _categorical_roles + _numerical_roles

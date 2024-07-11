@@ -10,12 +10,13 @@
 Reads a CSV file into the database.
 """
 
-from typing import Any, Dict, List, Optional, Union
-
-import getml.communication as comm
+from typing import List, Optional, Union
 
 from .connection import Connection
-from .helpers import _retrieve_urls
+from .helpers import (
+    CSVCmdType,
+    _read_csv,
+)
 
 
 def read_csv(
@@ -84,34 +85,15 @@ def read_csv(
         ```
 
     """
-    # -------------------------------------------
 
-    conn = conn or Connection()
-
-    # -------------------------------------------
-
-    if not isinstance(fnames, list):
-        fnames = [fnames]
-
-    fnames_ = _retrieve_urls(fnames)
-
-    # -------------------------------------------
-
-    cmd: Dict[str, Any] = {}
-
-    cmd["name_"] = name
-    cmd["type_"] = "Database.read_csv"
-
-    cmd["fnames_"] = fnames_
-    cmd["quotechar_"] = quotechar
-    cmd["sep_"] = sep
-    cmd["skip_"] = skip
-    cmd["num_lines_read_"] = num_lines_read
-    cmd["conn_id_"] = conn.conn_id
-
-    if colnames is not None:
-        cmd["colnames_"] = colnames
-
-    # -------------------------------------------
-
-    comm.send(cmd)
+    return _read_csv(
+        CSVCmdType.READ,
+        name,
+        fnames,
+        num_lines_read,
+        quotechar,
+        sep,
+        skip,
+        colnames,
+        conn,
+    )

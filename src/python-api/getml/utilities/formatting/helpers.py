@@ -53,7 +53,7 @@ def _get_column_content(col, coltype, start, length):
     with comm.send_and_get_socket(cmd) as sock:
         json_str = comm.recv_string(sock)
         if json_str[0] != "{":
-            comm.engine_exception_handler(json_str)
+            comm.handle_engine_exception(json_str)
 
     return json.loads(json_str)
 
@@ -97,7 +97,7 @@ def _get_data_frame_content(name, start, length):
         json_str = comm.recv_string(sock)
 
     if json_str[0] != "{":
-        comm.engine_exception_handler(json_str)
+        comm.handle_engine_exception(json_str)
 
     return json.loads(json_str)
 
@@ -120,6 +120,6 @@ def _get_view_content(start, length, cols):
     with comm.send_and_get_socket(cmd) as sock:
         json_str = comm.recv_string(sock)
         if json_str[0] != "{":
-            comm.engine_exception_handler(json_str)
+            comm.handle_engine_exception(json_str)
 
     return json.loads(json_str)

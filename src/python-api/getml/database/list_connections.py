@@ -36,7 +36,7 @@ def list_connections() -> List[Connection]:
     with comm.send_and_get_socket(cmd) as sock:
         msg = comm.recv_string(sock)
         if msg != "Success!":
-            comm.engine_exception_handler(msg)
+            comm.handle_engine_exception(msg)
         arr = json.loads(comm.recv_string(sock))
 
     return [Connection(elem) for elem in arr]

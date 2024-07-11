@@ -36,7 +36,7 @@ def _unit(self) -> str:
     with comm.send_and_get_socket(cmd) as sock:
         msg = comm.recv_string(sock)
         if msg != "Success!":
-            comm.engine_exception_handler(msg)
+            comm.handle_engine_exception(msg)
         unit = comm.recv_string(sock)
 
     return unit

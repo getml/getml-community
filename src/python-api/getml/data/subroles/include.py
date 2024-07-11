@@ -6,6 +6,10 @@
 #
 
 
+from typing import Final, get_args
+
+from getml.data.subroles.types import IncludeEmail, IncludeSubstring
+
 """
 Columns marked with a subrole in this submodule will be used for the
 specified purpose without excluding other purposes.
@@ -20,18 +24,16 @@ Example:
     ```
 """
 
-email = "include email"
+email: Final[IncludeEmail] = get_args(IncludeEmail)[0]
 """
 A column with this subrole will be
 used for the [`EmailDomain`][getml.preprocessors.EmailDomain] preprocessor.
 """
 
-substring = "include substring"
+substring: Final[IncludeSubstring] = get_args(IncludeSubstring)[0]
 """
 A column with this subrole will be
 used for the [`Substring`][getml.preprocessors.Substring] preprocessor.
 """
 
 __all__ = ("email", "substring")
-
-_all_include = [email, substring]

@@ -152,7 +152,7 @@ from .helpers2 import (
 )
 from .load_container import load_container
 from .placeholder import Placeholder
-from .roles_obj import Roles
+from .roles.container import Roles
 from .star_schema import StarSchema
 from .subset import Subset
 from .time_series import TimeSeries

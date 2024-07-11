@@ -8,6 +8,16 @@ import pytest
 import getml
 
 
+def pytest_collection_modifyitems(items):
+    for item in items:
+        try:
+            fixtures = item.fixturenames
+            if "engine" in fixtures:
+                item.add_marker(pytest.mark.engine)
+        except:
+            pass
+
+
 @contextmanager
 def workdir(dir: str):
     cwd = Path.cwd()

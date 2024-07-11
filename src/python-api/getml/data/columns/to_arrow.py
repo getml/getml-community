@@ -35,7 +35,7 @@ def _to_arrow(self: Any, unique: bool = False) -> pa.ChunkedArray:
         msg = comm.recv_string(sock)
 
         if msg != "Success!":
-            comm.engine_exception_handler(msg)
+            comm.handle_engine_exception(msg)
 
         with sock.makefile(mode="rb") as stream:
             with pa.ipc.open_stream(stream) as reader:

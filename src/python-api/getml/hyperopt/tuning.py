@@ -131,7 +131,7 @@ def _tune(
         msg = comm.log(sock)
         end = time.time()
         if msg != "Success!":
-            comm.engine_exception_handler(msg)
+            comm.handle_engine_exception(msg)
         print()
         _print_time_taken(begin, end, "Time taken: ")
         pipeline_name = comm.recv_string(sock)

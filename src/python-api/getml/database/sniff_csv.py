@@ -10,12 +10,10 @@
 Sniffs a list of CSV files.
 """
 
-from typing import Any, Dict, List, Optional, Union
-
-import getml.communication as comm
+from typing import List, Optional, Union
 
 from .connection import Connection
-from .helpers import _retrieve_urls
+from .helpers import CSVCmdType, _read_csv, _retrieve_urls_for_engine
 
 
 def sniff_csv(
@@ -65,30 +63,14 @@ def sniff_csv(
         Appropriate `CREATE TABLE` statement.
     """
 
-    conn = conn or Connection()
-
-    if not isinstance(fnames, list):
-        fnames = [fnames]
-
-    fnames_ = _retrieve_urls(fnames)
-
-    cmd: Dict[str, Any] = {}
-
-    cmd["name_"] = name
-    cmd["type_"] = "Database.sniff_csv"
-
-    cmd["fnames_"] = fnames_
-    cmd["num_lines_sniffed_"] = num_lines_sniffed
-    cmd["quotechar_"] = quotechar
-    cmd["sep_"] = sep
-    cmd["skip_"] = skip
-    cmd["conn_id_"] = conn.conn_id
-
-    if colnames is not None:
-        cmd["colnames_"] = colnames
-
-    with comm.send_and_get_socket(cmd) as sock:
-        msg = comm.recv_string(sock)
-        if msg != "Success!":
-            comm.engine_exception_handler(msg)
-        return comm.recv_string(sock)
+    return _read_csv(
+        CSVCmdType.SNIFF,
+        name,
+        fnames,
+        num_lines_sniffed,
+        quotechar,
+        sep,
+        skip,
+        colnames,
+        conn,
+    )

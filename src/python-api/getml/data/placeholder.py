@@ -19,7 +19,7 @@ from getml.utilities.formatting import _SignatureFormatter
 
 from .helpers import OnType, _check_join_key, _handle_on, _handle_ts
 from .relationship import many_to_many
-from .roles_obj import Roles
+from .roles.container import Roles
 
 # --------------------------------------------------------------------
 

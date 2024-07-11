@@ -51,6 +51,10 @@ seconds since UNIX time (January 1, 1970).
 If that fails as well, the value is set to NULL.
 """
 
+DEFAULT_BATCH_SIZE = 100000
+"""
+The default batch size used whenver batched IO operations are performed.
+"""
 
 DOCKER_DOCS_URL = "https://dev.getml.com/home/docker"
 """

@@ -41,7 +41,7 @@ def list_hyperopts():
     with comm.send_and_get_socket(cmd) as sock:
         msg = comm.recv_string(sock)
         if msg != "Success!":
-            comm.engine_exception_handler(msg)
+            comm.handle_engine_exception(msg)
         json_str = comm.recv_string(sock)
 
     return json.loads(json_str)["names"]
@@ -87,4 +87,4 @@ def delete(name: str) -> None:
     with comm.send_and_get_socket(cmd) as sock:
         msg = comm.recv_string(sock)
         if msg != "Success!":
-            comm.engine_exception_handler(msg)
+            comm.handle_engine_exception(msg)
