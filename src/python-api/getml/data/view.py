@@ -48,6 +48,15 @@ from getml.data.columns import (
     arange,
     rowid,
 )
+from getml.data.helpers import (
+    _is_typed_list,
+    _to_pyspark,
+    _where,
+    _with_column,
+    _with_role,
+    _with_subroles,
+    _with_unit,
+)
 from getml.data.placeholder import Placeholder
 from getml.data.roles import (
     categorical,

@@ -66,13 +66,16 @@ from getml.data.helpers import (
     _handle_cols,
     _is_non_empty_typed_list,
     _is_numerical_type_numpy,
+    _is_typed_list,
     _iter_batches,
     _prepare_roles,
+    _retrieve_urls,
     _send_numpy_array,
     _sniff_db,
     _sniff_pandas,
     _sniff_s3,
     _to_pyspark,
+    _where,
     _with_column,
     _with_role,
     _with_subroles,
@@ -3811,20 +3814,8 @@ class DataFrame:
             ```
 
         """
-        if isinstance(index, numbers.Integral):
-            index = index if int(index) > 0 else len(self) + index
-            selector = arange(int(index), int(index) + 1)
-            return View(base=self, subselection=selector)
 
-        if isinstance(index, slice):
-            start, stop, _ = _make_default_slice(index, len(self))
-            selector = arange(start, stop, index.step)
-            return View(base=self, subselection=selector)
-
-        if isinstance(index, (BooleanColumnView, FloatColumn, FloatColumnView)):
-            return View(base=self, subselection=index)
-
-        raise TypeError("Unsupported type for a subselection: " + type(index).__name__)
+        return _where(self, index)
 
     # ------------------------------------------------------------
 

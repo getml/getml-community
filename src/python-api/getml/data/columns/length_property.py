@@ -15,22 +15,22 @@ from typing import Any, Dict, Union
 import numpy as np
 
 import getml.communication as comm
-
-from .constants import VIEW_SIGNIFIER
+from getml.data.columns.constants import VIEW_SIGNIFIER
+from getml.utilities.formatting.column_formatter import _ColumnFormatter
 
 
 @property  # type: ignore
-def _length_property(self) -> Union[np.int32, str]:
+def _length_property(col) -> Union[int, str]:
     """
     The length of the column (number of rows in the data frame).
     """
 
     cmd: Dict[str, Any] = {}
 
-    cmd["type_"] = (self.cmd["type_"] + ".get_nrows").replace(VIEW_SIGNIFIER, "")
+    cmd["type_"] = (col.cmd["type_"] + ".get_nrows").replace(VIEW_SIGNIFIER, "")
     cmd["name_"] = ""
 
-    cmd["col_"] = self.cmd
+    cmd["col_"] = col.cmd
 
     with comm.send_and_get_socket(cmd) as sock:
         msg = comm.recv_string(sock)
@@ -38,7 +38,11 @@ def _length_property(self) -> Union[np.int32, str]:
             comm.handle_engine_exception(msg)
         nrows = comm.recv_string(sock)
 
-    try:
-        return np.int32(nrows)
-    except Exception:
+    nrows_to_display = len(col[: _ColumnFormatter.max_rows + 1].to_numpy())
+    if nrows_to_display <= _ColumnFormatter.max_rows:
+        return nrows_to_display
+
+    if isinstance(nrows, str):
         return nrows
+    else:
+        return int(nrows)
