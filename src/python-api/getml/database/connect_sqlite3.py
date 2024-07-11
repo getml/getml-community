@@ -125,6 +125,6 @@ def connect_sqlite3(
         msg = comm.recv_string(sock)
 
     if msg != "Success!":
-        comm.engine_exception_handler(msg)
+        comm.handle_engine_exception(msg, extra={"name": name_})
 
     return Connection(conn_id=conn_id)

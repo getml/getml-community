@@ -285,7 +285,7 @@ class Features:
         with comm.send_and_get_socket(cmd) as sock:
             msg = comm.recv_string(sock)
             if msg != "Success!":
-                comm.engine_exception_handler(msg)
+                comm.handle_engine_exception(msg)
             msg = comm.recv_string(sock)
 
         json_obj = json.loads(msg)
@@ -387,7 +387,7 @@ class Features:
         with comm.send_and_get_socket(cmd) as sock:
             msg = comm.recv_string(sock)
             if msg != "Success!":
-                comm.engine_exception_handler(msg)
+                comm.handle_engine_exception(msg)
             msg = comm.recv_string(sock)
 
         json_obj = json.loads(msg)
@@ -677,7 +677,7 @@ class Features:
         with comm.send_and_get_socket(cmd) as sock:
             msg = comm.recv_string(sock)
             if msg != "Found!":
-                comm.engine_exception_handler(msg)
+                comm.handle_engine_exception(msg)
             sql = comm.recv_string(sock)
 
         return SQLCode(sql.split("\n\n\n"), dialect)

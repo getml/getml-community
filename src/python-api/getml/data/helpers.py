@@ -18,21 +18,27 @@ import numbers
 import os
 import random
 import string
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import numpy as np
 import pandas as pd
 import pyarrow as pa
-from pyarrow import parquet
 
 import getml.communication as comm
+from getml import communication as comm
 from getml import constants, data
 from getml.constants import COMPARISON_ONLY, TIME_STAMP
-from getml.data.columns.columns import arange
-from getml.database import Connection, _retrieve_urls
-from getml.database.helpers import _retrieve_temp_dir
-
-from .columns import (
+from getml.data.columns import (
     BooleanColumnView,
     FloatColumn,
     FloatColumnView,
@@ -40,18 +46,24 @@ from .columns import (
     StringColumnView,
     from_value,
 )
-from .roles import (
-    _all_roles,
-    _categorical_roles,
-    _numerical_roles,
+from getml.data.columns.columns import arange
+from getml.data.roles import sets as roles_sets
+from getml.data.roles import (
     time_stamp,
     unused_float,
     unused_string,
 )
-from .subroles import _all_subroles
+from getml.data.roles.container import Roles
+from getml.data.roles.types import Role
+from getml.data.subroles import sets as subroles_sets
+from getml.data.subroles.types import Subrole
+from getml.database import Connection, _retrieve_urls
+from getml.database.helpers import _retrieve_temp_dir
+from getml.helpers import _is_iterable_not_str, _is_iterable_not_str_of_type
 
 if TYPE_CHECKING:
-    from getml.data import DataFrame, View
+    from getml.data.data_frame import DataFrame
+    from getml.data.view import View
 
 # --------------------------------------------------------------------
 
@@ -59,6 +71,8 @@ OnType = Optional[Union[str, Tuple[str, str], List[Union[str, Tuple[str, str]]]]
 """
 Types that can be passed to the 'on' argument of the 'join' method.
 """
+
+
 # --------------------------------------------------------------------
 
 
@@ -92,7 +106,7 @@ def list_data_frames() -> Dict[str, List[str]]:
     with comm.send_and_get_socket(cmd) as sock:
         msg = comm.recv_string(sock)
         if msg != "Success!":
-            comm.engine_exception_handler(msg)
+            comm.handle_engine_exception(msg)
         json_str = comm.recv_string(sock)
 
     return json.loads(json_str)
@@ -143,15 +157,6 @@ def _exists_in_memory(name: str) -> bool:
 # --------------------------------------------------------------------
 
 
-def _extract_shape(cmd, name):
-    shape = cmd[name + "_shape_"]
-    shape = np.asarray(shape).astype(np.int32)
-    return shape.tolist()
-
-
-# --------------------------------------------------------------------
-
-
 def _finditems(key: str, dct: Dict[str, Any]) -> Any:
     if key in dct:
         yield dct[key]
@@ -175,17 +180,21 @@ def _get_column(name, columns):
 
 def _handle_cols(
     cols: Union[
-        str, FloatColumn, StringColumn, List[Union[str, FloatColumn, StringColumn]]
+        str,
+        FloatColumn,
+        StringColumn,
+        Union[Iterable[str], Iterable[FloatColumn], Iterable[StringColumn]],
     ],
 ) -> List[str]:
     """
     Handles cols as supplied to DataFrame methods. Returns a list of column names.
     """
 
-    if not isinstance(cols, list):
-        cols = [cols]
-
-    if not _is_typed_list(cols, (str, FloatColumn, StringColumn)):
+    if _is_iterable_not_str_of_type(cols, str):
+        cols_ = cols
+    elif isinstance(col := cols, str):
+        cols_ = [col]
+    else:
         raise TypeError(
             "'cols' must be either a string, a FloatColumn, "
             "a StringColumn, or a list thereof."
@@ -193,7 +202,7 @@ def _handle_cols(
 
     names: List[str] = []
 
-    for col in cols:
+    for col in cols_:
         if isinstance(col, list):
             names.extend(_handle_cols(col))
 
@@ -247,7 +256,7 @@ def _handle_ts(ts):
 # --------------------------------------------------------------------
 
 
-def _is_numerical_type(coltype) -> bool:
+def _is_numerical_type_numpy(coltype) -> bool:
     return coltype in [
         int,
         float,
@@ -327,18 +336,13 @@ def _is_non_empty_typed_list(some_list, types) -> bool:
 # -----------------------------------------------------------------
 
 
-def _is_unsupported_type(coltype) -> bool:
-    return any(
-        [
-            pa.types.is_decimal(coltype),
-            pa.types.is_dictionary(coltype),
-            pa.types.is_large_list(coltype),
-            pa.types.is_list(coltype),
-            pa.types.is_map(coltype),
-            pa.types.is_struct(coltype),
-            pa.types.is_union(coltype),
-        ]
-    )
+def _iter_batches(
+    df_or_view: Union[DataFrame, View], batch_size: int
+) -> Iterator[View]:
+    start, end = 0, batch_size
+    while batch := df_or_view[start:end]:
+        yield batch
+        start, end = end, end + batch_size
 
 
 # -----------------------------------------------------------------
@@ -421,10 +425,22 @@ def _merge_join_keys(join_key: List[str], other_join_key: List[str]) -> Tuple[st
 # --------------------------------------------------------------------
 
 
-def _modify_pandas_columns(pandas_df: pd.DataFrame) -> pd.DataFrame:
-    pandas_df_copy = pandas_df
-    pandas_df_copy.columns = np.asarray(pandas_df.columns).astype(str).tolist()
-    return pandas_df_copy
+def _prepare_roles(
+    roles: Optional[Union[Roles, Dict[Role, Iterable[str]]]],
+    sniffed_roles: Roles,
+) -> Roles:
+    if roles is None:
+        roles = {}
+
+    if isinstance(roles, dict):
+        roles = Roles.from_dict(roles)
+
+    roles = sniffed_roles.update(roles)
+
+    return roles
+
+
+# --------------------------------------------------------------------
 
 
 # --------------------------------------------------------------------
@@ -503,47 +519,6 @@ def _replace_non_alphanumeric_cols(df_or_view):
 # --------------------------------------------------------------------
 
 
-def _update_sniffed_roles(
-    sniffed_roles: Dict[str, List[str]], roles: Dict[str, List[str]]
-) -> Dict[str, List[str]]:
-    # -------------------------------------------------------
-
-    if not isinstance(roles, dict):
-        raise TypeError("roles must be a dict!")
-
-    if not isinstance(sniffed_roles, dict):
-        raise TypeError("sniffed_roles must be a dict!")
-
-    for role in roles:
-        if not _is_typed_list(roles[role], str):
-            raise TypeError("Entries in roles must be lists of str!")
-
-    for role in sniffed_roles:
-        if not _is_typed_list(sniffed_roles[role], str):
-            raise TypeError("Entries in sniffed_roles must be lists of str!")
-
-    # -------------------------------------------------------
-
-    for new_role in roles:
-        for colname in roles[new_role]:
-            for old_role in sniffed_roles:
-                if colname in sniffed_roles[old_role]:
-                    sniffed_roles[old_role].remove(colname)
-                    break
-
-            if new_role in sniffed_roles:
-                sniffed_roles[new_role] += [colname]
-            else:
-                sniffed_roles[new_role] = [colname]
-
-    # -------------------------------------------------------
-
-    return sniffed_roles
-
-
-# ------------------------------------------------------------
-
-
 def _make_table(col, numpy_array) -> pa.Table:
     data_frame = pd.DataFrame()
     data_frame[col.name] = numpy_array
@@ -566,89 +541,13 @@ def _send_numpy_array(col, numpy_array: np.ndarray):
         msg = comm.recv_string(sock)
 
     if msg != "Success!":
-        comm.engine_exception_handler(msg)
+        comm.handle_engine_exception(msg)
 
 
 # --------------------------------------------------------------------
 
 
-def _sniff_arrow(table) -> Dict[str, List[str]]:
-    return _sniff_schema(table.schema)
-
-
-# --------------------------------------------------------------------
-
-
-def _sniff_csv(
-    fnames: List[str],
-    num_lines_sniffed: Optional[int] = 1000,
-    quotechar: Optional[str] = '"',
-    sep: Optional[str] = ",",
-    skip: Optional[int] = 0,
-    colnames: Optional[List[str]] = None,
-) -> Dict[str, List[str]]:
-    """Sniffs a list of CSV files and returns the result as a dictionary of
-    roles.
-
-    Args:
-        fnames: The list of CSV file names to be read.
-
-        num_lines_sniffed:
-
-            Number of lines analysed by the sniffer.
-
-        quotechar:
-
-            The character used to wrap strings.
-
-        sep:
-
-            The character used for separating fields.
-
-        skip:
-            Number of lines to skip at the beginning of each file.
-
-        colnames: The first line of a CSV file
-            usually contains the column names. When this is not the case, you need to
-            explicitly pass them.
-
-    Returns:
-        Keyword arguments (kwargs) that can be used to construct a DataFrame.
-    """
-
-    fnames_ = _retrieve_urls(fnames, verbose=False)
-
-    cmd: Dict[str, Any] = {}
-
-    cmd["name_"] = ""
-    cmd["type_"] = "Database.sniff_csv"
-
-    cmd["dialect_"] = "python"
-    cmd["fnames_"] = fnames_
-    cmd["num_lines_sniffed_"] = num_lines_sniffed
-    cmd["quotechar_"] = quotechar
-    cmd["sep_"] = sep
-    cmd["skip_"] = skip
-    cmd["conn_id_"] = "default"
-
-    if colnames is not None:
-        cmd["colnames_"] = colnames
-
-    with comm.send_and_get_socket(cmd) as sock:
-        msg = comm.recv_string(sock)
-        if msg != "Success!":
-            raise OSError(msg)
-        roles = comm.recv_string(sock)
-
-    return json.loads(roles)
-
-
-# --------------------------------------------------------------------
-
-
-def _sniff_db(
-    table_name: str, conn: Optional[Connection] = None
-) -> Dict[str, List[str]]:
+def _sniff_db(table_name: str, conn: Optional[Connection] = None) -> Roles:
     """
     Sniffs a table in the database and returns a dictionary of roles.
 
@@ -678,21 +577,13 @@ def _sniff_db(
             raise Exception(msg)
         roles = comm.recv_string(sock)
 
-    return json.loads(roles)
+    return Roles.from_dict(json.loads(roles))
 
 
 # --------------------------------------------------------------------
 
 
-def _sniff_parquet(fname: str) -> Dict[str, List[str]]:
-    schema = parquet.read_schema(fname)
-    return _sniff_schema(schema)
-
-
-# --------------------------------------------------------------------
-
-
-def _sniff_pandas(pandas_df: pd.DataFrame) -> Dict[str, List[str]]:
+def _sniff_pandas(pandas_df: pd.DataFrame) -> Roles:
     """Sniffs a pandas.DataFrame and returns the result as a dictionary of
     roles.
 
@@ -702,20 +593,21 @@ def _sniff_pandas(pandas_df: pd.DataFrame) -> Dict[str, List[str]]:
     Returns:
         Roles that can be used to construct a DataFrame.
     """
-    roles: Dict[str, Any] = {}
-    roles["unused_float"] = []
-    roles["unused_string"] = []
+    roles: Dict[Role, List[str]] = {
+        "unused_float": [],
+        "unused_string": [],
+    }
 
-    colnames = pandas_df.columns
+    colnames = [str(cname) for cname in pandas_df.columns]
     coltypes = pandas_df.dtypes
 
     for cname, ctype in zip(colnames, coltypes):
-        if _is_numerical_type(ctype):
+        if _is_numerical_type_numpy(ctype):
             roles["unused_float"].append(cname)
         else:
             roles["unused_string"].append(cname)
 
-    return roles
+    return Roles.from_dict(roles)
 
 
 # --------------------------------------------------------------------
@@ -729,7 +621,7 @@ def _sniff_s3(
     sep: Optional[str] = ",",
     skip: Optional[int] = 0,
     colnames: Optional[List[str]] = None,
-) -> Dict[str, List[str]]:
+) -> Roles:
     """Sniffs a list of CSV files located in an S3 bucket
     and returns the result as a dictionary of roles.
 
@@ -782,97 +674,7 @@ def _sniff_s3(
             raise OSError(msg)
         roles = comm.recv_string(sock)
 
-    return json.loads(roles)
-
-
-# --------------------------------------------------------------------
-
-
-def _sniff_schema(schema: pa.Schema) -> Dict[str, List[str]]:
-    roles: Dict[str, List[str]] = {}
-    roles["unused_float"] = []
-    roles["unused_string"] = []
-
-    colnames = schema.names
-    coltypes = schema.types
-
-    for cname, ctype in zip(colnames, coltypes):
-        if _is_unsupported_type(ctype):
-            continue
-        if _is_numerical_type(ctype.to_pandas_dtype()):
-            roles["unused_float"].append(cname)
-        else:
-            roles["unused_string"].append(cname)
-
-    return roles
-
-
-# --------------------------------------------------------------------
-
-
-def _check_role(role: str):
-    correct_role = isinstance(role, str)
-    correct_role = correct_role and role in _all_roles
-
-    if not correct_role:
-        raise ValueError(
-            """'role' must be None or of type str and in """ + str(_all_roles) + "."
-        )
-
-
-# ------------------------------------------------------------
-
-
-def _to_arrow(df_or_view: Any) -> pa.Table:
-    df_or_view.refresh()
-
-    cmd: Dict[str, Any] = {}
-
-    typename = type(df_or_view).__name__
-
-    cmd["type_"] = typename + ".to_arrow"
-    cmd["name_"] = df_or_view.name if typename == "DataFrame" else ""
-
-    if typename == "View":
-        cmd["view_"] = df_or_view._getml_deserialize()
-
-    with comm.send_and_get_socket(cmd) as sock:
-        msg = comm.recv_string(sock)
-        if msg != "Success!":
-            comm.engine_exception_handler(msg)
-        with sock.makefile(mode="rb") as stream:
-            with pa.ipc.open_stream(stream) as reader:
-                return reader.read_all()
-
-
-# ------------------------------------------------------------
-
-
-def _to_parquet(df_or_view: Any, fname: str, compression: str):
-    df_or_view.refresh()
-
-    if not isinstance(fname, str):
-        raise TypeError("'fname' must be of type str")
-
-    if not isinstance(compression, str):
-        raise TypeError("'compression' must be of type str")
-
-    fname_ = os.path.abspath(fname)
-
-    cmd: Dict[str, Any] = {}
-
-    typename = type(df_or_view).__name__
-
-    cmd["type_"] = typename + ".to_parquet"
-    cmd["name_"] = df_or_view.name if typename == "DataFrame" else ""
-
-    cmd["fname_"] = fname_
-    cmd["compression_"] = compression
-
-    if typename == "View":
-        cmd["view_"] = df_or_view._getml_deserialize()
-
-    comm.send(cmd)
+    return Roles.from_dict(json.loads(roles))
 
 
 # ------------------------------------------------------------
@@ -888,6 +690,7 @@ def _to_pyspark(df_or_view: Any, name: str, spark: Any):
     temp_dir = _retrieve_temp_dir()
     os.makedirs(temp_dir, exist_ok=True)
     path = os.path.join(temp_dir, name + ".parquet")
+
     _replace_non_alphanumeric_cols(df_or_view).to_parquet(path)
     spark_df = spark.read.parquet(path)
     spark_df.createOrReplaceTempView(name)
@@ -900,10 +703,10 @@ def _to_pyspark(df_or_view: Any, name: str, spark: Any):
 
 
 def _transform_col(col, role, is_boolean, is_float, is_string, time_formats):
-    if (is_boolean or is_float) and role in _categorical_roles:
+    if (is_boolean or is_float) and role in roles_sets.categorical:
         return col.as_str()  # pytype: disable=attribute-error
 
-    if (is_boolean or is_string) and role in _numerical_roles:
+    if (is_boolean or is_string) and role in roles_sets.numerical:
         if role == time_stamp:
             return col.as_ts(  # pytype: disable=attribute-error
                 time_formats=time_formats
@@ -969,10 +772,10 @@ def _with_column(
         BooleanColumnView,
     ],
     name: str,
-    role: Optional[str] = None,
-    subroles: Optional[Union[str, List[str]]] = None,
+    role: Optional[Role] = None,
+    subroles: Optional[Union[Subrole, Iterable[str]]] = None,
     unit: str = "",
-    time_formats: Optional[List[str]] = None,
+    time_formats: Optional[Iterable[str]] = None,
 ):
     # ------------------------------------------------------------
 
@@ -1021,13 +824,13 @@ def _with_column(
 
     # ------------------------------------------------------------
 
-    invalid_subroles = [r for r in subroles if r not in _all_subroles]
+    invalid_subroles = [r for r in subroles if r not in subroles_sets.all_]
 
     if invalid_subroles:
         raise ValueError(
             "'subroles' must be from getml.data.subroles, "
             + "meaning it is one of the following: "
-            + str(_all_subroles)
+            + str(subroles_sets.all_)
             + ", got "
             + str(invalid_subroles)
         )
@@ -1054,7 +857,7 @@ def _with_column(
     if role is None:
         role = unused_float if is_float else unused_string
 
-    _check_role(role)
+    Roles.from_dict({role: [name]}).validate()
 
     # ------------------------------------------------------------
 
@@ -1071,7 +874,10 @@ def _with_column(
 def _with_role(
     base,
     cols: Union[
-        str, FloatColumn, StringColumn, List[Union[str, FloatColumn, StringColumn]]
+        str,
+        FloatColumn,
+        StringColumn,
+        Union[List[str], List[FloatColumn], List[StringColumn]],
     ],
     role: str,
     time_formats: Optional[List[str]],
@@ -1096,9 +902,9 @@ def _with_role(
         if nname not in base.colnames:
             raise ValueError("No column called '" + nname + "' found.")
 
-    if role not in _all_roles:
+    if role not in roles_sets.all_:
         raise ValueError(
-            "'role' must be one of the following values: " + str(_all_roles)
+            "'role' must be one of the following values: " + str(roles_sets.all_)
         )
 
     # ------------------------------------------------------------
@@ -1107,7 +913,11 @@ def _with_role(
 
     for name in names:
         col = view[name]
-        unit = TIME_STAMP + COMPARISON_ONLY if role == time_stamp else col.unit
+        unit = (
+            constants.TIME_STAMP + constants.COMPARISON_ONLY
+            if role == time_stamp
+            else col.unit
+        )
         view = view.with_column(
             col=col,
             name=name,
@@ -1128,9 +938,12 @@ def _with_role(
 def _with_subroles(
     base,
     cols: Union[
-        str, FloatColumn, StringColumn, List[Union[str, FloatColumn, StringColumn]]
+        str,
+        FloatColumn,
+        StringColumn,
+        Union[List[str], List[FloatColumn], List[StringColumn]],
     ],
-    subroles: Optional[Union[str, List[str]]] = None,
+    subroles: Union[Subrole, Iterable[str]],
     append: bool = False,
 ):
     names = _handle_cols(cols)
@@ -1149,11 +962,11 @@ def _with_subroles(
 
     # ------------------------------------------------------------
 
-    if [r for r in subroles if r not in _all_subroles]:
+    if [r for r in subroles if r not in subroles_sets.all_]:
         raise ValueError(
             "'subroles' must be from getml.data.subroles, "
             + "meaning it is one of the following: "
-            + str(_all_subroles)
+            + str(subroles_sets.all_)
         )
 
     # ------------------------------------------------------------
@@ -1182,7 +995,10 @@ def _with_subroles(
 def _with_unit(
     base,
     cols: Union[
-        str, FloatColumn, StringColumn, List[Union[str, FloatColumn, StringColumn]]
+        str,
+        FloatColumn,
+        StringColumn,
+        Union[List[str], List[FloatColumn], List[StringColumn]],
     ],
     unit: str,
     comparison_only=False,

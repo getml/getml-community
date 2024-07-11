@@ -49,7 +49,7 @@ def _get_json_obj(name):
         msg = comm.recv_string(sock)
 
     if msg[0] != "{":
-        comm.engine_exception_handler(msg)
+        comm.handle_engine_exception(msg)
 
     return json.loads(msg)
 
@@ -328,7 +328,7 @@ class _Hyperopt:
             end = time.time()
 
         if msg != "Success!":
-            comm.engine_exception_handler(msg)
+            comm.handle_engine_exception(msg)
 
         print()
         _print_time_taken(begin, end, "Time taken: ")

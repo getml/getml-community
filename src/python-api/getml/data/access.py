@@ -55,7 +55,7 @@ def set_s3_access_key_id(value: str):
         comm.send_string(sock, value)
         msg = comm.recv_string(sock)
         if msg != "Success!":
-            comm.engine_exception_handler(msg)
+            comm.handle_engine_exception(msg)
 
 
 # -----------------------------------------------------------------------------
@@ -98,7 +98,7 @@ def set_s3_secret_access_key(value: str):
         comm.send_string(sock, value)
         msg = comm.recv_string(sock)
         if msg != "Success!":
-            comm.engine_exception_handler(msg)
+            comm.handle_engine_exception(msg)
 
 
 # --------------------------------------------------------------------------

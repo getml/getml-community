@@ -42,6 +42,7 @@ dependencies = [
     "numpy~=1.22",
     "jinja2",
     "rich~=13.0",
+    "typing-extensions~=4.0",
 ]
 
 [project.urls]
@@ -72,6 +73,11 @@ dependencies = [
   "ruff==0.4.5",
   "uv",
 ]
+
+[tool.hatch.envs.test]
+
+[[tool.hatch.envs.test.matrix]]
+python = ["3.8", "3.12"]
 
 [tool.hatch.build]
 include = [
@@ -113,3 +119,9 @@ exclude = ["tests/**/*",]
 [tool.ruff.lint.pyupgrade]
 # Preserve types, even if a file imports `from __future__ import annotations`.
 keep-runtime-typing = true
+
+
+[tool.pytest.ini_options]
+markers = [
+    "engine: tests that use the engine",
+]

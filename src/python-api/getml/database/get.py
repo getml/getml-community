@@ -49,7 +49,7 @@ def get(query: str, conn: Optional[Connection] = None) -> pd.DataFrame:
         comm.send_string(sock, query)
         msg = comm.recv_string(sock)
         if msg != "Success!":
-            comm.engine_exception_handler(msg)
+            comm.handle_engine_exception(msg)
         json_str = comm.recv_string(sock)
 
     return pd.read_json(json_str)

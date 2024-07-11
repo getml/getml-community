@@ -725,7 +725,7 @@ class Pipeline:
         msg = comm.recv_string(sock)
 
         if msg != "Success!":
-            comm.engine_exception_handler(msg)
+            comm.handle_engine_exception(msg)
 
     # ------------------------------------------------------------
 
@@ -1005,7 +1005,7 @@ class Pipeline:
             else:
                 yhat = None
         else:
-            comm.engine_exception_handler(msg)
+            comm.handle_engine_exception(msg)
 
         print()
 
@@ -1095,11 +1095,11 @@ class Pipeline:
         with comm.send_and_get_socket(cmd) as sock:
             msg = comm.recv_string(sock)
             if msg != "Found!":
-                comm.engine_exception_handler(msg)
+                comm.handle_engine_exception(msg)
             print("Checking data model...")
             msg = comm.log(sock)
             if msg != "Success!":
-                comm.engine_exception_handler(msg)
+                comm.handle_engine_exception(msg)
             print()
             issues = Issues(comm.recv_issues(sock))
             if len(issues) == 0:
@@ -1299,7 +1299,7 @@ class Pipeline:
             msg = comm.recv_string(sock)
 
             if msg != "Found!":
-                comm.engine_exception_handler(msg)
+                comm.handle_engine_exception(msg)
 
             begin = time.time()
 
@@ -1312,7 +1312,7 @@ class Pipeline:
                 print(msg)
                 _print_time_taken(begin, end, "Time taken: ")
             else:
-                comm.engine_exception_handler(msg)
+                comm.handle_engine_exception(msg)
 
         self._save()
 
@@ -1481,7 +1481,7 @@ class Pipeline:
         with comm.send_and_get_socket(cmd) as sock:
             msg = comm.recv_string(sock)
             if msg != "Found!":
-                comm.engine_exception_handler(msg)
+                comm.handle_engine_exception(msg)
             y_hat = self._transform(
                 peripheral_tables,
                 population_table,
@@ -1513,7 +1513,7 @@ class Pipeline:
             msg = comm.recv_string(sock)
 
         if msg[0] != "{":
-            comm.engine_exception_handler(msg)
+            comm.handle_engine_exception(msg)
 
         json_obj = json.loads(msg)
 
@@ -1608,7 +1608,7 @@ class Pipeline:
             msg = comm.recv_string(sock)
 
             if msg != "Found!":
-                comm.engine_exception_handler(msg)
+                comm.handle_engine_exception(msg)
 
             self._transform(
                 peripheral_tables, population_table, sock, predict=True, score=True
@@ -1617,7 +1617,7 @@ class Pipeline:
             msg = comm.recv_string(sock)
 
             if msg != "Success!":
-                comm.engine_exception_handler(msg)
+                comm.handle_engine_exception(msg)
 
             scores = comm.recv_string(sock)
 
@@ -1774,7 +1774,7 @@ class Pipeline:
         with comm.send_and_get_socket(cmd) as sock:
             msg = comm.recv_string(sock)
             if msg != "Found!":
-                comm.engine_exception_handler(msg)
+                comm.handle_engine_exception(msg)
             y_hat = self._transform(
                 peripheral_tables,
                 population_table,

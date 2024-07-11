@@ -12,10 +12,22 @@ from __future__ import annotations
 
 import json
 import numbers
-import os
+import warnings
 from collections import namedtuple
+from collections.abc import Iterator
 from copy import deepcopy
-from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Tuple, Union, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    Union,
+    cast,
+)
 
 import numpy as np
 import pandas as pd
@@ -23,25 +35,21 @@ import pyarrow
 
 import getml.communication as comm
 from getml import data
-from getml.data.columns import StringColumn, StringColumnView
-from getml.database import Connection
-from getml.log import logger
-from getml.utilities.formatting import _ViewFormatter
-
-from .columns import BooleanColumnView, FloatColumn, FloatColumnView, rowid
-from .helpers import (
-    _is_typed_list,
-    _to_arrow,
-    _to_parquet,
-    _to_pyspark,
-    _where,
-    _with_column,
-    _with_role,
-    _with_subroles,
-    _with_unit,
+from getml.constants import DEFAULT_BATCH_SIZE
+from getml.data._io.arrow import to_arrow
+from getml.data._io.csv import to_csv
+from getml.data._io.parquet import to_parquet
+from getml.data.columns import (
+    BooleanColumnView,
+    FloatColumn,
+    FloatColumnView,
+    StringColumn,
+    StringColumnView,
+    arange,
+    rowid,
 )
-from .placeholder import Placeholder
-from .roles import (
+from getml.data.placeholder import Placeholder
+from getml.data.roles import (
     categorical,
     join_key,
     numerical,
@@ -51,7 +59,12 @@ from .roles import (
     unused_float,
     unused_string,
 )
-from .roles_obj import Roles
+from getml.data.roles.container import Roles
+from getml.data.roles.types import Role
+from getml.data.subroles.types import Subrole
+from getml.database import Connection
+from getml.log import logger
+from getml.utilities.formatting import _ViewFormatter
 
 if TYPE_CHECKING:
     import pyspark.sql
@@ -421,6 +434,11 @@ class View:
 
     # ------------------------------------------------------------
 
+    def iter_batches(self, batch_size: int = DEFAULT_BATCH_SIZE) -> Iterator[View]:
+        yield from _iter_batches(self, batch_size)
+
+    # ------------------------------------------------------------
+
     @property
     def last_change(self) -> str:
         """
@@ -495,7 +513,7 @@ class View:
             json_str = comm.recv_string(sock)
 
         if json_str[0] != "{":
-            comm.engine_exception_handler(json_str)
+            comm.handle_engine_exception(json_str)
 
         response = json.loads(json_str)
 
@@ -542,14 +560,14 @@ class View:
                 The roles of the columns included in this View.
         """
         return Roles(
-            categorical=self._categorical_names,
-            join_key=self._join_key_names,
-            numerical=self._numerical_names,
-            target=self._target_names,
-            text=self._text_names,
-            time_stamp=self._time_stamp_names,
-            unused_float=self._unused_float_names,
-            unused_string=self._unused_string_names,
+            categorical=tuple(self._categorical_names),
+            join_key=tuple(self._join_key_names),
+            numerical=tuple(self._numerical_names),
+            target=tuple(self._target_names),
+            text=tuple(self._text_names),
+            time_stamp=tuple(self._time_stamp_names),
+            unused_float=tuple(self._unused_float_names),
+            unused_string=tuple(self._unused_string_names),
         )
 
     # ------------------------------------------------------------
@@ -616,7 +634,7 @@ class View:
                 Pyarrow equivalent of the current instance including
                 its underlying data.
         """
-        return _to_arrow(self)
+        return to_arrow(self)
 
     # ------------------------------------------------------------
 
@@ -635,7 +653,12 @@ class View:
     # ------------------------------------------------------------
 
     def to_csv(
-        self, fname: str, quotechar: str = '"', sep: str = ",", batch_size: int = 0
+        self,
+        fname: str,
+        quotechar: str = '"',
+        sep: str = ",",
+        batch_size: int = 0,
+        quoting_style: str = "needed",
     ):
         """
         Writes the underlying data into a newly created CSV file.
@@ -655,36 +678,29 @@ class View:
             batch_size:
                 Maximum number of lines per file. Set to 0 to read
                 the entire data frame into a single file.
+
+            quoting_style (str):
+                The quoting style to use. Delegated to pyarrow.
+
+                The following values are accepted:
+                - `"needed"` (default): only enclose values in quotes when needed.
+                - `"all_valid"`: enclose all valid values in quotes; nulls are not
+                  quoted.
+                - `"none"`: do not enclose any values in quotes; values containing
+                  special characters (such as quotes, cell delimiters or line
+                  endings) will raise an error.
+
+        Deprecated:
+           1.5: The `quotechar` parameter is deprecated.
         """
 
-        self.refresh()
+        if quotechar != '"':
+            warnings.warn(
+                "'quotechar' is deprecated, use 'quoting_style' instead.",
+                DeprecationWarning,
+            )
 
-        if not isinstance(fname, str):
-            raise TypeError("'fname' must be of type str")
-
-        if not isinstance(quotechar, str):
-            raise TypeError("'quotechar' must be of type str")
-
-        if not isinstance(sep, str):
-            raise TypeError("'sep' must be of type str")
-
-        if not isinstance(batch_size, numbers.Real):
-            raise TypeError("'batch_size' must be a real number")
-
-        fname_ = os.path.abspath(fname)
-
-        cmd: Dict[str, Any] = {}
-
-        cmd["type_"] = "View.to_csv"
-        cmd["name_"] = self.name
-
-        cmd["view_"] = self._getml_deserialize()
-        cmd["fname_"] = fname_
-        cmd["quotechar_"] = quotechar
-        cmd["sep_"] = sep
-        cmd["batch_size_"] = batch_size
-
-        comm.send(cmd)
+        to_csv(self, fname, sep, batch_size, quoting_style)
 
     # ------------------------------------------------------------
 
@@ -747,7 +763,7 @@ class View:
                 Pandas equivalent of the current instance including
                 its underlying data.
         """
-        return _to_arrow(self).to_pandas()
+        return to_arrow_table(self).to_pandas()
 
     # ------------------------------------------------------------
 
@@ -788,7 +804,7 @@ class View:
                 The compression format to use.
                 Supported values are "brotli", "gzip", "lz4", "snappy", "zstd"
         """
-        _to_parquet(self, fname, compression)
+        to_parquet(self, fname, compression)
 
     # ----------------------------------------------------------------
 
@@ -997,9 +1013,9 @@ class View:
             BooleanColumnView,
         ],
         name: str,
-        role: Optional[Union[dict[str, List[str]], Roles]] = None,
-        unit: Optional[str] = "",
-        subroles: Optional[Union[str, List[str]]] = None,
+        role: Optional[Role] = None,
+        unit: str = "",
+        subroles: Optional[Union[Subrole, Iterable[str]]] = None,
         time_formats: Optional[List[str]] = None,
     ) -> View:
         """Returns a new [`View`][getml.data.View] that contains an additional column.
@@ -1125,7 +1141,7 @@ class View:
     def with_subroles(
         self,
         names: Union[str, List[str]],
-        subroles: Union[str, List[str]],
+        subroles: Union[Subrole, Iterable[str]],
         append: bool = True,
     ):
         """Returns a new view with one or several new subroles on one or more columns.

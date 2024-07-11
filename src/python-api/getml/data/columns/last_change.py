@@ -23,7 +23,7 @@ def _last_change(df_name) -> str:
     with comm.send_and_get_socket(cmd) as sock:
         msg = comm.recv_string(sock)
         if msg != "Success!":
-            comm.engine_exception_handler(msg)
+            comm.handle_engine_exception(msg)
         result = comm.recv_string(sock)
 
     return result
