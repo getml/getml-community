@@ -46,7 +46,6 @@ def get_colnames(name: str, conn: Optional[Connection] = None) -> List[str]:
     with comm.send_and_get_socket(cmd) as sock:
         msg = comm.recv_string(sock)
         if msg != "Success!":
-            sock.close()
             comm.engine_exception_handler(msg)
         arr = json.loads(comm.recv_string(sock))
 

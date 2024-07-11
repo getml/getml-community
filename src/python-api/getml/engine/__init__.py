@@ -66,12 +66,11 @@ Note:
     or pipelines.
 """
 
-from getml.communication import is_monitor_alive
+from getml.communication import is_engine_alive, is_monitor_alive
 
 from .helpers import (
     delete_project,
     is_alive,
-    is_engine_alive,
     list_projects,
     list_running_projects,
     set_project,

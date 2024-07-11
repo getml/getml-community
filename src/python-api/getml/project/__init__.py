@@ -18,10 +18,9 @@ from getml.engine import is_alive
 
 from .attrs import __getattr__, _all
 
-
 if TYPE_CHECKING:
+    from .attrs import delete, load, restart, save, suspend, switch  # noqa: F401
     from .containers import DataFrames, Hyperopts, Pipelines
-    from .attrs import load, delete, restart, save, suspend, switch  # noqa: F401
 
     data_frames: DataFrames
     hyperopts: Hyperopts
@@ -38,12 +37,12 @@ __all__ = _all + ["DataFrames", "Hyperopts", "Pipelines"] + ["__getattr__"]  # n
 
 class ProjectModule(ModuleType):
     def __repr__(self):
-        output = ""
+        output = "No project set. To set: `getml.set_project(...)`"
         # resolving name has the side effect of reaching out to the monitor and
         # the engine and therefore triggers a message if either is unreachable
         project_name = self.name  # pylint: disable=E1101
         if is_alive():
-            output += f"Current project:\n\n{project_name}"
+            output = f"Current project:\n\n{project_name}"
         return output
 
 

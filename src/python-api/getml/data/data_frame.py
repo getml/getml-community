@@ -73,6 +73,7 @@ from .view import View
 
 if TYPE_CHECKING:
     import pyspark.sql
+
     from getml.data.data_frame import DataFrame
 
 # --------------------------------------------------------------------
@@ -2017,7 +2018,6 @@ class DataFrame:
         with comm.send_and_get_socket(cmd) as sock:
             msg = comm.recv_string(sock)
             if msg != "Found!":
-                sock.close()
                 comm.engine_exception_handler(msg)
             nbytes = comm.recv_string(sock)
 
@@ -2051,7 +2051,6 @@ class DataFrame:
         with comm.send_and_get_socket(cmd) as sock:
             msg = comm.recv_string(sock)
             if msg != "Found!":
-                sock.close()
                 comm.engine_exception_handler(msg)
             nrows = comm.recv_string(sock)
 
