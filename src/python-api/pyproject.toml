@@ -63,12 +63,14 @@ expression = "__version__"
 [tool.hatch.envs.default]
 installer = "uv"
 dependencies = [
-  "pyright",
-  "ruff==0.4.5",
-  "uv",
   "hatchling",
+  "keyring",
+  "keyrings.google-artifactregistry-auth",
+  "pyright",
   "pyspark",
   "pytest",
+  "ruff==0.4.5",
+  "uv",
 ]
 
 [tool.hatch.build]

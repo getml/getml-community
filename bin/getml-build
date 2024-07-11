@@ -20,7 +20,7 @@ process_build_args() {
 
 show_help() {
   cat <<-EOF
-		getml build wrapper
+		Build utilities
 
 		Usage:
 		  build <subcommand> [options]
@@ -31,6 +31,7 @@ show_help() {
 		  [e]ngine    Build engine
 		  [p]ackage   Export runable [e]ngine + [c]li package
 		  [py]thon    Package Python API
+		  [r]untime   Build docker runtime image
 		  [ar]chive   Create tar.gz archive of [p]ackage
 
 		Options:
@@ -69,26 +70,35 @@ if [[ -z $1 || $1 = "-h" ]]; then
   exit 0
 fi
 
-# process subcommands
 while [[ "$#" -gt 0 ]]; do
-  case $1 in
+  case "$1" in
     a | all)
       target="all"
+      shift
       ;;
     c | cli)
       target="cli"
+      shift
       ;;
     e | engine)
       target="engine"
+      shift
       ;;
     p | package)
       target="package"
+      shift
       ;;
     py | python)
       target="python"
+      shift
       ;;
-    ar | chive)
+    r | runtime)
+      target="runtime"
+      shift
+      ;;
+    ar | archive)
       target="archive"
+      shift
       ;;
     --)
       shift
@@ -103,9 +113,7 @@ while [[ "$#" -gt 0 ]]; do
       exit 1
       ;;
   esac
-  shift
 done
-
 
 (
   export VERSION=${VERSION:-$(<"$bin_dir/../VERSION")}

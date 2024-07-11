@@ -31,6 +31,14 @@ target "package" {
   }
 }
 
+target "runtime" {
+  dockerfile = "runtime/Dockerfile"
+  args = {
+    VERSION="${VERSION}"
+  }
+  tags = ["getml/getml:${VERSION}", "getml/getml:latest"]
+}
+
 target "python" {
   contexts = {
     engine-build = "target:engine"

@@ -1,0 +1,112 @@
+#!/usr/bin/env sh
+
+OP_REF_DOCKER="op://ziuqh3iho6xu7wonq6d7vcvg5q/hub.docker.com"
+OP_REF_PYPI_CREDENTIALS="op://ziuqh3iho6xu7wonq6d7vcvg5q/jwwt5m77hku6a2onmk7ych3uzy"
+DEFAULT_WHEEL_INDEX="https://europe-west1-python.pkg.dev/getml-infra/getml-python-api"
+DEFAULT_DOCKER_INDEX="europe-west1-docker.pkg.dev/getml-infra/getml-docker-runtime"
+ARTIFACTS_DIR="build/python-api"
+
+show_help () {
+  cat <<-EOF
+		Publishing utilities
+
+		Usage:
+		  build <subcommand> [options]
+
+		Subcommands:
+		  [a]ll       Publish all (wheel, docker runtime)
+		  [d]ocker    Publish docker runtime
+		  [w]heel     Publish python wheel
+
+		Options:
+		  -a <dir>    Directory containing artifacts (default: $ARTIFACTS_DIR, not supported for all)
+		  -i <index>  Index to publish to (default docker: $DEFAULT_DOCKER_INDEX,
+		                                   default wheel: $DEFAULT_WHEEL_INDEX,
+		                                   not supported for all)
+		  -h          Show this help message
+	EOF
+}
+
+process_opts() {
+  while getopts ":ha:i:" opt; do
+    case ${opt} in
+      a)
+        artifacts_dir="$OPTARG"
+        ;;
+      h)
+        show_help
+        exit 0
+        ;;
+      i)
+        index="$OPTARG"
+        ;;
+      \?)
+        echo "Invalid option: -$OPTARG" >&2
+        exit 1
+        ;;
+    esac
+  done
+}
+publish_all () {
+  publish_wheel
+  publish_docker
+}
+
+publish_wheel () {
+    index="${index:-$DEFAULT_WHEEL_INDEX}"
+    if [ $# -eq 0 ]; then
+      artifacts_dir="${artifacts_dir:-$ARTIFACTS_DIR}"
+    fi
+    if [ "$index" == "https://upload.pypi.org/legacy/" ]; then
+      auth="--auth $(op read "${OP_REF_PYPI_CREDENTIALS}/password")"
+    elif [ "$index" == "$DEFAULT_WHEEL_INDEX" ]; then
+      auth="--user oauth2accesstoken --auth $(hatch run keyring get "$DEFAULT_WHEEL_INDEX" oauth2accesstoken)"
+    fi
+    hatch publish --repo $index $auth $artifacts_dir "$@"
+}
+
+publish_docker () {
+    index=${index:-$DEFAULT_DOCKER_INDEX}
+    if [ "$index" == "https://index.docker.io/v1/" ]; then
+      op read "${OP_REF_DOCKER}/personal-access-token" | docker login -u $(op read "${OP_REF_DOCKER}/username") --password-stdin
+    fi
+    docker push --all-tags "$index/getml/getml" "$@"
+}
+
+if [ $# -eq 0 ]; then
+  show_help
+  exit 1
+fi
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    all|a)
+      subcommand=publish_all
+      shift
+      ;;
+    wheel|w)
+      subcommand=publish_wheel
+      shift
+      ;;
+    docker|d)
+      subcommand=publish_docker
+      shift
+      ;;
+    --)
+      shift
+      break
+      ;;
+    -*)
+      process_opts "$@"
+      shift $((OPTIND -1))
+      ;;
+    *)
+      show_help
+      exit 1
+      ;;
+  esac
+done
+
+(
+  $subcommand "$@"
+)

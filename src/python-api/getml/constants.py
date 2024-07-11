@@ -50,3 +50,16 @@ seconds since UNIX time (January 1, 1970).
 
 If that fails as well, the value is set to NULL.
 """
+
+
+DOCKER_DOCS_URL = "https://dev.getml.com/home/docker"
+"""
+URL that points to the docker sections of the getML documentation.
+"""
+
+COMPOSE_FILE_URL = (
+    "https://storage.googleapis.com/static.getml.com/runtime/docker-compose.yml"
+)
+"""
+URL that points to the docker-compose runtime file.
+"""
