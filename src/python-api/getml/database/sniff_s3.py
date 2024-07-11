@@ -111,6 +111,5 @@ def sniff_s3(
     with comm.send_and_get_socket(cmd) as sock:
         msg = comm.recv_string(sock)
         if msg != "Success!":
-            sock.close()
             comm.engine_exception_handler(msg)
         return comm.recv_string(sock)

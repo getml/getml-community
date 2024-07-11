@@ -23,6 +23,9 @@ from getml.communication import (
     _suspend_project,
 )
 
+# backward compatibility alias
+from getml.communication import is_engine_alive as is_alive
+
 # --------------------------------------------------------------------
 
 
@@ -39,41 +42,6 @@ def delete_project(name: str):
 
     """
     _delete_project(name)
-
-
-# -----------------------------------------------------------------------------
-
-
-def is_engine_alive() -> bool:
-    """Checks if the getML engine is running.
-
-    Returns:
-            True if the getML engine is running and ready to accept
-                commands and False otherwise.
-
-    """
-
-    cmd: Dict[str, str] = {}
-    cmd["type_"] = "is_alive"
-    cmd["name_"] = ""
-
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
-        sock.connect(("localhost", comm.port))
-    except ConnectionRefusedError:
-        return False
-
-    comm.send_string(sock, json.dumps(cmd))
-
-    sock.close()
-
-    return True
-
-
-# -----------------------------------------------------------------------------
-
-# define compatibility alias
-is_alive = is_engine_alive
 
 
 # -----------------------------------------------------------------------------

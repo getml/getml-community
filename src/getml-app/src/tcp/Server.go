@@ -77,7 +77,11 @@ func (s *Server) handleConnection(c net.Conn) {
 	cmd, err := recvCmd(c)
 
 	if err != nil {
-		c.Write([]byte(err.Error()))
+		log.Println("Error receiving command:", err.Error())
+		_, err := c.Write([]byte(err.Error()))
+		if err != nil {
+			return
+		}
 		return
 	}
 
@@ -107,13 +111,17 @@ func (s *Server) handleConnection(c net.Conn) {
 		logger := newLogger(c)
 		s.mainHandler.LoadProject(body, c, *logger)
 
+	case "loadprojectbundle":
+		logger := newLogger(c)
+		s.mainHandler.LoadProjectBundle(body, c, *logger)
+
 	case "restartproject":
 		logger := newLogger(c)
 		s.mainHandler.RestartProject(body, c, *logger)
 
-	case "saveproject":
+	case "bundleproject":
 		logger := newLogger(c)
-		s.mainHandler.SaveProject(body, c, *logger)
+		s.mainHandler.BundleProject(body, c, *logger)
 
 	case "setproject":
 		logger := newLogger(c)

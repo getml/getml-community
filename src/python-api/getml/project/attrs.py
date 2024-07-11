@@ -10,8 +10,11 @@
 Handles access to project-related information.
 """
 
+import warnings
+from os import PathLike
+from pathlib import Path
 from sys import modules
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from rich import print
 
@@ -32,16 +35,8 @@ def __getattr__(key):
     if key in _props:
         if is_engine_alive():
             return getattr(modules.get(__name__), "_" + key)()
-        elif is_monitor_alive():
-            projects = "\n".join(list_projects())
-            msg = comm._make_error_msg()
-            msg += "\n\nAvailable projects:\n\n"
-            msg += projects
-            print(msg)
-            return None
         else:
-            msg = comm._make_error_msg()
-            print(msg)
+            print(comm._make_error_msg())
             return None
 
     raise AttributeError(f"module 'getml.project' has no attribute {key}")
@@ -111,9 +106,9 @@ def restart() -> None:
 
 @module_function
 def save(
-    filename: Optional[str] = None,
+    filename: Optional[Union[PathLike, str]] = None,
     target_dir: Optional[str] = None,
-    replace: bool = True,
+    replace: bool = False,
 ) -> None:
     """
     Saves the currently connected project to disk.
@@ -121,12 +116,19 @@ def save(
     Args:
         filename: The name of the `.getml` bundle file
 
-        target_dir: the directory to save the bundle to.
-          If None, the current working directory is used.
-
         replace: Whether to replace an existing bundle.
+
+    Deprecated:
+        1.5: The `target_dir` argument is deprecated.
     """
-    return comm._save_project(_name(), filename, target_dir, replace)
+    if target_dir is not None:
+        warnings.warn(
+            "The target_dir argument is deprecated. Use filename with a path instead.",
+            DeprecationWarning,
+        )
+        bundle_name = filename if filename else f"{_name()}.getml"
+        filename = Path(target_dir) / bundle_name
+    return comm._save_project(_name(), filename, replace)
 
 
 @module_function

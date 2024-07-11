@@ -9,11 +9,11 @@ package tcp
 
 import (
 	"archive/zip"
+	"bytes"
 	"encoding/json"
 	"errors"
 	"getML/data"
 	"io"
-	"io/ioutil"
 	"net"
 	"os"
 	"path"
@@ -22,6 +22,25 @@ import (
 	"strings"
 	"time"
 )
+
+// -------------------------------------------------------------------------------------------
+
+func handleName(nameByte []byte) (string, error) {
+	if len(nameByte) == 0 {
+		return "", errors.New("Project name cannot be empty!")
+	}
+
+	var name string
+
+	err := json.Unmarshal(nameByte, &name)
+
+	if err != nil {
+		return "", err
+	}
+
+	return name, nil
+
+}
 
 // -------------------------------------------------------------------------------------------
 
@@ -52,7 +71,6 @@ func NewMainHandler(version string,
 // -------------------------------------------------------------------------------------------
 
 func (m *MainHandler) bundleProject(name string, writer *zip.Writer) error {
-
 	m.projects.Lock.RLock()
 
 	defer m.projects.Lock.RUnlock()
@@ -75,7 +93,7 @@ func (m *MainHandler) bundleProject(name string, writer *zip.Writer) error {
 
 // -------------------------------------------------------------------------------------------
 
-func (m *MainHandler) extractBundle(name string, r *zip.ReadCloser) (string, error) {
+func (m *MainHandler) extractBundle(name string, r *zip.Reader, logger logger) (string, error) {
 
 	var err error
 
@@ -101,6 +119,14 @@ func (m *MainHandler) extractBundle(name string, r *zip.ReadCloser) (string, err
 		return "", errors.New("Project '" + name + "' currently loaded. To replace it, call `suspend` first.")
 
 	}
+
+	progressLogger, err := newProgressLogger(logger, len(r.File))
+
+	if err != nil {
+		return "", err
+	}
+
+	logger.log("Loading project...")
 
 	for _, file := range r.File {
 
@@ -139,6 +165,8 @@ func (m *MainHandler) extractBundle(name string, r *zip.ReadCloser) (string, err
 		if err != nil {
 			return "", err
 		}
+
+		progressLogger.increment()
 
 	}
 
@@ -195,13 +223,12 @@ func (m *MainHandler) makeZipper(name string, projectDirectory string, writer *z
 // DeleteProject deletes an existing project.
 func (m *MainHandler) DeleteProject(nameByte []byte, c net.Conn) {
 
-	if len(nameByte) < 3 {
-		sendString(c, "Project name cannot be empty!")
+	name, err := handleName(nameByte)
+
+	if err != nil {
+		sendString(c, err.Error())
 		return
 	}
-
-	// Remove leading and trailing quotation mark.
-	name := string(nameByte[1:(len(nameByte) - 1)])
 
 	m.projects.Lock.Lock()
 
@@ -209,7 +236,7 @@ func (m *MainHandler) DeleteProject(nameByte []byte, c net.Conn) {
 
 	projectDirectory := m.projects.Config.ProjectDirectory
 
-	err := os.RemoveAll(path.Join(projectDirectory, name))
+	err = os.RemoveAll(path.Join(projectDirectory, name))
 
 	if err != nil {
 		sendString(c, err.Error())
@@ -278,7 +305,7 @@ func (m *MainHandler) listDirectories(directory string) []string {
 
 	fnames := []string{}
 
-	files, err := ioutil.ReadDir(directory)
+	files, err := os.ReadDir(directory)
 
 	if err != nil {
 		return fnames
@@ -337,6 +364,31 @@ func (m *MainHandler) GetVersion(c net.Conn) {
 
 // -------------------------------------------------------------------------------------------
 
+// loadProjectBundle loads a project bundle from memory
+func (m *MainHandler) loadProjectBundle(c net.Conn, name string, data []byte, logger logger) (string, error) {
+
+	r, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
+
+	if err != nil {
+		return "", err
+	}
+
+	projectName, err := m.extractBundle(name, r, logger)
+
+	if err != nil {
+		return "", err
+	}
+
+	enginePortStr, err := m.setProject([]byte("\""+projectName+"\""), c, logger)
+
+	if err != nil {
+		return "", err
+	}
+
+	return enginePortStr, nil
+
+}
+
 // LoadProject loads a project bundle from disk
 func (m *MainHandler) LoadProject(
 	body []byte,
@@ -365,25 +417,63 @@ func (m *MainHandler) LoadProject(
 		return
 	}
 
-	r, err := zip.OpenReader(bundle)
+	data, err := os.ReadFile(bundle)
 
 	if err != nil {
 		sendString(c, err.Error())
 		return
 	}
 
-	defer r.Close()
-
-	projectName, err := m.extractBundle(name, r)
+	enginePortStr, err := m.loadProjectBundle(c, name, data, logger)
 
 	if err != nil {
 		sendString(c, err.Error())
 		return
 	}
 
-	nameByte := []byte("\"" + projectName + "\"")
+	sendString(c, "Success!")
 
-	m.SetProject(nameByte, c, logger)
+	sendString(c, enginePortStr)
+}
+
+// LoadProjectBundle directly exposes loadProjectBundle and receives the data from the client
+func (m *MainHandler) LoadProjectBundle(
+	body []byte,
+	c net.Conn,
+	logger logger) {
+
+	type CmdBody struct {
+		Name string `json:"name_"`
+	}
+
+	cmdBody := CmdBody{}
+
+	err := json.Unmarshal(body, &cmdBody)
+
+	if err != nil {
+		sendString(c, err.Error())
+		return
+	}
+
+	name := cmdBody.Name
+
+	data, err := recvBytes(c)
+
+	if err != nil {
+		sendString(c, err.Error())
+		return
+	}
+
+	enginePortStr, err := m.loadProjectBundle(c, name, data, logger)
+
+	if err != nil {
+		sendString(c, err.Error())
+		return
+	}
+
+	sendString(c, "Success!")
+
+	sendString(c, enginePortStr)
 }
 
 // -------------------------------------------------------------------------------------------
@@ -399,7 +489,7 @@ func (m *MainHandler) ListAllProjects(c net.Conn) {
 
 	projects := []string{}
 
-	files, err := ioutil.ReadDir(projectDirectory)
+	files, err := os.ReadDir(projectDirectory)
 
 	if err != nil {
 		sendString(c, err.Error())
@@ -407,7 +497,7 @@ func (m *MainHandler) ListAllProjects(c net.Conn) {
 	}
 
 	for _, f := range files {
-		if f.Mode().IsDir() {
+		if f.IsDir() {
 			projects = append(projects, f.Name())
 		}
 	}
@@ -463,15 +553,14 @@ func (m *MainHandler) RestartProject(
 	c net.Conn,
 	logger logger) {
 
-	if len(nameByte) < 3 {
-		sendString(c, "Project name cannot be empty!")
+	name, err := handleName(nameByte)
+
+	if err != nil {
+		sendString(c, err.Error())
 		return
 	}
 
-	// Remove leading and trailing quotation mark.
-	name := string(nameByte[1:(len(nameByte) - 1)])
-
-	err := m.projects.Stop(name)
+	err = m.projects.Stop(name)
 
 	if err != nil {
 		sendString(c, err.Error())
@@ -484,17 +573,14 @@ func (m *MainHandler) RestartProject(
 
 // -------------------------------------------------------------------------------------------
 
-// SaveProject bundles a project and saves it to disk
-func (m *MainHandler) SaveProject(
+// BundleProject bundles a project and sends the bundle to the client.
+func (m *MainHandler) BundleProject(
 	body []byte,
 	c net.Conn,
 	logger logger) {
 
 	type CmdBody struct {
-		FileName   string `json:"file_name_"`
-		Name       string `json:"name_"`
-		TargetPath string `json:"target_path_"`
-		Replace    bool   `json:"replace_"`
+		Name string `json:"name_"`
 	}
 
 	cmdBody := CmdBody{}
@@ -506,43 +592,27 @@ func (m *MainHandler) SaveProject(
 		return
 	}
 
-	if len(cmdBody.Name) < 1 {
+	if len(cmdBody.Name) == 0 {
 		sendString(c, "Project name cannot be empty!")
 		return
 	}
 
-	extension := ".getml"
-
-	fileName := cmdBody.FileName
 	name := cmdBody.Name
-	replace := cmdBody.Replace
-	targetPath := filepath.FromSlash(cmdBody.TargetPath)
-	destination := filepath.Join(targetPath, fileName+extension)
 
-	zipFile, err := os.Open(destination)
+	sink := new(bytes.Buffer)
 
-	if !errors.Is(err, os.ErrNotExist) {
-		zipFile.Close()
+	w := zip.NewWriter(sink)
 
-		if !replace {
-			sendString(c, "'"+destination+"' already exists, set `replace` to replace the file.")
-			return
+	defer func() {
+		if err := w.Close(); err != nil {
+			sendString(c, err.Error())
 		}
 
-	}
+		sendString(c, "Success!")
 
-	zipFile, err = os.Create(destination)
+		sendBytes(c, sink.Bytes())
 
-	if err != nil {
-		sendString(c, err.Error())
-		return
-	}
-
-	defer zipFile.Close()
-
-	w := zip.NewWriter(zipFile)
-
-	defer w.Close()
+	}()
 
 	err = m.bundleProject(name, w)
 
@@ -551,41 +621,25 @@ func (m *MainHandler) SaveProject(
 		return
 	}
 
-	sendString(c, "Success!")
-
-	sendString(c, fileName+extension)
-
 }
 
 // -------------------------------------------------------------------------------------------
 
-// SetProject launches a new project
-func (m *MainHandler) SetProject(
+func (m *MainHandler) setProject(
 	nameByte []byte,
 	c net.Conn,
-	logger logger) {
+	logger logger) (string, error) {
 
-	if len(nameByte) < 3 {
-		sendString(c, "Project name cannot be empty!")
-		return
-	}
+	name, err := handleName(nameByte)
 
-	// Remove leading and trailing quotation mark.
-	name := string(nameByte[1:(len(nameByte) - 1)])
-
-	stdVars, err := m.projects.GetStandardVars(name)
-
-	if err == nil {
-		sendString(c, "Success!")
-		sendString(c, strconv.Itoa(*stdVars.EnginePort))
-		return
+	if err != nil {
+		return "", err
 	}
 
 	enginePort, err := m.findFreePort()
 
 	if err != nil {
-		sendString(c, err.Error())
-		return
+		return "", err
 	}
 
 	enginePortStr := strconv.Itoa(enginePort)
@@ -595,8 +649,11 @@ func (m *MainHandler) SetProject(
 	cmd, err := startProcess("engine", m.projects.Config.Monitor.Log, args)
 
 	if err != nil {
-		sendString(c, err.Error())
-		return
+		return "", err
+	}
+
+	if err != nil {
+		return "", err
 	}
 
 	m.projects.Add(name, cmd, enginePort)
@@ -607,6 +664,23 @@ func (m *MainHandler) SetProject(
 	}
 
 	err = m.loadAllPipelines(name, enginePort, c, logger)
+
+	if err != nil {
+		return "", err
+	}
+
+	return enginePortStr, nil
+}
+
+// -------------------------------------------------------------------------------------------
+
+// SetProject launches a new project
+func (m *MainHandler) SetProject(
+	nameByte []byte,
+	c net.Conn,
+	logger logger) {
+
+	enginePortStr, err := m.setProject(nameByte, c, logger)
 
 	if err != nil {
 		sendString(c, err.Error())
@@ -622,15 +696,14 @@ func (m *MainHandler) SetProject(
 // SuspendProject shuts down a running project.
 func (m *MainHandler) SuspendProject(nameByte []byte, c net.Conn) {
 
-	if len(nameByte) < 3 {
-		sendString(c, "Project name cannot be empty!")
+	name, err := handleName(nameByte)
+
+	if err != nil {
+		sendString(c, err.Error())
 		return
 	}
 
-	// Remove leading and trailing quotation mark.
-	name := string(nameByte[1:(len(nameByte) - 1)])
-
-	err := m.projects.Stop(name)
+	err = m.projects.Stop(name)
 
 	if err != nil {
 		sendString(c, err.Error())

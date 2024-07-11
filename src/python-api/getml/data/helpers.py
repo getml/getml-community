@@ -608,7 +608,6 @@ def _sniff_csv(
     with comm.send_and_get_socket(cmd) as sock:
         msg = comm.recv_string(sock)
         if msg != "Success!":
-            sock.close()
             raise OSError(msg)
         roles = comm.recv_string(sock)
 
@@ -647,7 +646,6 @@ def _sniff_db(
     with comm.send_and_get_socket(cmd) as sock:
         msg = comm.recv_string(sock)
         if msg != "Success!":
-            sock.close()
             raise Exception(msg)
         roles = comm.recv_string(sock)
 
@@ -752,7 +750,6 @@ def _sniff_s3(
     with comm.send_and_get_socket(cmd) as sock:
         msg = comm.recv_string(sock)
         if msg != "Success!":
-            sock.close()
             raise OSError(msg)
         roles = comm.recv_string(sock)
 

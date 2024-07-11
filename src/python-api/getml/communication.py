@@ -15,10 +15,14 @@ import numbers
 import pathlib
 import socket
 import sys
+from inspect import cleandoc
+from os import PathLike
+from time import sleep
 from typing import Any, Dict, List, NamedTuple, Optional, Union
 
 import numpy as np
 from rich import print
+
 from getml.progress_bar import _Progress
 
 from .version import __version__
@@ -27,25 +31,34 @@ from .version import __version__
 
 port = 1708
 """
-The port of the getML engine. The port is automatically set
-according to the process spawned when setting a project.
-The monitor automatically looks up a free port (starting from 1708).
+The default starting port for getML engines. The port is automatically set
+according to the worker engine process spawned when setting a project.
+The monitor (app) automatically looks up a free port (starting from 1708).
 Setting the port here has no effect.
 """
 
 tcp_port = 1711
 """
-The TCP port of the getML monitor.
+The TCP port of the getML monitor (app) that schedules engine workers
 """
 
 # --------------------------------------------------------------------
 
-ENGINE_CANNOT_CONNECT_ERROR_MSG = (
-    """Cannot reach the getML engine. Please make sure you have set a project."""
+ENGINE_CANNOT_CONNECT_ERROR_MSG_TEMPLATE = cleandoc(
+    """
+    Cannot reach the getML engine. Please make sure you have set a project.
+
+    To set: `getml.engine.set_project(...)`
+
+    Available projects:
+    {projects}
+    """
 )
 
-MONITOR_CANNOT_CONNECT_ERROR_MSG = (
-    """Cannot reach the getML monitor. Please make sure the getML app is running."""
+MONITOR_CANNOT_CONNECT_ERROR_MSG = cleandoc(
+    """
+    Cannot reach the getML monitor. Please make sure the getML app is running.
+    """
 )
 
 GETML_SEP = "$GETML_SEP"
@@ -68,11 +81,39 @@ def is_monitor_alive() -> bool:
         sock.connect(("localhost", tcp_port))
     except ConnectionRefusedError:
         return False
-
-    sock.close()
+    finally:
+        sock.close()
 
     return True
 
+
+# --------------------------------------------------------------------
+
+
+def is_engine_alive() -> bool:
+    """Checks if the getML engine is running.
+
+    Returns:
+            True if the getML engine is running and ready to accept
+                commands and False otherwise.
+
+    """
+
+    if not _list_projects_impl(running_only=True):
+        return False
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        sock.connect(("localhost", port))
+    except ConnectionRefusedError:
+        return False
+    finally:
+        sock.close()
+
+    return True
+
+
+# -----------------------------------------------------------------------------
 
 # --------------------------------------------------------------------
 
@@ -123,12 +164,13 @@ class _GetmlEncoder(json.JSONEncoder):
 # --------------------------------------------------------------------
 
 
-def _make_error_msg():
+def _make_error_msg() -> str:
     if not is_monitor_alive():
         return MONITOR_CANNOT_CONNECT_ERROR_MSG
     else:
-        msg = ENGINE_CANNOT_CONNECT_ERROR_MSG
-        msg += "\n\nTo set: `getml.engine.set_project`"
+        msg = ENGINE_CANNOT_CONNECT_ERROR_MSG_TEMPLATE.format(
+            projects="\n".join(_list_projects_impl(running_only=False))
+        )
         return msg
 
 
@@ -177,13 +219,18 @@ def recv_data(sock: socket.socket, size: Union[numbers.Real, int]) -> bytes:
     if not isinstance(size, (numbers.Real, int)):
         raise TypeError("'size' must be a real number.")
 
+    _, peer_port = sock.getpeername()
+
+    if peer_port != tcp_port and not is_engine_alive():
+        raise ConnectionRefusedError(_make_error_msg())
+
     data = []
 
-    bytes_received = np.uint64(0)
+    bytes_received = 0
 
-    max_chunk_size = np.uint64(2048)
+    max_chunk_size = 2048
 
-    while bytes_received < np.uint64(int(size)):
+    while bytes_received < size:
         current_chunk_size = int(min(size - bytes_received, max_chunk_size))
 
         chunk = sock.recv(current_chunk_size)
@@ -197,7 +244,7 @@ def recv_data(sock: socket.socket, size: Union[numbers.Real, int]) -> bytes:
 
         data.append(chunk)
 
-        bytes_received += np.uint64(len(chunk))
+        bytes_received += len(chunk)
 
     return b"".join(data)
 
@@ -253,15 +300,9 @@ def recv_float_matrix(sock: socket.socket) -> np.ndarray:
 # --------------------------------------------------------------------
 
 
-def recv_bytestring(sock: socket.socket) -> bytes:
+def recv_bytes(sock: socket.socket) -> bytes:
     """
-    Receives a bytestring from the getml engine.
-
-    Args:
-        sock: The socket to receive the bytestring from.
-
-    Returns:
-        The received bytestring.
+    Receives bytes over a socket.
     """
 
     if not isinstance(sock, socket.socket):
@@ -455,7 +496,7 @@ def send(cmd: Dict[str, Any]) -> None:
 # --------------------------------------------------------------------
 
 
-def send_and_get_socket(cmd: Dict[str, Any]) -> socket.socket:
+def send_and_get_socket(cmd: Dict[str, Any], port: int = port) -> socket.socket:
     """Sends a command to the getml engine and returns the established
     connection.
 
@@ -507,9 +548,35 @@ def send_and_get_socket(cmd: Dict[str, Any]) -> socket.socket:
 # --------------------------------------------------------------------
 
 
-def send_string(sock: socket.socket, string: str) -> None:
+def send_bytes(sock: socket.socket, data: bytes):
     """
-    Sends a string to the getml engine
+    Sends bytes over a socket.
+    """
+
+    if not isinstance(sock, socket.socket):
+        raise TypeError("'sock' must be a socket.")
+
+    if not isinstance(data, bytes):
+        raise TypeError("'data' must be bytes.")
+
+    size = len(data)
+
+    # By default, numeric data sent over the socket is big endian,
+    # also referred to as network-byte-order!
+    if sys.byteorder == "little":
+        sock.sendall(np.asarray([size]).astype(np.int32).byteswap().tobytes())
+    else:
+        sock.sendall(np.asarray([size]).astype(np.int32).tobytes())
+
+    sock.sendall(data)
+
+
+# --------------------------------------------------------------------
+
+
+def send_string(sock: socket.socket, string: str):
+    """
+    Sends a string over a socket
     (an actual string, not a bytestring).
 
     Args:
@@ -526,16 +593,7 @@ def send_string(sock: socket.socket, string: str) -> None:
 
     encoded = string.encode("utf-8")
 
-    size = len(encoded)
-
-    # By default, numeric data sent over the socket is big endian,
-    # also referred to as network-byte-order!
-    if sys.byteorder == "little":
-        sock.sendall(np.asarray([size]).astype(np.int32).byteswap().tobytes())
-    else:
-        sock.sendall(np.asarray([size]).astype(np.int32).tobytes())
-
-    sock.sendall(encoded)
+    send_bytes(sock, encoded)
 
 
 # --------------------------------------------------------------------
@@ -573,30 +631,35 @@ def _delete_project(name: str):
     if not isinstance(name, str):
         raise TypeError("'name' must be of type str")
 
-    if name in _list_projects_impl(running_only=True):
+    _delete_project_with_retry(name, retries=10, delay=0.2)
+
+
+# --------------------------------------------------------------------
+
+
+def _delete_project_with_retry(name: str, retries: int, delay: float):
+    """
+    Attempt to delete the project, retrying `retries` times if necessary.
+    """
+    if name in _list_projects_impl(running_only=False):
         _suspend_project(name)
 
-    cmd: Dict[str, Any] = {}
-    cmd["type_"] = "deleteproject"
-    cmd["body_"] = name
+    for _ in range(retries):
+        if name not in _list_projects_impl(running_only=False):
+            return
 
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        cmd: Dict[str, Any] = {}
+        cmd["type_"] = "deleteproject"
+        cmd["body_"] = name
 
-    try:
-        sock.connect(("localhost", tcp_port))
-    except ConnectionRefusedError:
-        raise ConnectionRefusedError(_make_error_msg())
+        with send_and_get_socket(cmd, tcp_port) as sock:
+            msg = recv_string(sock)
+            if msg != "Success!":
+                engine_exception_handler(msg)
 
-    msg = json.dumps(cmd, cls=_GetmlEncoder)
+        sleep(delay)
 
-    send_string(sock, msg)
-
-    msg = recv_string(sock)
-
-    if msg != "Success!":
-        engine_exception_handler(msg)
-
-    sock.close()
+    raise OSError(f"Failed to delete project '{name}' after {retries} attempts.")
 
 
 # --------------------------------------------------------------------
@@ -616,20 +679,21 @@ def _get_project_name() -> str:
 # --------------------------------------------------------------------
 
 
-def _load_project(bundle: str, name=None):
+def _load_project(bundle: Union[PathLike, str], name: Optional[str] = None):
     name = name or ""
 
-    if not isinstance(bundle, str):
+    if not isinstance(bundle, (str, PathLike)):
         raise TypeError("'bundle' must be of type str")
 
     if not isinstance(name, str):
         raise TypeError("'name' must be of type str")
 
-    bundle = pathlib.Path(bundle).resolve().as_posix()
+    with open(bundle, "rb") as f:
+        data = f.read()
 
     cmd: Dict[str, Any] = {}
-    cmd["type_"] = "loadproject"
-    cmd["body_"] = dict(bundle_=bundle, name_=name)
+    cmd["type_"] = "loadprojectbundle"
+    cmd["body_"] = dict(name_=name)
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -642,6 +706,8 @@ def _load_project(bundle: str, name=None):
 
     send_string(sock, msg)
 
+    send_bytes(sock, data)
+
     msg = log(sock)
 
     if msg != "Success!":
@@ -653,13 +719,13 @@ def _load_project(bundle: str, name=None):
     proj_name = _get_project_name()
 
     print()
-    print(f"Loaded {bundle}\n as {proj_name}. Connected to {proj_name}.")
+    print(f"Loaded {bundle} as {proj_name}. Connected to {proj_name}.")
 
 
 # --------------------------------------------------------------------
 
 
-def _list_projects_impl(running_only: bool):
+def _list_projects_impl(running_only: bool) -> List[str]:
     cmd = dict()
     cmd["type_"] = "listallprojects"
     cmd["body_"] = ""
@@ -738,33 +804,31 @@ def _check_version():
 
 def _save_project(
     name: str,
-    file_name: Optional[str] = None,
-    target_path: Optional[str] = None,
-    replace: bool = True,
+    file_name: Optional[Union[PathLike, str]] = None,
+    replace: bool = False,
 ):
     if not isinstance(name, str):
         raise TypeError("'name' must be of type str")
 
-    if not isinstance(file_name, str) and file_name is not None:
-        raise TypeError("'file_name' must be of type str or none")
+    if not isinstance(file_name, (str, PathLike)) and file_name is not None:
+        raise TypeError("'file_name' must be a str or PathLike")
 
-    if not isinstance(target_path, str) and target_path is not None:
-        raise TypeError("'target_path' must be of type str or none")
+    if file_name is None:
+        file_name = name
 
-    file_name = file_name or name
+    target_path = pathlib.Path(file_name).resolve()
+    if target_path.suffix == "":
+        target_path = target_path.with_suffix(".getml")
 
-    target_path_ = (
-        (pathlib.Path(target_path) if target_path else pathlib.Path.cwd())
-        .resolve()
-        .as_posix()
-    )
+    if target_path.exists() and not replace:
+        raise FileExistsError(
+            f"The file '{target_path}' already exists. "
+            "Use 'replace=True' to overwrite it."
+        )
 
     cmd: Dict[str, Any] = {}
-    cmd["type_"] = "saveproject"
-    cmd["body_"] = dict(
-        name_=name, file_name_=file_name, target_path_=target_path_, replace_=replace
-    )
-
+    cmd["type_"] = "bundleproject"
+    cmd["body_"] = {"name_": name}
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     try:
@@ -776,15 +840,18 @@ def _save_project(
 
     send_string(sock, msg)
 
-    msg = log(sock)
+    msg = recv_string(sock)
 
     if msg != "Success!":
         engine_exception_handler(msg)
 
-    bundle = recv_string(sock)
+    bundle = recv_bytes(sock)
+
+    with open(target_path, "wb") as f:
+        f.write(bundle)
 
     print()
-    print(f"Saved project {name} to '{target_path}/{bundle}'")
+    print(f"Saved project {name} to '{target_path}'")
 
 
 # --------------------------------------------------------------------

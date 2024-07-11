@@ -35,7 +35,6 @@ def _length_property(self) -> Union[np.int32, str]:
     with comm.send_and_get_socket(cmd) as sock:
         msg = comm.recv_string(sock)
         if msg != "Found!":
-            sock.close()
             comm.engine_exception_handler(msg)
         nrows = comm.recv_string(sock)
 

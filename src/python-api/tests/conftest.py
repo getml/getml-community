@@ -8,16 +8,6 @@ import pytest
 import getml
 
 
-def pytest_collection_modifyitems(items):
-    for item in items:
-        try:
-            fixtures = item.fixturenames
-            if "engine" in fixtures:
-                item.add_marker(pytest.mark.engine)
-        except:
-            pass
-
-
 @contextmanager
 def workdir(dir: str):
     cwd = Path.cwd()
@@ -96,7 +86,6 @@ def df(engine):
         10 rows x 4 columns
     """
     df, _ = getml.datasets.make_numerical(n_rows_population=10, n_rows_peripheral=0)
-    df.save()
     yield df
 
 
