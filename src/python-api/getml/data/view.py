@@ -15,25 +15,26 @@ import numbers
 import os
 from collections import namedtuple
 from copy import deepcopy
-from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Tuple, Union, cast
 
 import numpy as np
 import pandas as pd
 import pyarrow
 
 import getml.communication as comm
+from getml import data
 from getml.data.columns import StringColumn, StringColumnView
 from getml.database import Connection
 from getml.log import logger
 from getml.utilities.formatting import _ViewFormatter
 
-from .columns import BooleanColumnView, FloatColumn, FloatColumnView, arange, rowid
+from .columns import BooleanColumnView, FloatColumn, FloatColumnView, rowid
 from .helpers import (
     _is_typed_list,
-    _make_default_slice,
     _to_arrow,
     _to_parquet,
     _to_pyspark,
+    _where,
     _with_column,
     _with_role,
     _with_subroles,
@@ -53,8 +54,9 @@ from .roles import (
 from .roles_obj import Roles
 
 if TYPE_CHECKING:
-    from getml.data import DataFrame
     import pyspark.sql
+
+    from getml.data import DataFrame
 
 # --------------------------------------------------------------------
 
@@ -237,8 +239,8 @@ class View:
 
     # ----------------------------------------------------------------
 
-    def __len__(self):
-        return self.nrows(force=True)
+    def __len__(self) -> int:
+        return cast(int, self.nrows(force=True))
 
     # ------------------------------------------------------------
 
@@ -495,10 +497,16 @@ class View:
         if json_str[0] != "{":
             comm.engine_exception_handler(json_str)
 
-        result = json.loads(json_str)
+        response = json.loads(json_str)
 
-        if "recordsTotal" in result:
-            return int(result["recordsTotal"])
+        if "recordsTotal" in response:
+            return response["recordsTotal"]
+
+        # ensure that we do not display "unknown" if the number of rows is
+        # less than or equal to the maximum number of diplayed rows
+        nrows_to_display = len(self[: _ViewFormatter.max_rows + 1])
+        if nrows_to_display <= _ViewFormatter.max_rows:
+            return nrows_to_display
 
         return "unknown"
 
@@ -717,6 +725,15 @@ class View:
         cmd["conn_id_"] = conn.conn_id
 
         comm.send(cmd)
+
+    # ------------------------------------------------------------
+
+    def to_df(self, name) -> DataFrame:
+        """Creates a [`DataFrame`][getml.DataFrame] from the view."""
+        self.check()
+        self = self.refresh()
+        df = data.DataFrame(name)
+        return df.read_view(self)
 
     # ------------------------------------------------------------
 
@@ -961,20 +978,7 @@ class View:
             | 2        | cherry      | 1.4       |
             ```
         """
-        if isinstance(index, numbers.Integral):
-            index = index if int(index) > 0 else len(self) + index
-            selector = arange(index, index + 1)
-            return View(base=self, subselection=selector)
-
-        if isinstance(index, slice):
-            start, stop, step = _make_default_slice(index, len(self))
-            selector = arange(start, stop, step)
-            return View(base=self, subselection=selector)
-
-        if isinstance(index, (BooleanColumnView, FloatColumn, FloatColumnView)):
-            return View(base=self, subselection=index)
-
-        raise TypeError("Unsupported type for a subselection: " + type(index).__name__)
+        return _where(self, index)
 
     # ------------------------------------------------------------
 

@@ -11,12 +11,14 @@ Collection of helper functions that are not intended to be used by
 the end-user.
 """
 
+from __future__ import annotations
+
 import json
 import numbers
 import os
 import random
 import string
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -24,8 +26,9 @@ import pyarrow as pa
 from pyarrow import parquet
 
 import getml.communication as comm
-from getml import constants
+from getml import constants, data
 from getml.constants import COMPARISON_ONLY, TIME_STAMP
+from getml.data.columns.columns import arange
 from getml.database import Connection, _retrieve_urls
 from getml.database.helpers import _retrieve_temp_dir
 
@@ -46,6 +49,9 @@ from .roles import (
     unused_string,
 )
 from .subroles import _all_subroles
+
+if TYPE_CHECKING:
+    from getml.data import DataFrame, View
 
 # --------------------------------------------------------------------
 
@@ -346,12 +352,35 @@ def _make_id() -> str:
 # --------------------------------------------------------------------
 
 
-def _make_default_slice(slc, end) -> Tuple[int, int, int]:
+def _infer_arange_args_from_slice(
+    slc: slice, df_or_view: Union[DataFrame, View]
+) -> Tuple[int, int, int]:
     start = slc.start or 0
-    start = start if start >= 0 else end + start
-    stop = slc.stop or end
-    stop = stop if stop >= 0 else end + stop
+    end = 0
+
+    # as len forces an evaluation of the view, we want to call
+    # it only if necessary and only once
+    if slc.stop is None or slc.stop < 0 or start < 0:
+        end = len(df_or_view)
+
+    if start < 0:
+        start = max(end + start, 0)
+
+    if slc.stop is None:
+        stop = end
+    elif slc.stop < 0:
+        stop = max(end + slc.stop, 0)
+    else:
+        stop = slc.stop
+
     step = slc.step or 1
+
+    if stop < start:
+        return 0, 0, step
+
+    if step < 0:
+        start, stop = stop, start
+
     return start, stop, step
 
 
@@ -883,6 +912,44 @@ def _transform_col(col, role, is_boolean, is_float, is_string, time_formats):
         return col.as_num()  # pytype: disable=attribute-error
 
     return col
+
+
+# --------------------------------------------------------------------
+
+
+def _where(
+    df_or_view: Union[DataFrame, View],
+    indeces_or_mask: Union[
+        numbers.Real, slice, BooleanColumnView, FloatColumnView, FloatColumn
+    ],
+):
+    if isinstance(indeces_or_mask, numbers.Real):
+        index = int(indeces_or_mask)
+        index = index if index >= 0 else len(df_or_view) + index
+        selection = arange(index, index + 1)
+        candidate_view = data.View(base=df_or_view, subselection=selection)
+
+        # in python, a slice's stop can exceed the length of the container,
+        # so we can carry out the bounds check on a minimum subselection
+        # (1 row) to avoid evaluation of the full view
+        if len(candidate_view[:1]) == 0:
+            raise IndexError("Index out of bounds.")
+
+        return candidate_view
+
+    if isinstance(slice_ := indeces_or_mask, slice):
+        start, stop, step = _infer_arange_args_from_slice(slice_, df_or_view)
+        selection = arange(start, stop, step)
+        return data.View(base=df_or_view, subselection=selection)
+
+    if isinstance(
+        mask := indeces_or_mask, (BooleanColumnView, FloatColumn, FloatColumnView)
+    ):
+        return data.View(base=df_or_view, subselection=mask)
+
+    raise TypeError(
+        "Unsupported type for a subselection: " + type(indeces_or_mask).__name__
+    )
 
 
 # --------------------------------------------------------------------
