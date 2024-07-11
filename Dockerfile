@@ -45,7 +45,7 @@ RUN hatch build -t wheel
 
 FROM scratch AS python
 ARG PACKAGE_NAME
-COPY --from=python-build python-api/src/dist $PACKAGE_NAME/python-api
+COPY --from=python-build python-api/src/dist python-api
 
 FROM alpine AS archive-build
 ARG PACKAGE_NAME

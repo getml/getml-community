@@ -6,9 +6,12 @@
 #
 
 
+import platform
 import socket
 from datetime import datetime
+from enum import Enum
 from functools import partial, reduce
+from inspect import cleandoc
 from os import listdir, makedirs
 from os.path import isdir
 from pathlib import Path
@@ -20,7 +23,28 @@ from typing import Dict, List, NamedTuple, Optional, Union
 from rich import print
 
 from getml.communication import tcp_port
+from getml.constants import COMPOSE_FILE_URL, DOCKER_DOCS_URL
 from getml.version import __version__
+
+PLATFORM_NOT_SUPPORTED_NATIVELY_ERROR_MSG_TEMPLATE = cleandoc(
+    """
+    The platform '{platform}' is not supported natively by getML.
+
+    You can use the dockerized version of getML to run it on your platform.
+
+    Refer to the documentation for more information:
+    {docker_docs_url}
+
+    The simplest way to get started is to use the curated compose runtime:
+    curl -L {compose_file_url} | docker compose -f - up
+    """
+)
+
+
+class System(str, Enum):
+    LINUX = "Linux"
+    MACOS = "Darwin"
+    WINDOWS = "Windows"
 
 
 class _Options(NamedTuple):
@@ -231,6 +255,14 @@ def launch(
     if _is_monitor_alive():
         print("getML engine is already running.")
         return
+    if platform.system() != System.LINUX:
+        raise OSError(
+            PLATFORM_NOT_SUPPORTED_NATIVELY_ERROR_MSG_TEMPLATE.format(
+                platform=platform.system(),
+                docker_docs_url=DOCKER_DOCS_URL,
+                compose_file_url=COMPOSE_FILE_URL,
+            )
+        )
     home_path = _make_home_path(home_directory)
     binary_path = _find_binary(home_path)
     log_path = _make_log_path(home_path)
