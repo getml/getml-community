@@ -5,13 +5,29 @@
 # for details.
 #
 
-
 import pathlib
+
+import numpy as np
+import pytest
 
 import getml.data as data
 import getml.data.roles as roles
 import getml.engine as engine
-import numpy as np
+
+
+@pytest.mark.parametrize("df_or_view", ["df", "view"], indirect=True)
+def test_column_eq_missmatch():
+    with pytest.raises(TypeError):
+        df_or_view.column_01 == "string"
+        df_or_view.time_stamp == "string"
+        df_or_view.join_key == 1  # join_keys are encoded strings
+        df_or_view.time_stamp == "2019-01-01"
+        df_or_view.time_stamp.as_str() == 1
+
+    df_or_view.column_01 > 2.4
+    df_or_view.time_stamp == 123456789
+    df_or_view.join_key == "0"
+    df_or_view.targets >= 0
 
 
 def test_column_operators():
