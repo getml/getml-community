@@ -13,15 +13,14 @@ from __future__ import annotations
 from types import TracebackType
 from typing import Dict, Literal, Optional, Type
 
+from rich.progress import Progress as RichProgress, TaskID
 from rich.progress import (
-    BarColumn,
-    DownloadColumn,
-    TaskID,
     TextColumn,
+    BarColumn,
     TimeElapsedColumn,
     TimeRemainingColumn,
+    DownloadColumn,
 )
-from rich.progress import Progress as RichProgress
 
 
 class _Progress:
@@ -65,8 +64,6 @@ class _Progress:
                 TimeRemainingColumn(),
             )
         self._progress = RichProgress(*progress_columns, speed_estimate_period=300)
-        self._progress.live.console.is_jupyter = False
-        self._progress.live.console.is_interactive = True
 
     def update_if_possible(
         self, *, sub_description: str = "", completed: int = 0, refresh: bool = True
