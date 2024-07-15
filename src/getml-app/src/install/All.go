@@ -10,7 +10,7 @@ package install
 // All installs everything.
 func All(homeDir string, version string) {
 
-	err := copyResources(UsrLocal, version)
+	installDir, err := copyResources(UsrLocal, version)
 
 	if err != nil {
 		println("Could not install into '" + UsrLocal + "': " + err.Error())
@@ -18,13 +18,17 @@ func All(homeDir string, version string) {
 			"missing root rights. Trying local installation instead.")
 	} else {
 		copyFile("getML", "", UsrLocalBin, true)
+		println("Installation successful. The getML engine was installed into '" + installDir + "' and the cli was installed into '" + UsrLocalBin + "'.")
 		return
 	}
 
-	err = copyResources(homeDir, version)
+	installDir, err = copyResources(homeDir, version)
 
 	if err != nil {
 		println("Could not install into '" + homeDir + "': " + err.Error())
+	} else {
+		println("Installation successful. To be able to call 'getML' from anywhere, add the following to PATH:")
+		println(installDir)
 	}
 
 }
