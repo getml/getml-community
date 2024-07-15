@@ -10,12 +10,11 @@ package install
 import (
 	"errors"
 	"os"
-	"runtime"
 )
 
 // copyResources copies the resources into the
 // targetDir, if necessary.
-func copyResources(targetDir string, version string) error {
+func copyResources(targetDir string, version string) (string, error) {
 
 	allFiles := []string{
 		"config.json",
@@ -26,7 +25,7 @@ func copyResources(targetDir string, version string) error {
 	// Make sure that we don't copy any
 	// random folder called "templates"
 	if !filesExists(allFiles) {
-		return errors.New(
+		return "", errors.New(
 			"Could not find all necessary files, quitting installation.")
 	}
 
@@ -37,68 +36,56 @@ func copyResources(targetDir string, version string) error {
 	err := os.MkdirAll(mainDir, os.ModePerm)
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	err = copyFile("config.json", "", mainDir, true)
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	err = copyFile("config.json", "defaultConfig.json", mainDir, false)
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	err = copyFile("environment.json", "", mainDir, false)
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	err = copyFile("bin", "", mainDir, true)
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	err = copyFile("tests", "", mainDir, true)
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	err = copyFile("getML", "", mainDir, true)
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	if runtime.GOOS == "linux" {
-		err = copyFile("lib", "", mainDir, true)
-		if err != nil {
-			return err
-		}
-		err = copyFile("shape-main.png", "", mainDir, false)
-		if err != nil {
-			return err
-		}
+	err = copyFile("lib", "", mainDir, true)
+	if err != nil {
+		return "", err
 	}
-
-	if runtime.GOOS == "darwin" {
-		err = copyFile("Frameworks", "", mainDir, true)
-		if err != nil {
-			return err
-		}
-		err = copyFile("getml-cli", "", mainDir, true)
-		if err != nil {
-			return err
-		}
+	
+	err = copyFile("shape-main.png", "", mainDir, false)
+	if err != nil {
+		return "", err
 	}
 
 	println("Successfully installed getML into '" + mainDir + "'.")
 
-	return nil
+	return mainDir, nil
 }
