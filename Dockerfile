@@ -20,7 +20,7 @@ FROM scratch AS export
 ARG PACKAGE_NAME
 COPY --from=cli / .
 COPY --from=engine-build . .
-COPY LICENSE.txt $PACKAGE_NAME
+COPY LICENSE.txt INSTALL.md $PACKAGE_NAME
 COPY src/package-build-imports $PACKAGE_NAME
 
 FROM python:3.11-slim AS python-base-arm64
