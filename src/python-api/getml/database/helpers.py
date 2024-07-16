@@ -62,26 +62,26 @@ def _load_to_file(url: str, file_path: Path, verbose: bool = True) -> None:
                 length = int(length)
                 block_size = max(4096, length // 100)
 
-        finished = 0
+            finished = 0
 
-        with file_path.open("wb") as file:
-            progress.new("", total=length)
+            with file_path.open("wb") as file:
+                progress.new("", total=length)
 
-            while True:
-                block = response.read(block_size)
-                if not block:
-                    progress.update_if_possible(completed=length)
-                    break
-                finished += len(block)
-                file.write(block)
-                progress.update_if_possible(completed=finished)
+                while True:
+                    block = response.read(block_size)
+                    if not block:
+                        progress.update_if_possible(completed=length)
+                        break
+                    finished += len(block)
+                    file.write(block)
+                    progress.update_if_possible(completed=finished)
 
 
 # --------------------------------------------------------------------
 
 
 def _retrieve_temp_dir():
-    return TemporaryDirectory(delete=False).name
+    return Path(TemporaryDirectory(delete=False).name).parent / "getml"
 
 
 # --------------------------------------------------------------------
