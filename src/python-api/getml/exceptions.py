@@ -13,6 +13,7 @@ from typing import Any, Callable, Dict, Optional
 import pyarrow as pa
 from pyarrow.lib import ArrowInvalid
 
+
 class ArrowCastExceptionHandlerRegistry:
     """
     A registry for handlers of exceptions originating from the Arrow library.
