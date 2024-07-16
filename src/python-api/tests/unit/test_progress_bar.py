@@ -13,11 +13,11 @@ def test_exception_in_progress_bar(capsys):
 
 
 @pytest.mark.parametrize(
-    "set_finished_on_close, expected",
+    "set_finished_on_exit, expected",
     [(True, "100%"), (False, "0%")],
 )
-def test_finished_on_clode(set_finished_on_close: bool, expected: str, capsys):
-    with _Progress(set_finished_on_close=set_finished_on_close) as progress:
+def test_finished_on_clode(set_finished_on_exit: bool, expected: str, capsys):
+    with _Progress(set_finished_on_exit=set_finished_on_exit) as progress:
         progress.new("Test", 100)
 
     captured = capsys.readouterr()
