@@ -45,12 +45,21 @@ class Connector {
                                    const std::int32_t _start,
                                    const std::int32_t _length) = 0;
 
+  /// Returns the names of the columns produced by a query.
+  virtual std::vector<std::string> get_colnames_from_query(
+      const std::string& _query) const = 0;
+
   /// Returns the names of the table columns.
-  virtual std::vector<std::string> get_colnames(
+  virtual std::vector<std::string> get_colnames_from_table(
       const std::string& _table) const = 0;
 
+  /// Returns the types of the columns produced by a query.
+  virtual std::vector<io::Datatype> get_coltypes_from_query(
+      const std::string& _table,
+      const std::vector<std::string>& _colnames) const = 0;
+
   /// Returns the types of the table columns.
-  virtual std::vector<io::Datatype> get_coltypes(
+  virtual std::vector<io::Datatype> get_coltypes_from_table(
       const std::string& _table,
       const std::vector<std::string>& _colnames) const = 0;
 

@@ -39,10 +39,11 @@ class Postgres : public Connector {
   std::string describe() const final;
 
   /// Returns the names of the table columns.
-  std::vector<std::string> get_colnames(const std::string& _table) const final;
+  std::vector<std::string> get_colnames_from_query(
+      const std::string& _table) const final;
 
   /// Returns the types of the table columns.
-  std::vector<io::Datatype> get_coltypes(
+  std::vector<io::Datatype> get_coltypes_from_query(
       const std::string& _table,
       const std::vector<std::string>& _colnames) const final;
 
@@ -76,6 +77,22 @@ class Postgres : public Connector {
     if (PQtransactionStatus(conn.get()) == PQTRANS_INTRANS) {
       exec("COMMIT", conn.get());
     }
+  }
+
+  /// Returns the names of columns of the table.
+  std::vector<std::string> get_colnames_from_table(
+      const std::string& _table) const final {
+    const auto table = io::StatementMaker::handle_schema(_table, "\"", "\"");
+    return get_colnames_from_query("SELECT * FROM \"" + table + "\" LIMIT 0;");
+  }
+
+  /// Returns the types of columns of the table.
+  std::vector<io::Datatype> get_coltypes_from_table(
+      const std::string& _table,
+      const std::vector<std::string>& _colnames) const final {
+    const auto table = io::StatementMaker::handle_schema(_table, "\"", "\"");
+    return get_coltypes_from_query("SELECT * FROM \"" + table + "\" LIMIT 0;",
+                                   _colnames);
   }
 
   /// Returns the number of rows in the table signified by _tname.
