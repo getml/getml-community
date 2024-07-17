@@ -4,7 +4,6 @@ add_library(
   ContentGetter.cpp
   CSVBuffer.cpp
   DatabaseParser.cpp
-  DatabaseSniffer.cpp
   MySQL.cpp
   MySQLIterator.cpp
   Postgres.cpp
@@ -12,6 +11,7 @@ add_library(
   QuerySplitter.cpp
   Sqlite3.cpp
   Sqlite3Iterator.cpp
+  sniff.cpp
 )
 
 target_link_libraries(

@@ -8,6 +8,7 @@
 #ifndef DATABASE_SQLITE3_HPP_
 #define DATABASE_SQLITE3_HPP_
 
+#include <stdexcept>
 extern "C" {
 #include <sqlite3.h>
 }
@@ -56,11 +57,12 @@ class Sqlite3 : public Connector {
   void read(const std::string& _table, const size_t _skip,
             io::Reader* _reader) final;
 
-  /// Returns the names of the table columns.
-  std::vector<std::string> get_colnames(const std::string& _table) const final;
+  /// Returns the colnames produced by the query.
+  std::vector<std::string> get_colnames_from_query(
+      const std::string& _table) const final;
 
   /// Returns the types of the table columns.
-  std::vector<io::Datatype> get_coltypes(
+  std::vector<io::Datatype> get_coltypes_from_table(
       const std::string& _table,
       const std::vector<std::string>& _colnames) const final;
 
@@ -76,6 +78,20 @@ class Sqlite3 : public Connector {
   /// Drops a table and cleans up, if necessary.
   void drop_table(const std::string& _tname) final {
     execute("DROP TABLE \"" + _tname + "\"; VACUUM;");
+  }
+
+  /// Returns the names of columns of the table.
+  std::vector<std::string> get_colnames_from_table(
+      const std::string& _table) const final {
+    return get_colnames_from_query("SELECT * FROM \"" + _table + "\" LIMIT 0;");
+  }
+
+  /// Returns the types of columns of the table.
+  std::vector<io::Datatype> get_coltypes_from_query(
+      const std::string& _query,
+      const std::vector<std::string>& _colnames) const final {
+    throw std::runtime_error(
+        "Retrieving the column types of a table is unsupported in sqlite3.");
   }
 
   /// Returns the number of rows in the table signified by _tname.

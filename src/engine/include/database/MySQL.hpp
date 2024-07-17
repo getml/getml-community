@@ -52,12 +52,13 @@ class MySQL : public Connector {
   /// Returns a std::string describing the connection.
   std::string describe() const final;
 
-  /// Returns the names of the table columns.
-  std::vector<std::string> get_colnames(const std::string& _table) const final;
+  /// Returns the names of columns produced by the query.
+  std::vector<std::string> get_colnames_from_query(
+      const std::string& _query) const final;
 
-  /// Returns the types of the table columns.
-  std::vector<io::Datatype> get_coltypes(
-      const std::string& _table,
+  /// Returns the types of columns produced by the query.
+  std::vector<io::Datatype> get_coltypes_from_query(
+      const std::string& _query,
       const std::vector<std::string>& _colnames) const final;
 
   /// Returns the content of a table in a format that is compatible
@@ -86,6 +87,20 @@ class MySQL : public Connector {
   void execute(const std::string& _sql) final {
     const auto conn = make_connection();
     exec(_sql, conn);
+  }
+
+  /// Returns the names of columns of the table.
+  std::vector<std::string> get_colnames_from_table(
+      const std::string& _table) const final {
+    return get_colnames_from_query("SELECT * FROM `" + _table + "` LIMIT 0;");
+  }
+
+  /// Returns the types of columns of the table.
+  std::vector<io::Datatype> get_coltypes_from_table(
+      const std::string& _table,
+      const std::vector<std::string>& _colnames) const final {
+    return get_coltypes_from_query("SELECT * FROM `" + _table + "` LIMIT 0;",
+                                   _colnames);
   }
 
   /// Returns the number of rows in the table signified by _tname.
