@@ -3017,9 +3017,8 @@ class DataFrame:
             raise TypeError("'append' must be bool.")
 
         temp_dir = _retrieve_temp_dir()
-        os.makedirs(temp_dir, exist_ok=True)
-        path = os.path.join(temp_dir, self.name)
-        spark_df.write.mode("overwrite").parquet(path)
+        path = temp_dir / str(self.name)
+        spark_df.write.mode("overwrite").parquet(str(path))
 
         filepaths = [
             os.path.join(path, filepath)

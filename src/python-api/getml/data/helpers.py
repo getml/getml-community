@@ -688,8 +688,7 @@ def _to_pyspark(df_or_view: Any, name: str, spark: Any):
             + "' to pyspark.DataFrame, because it contains no columns."
         )
     temp_dir = _retrieve_temp_dir()
-    os.makedirs(temp_dir, exist_ok=True)
-    path = os.path.join(temp_dir, name + ".parquet")
+    path = temp_dir / (name + ".parquet")
 
     _replace_non_alphanumeric_cols(df_or_view).to_parquet(path)
     spark_df = spark.read.parquet(path)
