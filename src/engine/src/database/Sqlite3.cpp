@@ -61,12 +61,10 @@ void Sqlite3::execute(const std::string& _sql) {
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::string> Sqlite3::get_colnames(
-    const std::string& _table) const {
+std::vector<std::string> Sqlite3::get_colnames_from_query(
+    const std::string& _query) const {
   multithreading::ReadLock read_lock(read_write_lock_,
                                      std::chrono::milliseconds(1000));
-
-  const std::string sql = "SELECT * FROM \"" + _table + "\" LIMIT 0";
 
   // We set this to nullptr, so it will not be deleted if doesn't point to
   // anything.
@@ -74,11 +72,11 @@ std::vector<std::string> Sqlite3::get_colnames(
   sqlite3_stmt* stmt = nullptr;
 
   int rc = sqlite3_prepare_v2(
-      db(),                          // Database handle.
-      sql.c_str(),                   // SQL statement, UTF-8 encoded.
-      static_cast<int>(sql.size()),  // Maximum length of zSql in bytes.
-      &stmt,                         // OUT: Statement handle.
-      NULL                           // OUT: Pointer to unused portion of zSql
+      db(),                             // Database handle.
+      _query.c_str(),                   // SQL statement, UTF-8 encoded.
+      static_cast<int>(_query.size()),  // Maximum length of zSql in bytes.
+      &stmt,                            // OUT: Statement handle.
+      NULL  // OUT: Pointer to unused portion of zSql
   );
 
   // The unique_ptr takes ownership of stmt and finalizes it when
@@ -105,7 +103,7 @@ std::vector<std::string> Sqlite3::get_colnames(
 
 // ----------------------------------------------------------------------------
 
-std::vector<io::Datatype> Sqlite3::get_coltypes(
+std::vector<io::Datatype> Sqlite3::get_coltypes_from_table(
     const std::string& _table,
     const std::vector<std::string>& _colnames) const {
   multithreading::ReadLock read_lock(read_write_lock_,
@@ -175,7 +173,7 @@ TableContent Sqlite3::get_content(const std::string& _tname,
     throw std::runtime_error("start must be smaller than number of rows!");
   }
 
-  const auto colnames = get_colnames(_tname);
+  const auto colnames = get_colnames_from_table(_tname);
 
   const auto ncols = colnames.size();
 
@@ -359,9 +357,10 @@ Sqlite3::make_insert_statement(
 
 void Sqlite3::read(const std::string& _table, const size_t _skip,
                    io::Reader* _reader) {
-  const std::vector<std::string> colnames = get_colnames(_table);
+  const std::vector<std::string> colnames = get_colnames_from_table(_table);
 
-  const std::vector<io::Datatype> coltypes = get_coltypes(_table, colnames);
+  const std::vector<io::Datatype> coltypes =
+      get_coltypes_from_table(_table, colnames);
 
   if (colnames.size() != coltypes.size()) {
     throw std::runtime_error("Table '" + _table +

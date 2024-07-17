@@ -122,6 +122,11 @@ class DatabaseManager {
   void sniff_csv(const typename Command::SniffCSVOp& _cmd,
                  Poco::Net::StreamSocket* _socket) const;
 
+  /// Sniffs a query and generates suitable keyword arguments
+  /// to build a DataFrame.
+  void sniff_query(const typename Command::SniffQueryOp& _cmd,
+                   Poco::Net::StreamSocket* _socket) const;
+
   /// Sniffs a table and generates suitable keyword arguments
   /// to build a DataFrame.
   void sniff_table(const typename Command::SniffTableOp& _cmd,

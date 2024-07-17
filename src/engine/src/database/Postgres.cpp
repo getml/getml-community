@@ -43,15 +43,11 @@ std::string Postgres::describe() const {
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::string> Postgres::get_colnames(
-    const std::string& _table) const {
-  const auto table = io::StatementMaker::handle_schema(_table, "\"", "\"");
-
-  const std::string sql = "SELECT * FROM \"" + table + "\" LIMIT 0";
-
+std::vector<std::string> Postgres::get_colnames_from_query(
+    const std::string& _query) const {
   const auto connection = make_connection();
 
-  const auto result = exec(sql, connection.get());
+  const auto result = exec(_query, connection.get());
 
   const int num_cols = PQnfields(result.get());
 
@@ -66,16 +62,12 @@ std::vector<std::string> Postgres::get_colnames(
 
 // ----------------------------------------------------------------------------
 
-std::vector<io::Datatype> Postgres::get_coltypes(
-    const std::string& _table,
+std::vector<io::Datatype> Postgres::get_coltypes_from_query(
+    const std::string& _query,
     const std::vector<std::string>& _colnames) const {
-  const auto table = io::StatementMaker::handle_schema(_table, "\"", "\"");
-
-  const std::string sql = "SELECT * FROM \"" + table + "\" LIMIT 0";
-
   const auto connection = make_connection();
 
-  const auto result = exec(sql, connection.get());
+  const auto result = exec(_query, connection.get());
 
   const int num_cols = PQnfields(result.get());
 
@@ -110,7 +102,7 @@ TableContent Postgres::get_content(const std::string& _tname,
     throw std::runtime_error("start must be smaller than number of rows!");
   }
 
-  const auto colnames = get_colnames(_tname);
+  const auto colnames = get_colnames_from_table(_tname);
 
   const auto ncols = colnames.size();
 
@@ -209,9 +201,10 @@ std::string Postgres::make_connection_string(
 
 void Postgres::read(const std::string& _table, const size_t _skip,
                     io::Reader* _reader) {
-  const std::vector<std::string> colnames = get_colnames(_table);
+  const std::vector<std::string> colnames = get_colnames_from_table(_table);
 
-  const std::vector<io::Datatype> coltypes = get_coltypes(_table, colnames);
+  const std::vector<io::Datatype> coltypes =
+      get_coltypes_from_table(_table, colnames);
 
   assert_true(colnames.size() == coltypes.size());
 

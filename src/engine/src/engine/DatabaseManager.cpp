@@ -72,12 +72,12 @@ void DatabaseManager::copy_table(const typename Command::CopyTableOp& _cmd,
   // Infer the table schema from the source connection and create an
   // appropriate table in the target database.
   const auto stmt =
-      database::DatabaseSniffer::sniff(source_conn, target_conn->dialect(),
-                                       source_table_name, target_table_name);
+      database::sniff::table(source_conn, target_conn->dialect(),
+                             source_table_name, target_table_name);
 
   target_conn->execute(stmt);
 
-  const auto colnames = source_conn->get_colnames(source_table_name);
+  const auto colnames = source_conn->get_colnames_from_table(source_table_name);
 
   const auto iterator = source_conn->select(colnames, source_table_name, "");
 
@@ -147,7 +147,7 @@ void DatabaseManager::execute(const typename Command::ExecuteOp& _cmd,
 
 void DatabaseManager::execute_command(const Command& _command,
                                       Poco::Net::StreamSocket* _socket) {
-  const auto handle = [this, _socket](const auto& _cmd) {
+  const auto handle_other_command = [this, _socket](const auto& _cmd) {
     using Type = std::decay_t<decltype(_cmd)>;
 
     if constexpr (std::is_same<Type, typename Command::CopyTableOp>()) {
@@ -173,16 +173,28 @@ void DatabaseManager::execute_command(const Command& _command,
       list_connections(_cmd, _socket);
     } else if constexpr (std::is_same<Type, typename Command::ListTablesOp>()) {
       list_tables(_cmd, _socket);
-    } else if constexpr (std::is_same<Type, typename Command::NewDBOp>()) {
-      new_db(_cmd, _socket);
     } else if constexpr (std::is_same<Type, typename Command::ReadCSVOp>()) {
       read_csv(_cmd, _socket);
     } else if constexpr (std::is_same<Type, typename Command::RefreshOp>()) {
       refresh(_cmd, _socket);
     } else if constexpr (std::is_same<Type, typename Command::SniffCSVOp>()) {
       sniff_csv(_cmd, _socket);
+    } else if constexpr (std::is_same<Type, typename Command::SniffQueryOp>()) {
+      sniff_query(_cmd, _socket);
     } else if constexpr (std::is_same<Type, typename Command::SniffTableOp>()) {
       sniff_table(_cmd, _socket);
+    } else {
+      static_assert(rfl::always_false_v<Type>, "Not all cases were covered.");
+    }
+  };
+
+  const auto handle = [this, _socket, handle_other_command](const auto& _cmd) {
+    using Type = std::decay_t<decltype(_cmd)>;
+    if constexpr (std::is_same<Type, Command::NewDBOp>()) {
+      new_db(_cmd, _socket);
+    } else if constexpr (std::is_same<Type,
+                                      typename Command::TaggedUnionType>()) {
+      rfl::visit(handle_other_command, _cmd);
     } else {
       static_assert(rfl::always_false_v<Type>, "Not all cases were covered.");
     }
@@ -232,8 +244,9 @@ void DatabaseManager::get_colnames(const typename Command::GetColnamesOp& _cmd,
 
   const auto query = (name == "") ? _cmd.query() : std::nullopt;
 
-  const auto colnames = query ? connector(conn_id)->select(*query)->colnames()
-                              : connector(conn_id)->get_colnames(name);
+  const auto colnames =
+      query ? connector(conn_id)->get_colnames_from_query(*query)
+            : connector(conn_id)->get_colnames_from_table(name);
 
   communication::Sender::send_string("Success!", _socket);
 
@@ -450,14 +463,32 @@ void DatabaseManager::sniff_csv(const typename Command::SniffCSVOp& _cmd,
 
 // ----------------------------------------------------------------------------
 
+void DatabaseManager::sniff_query(const typename Command::SniffQueryOp& _cmd,
+                                  Poco::Net::StreamSocket* _socket) const {
+  const auto& conn_id = _cmd.conn_id();
+
+  const auto& name = _cmd.name();
+
+  const auto query = communication::Receiver::recv_string(_socket);
+
+  const auto roles =
+      database::sniff::query(connector(conn_id), "python", query, name);
+
+  communication::Sender::send_string("Success!", _socket);
+
+  communication::Sender::send_string(roles, _socket);
+}
+
+// ----------------------------------------------------------------------------
+
 void DatabaseManager::sniff_table(const typename Command::SniffTableOp& _cmd,
                                   Poco::Net::StreamSocket* _socket) const {
   const auto& conn_id = _cmd.conn_id();
 
   const auto& name = _cmd.name();
 
-  const auto roles = database::DatabaseSniffer::sniff(connector(conn_id),
-                                                      "python", name, name);
+  const auto roles =
+      database::sniff::table(connector(conn_id), "python", name, name);
 
   communication::Sender::send_string("Success!", _socket);
 

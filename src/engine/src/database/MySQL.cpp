@@ -84,12 +84,11 @@ std::shared_ptr<MYSQL_RES> MySQL::exec(
 
 // ----------------------------------------------------------------------------
 
-std::vector<std::string> MySQL::get_colnames(const std::string& _table) const {
-  const std::string sql = "SELECT * FROM `" + _table + "` LIMIT 0;";
-
+std::vector<std::string> MySQL::get_colnames_from_query(
+    const std::string& _query) const {
   const auto conn = make_connection();
 
-  const auto result = exec(sql, conn);
+  const auto result = exec(_query, conn);
 
   if (!result) {
     throw std::runtime_error("Query returned no result!");
@@ -108,14 +107,12 @@ std::vector<std::string> MySQL::get_colnames(const std::string& _table) const {
 
 // ----------------------------------------------------------------------------
 
-std::vector<io::Datatype> MySQL::get_coltypes(
-    const std::string& _table,
+std::vector<io::Datatype> MySQL::get_coltypes_from_query(
+    const std::string& _query,
     const std::vector<std::string>& _colnames) const {
-  const std::string sql = "SELECT * FROM `" + _table + "` LIMIT 0;";
-
   const auto conn = make_connection();
 
-  const auto result = exec(sql, conn);
+  const auto result = exec(_query, conn);
 
   if (!result) {
     throw std::runtime_error("Query returned no result!");
@@ -152,7 +149,7 @@ TableContent MySQL::get_content(const std::string& _tname,
     throw std::runtime_error("start must be smaller than number of rows!");
   }
 
-  const auto colnames = get_colnames(_tname);
+  const auto colnames = get_colnames_from_table(_tname);
 
   const auto ncols = colnames.size();
 
@@ -263,22 +260,16 @@ std::string MySQL::make_bulk_insert_query(
 
 void MySQL::read(const std::string& _table, const size_t _skip,
                  io::Reader* _reader) {
-  // ------------------------------------------------------------------------
-  // Get colnames and coltypes
+  const std::vector<std::string> colnames = get_colnames_from_table(_table);
 
-  const std::vector<std::string> colnames = get_colnames(_table);
-
-  const std::vector<io::Datatype> coltypes = get_coltypes(_table, colnames);
+  const std::vector<io::Datatype> coltypes =
+      get_coltypes_from_table(_table, colnames);
 
   assert_true(colnames.size() == coltypes.size());
 
-  // ------------------------------------------------------------------------
-
   check_colnames(colnames, _reader);
 
-  // ------------------------------------------------------------------------
   // Skip lines, if necessary.
-
   size_t line_count = 0;
 
   for (size_t i = 0; i < _skip; ++i) {
@@ -286,9 +277,7 @@ void MySQL::read(const std::string& _table, const size_t _skip,
     ++line_count;
   }
 
-  // ----------------------------------------------------------------
   // Create a temporary file and insert the parsed CSV, line by line.
-
   const auto query = make_bulk_insert_query(_table, colnames);
 
   execute("START TRANSACTION;");
