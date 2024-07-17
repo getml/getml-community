@@ -10,11 +10,10 @@
 Collection of helper functions not meant to be used by the enduser.
 """
 
-import io
 from enum import Enum
 from inspect import cleandoc
 from pathlib import Path
-from tempfile import TemporaryDirectory
+from tempfile import gettempdir
 from typing import Any, Dict, Iterable, List, Literal, Optional, Union, overload
 from urllib import request
 from urllib.parse import urlparse
@@ -80,8 +79,10 @@ def _load_to_file(url: str, file_path: Path, verbose: bool = True) -> None:
 # --------------------------------------------------------------------
 
 
-def _retrieve_temp_dir():
-    return Path(TemporaryDirectory(delete=False).name).parent / "getml"
+def _retrieve_temp_dir() -> Path:
+    temp_dir = Path(gettempdir()) / "getml"
+    temp_dir.mkdir(exist_ok=True)
+    return temp_dir
 
 
 # --------------------------------------------------------------------
@@ -95,7 +96,7 @@ def _retrieve_url(
     parse_result = urlparse(url)
 
     if target_path is None:
-        target_path = Path(_retrieve_temp_dir())
+        target_path = _retrieve_temp_dir()
 
     target_path = target_path / parse_result.netloc / parse_result.path[1:]
 
