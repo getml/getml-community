@@ -772,7 +772,7 @@ class View:
                 Pandas equivalent of the current instance including
                 its underlying data.
         """
-        return to_arrow_table(self).to_pandas()
+        return to_arrow(self).to_pandas()
 
     # ------------------------------------------------------------
 

@@ -24,8 +24,8 @@ def test_adventure_works():
     getml.engine.launch()
     getml.set_project("adventure_works")
 
-    conn = getml.database.connect_mariadb(
-        host="relational.fit.cvut.cz",
+    conn = getml.database.connect_mysql(
+        host="db.relational-data.org",
         dbname="AdventureWorks2014",
         port=3306,
         user="guest",

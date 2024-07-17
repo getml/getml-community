@@ -34,8 +34,8 @@ def test_save_and_load():
     getml.engine.launch()
     getml.engine.set_project("cora")
 
-    getml.database.connect_mariadb(
-        host="relational.fit.cvut.cz",
+    getml.database.connect_mysql(
+        host="db.relational-data.org",
         dbname="CORA",
         port=3306,
         user="guest",
