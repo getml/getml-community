@@ -16,7 +16,7 @@ import getml.engine as engine
 
 
 @pytest.mark.parametrize("df_or_view", ["df", "view"], indirect=True)
-def test_column_eq_missmatch():
+def test_column_eq_missmatch(df_or_view):
     with pytest.raises(TypeError):
         df_or_view.column_01 == "string"
         df_or_view.time_stamp == "string"
