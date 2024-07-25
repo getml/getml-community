@@ -26,6 +26,9 @@ exclude: FrozenSet[ExcludeLike] = frozenset(
         subroles.exclude.text_field_splitter,
     }
 )
+"""
+Set of subroles that exclude columns from certain operations.
+"""
 
 include: FrozenSet[IncludeLike] = frozenset(
     {
@@ -33,6 +36,9 @@ include: FrozenSet[IncludeLike] = frozenset(
         subroles.include.substring,
     }
 )
+"""
+Set of subroles that explicitly include columns for certain operations.
+"""
 
 only: FrozenSet[OnlyLike] = frozenset(
     {
@@ -40,5 +46,11 @@ only: FrozenSet[OnlyLike] = frozenset(
         subroles.only.substring,
     }
 )
+"""
+Set of subroles that restrict the operations that can be performed on columns.
+"""
 
 all_: FrozenSet[Subrole] = exclude | include | only
+"""
+Set of all possible subroles.
+"""
