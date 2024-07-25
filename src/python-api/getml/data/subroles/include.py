@@ -6,7 +6,7 @@
 #
 
 
-from typing import Final, get_args
+from typing import Final
 
 from getml.data.subroles.types import IncludeEmail, IncludeSubstring
 
@@ -24,13 +24,13 @@ Example:
     ```
 """
 
-email: Final[IncludeEmail] = get_args(IncludeEmail)[0]
+email: Final[IncludeEmail] = "include email"
 """
 A column with this subrole will be
 used for the [`EmailDomain`][getml.preprocessors.EmailDomain] preprocessor.
 """
 
-substring: Final[IncludeSubstring] = get_args(IncludeSubstring)[0]
+substring: Final[IncludeSubstring] = "include substring"
 """
 A column with this subrole will be
 used for the [`Substring`][getml.preprocessors.Substring] preprocessor.

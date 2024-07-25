@@ -6,7 +6,7 @@
 #
 
 
-from typing import Final, get_args
+from typing import Final
 
 from getml.data.subroles.types import OnlyEmail, OnlySubstring
 
@@ -24,7 +24,7 @@ Example:
 
 """
 
-email: Final[OnlyEmail] = get_args(OnlyEmail)[0]
+email: Final[OnlyEmail] = "only email"
 """
 A column with this subrole will only be
 used for the [`EmailDomain`][getml.preprocessors.EmailDomain]
@@ -32,7 +32,7 @@ preprocessor and nothing else. It will be ignored by all other preprocessors,
 feature learners and predictors.
 """
 
-substring: Final[OnlySubstring] = get_args(OnlySubstring)[0]
+substring: Final[OnlySubstring] = "only substring"
 """
 A column with this subrole will only be
 used for the [`Substring`][getml.preprocessors.Substring]
