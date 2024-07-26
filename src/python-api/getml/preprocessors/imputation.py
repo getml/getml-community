@@ -11,6 +11,7 @@ Contains routines for preprocessing data frames.
 """
 
 from dataclasses import dataclass
+from typing import Optional, Dict, Any
 
 from .preprocessor import _Preprocessor
 from .validate import _validate
@@ -27,11 +28,11 @@ class Imputation(_Preprocessor):
     that signifies whether the original value was imputed.
 
     Args:
-        add_dummies (bool):
+        add_dummies:
             Whether you want to add dummy variables
-            that signify whether the original value was imputed..
+            that signify whether the original value was imputed.
 
-    Example:
+    ??? example
         ```python
         imputation = getml.preprocessors.Imputation()
 
@@ -49,12 +50,12 @@ class Imputation(_Preprocessor):
 
     add_dummies: bool = False
 
-    def validate(self, params=None):
+    def validate(self, params: Optional[Dict[str, Any]] = None) -> None:
         """Checks both the types and the values of all instance
         variables and raises an exception if something is off.
 
         Args:
-            params (dict, optional):
+            params:
                 A dictionary containing
                 the parameters to validate. If not is passed,
                 the own parameters will be validated.

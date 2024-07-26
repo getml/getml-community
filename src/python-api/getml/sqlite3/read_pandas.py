@@ -11,6 +11,7 @@ Contains utility functions for reading a pandas DataFrame
 into sqlite3.
 """
 
+from __future__ import annotations
 import numbers
 import sqlite3
 from typing import Literal
@@ -33,7 +34,7 @@ def read_pandas(
 
     Args:
         conn:
-            A sqlite3 connection created by [`connect`][getml.sqlite3.connect].
+            A sqlite3 connection created by [`connect`][getml.sqlite3.connect.connect].
 
         table_name:
             The name of the table to write to.

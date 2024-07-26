@@ -9,14 +9,14 @@
 """Lists all hyperparameter optimization objects present in the engine."""
 
 import json
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import getml.communication as comm
 
 # --------------------------------------------------------------------
 
 
-def list_hyperopts():
+def list_hyperopts() -> List[str]:
     """Lists all hyperparameter optimization objects present in the engine.
 
     Note that this function only lists hyperopts which are part of the
@@ -24,13 +24,10 @@ def list_hyperopts():
     changing projects.
 
     To subsequently load one of them, use
-    [`load_hyperopt`][getml.hyperopt.load_hyperopt].
+    [`load_hyperopt`][getml.hyperopt.load_hyperopt.load_hyperopt].
 
     Returns:
         list containing the names of all hyperopts.
-
-    Note:
-        Not supported in the getML community edition.
 
     """
 

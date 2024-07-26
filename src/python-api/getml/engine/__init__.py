@@ -13,7 +13,7 @@ internet browser and enter [http://localhost:1709](http://localhost:1709) in the
 connect to a local TCP socket at port 1709 opened by the getML
 monitor. This will only be possible from within the same device!
 
-Example:
+??? example
     First of all, you need to start the getML engine.
     Next, you need to create a new project or
     load an existing one.
@@ -40,7 +40,7 @@ Note:
     script it has to run won't be killed the moment your remote
     connection becomes unstable, and
     you are able to recover them later on (see
-    [`remote_access`][ref]).
+    [`remote_access`][remote-access]).
 
     All data frame objects and models in the getML engine are
     bundled in projects. When loading an existing project, the
@@ -77,7 +77,7 @@ from .helpers import (
     shutdown,
     suspend_project,
 )
-from .launch import launch
+from ._launch import launch
 
 __all__ = (
     "delete_project",

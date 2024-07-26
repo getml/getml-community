@@ -35,7 +35,7 @@ class DataModel:
             [statistical population](https://en.wikipedia.org/wiki/Statistical_population)
             and contains the targets.
 
-    Example:
+    ??? example
         This example will construct a data model in which the
         'population_table' depends on the 'peripheral_table' via
         the 'join_key' column. In addition, only those rows in

@@ -81,7 +81,7 @@ def load(bundle: str, name: Optional[str] = None) -> None:
         bundle: The `.getml` bundle file to load.
 
         name: A name for the project contained in the bundle.
-          If None, the name will be extracted from the bundle.
+            If None, the name will be extracted from the bundle.
     """
     return comm._load_project(bundle, name)
 

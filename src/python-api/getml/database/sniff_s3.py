@@ -67,7 +67,7 @@ def sniff_s3(
     Returns:
         Appropriate `CREATE TABLE` statement.
 
-    Example:
+    ??? example
         Let's assume you have two CSV files - *file1.csv* and
         *file2.csv* - in the bucket. You can
         import their data into the getML engine using the following

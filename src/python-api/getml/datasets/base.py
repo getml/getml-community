@@ -161,11 +161,11 @@ def load_air_pollution(
     The dataset consists of a single table split into train and test sets
     around 2014-01-01.
 
-    The original publication is:
-    Liang, X., Zou, T., Guo, B., Li, S., Zhang, H., Zhang, S., Huang, H. and
-    Chen, S. X. (2015). Assessing Beijing's PM2.5 pollution: severity, weather
-    impact, APEC and winter heating. Proceedings of the Royal Society A, 471,
-    20150257.
+    !!! abstract "Reference"
+        Liang, X., Zou, T., Guo, B., Li, S., Zhang, H., Zhang, S., Huang, H. and
+        Chen, S. X. (2015). Assessing Beijing's PM2.5 pollution: severity, weather
+        impact, APEC and winter heating. Proceedings of the Royal Society A, 471,
+        20150257.
 
     Args:
         as_pandas:
@@ -175,13 +175,13 @@ def load_air_pollution(
             Return data with roles set
 
     Returns:
-            A DataFrame holding the data described above.
+        A DataFrame holding the data described above.
 
-                The following DataFrames are returned:
+            The following DataFrames are returned:
 
-                    * `air_pollution`
+            * `air_pollution`
 
-    Example:
+    ??? example
         ```python
         air_pollution = getml.datasets.load_air_pollution()
         type(air_pollution)
@@ -248,20 +248,20 @@ def load_atherosclerosis(
             `df` as values.
 
     Returns:
-            Tuple containing (sorted alphabetically by `df.name`) the data as
-                [`DataFrame`][getml.DataFrame] or `pandas.DataFrame` (if `as_pandas`
-                is True) or
-                if `as_dict` is `True`: Dictionary containing the data as
-                [`DataFrame`][getml.DataFrame] or `pandas.DataFrame` (if `as_pandas`
-                is True). The keys correspond to the name of the DataFrame on the
-                [`engine`][getml.engine].
+        Tuple containing (sorted alphabetically by `df.name`) the data as
+            [`DataFrame`][getml.DataFrame] or `pandas.DataFrame` (if `as_pandas`
+            is True) or
+            if `as_dict` is `True`: Dictionary containing the data as
+            [`DataFrame`][getml.DataFrame] or `pandas.DataFrame` (if `as_pandas`
+            is True). The keys correspond to the name of the DataFrame on the
+            [`engine`][getml.engine].
 
-                The following DataFrames are returned:
+            The following DataFrames are returned:
 
-                - `population`
-                - `contr`
+            - `population`
+            - `contr`
 
-    Example:
+    ??? example
         ```python
         population, contr = getml.datasets.load_atherosclerosis()
         type(population)
@@ -308,11 +308,11 @@ def load_biodegradability(
     values of 1055 chemicals were collected from the webpage of the National
     Institute of Technology and Evaluation of Japan (NITE).
 
-    The original publication is:
-    Mansouri, K., Ringsted, T., Ballabio, D., Todeschini, R., Consonni, V.
-    (2013). Quantitative Structure - Activity Relationship models for ready
-    biodegradability of chemicals. Journal of Chemical Information and Modeling,
-    53, 867-878
+    !!! abstract "Reference"
+        Mansouri, K., Ringsted, T., Ballabio, D., Todeschini, R., Consonni, V.
+        (2013). Quantitative Structure - Activity Relationship models for ready
+        biodegradability of chemicals. Journal of Chemical Information and Modeling,
+        53, 867-878
 
     The dataset was collected through the [Relational Dataset Repository (former CTU Prague
     Relational Learning Repository)](https://relational-data.org/dataset/Biodegradability)
@@ -335,22 +335,22 @@ def load_biodegradability(
             `df` as values.
 
     Returns:
-            Tuple containing (sorted alphabetically by `df.name`) the data as
-                [`DataFrame`][getml.DataFrame] or `pandas.DataFrame` (if `as_pandas`
-                is True) or if `as_dict` is `True`: Dictionary containing the data as
-                [`DataFrame`][getml.DataFrame] or `pandas.DataFrame` (if `as_pandas`
-                is True). The keys correspond to the name of the DataFrame on the
-                [`engine`][getml.engine].
+        Tuple containing (sorted alphabetically by `df.name`) the data as
+            [`DataFrame`][getml.DataFrame] or `pandas.DataFrame` (if `as_pandas`
+            is True) or if `as_dict` is `True`: Dictionary containing the data as
+            [`DataFrame`][getml.DataFrame] or `pandas.DataFrame` (if `as_pandas`
+            is True). The keys correspond to the name of the DataFrame on the
+            [`engine`][getml.engine].
 
-                The following DataFrames are returned:
+            The following DataFrames are returned:
 
-                * `molecule`
-                * `atom`
-                * `bond`
-                * `gmember`
-                * `group`
+            * `molecule`
+            * `atom`
+            * `bond`
+            * `gmember`
+            * `group`
 
-    Example:
+    ??? example
         ```python
         biodegradability = getml.datasets.load_biodegradability(as_dict=True)
         type(biodegradability["molecule_train"])
@@ -408,22 +408,22 @@ def load_consumer_expenditures(
             `df` as values.
 
     Returns:
-            Tuple containing (sorted alphabetically by `df.name`) the data as
-                [`DataFrame`][getml.DataFrame] or `pandas.DataFrame` (if `as_pandas`
-                is True) or
-                if `as_dict` is `True`: Dictionary containing the data as
-                [`DataFrame`][getml.DataFrame] or `pandas.DataFrame` (if `as_pandas`
-                is True). The keys correspond to the name of the DataFrame on the
-                [`engine`][getml.engine].
+        Tuple containing (sorted alphabetically by `df.name`) the data as
+            [`DataFrame`][getml.DataFrame] or `pandas.DataFrame` (if `as_pandas`
+            is True) or
+            if `as_dict` is `True`: Dictionary containing the data as
+            [`DataFrame`][getml.DataFrame] or `pandas.DataFrame` (if `as_pandas`
+            is True). The keys correspond to the name of the DataFrame on the
+            [`engine`][getml.engine].
 
-                The following DataFrames are returned:
+            The following DataFrames are returned:
 
-                * `population`
-                * `expd`
-                * `fmld`
-                * `memd`
+            * `population`
+            * `expd`
+            * `fmld`
+            * `memd`
 
-    Example:
+    ??? example
         ```python
         ce = getml.datasets.load_consumer_expenditures(as_dict=True)
         type(ce["expd"])
@@ -464,8 +464,9 @@ def load_interstate94(
 
     The interstate94 dataset is a multivariate time series containing the
     hourly traffic volume on I-94 westbound from Minneapolis-St Paul. It is
-    based on data provided by the [MN Department of Transportation
-    ](https://www.dot.state.mn.us/). Some additional data preparation done by
+    based on data provided by the
+    [MN Department of Transportation](https://www.dot.state.mn.us/).
+    Some additional data preparation done by
     [John Hogue](https://github.com/dreyco676/Anomaly_Detection_A_to_Z/). The
     dataset features some particular interesting characteristics common for
     time series, which classical models may struggle to appropriately deal
@@ -488,13 +489,13 @@ def load_interstate94(
             Return data as `pandas.DataFrame`
 
     Returns:
-            A DataFrame holding the data described above.
+        A DataFrame holding the data described above.
 
-                The following DataFrames are returned:
+            The following DataFrames are returned:
 
-                * `traffic`
+            * `traffic`
 
-    Example:
+    ??? example
         ```python
         traffic = getml.datasets.load_interstate94()
         type(traffic)
@@ -536,8 +537,8 @@ def load_loans(
     The loans dataset is based on a financial dataset from the [Relational Dataset Repository (former CTU Prague
     Relational Learning Repository)](https://relational-data.org/dataset/Financial).
 
-    The original publication is:
-    Berka, Petr (1999). Workshop notes on Discovery Challenge PKDD'99.
+    !!! abstract "Reference"
+        Berka, Petr (1999). Workshop notes on Discovery Challenge PKDD'99.
 
     The dataset contains information on 606 successful and 76 unsuccessful
     loans. After some preprocessing it contains 5 tables
@@ -569,23 +570,23 @@ def load_loans(
             `df` as values.
 
     Returns:
-            Tuple containing (sorted alphabetically by `df.name`) the data as
-                [`DataFrame`][getml.DataFrame] or `pandas.DataFrame` (if `as_pandas`
-                is True) or
-                if `as_dict` is `True`: Dictionary containing the data as
-                [`DataFrame`][getml.DataFrame] or `pandas.DataFrame` (if `as_pandas`
-                is True). The keys correspond to the name of the DataFrame on the
-                [`engine`][getml.engine].
+        Tuple containing (sorted alphabetically by `df.name`) the data as
+            [`DataFrame`][getml.DataFrame] or `pandas.DataFrame` (if `as_pandas`
+            is True) or
+            if `as_dict` is `True`: Dictionary containing the data as
+            [`DataFrame`][getml.DataFrame] or `pandas.DataFrame` (if `as_pandas`
+            is True). The keys correspond to the name of the DataFrame on the
+            [`engine`][getml.engine].
 
-                The following DataFrames are returned:
+            The following DataFrames are returned:
 
-                * `account`
-                * `loan`
-                * `meta`
-                * `order`
-                * `trans`
+            * `account`
+            * `loan`
+            * `meta`
+            * `order`
+            * `trans`
 
-    Example:
+    ??? example
         ```python
         loans = getml.datasets.load_loans(as_dict=True)
         type(loans["population_train"])
@@ -630,10 +631,10 @@ def load_occupancy(
     binary classification problem. The task is to predict room occupancy
     from Temperature, Humidity, Light and CO2.
 
-    The original publication is:
-    Candanedo, L. M., & Feldheim, V. (2016). Accurate occupancy detection of an
-    office room from light, temperature, humidity and CO2 measurements using
-    statistical learning models. Energy and Buildings, 112, 28-39.
+    !!! abstract "Reference"
+        Candanedo, L. M., & Feldheim, V. (2016). Accurate occupancy detection of an
+        office room from light, temperature, humidity and CO2 measurements using
+        statistical learning models. Energy and Buildings, 112, 28-39.
 
     Args:
         roles:
@@ -647,21 +648,21 @@ def load_occupancy(
             `df` as values.
 
     Returns:
-            Tuple containing (sorted alphabetically by `df.name`) the data as
-                [`DataFrame`][getml.DataFrame] or `pandas.DataFrame` (if `as_pandas`
-                is True) or
-                if `as_dict` is `True`: Dictionary containing the data as
-                [`DataFrame`][getml.DataFrame] or `pandas.DataFrame` (if `as_pandas`
-                is True). The keys correspond to the name of the DataFrame on the
-                [`engine`][getml.engine].
+        Tuple containing (sorted alphabetically by `df.name`) the data as
+            [`DataFrame`][getml.DataFrame] or `pandas.DataFrame` (if `as_pandas`
+            is True) or
+            if `as_dict` is `True`: Dictionary containing the data as
+            [`DataFrame`][getml.DataFrame] or `pandas.DataFrame` (if `as_pandas`
+            is True). The keys correspond to the name of the DataFrame on the
+            [`engine`][getml.engine].
 
-                The following DataFrames are returned:
+            The following DataFrames are returned:
 
-                * `population_train`
-                * `population_test`
-                * `population_validation`
+            * `population_train`
+            * `population_test`
+            * `population_validation`
 
-    Example:
+    ??? example
         ```python
         population_train, population_test, _ = getml.datasets.load_occupancy()
         type(occupancy_train)

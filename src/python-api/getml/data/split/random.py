@@ -53,7 +53,7 @@ def random(
             You can name these sets whatever you want to (in our example,
             we called it 'other').
 
-    Example:
+    ??? example
         ```python
         split = getml.data.split.random(
             train=0.8, test=0.1, validation=0.05, other=0.05

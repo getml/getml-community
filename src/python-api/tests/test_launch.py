@@ -3,7 +3,7 @@ from unittest.mock import patch
 import pytest
 
 import getml
-from getml.engine.launch import (
+from getml.engine._launch import (
     COMPOSE_FILE_URL,
     DOCKER_DOCS_URL,
     PLATFORM_NOT_SUPPORTED_NATIVELY_ERROR_MSG_TEMPLATE,

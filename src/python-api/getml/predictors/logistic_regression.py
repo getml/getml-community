@@ -26,20 +26,20 @@ class LogisticRegression(_Predictor):
     Learns a simple linear relationship using the sigmoid function:
 
     $$
-    \hat{y} = \sigma(w_0 + w_1 * feature_1 + w_2 * feature_2 + ...)
+    \\hat{y} = \\sigma(w_0 + w_1 * feature_1 + w_2 * feature_2 + ...)
     $$
 
-    $\sigma$ denotes the sigmoid function:
+    $\\sigma$ denotes the sigmoid function:
 
     $$
-    \sigma(z) = \\frac{1}{1 + exp(-z)}
+    \\sigma(z) = \\frac{1}{1 + exp(-z)}
     $$
 
     The weights are optimized by minimizing the cross entropy loss of
-    the predictions $\hat{y}$ w.r.t. the [targets][annotating-data-target] $y$.
+    the predictions $\\hat{y}$ w.r.t. the [targets][annotating-data-target] $y$.
 
     $$
-    L(\hat{y},y) = - y*\log \hat{y} - (1 - y)*\log(1 - \hat{y})
+    L(\\hat{y},y) = - y*\\log \\hat{y} - (1 - y)*\\log(1 - \\hat{y})
     $$
 
     Logistic regressions are always trained numerically.
@@ -55,10 +55,10 @@ class LogisticRegression(_Predictor):
         learning_rate:
             The learning rate used for the Adaptive Moments algorithm
             (only relevant when categorical features are
-            included). Range: (0, $\infty$]
+            included). Range: (0, ∞]
 
         reg_lambda:
-            L2 regularization parameter. Range: [0, $\infty$]
+            L2 regularization parameter. Range: [0, ∞]
     """
 
     # ----------------------------------------------------------------
@@ -85,7 +85,7 @@ class LogisticRegression(_Predictor):
             ```
 
         Note:
-            This method is called at end of the \_\_init\_\_ constructor
+            This method is called at end of the `__init__` constructor
             and every time before the predictor - or a class holding
             it as an instance variable - is sent to the getML engine.
         """

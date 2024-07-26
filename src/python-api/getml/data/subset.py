@@ -38,7 +38,7 @@ class Subset:
         population:
             The population table.
 
-    Example:
+    ??? example
         ```python
         container = getml.data.Container(
             train=population_train,

@@ -19,7 +19,7 @@ import sqlite3
 sqlite3.sqlite_version
 ```
 
-Example:
+??? example
     For our example we will assume that you want to productionize
     the [CORA project](https://github.com/getml/getml-demo/blob/master/cora.ipynb).
 

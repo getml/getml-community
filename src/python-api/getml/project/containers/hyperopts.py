@@ -99,7 +99,7 @@ class Hyperopts:
         Returns:
                 A container of filtered hyperopts.
 
-        Example:
+        ??? example
             ```python
             gaussian_hyperopts = getml.project.hyperopts.filter(lamda hyp: "Gaussian" in hyp.type)
             ```
@@ -125,7 +125,7 @@ class Hyperopts:
         Returns:
                 A container of sorted hyperopts.
 
-        Example:
+        ??? example
             ```python
             by_type = getml.project.hyperopt.sort(lambda hyp: hyp.type)
             ```

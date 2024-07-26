@@ -34,6 +34,13 @@ def connect_postgres(
     But first, make sure your database is running, and you can reach it
     from via your command line.
 
+    enterprise-adm: Enterprise edition
+        This feature is available in the getML
+        [Enterprise edition][getting-started-community-vs-enterprise].
+
+        For licences, technical support and more information, feel free to [contact us](
+        https://www.getml.com/contact)!
+
     Args:
         dbname:
             The name of the database to which you want to connect.

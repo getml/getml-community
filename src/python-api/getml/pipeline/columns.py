@@ -48,12 +48,22 @@ class Columns:
     global methods to request columns' importances and apply a column selection
     to data frames provided to the pipeline.
 
+    Args:
+        pipeline:
+            The id of the pipeline.
+        targets:
+            The names of the targets used for this pipeline.
+        peripheral:
+            The abstract representation of peripheral tables used for this pipeline.
+        data:
+            The columns to be stored in the container. If not provided, they are obtained from the engine.
+
     Note:
         The container is an iterable. So, in addition to
         [`filter`][getml.pipeline.Columns.filter] you can also use python list
         comprehensions for filtering.
 
-    Example:
+    ??? example
         ```python
         all_my_columns = my_pipeline.columns
 
@@ -248,8 +258,8 @@ class Columns:
 
     def _make_columns(self, data: Sequence[Column]) -> Columns:
         """
-        A factory to construct a :class:`getml.pipeline.Columns` container from a list
-        of :class:`getml.pipeline.Column`s.
+        A factory to construct a [`Columns`][getml.pipeline.Columns] container from a list
+        of [`Columns`][getml.pipeline.Columns]s.
         """
         return Columns(self.pipeline, self.targets, self.peripheral, data)
 
@@ -268,13 +278,13 @@ class Columns:
         Filters the columns container.
 
         Args:
-            conditional (callable, optional):
+            conditional:
                 A callable that evaluates to a boolean for a given item.
 
         Returns:
             A container of filtered Columns.
 
-        Example:
+        ??? example
             ```python
             important_columns = my_pipeline.columns.filter(lambda column: column.importance > 0.1)
             peripheral_columns = my_pipeline.columns.filter(lambda column: column.marker == "[PERIPHERAL]")
@@ -306,12 +316,12 @@ class Columns:
         [`unused_string`][getml.data.roles.unused_string] can not have importance of course.
 
         Args:
-            target_num (int):
+            target_num:
                 Indicates for which target you want to view the
                 importances.
                 (Pipelines can have more than one target.)
 
-            sort (bool):
+            sort:
                 Whether you want the results to be sorted.
 
         Returns:
@@ -343,7 +353,7 @@ class Columns:
         Holds the names of a [`Pipeline`][getml.Pipeline]'s columns.
 
         Returns:
-            `list` containing the names.
+            List containing the names.
 
         Note:
             The order corresponds to the current sorting of the container.
@@ -353,17 +363,22 @@ class Columns:
     # ----------------------------------------------------------------
 
     def select(
-        self, container: Container, share_selected_columns: float = 0.5
+        self,
+        container: Union[Container, StarSchema, TimeSeries],
+        share_selected_columns: float = 0.5,
     ) -> Container:
         """
         Returns a new data container with all insufficiently important columns dropped.
 
         Args:
-            container ([`Container`][getml.data.Container] or [`StarSchema`][getml.data.StarSchema] or [`TimeSeries`][getml.data.TimeSeries]):
+            container:
                 The container containing the data you want to use.
 
             share_selected_columns: The share of columns
                 to keep. Must be between 0.0 and 1.0.
+
+        Returns:
+            A new container with the columns dropped.
         """
 
         # ------------------------------------------------------------
@@ -435,21 +450,20 @@ class Columns:
         container is sorted by target and name.
 
         Args:
-            by (str, optional):
+            by:
                 The name of field to sort by. Possible fields:
                     - name(s)
                     - table(s)
                     - importances(s)
-            key (callable, optional):
+            key:
                 A callable that evaluates to a sort key for a given item.
-            descending (bool, optional):
+            descending:
                 Whether to sort in descending order.
 
         Returns:
-            [`columns`][getml.pipeline.columns]:
                 A container of sorted columns.
 
-        Example:
+        ??? example
             ```python
             by_importance = my_pipeline.columns.sort(key=lambda column: column.importance)
             ```

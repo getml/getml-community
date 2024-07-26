@@ -16,6 +16,16 @@ from dataclasses import dataclass
 class Table:
     """
     A dataclass that holds data about a single table.
+
+    Args:
+        name:
+            The name of the table.
+        importance:
+            The importance of the table.
+        target:
+            The target of the table.
+        marker:
+            The marker of the table.
     """
 
     name: str

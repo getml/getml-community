@@ -10,6 +10,7 @@
 Returns a table as a pandas.DataFrame.
 """
 
+from __future__ import annotations
 import sqlite3
 
 import pandas as pd
@@ -23,7 +24,7 @@ def to_pandas(conn: sqlite3.Connection, query: str) -> pd.DataFrame:
 
     Args:
         conn:
-            A sqlite3 connection created by [`connect`][getml.sqlite3.connect].
+            A sqlite3 connection created by [`connect`][getml.sqlite3.connect.connect].
 
         query:
             The query used to get the table. You can also

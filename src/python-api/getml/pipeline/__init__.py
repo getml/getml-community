@@ -14,7 +14,7 @@ data preparation:
 - Training and evaluation of machine learning (ML) algorithms
 - Deployment of the fitted models
 
-Example:
+??? example
     We assume that you have already set up your
     preprocessors (refer to [`preprocessors`][getml.preprocessors]),
     your feature learners (refer to [`feature_learning`][getml.feature_learning])
@@ -76,7 +76,7 @@ Example:
     predictions = pipe.predict(container.full)
     ```
 
-Example:
+??? example
     If your data can be organized in a simple star schema,
     you can use [`StarSchema`][getml.data.StarSchema].
     [`StarSchema`][getml.data.StarSchema] unifies
@@ -144,7 +144,7 @@ Example:
     pipe.score(star_schema.test)
     ```
 
-Example:
+??? example
     [`StarSchema`][getml.data.StarSchema] is simpler,
     but cannot be used for more complex data models.
     The general approach is to use
@@ -251,7 +251,7 @@ Example:
     )
     ```
     Or you could even do this. The order of the peripheral tables
-    can be inferred from the \_\_repr\_\_ method of the pipeline,
+    can be inferred from the `__repr__()` method of the pipeline,
     and it is usually in alphabetical order.
 
     ```python

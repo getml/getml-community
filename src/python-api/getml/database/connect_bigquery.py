@@ -30,6 +30,13 @@ def connect_bigquery(
     """
     Creates a new BigQuery database connection.
 
+    enterprise-adm: Enterprise edition
+        This feature is available in the getML
+        [Enterprise edition][getting-started-community-vs-enterprise].
+
+        For licences, technical support and more information, feel free to [contact us](
+        https://www.getml.com/contact)!
+
     Args:
         database_id:
             The ID of the database to connect to.
@@ -76,9 +83,6 @@ def connect_bigquery(
         conn_id:
             The name to be used to reference the connection.
             If you do not pass anything, this will create a new default connection.
-
-    Note:
-        Not supported in the getML community edition.
 
     Returns:
         The connection object.

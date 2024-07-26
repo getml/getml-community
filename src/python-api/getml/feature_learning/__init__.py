@@ -5,7 +5,6 @@
 # for details.
 #
 
-
 """
 This module contains relational learning algorithms to learn features
 from relational data or time series.
@@ -20,6 +19,7 @@ from .feature_learner import _FeatureLearner
 from .multirel import Multirel
 from .relboost import Relboost
 from .relmt import RelMT
+from . import aggregations
 
 __all__ = (
     "_FeatureLearner",

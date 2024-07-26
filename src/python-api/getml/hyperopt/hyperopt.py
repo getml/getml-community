@@ -413,6 +413,13 @@ class GaussianHyperparameterSearch(_Hyperopt):
     throughout previous evaluations. Assessing the quality of potential
     combinations will be done using the expected information (EI).
 
+    enterprise-adm: Enterprise edition
+        This feature is available in the getML
+        [Enterprise edition][getting-started-community-vs-enterprise].
+
+        For licences, technical support and more information, feel free to [contact us](
+        https://www.getml.com/contact)!
+
     Args:
         param_space:
             Dictionary containing numerical arrays of length two
@@ -461,7 +468,7 @@ class GaussianHyperparameterSearch(_Hyperopt):
         n_iter:
             Number of iterations in the hyperparameter optimization
             and thus the number of parameter combinations to draw and
-            evaluate. Range: [1, $\infty$]
+            evaluate. Range: [1, ∞]
 
         seed:
             Seed used for the random number generator that underlies
@@ -476,7 +483,7 @@ class GaussianHyperparameterSearch(_Hyperopt):
             either [`XGBoostRegressor`][getml.predictors.XGBoostRegressor] or
             [`XGBoostClassifier`][getml.predictors.XGBoostClassifier] - are set to
             1. Internally, a `seed` of None will be mapped to
-            5543. Range: [0, $\infty$]
+            5543. Range: [0, ∞]
 
         ratio_iter:
             Ratio of the iterations used for the burn-in.
@@ -513,7 +520,7 @@ class GaussianHyperparameterSearch(_Hyperopt):
             order to get to the next combination, the EI has to be
             maximized over the whole parameter space. Much like the
             GaussianProcess itself, this requires a burn-in phase.
-            Range: [3, $\infty$]
+            Range: [3, ∞]
 
         surrogate_burn_in_algorithm:
             Specifies the algorithm used to draw new parameter
@@ -544,7 +551,7 @@ class GaussianHyperparameterSearch(_Hyperopt):
         gaussian_optimization_burn_ins:
             Number of random evaluation points used during the burn-in
             of the fitting of the Gaussian process. Range: [3,
-            $\infty$]
+            ∞]
 
         early_stopping:
             Whether you want to apply early stopping to the predictors.
@@ -590,7 +597,7 @@ class GaussianHyperparameterSearch(_Hyperopt):
         * [Julien Villemonteix, Emmanuel Vazquez, and Eric Walter, 2009
           ](https://arxiv.org/pdf/cs/0611143.pdf)
 
-    Example:
+    ??? example
         ```python
         from getml import data
         from getml import datasets
@@ -623,8 +630,8 @@ class GaussianHyperparameterSearch(_Hyperopt):
 
         fe1 = feature_learning.Multirel(
             aggregation=[
-                aggregations.Count,
-                aggregations.Sum
+                aggregations.COUNT,
+                aggregations.SUM
             ],
             loss_function=loss_functions.SquareLoss,
             num_features=10,
@@ -730,9 +737,6 @@ class GaussianHyperparameterSearch(_Hyperopt):
         best_pipeline = gaussian_search.best_pipeline
         ```
 
-    Note:
-        Not supported in the getML community edition.
-
     """
 
     def __init__(
@@ -818,6 +822,13 @@ class LatinHypercubeSearch(_Hyperopt):
     space, and a random search, which draws completely random samples
     from the hyperparameter space.
 
+    enterprise-adm: Enterprise edition
+        This feature is available in the getML
+        [Enterprise edition][getting-started-community-vs-enterprise].
+
+        For licences, technical support and more information, feel free to [contact us](
+        https://www.getml.com/contact)!
+
     Args:
         param_space:
             Dictionary containing numerical arrays of length two
@@ -866,7 +877,7 @@ class LatinHypercubeSearch(_Hyperopt):
         n_iter:
             Number of iterations in the hyperparameter optimization
             and thus the number of parameter combinations to draw and
-            evaluate. Range: [1, $\infty$]
+            evaluate. Range: [1, ∞]
 
         seed:
             Seed used for the random number generator that underlies
@@ -881,9 +892,9 @@ class LatinHypercubeSearch(_Hyperopt):
             either [`XGBoostRegressor`][getml.predictors.XGBoostRegressor] or
             [`XGBoostClassifier`][getml.predictors.XGBoostClassifier] - are set to
             1. Internally, a `seed` of None will be mapped to
-            5543. Range: [0, $\infty$]
+            5543. Range: [0, ∞]
 
-    Example:
+    ??? example
         ```python
         from getml import data
         from getml import datasets
@@ -916,8 +927,8 @@ class LatinHypercubeSearch(_Hyperopt):
 
         fe1 = feature_learning.Multirel(
             aggregation=[
-                aggregations.Count,
-                aggregations.Sum
+                aggregations.COUNT,
+                aggregations.SUM
             ],
             loss_function=loss_functions.SquareLoss,
             num_features=10,
@@ -994,8 +1005,6 @@ class LatinHypercubeSearch(_Hyperopt):
         )
         ```
 
-    Note:
-        Not supported in the getML community edition.
     """
 
     def __init__(
@@ -1061,6 +1070,13 @@ class RandomSearch(_Hyperopt):
     by uniformly drawing a random value in between the lower and upper
     bound for each dimension of `param_space` independently.
 
+    enterprise-adm: Enterprise edition
+        This feature is available in the getML
+        [Enterprise edition][getting-started-community-vs-enterprise].
+
+        For licences, technical support and more information, feel free to [contact us](
+        https://www.getml.com/contact)!
+
     Args:
         param_space:
             Dictionary containing numerical arrays of length two
@@ -1108,7 +1124,7 @@ class RandomSearch(_Hyperopt):
         n_iter:
             Number of iterations in the hyperparameter optimization
             and thus the number of parameter combinations to draw and
-            evaluate. Range: [1, $\infty$]
+            evaluate. Range: [1, ∞]
 
         seed:
             Seed used for the random number generator that underlies
@@ -1123,9 +1139,9 @@ class RandomSearch(_Hyperopt):
             either [`XGBoostRegressor`][getml.predictors.XGBoostRegressor] or
             [`XGBoostClassifier`][getml.predictors.XGBoostClassifier] - are set to
             1. Internally, a `seed` of None will be mapped to
-            5543. Range: [0, $\infty$]
+            5543. Range: [0, ∞]
 
-    Example:
+    ??? example
         ```python
 
         from getml import data
@@ -1159,8 +1175,8 @@ class RandomSearch(_Hyperopt):
 
         fe1 = feature_learning.Multirel(
             aggregation=[
-                aggregations.Count,
-                aggregations.Sum
+                aggregations.COUNT,
+                aggregations.SUM
             ],
             loss_function=loss_functions.SquareLoss,
             num_features=10,
@@ -1236,9 +1252,6 @@ class RandomSearch(_Hyperopt):
             peripheral_tables=[peripheral_table]
         )
         ```
-
-    Note:
-        Not supported in the getML community edition.
     """
 
     def __init__(

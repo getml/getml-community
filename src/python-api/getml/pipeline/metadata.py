@@ -22,6 +22,12 @@ class Metadata(NamedTuple):
     Contains the metadata related
     to a data frame that
     were originally passed to .fit(...).
+
+    Attributes:
+        name:
+            The name of the data frame.
+        roles:
+            The roles of the columns in the data frame.
     """
 
     name: str
@@ -33,6 +39,12 @@ class AllMetadata(NamedTuple):
     Contains the metadata related
     to all the data frames that
     were originally passed to .fit(...).
+
+    Attributes:
+        peripheral:
+            The metadata of the peripheral tables.
+        population:
+            The metadata of the population table.
     """
 
     peripheral: List[Metadata]

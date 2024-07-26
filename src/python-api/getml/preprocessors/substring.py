@@ -11,6 +11,7 @@ Contains routines for preprocessing data frames.
 """
 
 from dataclasses import dataclass
+from typing import Optional, Dict, Any
 
 from .preprocessor import _Preprocessor
 from .validate import _validate
@@ -32,13 +33,13 @@ class Substring(_Preprocessor):
     you can also assign a *unit*.
 
     Args:
-        begin (int):
+        begin:
             Index of the beginning of the substring (starting from 0).
 
-        length (int):
+        length:
             The length of the substring.
 
-        unit (str, optional):
+        unit:
             The unit of all columns to which the preprocessor
             should be applied. These columns must also have the subrole
             substring.
@@ -48,7 +49,7 @@ class Substring(_Preprocessor):
             [`include.substring`][getml.data.subroles.include.substring] or
             [`only.substring`][getml.data.subroles.only.substring].
 
-    Example:
+    ??? example
         ```python
         my_df.set_subroles("col1", getml.data.subroles.include.substring)
 
@@ -77,12 +78,12 @@ class Substring(_Preprocessor):
     length: int
     unit: str = ""
 
-    def validate(self, params=None):
+    def validate(self, params: Optional[Dict[str, Any]] = None) -> None:
         """Checks both the types and the values of all instance
         variables and raises an exception if something is off.
 
         Args:
-            params (dict, optional):
+            params:
                 A dictionary containing
                 the parameters to validate. If not is passed,
                 the own parameters will be validated.

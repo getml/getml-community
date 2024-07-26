@@ -11,19 +11,19 @@ Reduces boilerplate code for the validation.
 """
 
 
-def _validate(self, params):
+def _validate(instance, params):
     if params is None:
-        params = self.__dict__
+        params = instance.__dict__
     else:
-        params = {**self.__dict__, **params}
+        params = {**instance.__dict__, **params}
 
     if not isinstance(params, dict):
         raise ValueError("params must be None or a dictionary!")
 
     for kkey in params:
-        if kkey not in self._supported_params:
+        if kkey not in instance._supported_params:
             raise KeyError(
-                f"Instance variable '{kkey}' is not supported in {self.type}."
+                f"Instance variable '{kkey}' is not supported in {instance.type}."
             )
 
     return params

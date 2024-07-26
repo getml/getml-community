@@ -11,6 +11,7 @@ Contains routines for preprocessing data frames.
 """
 
 from dataclasses import dataclass
+from typing import Optional, Dict, Any
 
 from .preprocessor import _Preprocessor
 from .validate import _validate
@@ -32,7 +33,7 @@ class EmailDomain(_Preprocessor):
     It is recommended that you assign [`only.email`][getml.data.subroles.only.email],
     because it is unlikely that the e-mail address itself is interesting.
 
-    Example:
+    ??? example
         ```python
         my_data_frame.set_subroles("email", getml.data.subroles.only.email)
 
@@ -50,12 +51,12 @@ class EmailDomain(_Preprocessor):
         ```
     """
 
-    def validate(self, params=None):
+    def validate(self, params: Optional[Dict[str, Any]] = None) -> None:
         """Checks both the types and the values of all instance
         variables and raises an exception if something is off.
 
         Args:
-            params (dict, optional):
+            params:
                 A dictionary containing
                 the parameters to validate. If not is passed,
                 the own parameters will be validated.

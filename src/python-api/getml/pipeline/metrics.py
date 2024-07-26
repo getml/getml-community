@@ -40,7 +40,7 @@ rate, sometimes referred to as *recall*, measures the share of
 true positive predictions over all positives:
 
 $$
-TPR = \\frac{number \; of \; true \; positives}{number \; of \; all \; positives}
+TPR = \\frac{number \\; of \\; true \\; positives}{number \\; of \\; all \\; positives}
 $$
 
 In other words, we want our classification algorithm to "catch" as
@@ -51,7 +51,7 @@ false positive rate measures the share of false positives over all
 negatives.
 
 $$
-FPR = \\frac{number \; of \; false \; positives}{number \; of \; all \; negatives}
+FPR = \\frac{number \\; of \\; false \\; positives}{number \\; of \\; all \\; negatives}
 $$
 
 In other words, we want as few "false alarms" as possible.
@@ -73,7 +73,7 @@ samples in the testing set.
 Used for classification problems.
 
 $$
-accuracy = \\frac{number \; of \; correct \; predictions}{number \; of \; all \; predictions}
+accuracy = \\frac{number \\; of \\; correct \\; predictions}{number \\; of \\; all \\; predictions}
 $$
 
 The number of correct predictions depends on the threshold used:
@@ -104,7 +104,7 @@ Mathematically speaking, cross-entropy for a binary classification problem
 is defined as follows:
 
 $$
-cross \; entropy = - \\frac{1}{N} \sum_{i}^{N} (y_i \log p_i + (1 - y_i) \log(1 - p_i),
+cross \\; entropy = - \\frac{1}{N} \\sum_{i}^{N} (y_i \\log p_i + (1 - y_i) \\log(1 - p_i),
 $$
 
 where $p_i$ is the probability of a positive outcome as predicted
@@ -120,7 +120,7 @@ that we observe a particular state of the world given the probabilities.
 We can calculate this likelihood as follows:
 
 $$
-likelihood = \prod_{i}^{N} (p_i^{y_i} * (1 - p_i)^{1 - y_i}).
+likelihood = \\prod_{i}^{N} (p_i^{y_i} * (1 - p_i)^{1 - y_i}).
 $$
 
 (Recall that $y_i$ can only be 0 or 1.)
@@ -141,10 +141,10 @@ numerical targets.
 Used for regression problems.
 
 $$
-MAE = \\frac{\sum_{i=1}^n | \mathbf{y}_i - \mathbf{\hat{y}}_i |}{n},
+MAE = \\frac{\\sum_{i=1}^n | \\mathbf{y}_i - \\mathbf{\\hat{y}}_i |}{n},
 $$
 
-where $\mathbf{y}_i$ and $\mathbf{\hat{y}}_i$ are the target
+where $\\mathbf{y}_i$ and $\\mathbf{\\hat{y}}_i$ are the target
 values or prediction respectively for a particular data sample
 $i$ (both multidimensional in case of using multiple targets)
 while $n$ is the number of samples we consider during the
@@ -158,10 +158,10 @@ numerical targets.
 Used for regression problems.
 
 $$
-RMSE = \sqrt{\\frac{\sum_{i=1}^n ( \mathbf{y}_i - \mathbf{\hat{y}}_i )^2}{n}},
+RMSE = \\sqrt{\\frac{\\sum_{i=1}^n ( \\mathbf{y}_i - \\mathbf{\\hat{y}}_i )^2}{n}},
 $$
 
-where $\mathbf{y}_i$ and $\mathbf{\hat{y}}_i$ are the target
+where $\\mathbf{y}_i$ and $\\mathbf{\\hat{y}}_i$ are the target
 values or prediction respectively for a particular data sample
 $i$ (both multidimensional in case of using multiple targets)
 while $n$ is the number of samples we consider during the
@@ -177,10 +177,10 @@ Used for regression problems.
 $R^{2}$ is defined as follows:
 
 $$
-R^{2} = \\frac{(\sum_{i=1}^n ( y_i - \\bar{y_i} ) *  ( \hat{y_i} - \\bar{\hat{y_i}} ))^2 }{\sum_{i=1}^n ( y_i - \\bar{y_i} )^2 \sum_{i=1}^n ( \hat{y_i} - \\bar{\hat{y_i}} )^2 },
+R^{2} = \\frac{(\\sum_{i=1}^n ( y_i - \\bar{y_i} ) *  ( \\hat{y_i} - \\bar{\\hat{y_i}} ))^2 }{\\sum_{i=1}^n ( y_i - \\bar{y_i} )^2 \\sum_{i=1}^n ( \\hat{y_i} - \\bar{\\hat{y_i}} )^2 },
 $$
 
-where $y_i$ are the true values, $\hat{y_i}$ are
+where $y_i$ are the true values, $\\hat{y_i}$ are
 the predictions and $\\bar{...}$ denotes the mean operator.
 
 An $R^{2}$ of 1 implies perfect correlation between the predictions

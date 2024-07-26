@@ -140,7 +140,7 @@ class DataFrame:
             ```
             Otherwise, you can use the [`Roles`][getml.data.Roles] class.
 
-    Example:
+    ??? example
         Creating a new data frame object in the getML engine and importing
         data is done by one the class functions
         [`from_csv`][getml.DataFrame.from_csv],
@@ -1098,7 +1098,7 @@ class DataFrame:
             It is assumed that the first line of each CSV file
             contains a header with the column names.
 
-        Example:
+        ??? example
             Let's assume you have two CSV files - *file1.csv* and
             *file2.csv* - in the current working directory. You can
             import their data into the getML engine using.
@@ -1289,7 +1289,7 @@ class DataFrame:
         Returns:
                 Handler of the underlying data.
 
-        Example:
+        ??? example
             ```python
             getml.database.connect_mysql(
                 host="db.relational-data.org",
@@ -1657,8 +1657,8 @@ class DataFrame:
         getML engine.
 
         Args:
-            fname:
-                The path of the parquet file to be read.
+            fnames:
+                The path of the parquet file(s) to be read.
 
             name:
                 Name of the data frame to be created.
@@ -1883,6 +1883,16 @@ class DataFrame:
         the CSV file(s), and return a corresponding
         [`DataFrame`][getml.DataFrame] handle.
 
+        enterprise-adm: Enterprise edition
+            This feature is available in the getML
+            [Enterprise edition][getting-started-community-vs-enterprise].
+
+            For licences, technical support and more information, feel free to [contact us](
+            https://www.getml.com/contact)!
+
+        Note:
+            Note that S3 is not supported on Windows.
+
         Args:
             bucket:
                 The bucket from which to read the files.
@@ -1938,7 +1948,7 @@ class DataFrame:
         Returns:
                 Handler of the underlying data.
 
-        Example:
+        ??? example
             Let's assume you have two CSV files - *file1.csv* and
             *file2.csv* - in the bucket. You can
             import their data into the getML engine using the following
@@ -1963,8 +1973,6 @@ class DataFrame:
             for further information on overriding the CSV sniffer for greater
             type safety.
 
-        Note:
-            Not supported in the getML community edition.
         """
 
         if isinstance(keys, str):
@@ -2138,7 +2146,7 @@ class DataFrame:
         disk into the getML engine and updates the current handler
         using [`refresh`][getml.DataFrame.refresh].
 
-        Example:
+        ??? example
             First, we have to create and import data sets.
             ```python
             d, _ = getml.datasets.make_numerical(population_name = 'test')
@@ -2621,8 +2629,8 @@ class DataFrame:
         """Read a parquet file.
 
         Args:
-            fname:
-                The filepath of the parquet file to be read.
+            fnames:
+                The filepath of the parquet file(s) to be read.
 
             append:
                 If a data frame object holding the same ``name`` is
@@ -2690,6 +2698,16 @@ class DataFrame:
         It is assumed that the first line of each CSV file contains a
         header with the column names.
 
+        enterprise-adm: Enterprise edition
+            This feature is available in the getML
+            [Enterprise edition][getting-started-community-vs-enterprise].
+
+            For licences, technical support and more information, feel free to [contact us](
+            https://www.getml.com/contact)!
+
+        Note:
+            Note that S3 is not supported on Windows.
+
         Args:
             bucket:
                 The bucket from which to read the files.
@@ -2756,8 +2774,6 @@ class DataFrame:
         Returns:
                 Handler of the underlying data.
 
-        Note:
-            Not supported in the getML community edition.
         """
 
         time_formats = time_formats or constants.TIME_FORMATS
@@ -3160,11 +3176,11 @@ class DataFrame:
         cols: Union[
             str, FloatColumn, StringColumn, List[Union[str, FloatColumn, StringColumn]]
         ],
-    ):
+    ) -> None:
         """Removes all [`subroles`][getml.data.subroles] from one or more columns.
 
         Args:
-            columns:
+            cols:
                 The columns or the names thereof.
         """
 
@@ -3186,7 +3202,7 @@ class DataFrame:
         """Removes the unit from one or more columns.
 
         Args:
-            columns:
+            cols:
                 The columns or the names thereof.
         """
 
@@ -3254,7 +3270,7 @@ class DataFrame:
                 This is only necessary, if an implicit conversion from a StringColumn to
                 a time stamp is taking place.
 
-        Example:
+        ??? example
             ```python
             data_df = dict(
                 animal=["hawk", "parrot", "goose"],
@@ -3656,6 +3672,14 @@ class DataFrame:
         """
         Writes the underlying data into a newly created CSV file
         located in an S3 bucket.
+
+        enterprise-adm: Enterprise edition
+            This feature is available in the getML
+            [Enterprise edition][getting-started-community-vs-enterprise].
+
+            For licences, technical support and more information, feel free to [contact us](
+            https://www.getml.com/contact)!
+
         Note:
             Note that S3 is not supported on Windows.
 
@@ -3678,7 +3702,7 @@ class DataFrame:
                 Maximum number of lines per file. Set to 0 to read
                 the entire data frame into a single file.
 
-        Example:
+        ??? example
             ```python
             getml.engine.set_s3_access_key_id("YOUR-ACCESS-KEY-ID")
             getml.engine.set_s3_secret_access_key("YOUR-SECRET-ACCESS-KEY")
@@ -3772,7 +3796,7 @@ class DataFrame:
         Returns:
                 A new [`View`][getml.data.View] containing the selected rows.
 
-        Example:
+        ??? example
             Generate example data:
             ```python
             data = dict(
@@ -4037,9 +4061,7 @@ class DataFrame:
                 is hardly interesting, but it might be useful to know how often
                 we have seen that same bank account number in another table.
 
-                If True, this will also set the
-                [`compare`][getml.data.subroles.only.compare] subrole. The feature
-                learning algorithms and the feature selectors will interpret this
-                accordingly.
+                For more information on units, please refer to the
+                [User Guide][annotating-data-units].
         """
         return _with_unit(self, cols, unit, comparison_only)

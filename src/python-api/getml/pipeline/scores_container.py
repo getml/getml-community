@@ -25,6 +25,12 @@ class Scores:
     """
     Container which holds the history of all scores associated with a given pipeline.
     The container supports slicing and is sort- and filterable.
+
+    Args:
+        data:
+            A list of [`Score`][getml.pipeline.score] objects.
+        latest:
+            A dictionary containing the latest scores for each metric.
     """
 
     # ----------------------------------------------------------------
@@ -132,14 +138,13 @@ class Scores:
         Filters the scores container.
 
         Args:
-            conditional (callable):
+            conditional:
                 A callable that evaluates to a boolean for a given item.
 
         Returns:
-            [`Scores`][getml.pipeline.Scores]:
                 A container of filtered scores.
 
-        Example:
+        ??? example
             ```python
             from datetime import datetime, timedelta
             one_week_ago = datetime.today() - timedelta(days=7)
@@ -156,6 +161,9 @@ class Scores:
     def mae(self) -> Union[float, List[float]]:
         """
         A convenience wrapper to retrieve the `mae` from the latest scoring run.
+
+        Returns:
+                The mean absolute error.
         """
         return _unlist_maybe(self._latest[mae])
 
@@ -165,6 +173,9 @@ class Scores:
     def rmse(self) -> Union[float, List[float]]:
         """
         A convenience wrapper to retrieve the `rmse` from the latest scoring run.
+
+        Returns:
+                The root mean squared error.
         """
         return _unlist_maybe(self._latest[rmse])
 
@@ -174,6 +185,9 @@ class Scores:
     def rsquared(self) -> Union[float, List[float]]:
         """
         A convenience wrapper to retrieve the `rsquared` from the latest scoring run.
+
+        Returns:
+                The squared correlation coefficient.
         """
         return _unlist_maybe(self._latest[rsquared])
 
@@ -186,17 +200,16 @@ class Scores:
         Sorts the scores container.
 
         Args:
-            key (callable, optional):
+            key:
                 A callable that evaluates to a sort key for a given item.
 
-            descending (bool, optional):
+            descending:
                 Whether to sort in descending order.
 
-        Return:
-            [`Scores`][getml.pipeline.Scores]:
+        Returns:
                 A container of sorted scores.
 
-        Example:
+        ??? example
             ```python
             by_auc = pipe.scores.sort(key=lambda score: score.auc)
             most_recent_first = pipe.scores.sort(key=lambda score: score.date_time, descending=True)

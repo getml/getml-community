@@ -19,7 +19,7 @@ class Aggregation:
     """
     Lazily evaluated aggregation over a column.
 
-    Example:
+    ??? example
         ```python
         my_data_frame["my_column"].avg()
         3.0

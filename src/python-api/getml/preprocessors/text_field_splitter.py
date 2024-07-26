@@ -11,6 +11,7 @@ Contains routines for preprocessing data frames.
 """
 
 from dataclasses import dataclass
+from typing import Optional, Dict, Any
 
 from .preprocessor import _Preprocessor
 from .validate import _validate
@@ -35,7 +36,7 @@ class TextFieldSplitter(_Preprocessor):
     ```
     Refer to the [User Guide][preprocessing-free-form-text] for more information.
 
-    Example:
+    ??? example
         ```python
         text_field_splitter = getml.preprocessors.TextFieldSplitter()
 
@@ -51,12 +52,12 @@ class TextFieldSplitter(_Preprocessor):
         ```
     """
 
-    def validate(self, params=None):
+    def validate(self, params: Optional[Dict[str, Any]] = None) -> None:
         """Checks both the types and the values of all instance
         variables and raises an exception if something is off.
 
         Args:
-            params (dict, optional):
+            params:
                 A dictionary containing
                 the parameters to validate. If not is passed,
                 the own parameters will be validated.

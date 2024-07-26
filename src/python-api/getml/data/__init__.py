@@ -30,7 +30,7 @@ three different steps.
   [`Placeholder`][getml.data.Placeholder] from the data and joining them to
   represent the data schema.
 
-Example:
+??? example
     Creating a new data frame object in the getML engine and importing
     data is done by one of the class methods
     [`from_csv`][getml.DataFrame.from_csv],

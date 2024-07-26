@@ -117,7 +117,7 @@ class View:
         dropped:
             A list of columns that have been dropped.
 
-    Example:
+    ??? example
         You hardly ever directly create views. Instead, it is more likely
         that you will encounter them as a result of some operation on a
         [`DataFrame`][getml.DataFrame]:
@@ -882,7 +882,7 @@ class View:
                 Maximum number of lines per file. Set to 0 to read
                 the entire data frame into a single file.
 
-        Example:
+        ??? example
             ```python
             getml.engine.set_s3_access_key_id("YOUR-ACCESS-KEY-ID")
             getml.engine.set_s3_secret_access_key("YOUR-SECRET-ACCESS-KEY")
@@ -962,7 +962,7 @@ class View:
         Returns:
             A new view containing only the rows that satisfy the condition.
 
-        Example:
+        ??? example
             Generate example data:
             ```python
             data = dict(
@@ -1152,7 +1152,7 @@ class View:
         names: Union[str, List[str]],
         subroles: Union[Subrole, Iterable[str]],
         append: bool = True,
-    ):
+    ) -> View:
         """Returns a new view with one or several new subroles on one or more columns.
 
         Args:

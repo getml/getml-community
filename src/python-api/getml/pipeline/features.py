@@ -52,12 +52,22 @@ class Features:
     Further, the container holds global methods to request features' importances,
     correlations and their respective transpiled sql representation.
 
+    Args:
+        pipeline:
+            The name of the pipeline the features are associated with.
+
+        targets:
+            The targets the features are associated with.
+
+        data:
+            The features to be stored in the container.
+
     Note:
         The container is an iterable. So, in addition to
         [`filter`][getml.pipeline.Features.filter] you can also use python list
         comprehensions for filtering.
 
-    Example:
+    ??? example
         ```python
         all_my_features = my_pipeline.features
 
@@ -245,7 +255,7 @@ class Features:
         Holds the correlations of a [`Pipeline`][getml.Pipeline]'s features.
 
         Returns:
-            `list` containing the correlations.
+            List containing the correlations.
 
         Note:
             The order corresponds to the current sorting of the container.
@@ -262,12 +272,12 @@ class Features:
         as displayed in the getML monitor.
 
         Args:
-            target_num (int):
+            target_num:
                 Indicates for which target you want to view the
                 importances.
                 (Pipelines can have more than one target.)
 
-            sort (bool):
+            sort:
                 Whether you want the results to be sorted.
 
         Returns:
@@ -322,14 +332,13 @@ class Features:
          Filters the Features container.
 
         Args:
-            conditional (callable, optional):
+            conditional:
                 A callable that evaluates to a boolean for a given item.
 
         Returns:
-            [`Features`][getml.pipeline.Features]:
                 A container of filtered Features.
 
-        Example:
+        ??? example
             ```python
             important_features = my_pipeline.features.filter(lambda feature: feature.importance > 0.1)
             correlated_features = my_pipeline.features.filter(lambda feature: feature.correlation > 0.3)
@@ -346,7 +355,7 @@ class Features:
          Holds the correlations of a [`Pipeline`][getml.Pipeline]'s features.
 
         Returns:
-            `list` containing the correlations.
+            List containing the correlations.
 
         Note:
             The order corresponds to the current sorting of the container.
@@ -363,15 +372,15 @@ class Features:
         as displayed in the getML monitor.
 
         Args:
-            target_num (int):
+            target_num:
                 Indicates for which target you want to view the
                 importances.
                 (Pipelines can have more than one target.)
 
-            sort (bool):
+            sort:
                 Whether you want the results to be sorted.
 
-        Returns
+        Returns:
             The first array contains the names of the features.
             The second array contains their importances. By definition, all importances add up to 1.
 
@@ -427,7 +436,7 @@ class Features:
         Holds the names of a [`Pipeline`][getml.Pipeline]'s features.
 
         Returns:
-            `list` containing the names.
+            List containing the names.
 
         Note:
             The order corresponds to the current sorting of the container.
@@ -442,7 +451,7 @@ class Features:
         Holds the names of a [`Pipeline`][getml.Pipeline]'s features.
 
         Returns:
-            `list` containing the names.
+            List containing the names.
 
         Note:
             The order corresponds to the current sorting of the container.
@@ -471,21 +480,20 @@ class Features:
         container is sorted by target and name.
 
         Args:
-            by (str, optional):
+            by:
                 The name of field to sort by. Possible fields:
                     - name(s)
                     - correlation(s)
                     - importances(s)
-            key (callable, optional):
+            key:
                 A callable that evaluates to a sort key for a given item.
-            descending (bool, optional):
+            descending:
                 Whether to sort in descending order.
 
         Return:
-            [`Features`][getml.pipeline.Features]:
                 A container of sorted Features.
 
-        Example:
+        ??? example
             ```python
             by_correlation = my_pipeline.features.sort(by="correlation")
 
@@ -541,6 +549,9 @@ class Features:
     def to_pandas(self) -> pd.DataFrame:
         """
         Returns all information related to the features in a pandas data frame.
+
+        Returns:
+            A pandas data frame containing the features' names, importances, correlations, and SQL code.
         """
 
         return self._to_pandas()
@@ -562,42 +573,42 @@ class Features:
         Returns SQL statements visualizing the features.
 
         Args:
-            targets (boolean):
+            targets:
                 Whether you want to include the target columns
                 in the main table.
 
-            subfeatures (boolean):
+            subfeatures:
                 Whether you want to include the code for the
                 subfeatures of a snowflake schema.
 
-            dialect (string):
+            dialect:
                 The SQL dialect to use. Must be from
                 [`dialect`][getml.pipeline.dialect]. Please
                 note that not all dialects are supported
                 in the getML community edition.
 
-            schema (string, optional):
+            schema:
                 The schema in which to wrap all generated tables and
                 indices. None for no schema. Not applicable to all dialects.
                 For the BigQuery and MySQL dialects, the schema is identical
                 to the database ID.
 
-            nchar_categorical (int):
+            nchar_categorical:
                 The maximum number of characters used in the
                 VARCHAR for categorical columns. Not applicable
                 to all dialects.
 
-            nchar_join_key (int):
+            nchar_join_key:
                 The maximum number of characters used in the
                 VARCHAR for join keys. Not applicable
                 to all dialects.
 
-            nchar_text (int):
+            nchar_text:
                 The maximum number of characters used in the
                 VARCHAR for text columns. Not applicable
                 to all dialects.
 
-            size_threshold (int, optional):
+            size_threshold:
                 The maximum number of characters to display
                 in a single feature. Displaying extremely
                 complicated features can crash your iPython
@@ -606,13 +617,13 @@ class Features:
                 upper limit is advantageous. Set to None
                 for no upper limit.
 
+        Returns:
+                Object representing the features.
+
         Examples:
             ```python
             my_pipeline.features.to_sql()
             ```
-        Returns:
-            [`SQLCode`][getml.pipeline.SQLCode]
-                Object representing the features.
 
         Note:
             Only fitted pipelines

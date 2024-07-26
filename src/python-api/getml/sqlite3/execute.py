@@ -10,6 +10,7 @@
 Executes SQL scripts on SQLite3
 """
 
+from __future__ import annotations
 import os
 import sqlite3
 from typing import List
@@ -38,7 +39,7 @@ def execute(conn: sqlite3.Connection, fname: str) -> None:
 
     Args:
         conn:
-            A sqlite3 connection created by [`connect`][getml.sqlite3.connect].
+            A sqlite3 connection created by [`connect`][getml.sqlite3.connect.connect].
 
         fname:
             The names of the SQL script or a folder containing SQL scripts.

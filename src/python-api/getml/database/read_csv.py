@@ -42,7 +42,7 @@ def read_csv(
         quotechar:
             The character used to wrap strings. Default:`"`
 
-        sep
+        sep:
             The separator used for separating fields. Default:`,`
 
         num_lines_read:
@@ -63,7 +63,7 @@ def read_csv(
             If you don't explicitly pass a connection,
             the engine will use the default connection.
 
-    Example:
+    ??? example
         Let's assume you have two CSV files - *file1.csv* and
         *file2.csv* . You can import their data into the database
         using the following commands:

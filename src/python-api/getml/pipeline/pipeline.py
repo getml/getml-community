@@ -177,7 +177,7 @@ class Pipeline:
             The share of features you want the feature
             selection to keep. When set to 0.0, then all features will be kept.
 
-    Example:
+    ??? example
         We assume that you have already set up your
         preprocessors (refer to [`preprocessors`][getml.preprocessors]),
         your feature learners (refer to [`feature_learning`][getml.feature_learning])
@@ -238,7 +238,7 @@ class Pipeline:
         predictions = pipe.predict(container.full)
         ```
 
-    Example:
+    ??? example
         If your data can be organized in a simple star schema,
         you can use [`StarSchema`][getml.data.StarSchema].
         [`StarSchema`][getml.data.StarSchema] unifies
@@ -307,7 +307,7 @@ class Pipeline:
         pipe.score(star_schema.test)
         ```
 
-    Example:
+    ??? example
         [`StarSchema`][getml.data.StarSchema] is simpler,
         but cannot be used for more complex data models.
         The general approach is to use
@@ -415,7 +415,7 @@ class Pipeline:
         )
         ```
         Or you could even do this. The order of the peripheral tables
-        can be inferred from the \_\_repr\_\_ method of the pipeline,
+        can be inferred from the `__repr__` method of the pipeline,
         and it is usually in alphabetical order.
 
         ```python
@@ -1020,6 +1020,9 @@ class Pipeline:
         last time `.score()` was called) on the pipeline.
 
         For programmatic access use [`metrics`][getml.pipeline.metrics].
+
+        Returns:
+            The accuracy of the pipeline.
         """
         return self.scores.accuracy
 
@@ -1032,6 +1035,9 @@ class Pipeline:
         last time `.score()` was called) on the pipeline.
 
         For programmatic access use [`metrics`][getml.pipeline.metrics].
+
+        Returns:
+            The auc of the pipeline.
         """
         return self.scores.auc
 
@@ -1051,13 +1057,13 @@ class Pipeline:
         Checks the validity of the data model.
 
         Args:
-            population_table ([`DataFrame`][getml.DataFrame], [`View`][getml.View] or [`Subset`][getml.data.Subset]):
+            population_table:
                 Main table containing the target variable(s) and
                 corresponding to the ``population``
                 [`Placeholder`][getml.data.Placeholder] instance
                 variable.
 
-            peripheral_tables (List[[`DataFrame`][getml.DataFrame] or [`View`][getml.View]], dict, [`DataFrame`][getml.DataFrame] or [`View`][getml.View], optional):
+            peripheral_tables:
                 Additional tables corresponding to the ``peripheral``
                 [`Placeholder`][getml.data.Placeholder] instance
                 variable. If passed as a list, the order needs to
@@ -1123,6 +1129,9 @@ class Pipeline:
         [`Columns`][getml.pipeline.Columns] object that
         can be used to handle information about the original
         columns utilized by the feature learners.
+
+        Returns:
+            The columns object.
         """
         self._check_whether_fitted()
         return Columns(self.id, self.targets, self.peripheral)
@@ -1136,6 +1145,9 @@ class Pipeline:
         run (the last time `.score()` was called) on the pipeline.
 
         For programmatic access use [`metrics`][getml.pipeline.metrics].
+
+        Returns:
+            The cross entropy of the pipeline.
         """
         return self.scores.cross_entropy
 
@@ -1166,7 +1178,7 @@ class Pipeline:
         See [deployment][deployment] for details.
 
         Args:
-            deploy (bool): If `True`, the deployment of the pipeline
+            deploy: If `True`, the deployment of the pipeline
                 will be triggered.
         """
         self._check_whether_fitted()
@@ -1193,6 +1205,9 @@ class Pipeline:
         [`Features`][getml.pipeline.Features] object that
         can be used to handle the features generated
         by the feature learners.
+
+        Returns:
+            The features object.
         """
         self._check_whether_fitted()
         return Features(self.id, self.targets)
@@ -1215,13 +1230,13 @@ class Pipeline:
         and predictors.
 
         Args:
-            population_table ([`DataFrame`][getml.DataFrame], [`View`][getml.View] or [`Subset`][getml.data.Subset]):
+            population_table:
                 Main table containing the target variable(s) and
                 corresponding to the ``population``
                 [`Placeholder`][getml.data.Placeholder] instance
                 variable.
 
-            peripheral_tables (List[[`DataFrame`][getml.DataFrame] or [`View`][getml.View]], dict, [`DataFrame`][getml.DataFrame] or [`View`][getml.View], optional):
+            peripheral_tables:
                 Additional tables corresponding to the ``peripheral``
                 [`Placeholder`][getml.data.Placeholder] instance
                 variable. If passed as a list, the order needs to
@@ -1234,7 +1249,7 @@ class Pipeline:
                 or [`TimeSeries`][getml.data.TimeSeries], that means you are passing
                 a [`Subset`][getml.data.Subset].
 
-            validation_table ([`DataFrame`][getml.DataFrame], [`View`][getml.View] or [`Subset`][getml.data.Subset]):
+            validation_table:
                 Main table containing the target variable(s) and
                 corresponding to the ``population``
                 [`Placeholder`][getml.data.Placeholder] instance
@@ -1244,9 +1259,12 @@ class Pipeline:
                 Only used for early stopping in [`XGBoostClassifier`][getml.predictors.XGBoostClassifier]
                 and [`XGBoostRegressor`][getml.predictors.XGBoostRegressor].
 
-            check (bool):
+            check:
                 Whether you want to check the data model before fitting. The checks are
                 equivalent to the checks run by [`check`][getml.Pipeline.check].
+
+        Returns:
+            The fitted pipeline.
         """
 
         additional_tags = (
@@ -1324,6 +1342,9 @@ class Pipeline:
     def fitted(self) -> bool:
         """
         Whether the pipeline has already been fitted.
+
+        Returns:
+            Whether the pipeline has already been fitted.
         """
         return self._id != NOT_FITTED
 
@@ -1336,6 +1357,9 @@ class Pipeline:
         last time `.score()` was called) on the pipeline.
 
         For programmatic access use [`metrics`][getml.pipeline.metrics].
+
+        Returns:
+            The mae of the pipeline.
         """
         return self.scores.mae
 
@@ -1347,6 +1371,9 @@ class Pipeline:
         [`Plots`][getml.pipeline.Plots] object that
         can be used to generate plots like an ROC
         curve or a lift curve.
+
+        Returns:
+            The plots object.
         """
         self._check_whether_fitted()
         return Plots(self.id)
@@ -1358,6 +1385,9 @@ class Pipeline:
         """
         ID of the pipeline. This is used to uniquely identify
         the pipeline on the engine.
+
+        Returns:
+            The ID of the pipeline.
         """
         return self._id
 
@@ -1366,7 +1396,10 @@ class Pipeline:
     @property
     def is_classification(self) -> bool:
         """
-        Whether the pipeline can used for classification problems.
+        Whether the pipeline can be used for classification problems.
+
+        Returns:
+            Whether the pipeline can be used for classification problems.
         """
         return self._check_classification_or_regression()
 
@@ -1375,7 +1408,10 @@ class Pipeline:
     @property
     def is_regression(self) -> bool:
         """
-        Whether the pipeline can used for regression problems.
+        Whether the pipeline can be used for regression problems.
+
+        Returns:
+            Whether the pipeline can be used for regression problems.
         """
         return not self.is_classification
 
@@ -1390,6 +1426,9 @@ class Pipeline:
         to existing data frames to correctly reassign
         the roles of existing columns. If the pipeline
         has not been fitted, this is None.
+
+        Returns:
+            The metadata of the pipeline.
         """
         return self._metadata
 
@@ -1400,6 +1439,9 @@ class Pipeline:
         """
         Returns the ID of the pipeline. The name property is
         kept for backward compatibility.
+
+        Returns:
+            The ID of the pipeline.
         """
         return self._id
 
@@ -1420,16 +1462,16 @@ class Pipeline:
 
         Returns the predictions generated by the pipeline based on
         `population_table` and `peripheral_tables` or writes them into
-        a data base named `table_name`.
+        a database named `table_name`.
 
         Args:
-            population_table ([`DataFrame`][getml.DataFrame], [`View`][getml.View] or [`Subset`][getml.data.Subset]):
+            population_table:
                 Main table containing the target variable(s) and
                 corresponding to the ``population``
                 [`Placeholder`][getml.data.Placeholder] instance
                 variable.
 
-            peripheral_tables (List[[`DataFrame`][getml.DataFrame] or [`View`][getml.View]], dict, [`DataFrame`][getml.DataFrame] or [`View`][getml.View], optional):
+            peripheral_tables:
                 Additional tables corresponding to the ``peripheral``
                 [`Placeholder`][getml.data.Placeholder] instance
                 variable. If passed as a list, the order needs to
@@ -1442,7 +1484,7 @@ class Pipeline:
                 or [`TimeSeries`][getml.data.TimeSeries], that means you are passing
                 a [`Subset`][getml.data.Subset].
 
-            table_name (str, optional):
+            table_name:
                 If not an empty string, the resulting predictions will
                 be written into a table in a [`database`][getml.database].
                 Refer to [Unified import interface][importing-data-unified-interface] for further information.
@@ -1501,7 +1543,6 @@ class Pipeline:
         last time you called [`fit`][getml.Pipeline.fit].
 
         Returns:
-            [`Pipeline`][getml.Pipeline]:
                 Current instance
         """
 
@@ -1530,6 +1571,9 @@ class Pipeline:
         (the last time `.score()` was called) on the pipeline.
 
         For programmatic access use [`metrics`][getml.pipeline.metrics].
+
+        Returns:
+            The rmse of the pipeline.
         """
         return self.scores.rmse
 
@@ -1542,6 +1586,9 @@ class Pipeline:
         (the last time `.score()` was called) on the pipeline.
 
         For programmatic access use [`metrics`][getml.pipeline.metrics].
+
+        Returns:
+            The rsquared of the pipeline.
         """
         return self.scores.rsquared
 
@@ -1563,13 +1610,13 @@ class Pipeline:
         `peripheral_tables`.
 
         Args:
-            population_table ([`DataFrame`][getml.DataFrame], [`View`][getml.View] or [`Subset`][getml.data.Subset]):
+            population_table:
                 Main table containing the target variable(s) and
                 corresponding to the ``population``
                 [`Placeholder`][getml.data.Placeholder] instance
                 variable.
 
-            peripheral_tables (List[[`DataFrame`][getml.DataFrame] or [`View`][getml.View]], dict, [`DataFrame`][getml.DataFrame] or [`View`][getml.View], optional):
+            peripheral_tables:
                 Additional tables corresponding to the ``peripheral``
                 [`Placeholder`][getml.data.Placeholder] instance
                 variable. If passed as a list, the order needs to
@@ -1581,6 +1628,9 @@ class Pipeline:
                 a [`Container`][getml.data.Container], [`StarSchema`][getml.data.StarSchema]
                 or [`TimeSeries`][getml.data.TimeSeries], that means you are passing
                 a [`Subset`][getml.data.Subset].
+
+        Returns:
+            The scores of the pipeline.
 
         Note:
             Only fitted pipelines
@@ -1637,7 +1687,6 @@ class Pipeline:
         Contains all scores generated by [`score`][getml.Pipeline.score]
 
         Returns:
-            [`Scores`][getml.pipeline.Scores]:
                 A container that holds the scores for the pipeline.
 
         """
@@ -1655,6 +1704,9 @@ class Pipeline:
     def scored(self) -> bool:
         """
         Whether the pipeline has been scored.
+
+        Returns:
+            Whether the pipeline has been scored.
         """
         if self._scores is None:
             return False
@@ -1668,6 +1720,9 @@ class Pipeline:
         [`Tables`][getml.pipeline.Tables] object that
         can be used to handle information about the original
         tables utilized by the feature learners.
+
+        Returns:
+            The tables object.
         """
         self._check_whether_fitted()
         return Tables(self.targets, self.columns)
@@ -1678,6 +1733,9 @@ class Pipeline:
     def targets(self) -> List[str]:
         """
         Contains the names of the targets used for this pipeline.
+
+        Returns:
+            The names of the targets.
         """
         self._check_whether_fitted()
         return copy.deepcopy(self._targets)
@@ -1702,7 +1760,40 @@ class Pipeline:
         `peripheral_tables` into features, which can be inserted into
         machine learning models.
 
-        Example:
+
+        Args:
+            population_table:
+                Main table containing the target variable(s) and
+                corresponding to the ``population``
+                [`Placeholder`][getml.data.Placeholder] instance
+                variable.
+
+            peripheral_tables:
+                Additional tables corresponding to the ``peripheral``
+                [`Placeholder`][getml.data.Placeholder] instance
+                variable. If passed as a list, the order needs to
+                match the order of the corresponding placeholders passed
+                to ``peripheral``.
+
+                If you pass a [`Subset`][getml.data.Subset] to `population_table`,
+                the peripheral tables from that subset will be used. If you use
+                a [`Container`][getml.data.Container], [`StarSchema`][getml.data.StarSchema]
+                or [`TimeSeries`][getml.data.TimeSeries], that means you are passing
+                a [`Subset`][getml.data.Subset].
+
+            df_name:
+                If not an empty string, the resulting features will be
+                written into a newly created DataFrame.
+
+            table_name:
+                If not an empty string, the resulting features will
+                be written into a table in a [`database`][getml.database].
+                Refer to [Unified import interface][importing-data-unified-interface] for further information.
+
+        Returns:
+            The features generated by the pipeline.
+
+        ??? example
             By default, `transform` returns a [`ndarray`](https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html):
             ```python
             my_features_array = pipe.transform()
@@ -1717,35 +1808,6 @@ class Pipeline:
             getml.database.connect_odbc(...)
             pipe.transform(table_name="MY_FEATURES")
             ```
-
-        Args:
-            population_table ([`DataFrame`][getml.DataFrame], [`View`][getml.View] or [`Subset`][getml.data.Subset]):
-                Main table containing the target variable(s) and
-                corresponding to the ``population``
-                [`Placeholder`][getml.data.Placeholder] instance
-                variable.
-
-            peripheral_tables (List[[`DataFrame`][getml.DataFrame] or [`View`][getml.View]], dict, [`DataFrame`][getml.DataFrame] or [`View`][getml.View], optional):
-                Additional tables corresponding to the ``peripheral``
-                [`Placeholder`][getml.data.Placeholder] instance
-                variable. If passed as a list, the order needs to
-                match the order of the corresponding placeholders passed
-                to ``peripheral``.
-
-                If you pass a [`Subset`][getml.data.Subset] to `population_table`,
-                the peripheral tables from that subset will be used. If you use
-                a [`Container`][getml.data.Container], [`StarSchema`][getml.data.StarSchema]
-                or [`TimeSeries`][getml.data.TimeSeries], that means you are passing
-                a [`Subset`][getml.data.Subset].
-
-            df_name (str, optional):
-                If not an empty string, the resulting features will be
-                written into a newly created DataFrame.
-
-            table_name (str, optional):
-                If not an empty string, the resulting features will
-                be written into a table in a [`database`][getml.database].
-                Refer to [Unified import interface][importing-data-unified-interface] for further information.
 
         Note:
             Only fitted pipelines

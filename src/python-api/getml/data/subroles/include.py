@@ -14,7 +14,7 @@ from getml.data.subroles.types import IncludeEmail, IncludeSubstring
 Columns marked with a subrole in this submodule will be used for the
 specified purpose without excluding other purposes.
 
-Example:
+??? example
     ```python
     # The Substring preprocessor will be applied to this column.
     # But other preprocessors, feature learners or predictors

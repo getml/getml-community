@@ -34,12 +34,20 @@ class Tables:
     supports slicing and can be sorted and filtered. Further, the container
     holds global methods to request tables' importances.
 
+    Args:
+        targets:
+            The targets associated with the pipeline.
+        columns:
+            The columns with which the tables are built.
+        data:
+            A list of [`Table`][getml.pipeline.table.Table] objects.
+
     Note:
         The container is an iterable. So, in addition to
         [`filter`][getml.pipeline.Tables.filter] you can also use python list
         comprehensions for filtering.
 
-    Examples:
+    ??? example
         ```python
         all_my_tables = my_pipeline.tables
         first_table = my_pipeline.tables[0]
@@ -194,13 +202,13 @@ class Tables:
         Filters the tables container.
 
         Args:
-            conditional (callable, optional):
+            conditional:
                 A callable that evaluates to a boolean for a given item.
 
         Returns:
                 A container of filtered tables.
 
-        Example:
+        ??? example
             ```python
             important_tables = my_pipeline.table.filter(lambda table: table.importance > 0.1)
             peripheral_tables = my_pipeline.tables.filter(lambda table: table.marker == "[PERIPHERAL]")
@@ -223,11 +231,11 @@ class Tables:
         each target, the importances add up to 1.
 
         Args:
-            target_num (int):
+            target_num:
                 Indicates for which target you want to view the
                 importances. (Pipelines can have more than one target.)
 
-            sort (bool):
+            sort:
                 Whether you want the results to be sorted.
 
         Returns:
@@ -260,7 +268,7 @@ class Tables:
         Holds the names of a [`Pipeline`][getml.Pipeline]'s tables.
 
         Returns:
-            `list` containing the names.
+            List containing the names.
 
         Note:
             The order corresponds to the current sorting of the container.
@@ -280,19 +288,19 @@ class Tables:
         container is sorted by target and name.
 
         Args:
-            by (str, optional):
+            by:
                 The name of field to sort by. Possible fields:
                     - name(s)
                     - importances(s)
-            key (callable, optional):
+            key:
                 A callable that evaluates to a sort key for a given item.
-            descending (bool, optional):
+            descending:
                 Whether to sort in descending order.
 
         Returns:
                 A container of sorted tables.
 
-        Example:
+        ??? example
             ```python
             by_importance = my_pipeline.tables.sort(key=lambda table: table.importance)
             ```
@@ -337,7 +345,7 @@ class Tables:
         Holds the targets of a [`Pipeline`][getml.Pipeline]'s tables.
 
         Returns:
-            `list` containing the names.
+            List containing the names.
 
         Note:
             The order corresponds to the current sorting of the container.
@@ -349,6 +357,9 @@ class Tables:
     def to_pandas(self) -> pd.DataFrame:
         """
         Returns all information related to the tables in a pandas DataFrame.
+
+        Returns:
+            A pandas DataFrame containing the tables' names, importances, targets and markers.
         """
 
         data_frame = pd.DataFrame()

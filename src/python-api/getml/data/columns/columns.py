@@ -114,12 +114,11 @@ def arange(
 # -----------------------------------------------------------------------------
 
 
-def rowid():
+def rowid() -> FloatColumnView:
     """
     Get the row numbers of the table.
 
     Returns:
-        [`FloatColumnView`][getml.data.columns.FloatColumnView]:
             (numerical) column containing the row id, starting with 0
     """
     return FloatColumnView(operator="rowid", operand1=None, operand2=None)
@@ -181,7 +180,7 @@ class BooleanColumnView(_View):
     They can be used to take subselection of the data frame
     or to update other columns.
 
-    Example:
+    ??? example
         ```python
         import numpy as np
 

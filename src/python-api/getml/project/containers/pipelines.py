@@ -10,6 +10,7 @@
 Container which holds all of a project's pipelines.
 """
 
+from __future__ import annotations
 from typing import Any, Callable, List
 
 from getml.pipeline.helpers2 import _refresh_all, list_pipelines
@@ -24,7 +25,7 @@ class Pipelines:
     Container which holds all pipelines associated with the currently running
     project. The container supports slicing and is sort- and filterable.
 
-    Example:
+    ??? example
         Show the first 10 pipelines belonging to the current project:
         ```python
         getml.project.pipelines[:10]
@@ -182,7 +183,7 @@ class Pipelines:
 
     # ----------------------------------------------------------------
 
-    def sort(self, key: Callable, descending: bool = False):
+    def sort(self, key: Callable, descending: bool = False) -> Pipelines:
         """
         Sorts the pipelines container.
 
@@ -196,7 +197,7 @@ class Pipelines:
         Returns:
                 A container of sorted pipelines.
 
-        Example:
+        ??? example
             ```python
             by_auc = getml.project.pipelines.sort(key=lambda pipe: pipe.auc)
             by_fl = getml.project.pipelines.sort(key=lambda pipe: pipe.feature_learners[0].type)
@@ -207,7 +208,7 @@ class Pipelines:
 
     # ----------------------------------------------------------------
 
-    def filter(self, conditional: Callable):
+    def filter(self, conditional: Callable) -> Pipelines:
         """
         Filters the pipelines container.
 
@@ -218,7 +219,7 @@ class Pipelines:
         Returns:
                 A container of filtered pipelines.
 
-        Example:
+        ??? example
             ```python
             pipelines_with_tags = getml.project.pipelines.filter(lambda pipe: len(pipe.tags) > 0)
             accurate_pipes = getml.project.pipelines.filter(lambda pipe: all(acc > 0.9 for acc in pipe.accuracy))

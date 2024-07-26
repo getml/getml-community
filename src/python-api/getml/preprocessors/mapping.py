@@ -10,12 +10,15 @@
 Contains routines for preprocessing data frames.
 """
 
-from dataclasses import dataclass, field
-from typing import ClassVar, List
+from dataclasses import dataclass
 
-from getml.feature_learning.aggregations import _Aggregations
-from getml.feature_learning.aggregations import mapping as mapping_aggregations
+from typing import ClassVar, Iterable, Optional, Dict, Any
 
+from ..feature_learning.aggregations.sets import (
+    MAPPING,
+    MappingAggregationsSets,
+)
+from ..feature_learning.aggregations.types import MappingAggregations
 from .preprocessor import _Preprocessor
 from .validate import _validate
 
@@ -32,20 +35,34 @@ class Mapping(_Preprocessor):
 
     Refer to the [User guide][preprocessing-mappings] for more information.
 
-    Args:
-        aggregation (List[[`aggregations`][getml.feature_learning.aggregations]], optional):
+    enterprise-adm: Enterprise edition
+        This feature is available in the getML
+        [Enterprise edition][getting-started-community-vs-enterprise].
+
+        For licences, technical support and more information, feel free to [contact us](
+        https://www.getml.com/contact)!
+
+    Attributes:
+        agg_sets:
+            It is a class variable holding the available aggregation sets for the
+            mapping preprocessor.
+            Value: [`MAPPING`][getml.feature_learning.aggregations.sets.MAPPING].
+
+    Parameters:
+        aggregation:
             The aggregation function to use over the targets.
 
-            Must be from [`aggregations`][getml.feature_learning.aggregations].
+            Must be an aggregation supported by Mapping preprocessor
+            ([`MAPPING_AGGREGATIONS`][getml.feature_learning.aggregations.sets.MAPPING_AGGREGATIONS]).
 
-        min_freq (int, optional):
+        min_freq:
             The minimum number of targets required for a value to be included in
-            the mapping. Range: [0, $\infty$]
+            the mapping. Range: [0, ∞]
 
-        multithreading (bool, optional):
+        multithreading:
             Whether you want to apply multithreading.
 
-    Example:
+    ??? example
         ```python
         mapping = getml.preprocessors.Mapping()
 
@@ -60,33 +77,31 @@ class Mapping(_Preprocessor):
         )
         ```
 
-    Note:
-        Not supported in the getML community edition.
     """
 
-    agg_sets: ClassVar[_Aggregations] = mapping_aggregations
+    agg_sets: ClassVar[MappingAggregationsSets] = MAPPING
 
-    aggregation: List[str] = field(default_factory=lambda: mapping_aggregations.Default)
+    aggregation: Iterable[MappingAggregations] = MAPPING.default
     min_freq: int = 30
     multithreading: bool = True
 
-    def validate(self, params=None):
+    def validate(self, params: Optional[Dict[str, Any]] = None) -> None:
         """Checks both the types and the values of all instance
         variables and raises an exception if something is off.
 
         Args:
-            params (dict, optional):
+            params:
                 A dictionary containing
                 the parameters to validate. If not is passed,
                 the own parameters will be validated.
         """
         params = _validate(self, params)
 
-        if not all([agg in mapping_aggregations.All for agg in params["aggregation"]]):
+        if not all([agg in MAPPING.all for agg in params["aggregation"]]):
             raise ValueError(
-                "'aggregation' must be from Mapping.agg_sets.All, "
+                "'aggregation' must be from Mapping.agg_sets.all, "
                 + "meaning from the following set: "
-                + str(mapping_aggregations.All)
+                + str(MAPPING.all)
                 + "."
             )
 

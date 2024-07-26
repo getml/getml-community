@@ -41,7 +41,7 @@ def copy_table(
             connection. If you do not explicitly pass a target_table, the
             name will be identical to the source_table.
 
-    Example:
+    ??? example
         A frequent use case for this function is to copy data from a data source into
         sqlite. This is a good idea, because sqlite is faster than most standard,
         ACID-compliant databases, and also you want to avoid messing up a productive

@@ -26,7 +26,7 @@ from getml.data.subroles.types import (
 Columns marked with a subrole in this submodule will not be used
 for the specified purpose.
 
-Example:
+??? example
     ```python
     # The Relboost feature learning algorithm will
     # ignore this column.

@@ -14,7 +14,7 @@ to transpile its features to production-ready SQL code.
 This SQL code can be run on standard cloud infrastructure.
 Please also refer to [`SQLCode`][getml.pipeline.SQLCode].
 
-Example:
+??? example
     ```python
     sql_code = my_pipeline.features.to_sql(
         getml.pipeline.dialect.spark_sql)
@@ -45,8 +45,12 @@ _all_dialects = [
 bigquery = _all_dialects[0]
 """BigQuery is a proprietary database system used by the Google Cloud.
 
-Note:
-    Not supported in the getML community edition.
+enterprise-adm: Enterprise edition
+    This feature is available in the getML
+    [Enterprise edition][getting-started-community-vs-enterprise].
+
+    For licences, technical support and more information, feel free to [contact us](
+    https://www.getml.com/contact)!
 """
 
 human_readable_sql = _all_dialects[1]
@@ -57,8 +61,12 @@ mysql = _all_dialects[2]
 """MySQL and its fork MariaDB are among the most popular open-source
 database systems.
 
-Note:
-    Not supported in the getML community edition.
+enterprise-adm: Enterprise edition
+    This feature is available in the getML
+    [Enterprise edition][getting-started-community-vs-enterprise].
+
+    For licences, technical support and more information, feel free to [contact us](
+    https://www.getml.com/contact)!
 """
 
 postgres = _all_dialects[3]
@@ -66,8 +74,12 @@ postgres = _all_dialects[3]
 used by PostgreSQL and its many derivatives like Redshift
 or Greenplum.
 
-Note:
-    Not supported in the getML community edition.
+enterprise-adm: Enterprise edition
+    This feature is available in the getML
+    [Enterprise edition][getting-started-community-vs-enterprise].
+
+    For licences, technical support and more information, feel free to [contact us](
+    https://www.getml.com/contact)!
 """
 
 spark_sql = _all_dialects[4]
@@ -75,10 +87,14 @@ spark_sql = _all_dialects[4]
 
 Apache Spark is an open-source, distributed, in-memory
 engine for large-scale data processing and a popular
-choice for producutionizing machine learning pipelines.
+choice for productionizing machine learning pipelines.
 
-Note:
-    Not supported in the getML community edition.
+enterprise-adm: Enterprise edition
+    This feature is available in the getML
+    [Enterprise edition][getting-started-community-vs-enterprise].
+
+    For licences, technical support and more information, feel free to [contact us](
+    https://www.getml.com/contact)!
 """
 
 sqlite3 = _all_dialects[5]
@@ -87,16 +103,24 @@ sqlite3 = _all_dialects[5]
 It is recommended for live prediction systems or when the amount
 of data handled is unlikely to be too large.
 
-Note:
-    Not supported in the getML community edition.
+enterprise-adm: Enterprise edition
+    This feature is available in the getML
+    [Enterprise edition][getting-started-community-vs-enterprise].
+
+    For licences, technical support and more information, feel free to [contact us](
+    https://www.getml.com/contact)!
 """
 
 tsql = _all_dialects[6]
 """TSQL or Transact-SQL is the dialect used by most Microsoft
 databases.
 
-Note:
-    Not supported in the getML community edition.
+enterprise-adm: Enterprise edition
+    This feature is available in the getML
+    [Enterprise edition][getting-started-community-vs-enterprise].
+
+    For licences, technical support and more information, feel free to [contact us](
+    https://www.getml.com/contact)!
 """
 
 
@@ -105,13 +129,13 @@ Note:
 
 def _drop_table(dialect: str, key: str) -> str:
     if dialect in (bigquery, mysql, spark_sql):
-        return "DROP TABLE IF EXISTS `" + key.upper() + "`"
+        return f"DROP TABLE IF EXISTS `{key.upper()}`"
 
     if dialect in (human_readable_sql, postgres, sqlite3):
-        return 'DROP TABLE IF EXISTS "' + key.upper() + '"'
+        return f'DROP TABLE IF EXISTS "{key.upper()}"'
 
     if dialect == tsql:
-        return "DROP TABLE IF EXISTS \[" + key.upper() + "\]"
+        return f"DROP TABLE IF EXISTS [{key.upper()}]"
 
     raise ValueError(
         "Unknown dialect: '"
@@ -132,7 +156,7 @@ def _table_pattern(dialect: str) -> Pattern:
         return re.compile('CREATE TABLE "(.+)"')
 
     if dialect == tsql:
-        return re.compile("INTO \[(.+)\]")
+        return re.compile(r"INTO \[(.+)\]")
 
     raise ValueError(
         "Unknown dialect: '"

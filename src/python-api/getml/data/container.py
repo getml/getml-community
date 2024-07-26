@@ -92,7 +92,7 @@ class Container:
             the subsets separately using *train*, *validation*, *test*
             and *kwargs*.
 
-            Example:
+            ??? example
                 ```python
                 # Pass the subset.
                 container = getml.data.Container(my_subset=my_data_frame)
@@ -102,7 +102,7 @@ class Container:
                 my_pipeline.fit(container.my_subset)
                 ```
 
-    Example:
+    ??? example
         A [`DataModel`][getml.data.DataModel] only contains abstract data. When we
         fit a pipeline, we need to assign concrete data.
 

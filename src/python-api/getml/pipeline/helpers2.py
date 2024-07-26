@@ -72,7 +72,7 @@ def list_pipelines() -> List[str]:
     [`load`][getml.pipeline.load].
 
     Returns:
-        list containing the names of all pipelines.
+        List containing the names of all pipelines.
     """
 
     cmd: Dict[str, Any] = {}
@@ -99,8 +99,7 @@ def load(name: str) -> Pipeline:
         name: The name of the pipeline to be loaded.
 
     Returns:
-        A [`Pipeline`][getml.Pipeline] that is a handler
-        for the pipeline signified by name.
+        Pipeline that is a handler for the pipeline signified by name.
     """
 
     return _make_dummy(name).refresh()
@@ -116,6 +115,9 @@ def exists(name: str) -> bool:
     Args:
         name (str):
             Name of the pipeline.
+
+    Returns:
+            True if the pipeline exists, False otherwise.
     """
     if not isinstance(name, str):
         raise TypeError("'name' must be of type str")
@@ -133,7 +135,7 @@ def delete(name: str) -> None:
     If a pipeline named 'name' exists, it is deleted.
 
     Args:
-        name (str):
+        name:
             Name of the pipeline.
     """
 

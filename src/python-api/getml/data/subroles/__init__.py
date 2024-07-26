@@ -10,7 +10,7 @@ will be used by the pipeline.
 
 A column can have no subrole, one subrole or several subroles.
 
-Example:
+??? example
     ```python
     # The Relboost feature learning algorithm will
     # ignore this column.

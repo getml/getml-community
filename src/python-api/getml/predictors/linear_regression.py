@@ -32,14 +32,14 @@ class LinearRegression(_Predictor):
     regression:
 
     $$
-    \hat{y} = w_0 + w_1 * feature_1 + w_2 * feature_2 + ...
+    \\hat{y} = w_0 + w_1 * feature_1 + w_2 * feature_2 + ...
     $$
 
     The weights are optimized by minimizing the squared loss of the
-    predictions $\hat{y}$ w.r.t. the [target][annotating-data-target] $y$.
+    predictions $\\hat{y}$ w.r.t. the [target][annotating-data-target] $y$.
 
     $$
-    L(y,\hat{y}) = \\frac{1}{n} \sum_{i=1}^{n} (y_i -\hat{y}_i)^2
+    L(y,\\hat{y}) = \\frac{1}{n} \\sum_{i=1}^{n} (y_i -\\hat{y}_i)^2
     $$
 
     Linear regressions can be trained arithmetically or numerically.
@@ -54,10 +54,10 @@ class LinearRegression(_Predictor):
         learning_rate:
             The learning rate used for training numerically (only
             relevant when categorical features are included). Range:
-            (0, $\infty$]
+            (0, ∞]
 
         reg_lambda:
-            L2 regularization parameter. Range: [0, $\infty$]
+            L2 regularization parameter. Range: [0, ∞]
 
 
 
@@ -79,7 +79,7 @@ class LinearRegression(_Predictor):
                 the parameters to validate. If nothing is passed,
                 the default parameters will be validated.
 
-        Example:
+        ??? example
             ```python
             l = getml.predictors.LinearRegression()
             l.learning_rate = 8.1
@@ -87,7 +87,7 @@ class LinearRegression(_Predictor):
             ```
 
         Note:
-            This method is called at end of the \_\_init\_\_ constructor
+            This method is called at end of the `__init__` constructor
             and every time before the predictor - or a class holding
             it as an instance variable - is sent to the getML engine.
         """
