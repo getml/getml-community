@@ -38,6 +38,13 @@ def connect_odbc(
     Before you use the ODBC connector, make sure the database is up and
     running and that the appropriate ODBC drivers are installed.
 
+    enterprise-adm: Enterprise edition
+        This feature is available in the getML
+        [Enterprise Edition][getting-started-community-vs-enterprise].
+
+        For licences, technical support and more information, feel free to [contact us](
+        https://www.getml.com/contact)!
+
     Args:
         server_name:
             The server name, as referenced in your .obdc.ini file.
@@ -124,8 +131,6 @@ def connect_odbc(
     Returns:
         The connection object.
 
-    Note:
-        Not supported in the getML community edition.
     """
 
     time_formats = time_formats or constants.TIME_FORMATS

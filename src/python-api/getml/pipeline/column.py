@@ -19,6 +19,20 @@ import numpy as np
 class Column:
     """
     Dataclass that holds data about a single column.
+
+    Args:
+        index:
+            The index of the column.
+        name:
+            The name of the column.
+        marker:
+            The marker of the column.
+        table:
+            The table the column is from.
+        target:
+            The target the column is associated with.
+        importance:
+            The importance of the column.
     """
 
     index: int

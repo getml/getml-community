@@ -10,6 +10,7 @@
 Returns a table as a list of lists.
 """
 
+from __future__ import annotations
 import sqlite3
 from typing import List, Tuple
 
@@ -32,7 +33,7 @@ def to_list(conn: sqlite3.Connection, query: str) -> Tuple[List[str], List[list]
 
     Args:
         conn:
-            A sqlite3 connection created by [`connect`][getml.sqlite3.connect].
+            A sqlite3 connection created by [`connect`][getml.sqlite3.connect.connect].
 
         query:
             The query used to get the table. You can also

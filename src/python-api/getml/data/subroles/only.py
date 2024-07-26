@@ -14,7 +14,7 @@ from getml.data.subroles.types import OnlyEmail, OnlySubstring
 Columns marked with a subrole in this submodule will only be used
 for the specified purpose and nothing else.
 
-Example:
+??? example
     ```python
     # Only the EmailDomain preprocessor will be applied
     # to "emails". All other preprocessors, feature learners,

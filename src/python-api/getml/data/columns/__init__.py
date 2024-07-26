@@ -26,7 +26,7 @@ Columns are *immutable* and *lazily evaluated*.
   in the *column views*: Column views do not exist
   until they are required.
 
-Example:
+??? example
     This is what some column operations might look like:
 
     ```python

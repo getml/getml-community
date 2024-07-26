@@ -239,7 +239,7 @@ def tune_feature_learners(
 ) -> Pipeline:
     """
     A high-level interface for optimizing the feature learners of a
-    [`Pipeline`][getml.pipelines.Pipeline].
+    [`Pipeline`][getml.pipeline.Pipeline].
 
     Efficiently optimizes the hyperparameters for the set of feature learners
     (from [`feature_learning`][getml.feature_learning]) of a given pipeline by breaking each
@@ -278,7 +278,7 @@ def tune_feature_learners(
     Returns:
         Pipeline containing tuned versions of the feature learners.
 
-    Example:
+    ??? example
         We assume that you have already set up your
         [`Pipeline`][getml.Pipeline] and
         [`Container`][getml.data.Container].
@@ -288,9 +288,6 @@ def tune_feature_learners(
             pipeline=base_pipeline,
             container=container)
         ```
-
-    Note:
-        Not supported in the getML community edition.
     """
 
     if not isinstance(pipeline, getml.pipeline.Pipeline):
@@ -349,7 +346,8 @@ def tune_predictors(
     [`Pipeline`][getml.Pipeline].
 
     Efficiently optimizes the hyperparameters for the set of predictors (from
-    `getml.predictors`) of a given pipeline by breaking each predictor's
+    [`getml.predictors`][getml.predictors]) of a given pipeline by breaking each
+    predictor's
     hyperparameter space down into carefully curated
     subspaces: `hyperopt_tuning_subspaces` and optimizing the hyperparameters for
     each subspace in a sequential multi-step process.  For further details about
@@ -382,7 +380,7 @@ def tune_predictors(
             The number of parallel threads to use. If set to 0,
             the number of threads will be inferred.
 
-    Example:
+    ??? example
         We assume that you have already set up your
         [`Pipeline`][getml.Pipeline] and
         [`Container`][getml.data.Container].
@@ -396,8 +394,6 @@ def tune_predictors(
     Returns:
         Pipeline containing tuned predictors.
 
-    Note:
-        Not supported in the getML community edition.
     """
 
     if not isinstance(pipeline, getml.pipeline.Pipeline):

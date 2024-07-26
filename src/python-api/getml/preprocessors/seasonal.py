@@ -11,6 +11,7 @@ Contains routines for preprocessing data frames.
 """
 
 from dataclasses import dataclass
+from typing import Optional, Dict, Any
 
 from .preprocessor import _Preprocessor
 from .validate import _validate
@@ -39,27 +40,27 @@ class Seasonal(_Preprocessor):
     not included.
 
     Args:
-        disable_year (bool, optional):
+        disable_year:
             Prevents the Seasonal preprocessor from
             extracting the year from time stamps.
 
-        disable_month (bool, optional):
+        disable_month:
             Prevents the Seasonal preprocessor from
             extracting the month from time stamps.
 
-        disable_weekday (bool, optional):
+        disable_weekday:
             Prevents the Seasonal preprocessor from
             extracting the weekday from time stamps.
 
-        disable_hour (bool, optional):
+        disable_hour:
             Prevents the Seasonal preprocessor from
             extracting the hour from time stamps.
 
-        disable_minute (bool, optional):
+        disable_minute:
             Prevents the Seasonal preprocessor from
             extracting the minute from time stamps.
 
-    Example:
+    ??? example
         ```python
         seasonal = getml.preprocessors.Seasonal()
 
@@ -81,12 +82,12 @@ class Seasonal(_Preprocessor):
     disable_hour: bool = False
     disable_minute: bool = False
 
-    def validate(self, params=None):
+    def validate(self, params: Optional[Dict[str, Any]] = None) -> None:
         """Checks both the types and the values of all instance
         variables and raises an exception if something is off.
 
         Args:
-            params (dict, optional):
+            params:
                 A dictionary containing
                 the parameters to validate. If not is passed,
                 the own parameters will be validated.

@@ -6,16 +6,20 @@
 #
 
 
-"""This module contains machine learning algorithms to learn and predict on the
-generated features.
+"""
 
-The predictor classes defined in this module serve two
-purposes. First, a predictor can be used as a ``feature_selector``
+The predictor classes defined in this module **serve two purposes**.
+
+First, a predictor can be used as a **feature selector**
 in [`Pipeline`][getml.Pipeline] to only select the best features
 generated during the automated feature learning and to get rid of
-any redundancies. Second, by using it as a ``predictor``, it will
+any redundancies.
+
+Second, by using it as a **predictor**, it will
 be trained on the features of the supplied data set and used to
-predict to unknown results. Every time a new data set is passed to
+predict unknown results.
+
+Every time a new data set is passed to
 the [`predict`][getml.Pipeline.predict] method of one of the
 models, the raw relational data is interpreted in the
 data model, which was provided during the construction of the model,
@@ -25,14 +29,16 @@ will be predicted using the trained predictor.
 
 The algorithms can be grouped according to their finesse and
 whether you want to use them for a classification or
-regression problem.
+regression problem. For memory intensive applications, the getML
+Enterprise edition offers predictors with memory mapping .
 
 
 
-|   | simple  | sophisticated  |
-----|---------|---------------|
-|  __regression__ | [`LinearRegression`][getml.predictors.LinearRegression]  |  [`XGBoostRegressor`][getml.predictors.XGBoostRegressor] |
-| __classification__ |  [`LogisticRegression`][getml.predictors.LogisticRegression] | [`XGBoostClassifier`][getml.predictors.XGBoostClassifier]  |
+
+|   | simple  | sophisticated  | memory intensive  |
+----|---------|---------------|--------------------|
+|  __regression__ | [`LinearRegression`][getml.predictors.LinearRegression]  |  [`XGBoostRegressor`][getml.predictors.XGBoostRegressor] | [`ScaleGBMRegressor`][getml.predictors.ScaleGBMRegressor] |
+| __classification__ |  [`LogisticRegression`][getml.predictors.LogisticRegression] | [`XGBoostClassifier`][getml.predictors.XGBoostClassifier]  | [`ScaleGBMClassifier`][getml.predictors.ScaleGBMClassifier] |
 
 
 Note:

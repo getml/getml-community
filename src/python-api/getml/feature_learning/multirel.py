@@ -11,13 +11,16 @@ Feature learning based on Multi-Relational Decision Tree Learning.
 """
 
 from dataclasses import dataclass, field
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, Optional, Union, Iterable
 
-from .aggregations import _Aggregations
-from .aggregations import multirel as multirel_aggregations
+from .aggregations.sets import (
+    MULTIREL,
+    MultirelAggregationsSets,
+)
+from .aggregations.types import MultirelAggregations
 from .fastprop import FastProp
 from .feature_learner import _FeatureLearner
-from .loss_functions import CrossEntropyLoss, SquareLoss
+from .loss_functions import CrossEntropyLossType, SquareLossType
 from .validation import _validate_multirel_parameters
 
 # --------------------------------------------------------------------
@@ -35,23 +38,34 @@ class Multirel(_FeatureLearner):
     For more information on the underlying feature learning algorithm, check
     out the User guide: [Multirel][feature-engineering-algorithms-multirel].
 
+    enterprise-adm: Enterprise edition
+        This feature is available in the getML
+        [Enterprise edition][getting-started-community-vs-enterprise].
+
+        For licences, technical support and more information, feel free to [contact us](
+        https://www.getml.com/contact)!
 
     Attributes:
+        agg_sets:
+            It is a class variable holding the available aggregation sets for the
+            Multirel feature learner.
+            Value: [`MULTIREL`][getml.feature_learning.aggregations.MULTIREL].
+
+    Parameters:
         aggregation:
             Mathematical operations used by the automated feature
             learning algorithm to create new features.
 
-            Must be from [`aggregations`][getml.feature_learning.aggregations].
+            Must be an aggregation supported by Multirel feature learner
+            ([`MULTIREL_AGGREGATIONS`][getml.feature_learning.aggregations.MULTIREL_AGGREGATIONS]).
 
         allow_sets:
             Multirel can summarize different categories into sets for
             producing conditions. When expressed as SQL statements these
             sets might look like this:
-
-
-
-                t2.category IN ( 'value_1', 'value_2', ... )
-
+            ```sql
+            t2.category IN ( 'value_1', 'value_2', ... )
+            ```
             This can be very powerful, but it can also produce
             features that are hard to read and might be prone to
             overfitting when the `sampling_factor` is too low.
@@ -62,63 +76,61 @@ class Multirel(_FeatureLearner):
             variables.
 
             For more information please refer to
-            :ref:`data_model_time_series`. Range: [0, $\infty$]
+            [Time Series][data-model-time-series] in the User Guide. Range: [0, ∞]
 
         grid_factor:
             Multirel will try a grid of critical values for your
             numerical features. A higher `grid_factor` will lead to a
             larger number of critical values being considered. This
             can increase the training time, but also lead to more
-            accurate features. Range: (0, $\infty$]
+            accurate features. Range: (0, ∞]
 
         loss_function:
             Objective function used by the feature learning algorithm
             to optimize your features. For regression problems use
-            [`SquareLoss`][getml.feature_learning.loss_functions.SquareLoss] and for
+            [`SquareLoss`][getml.feature_learning.loss_functions.SQUARELOSS] and for
             classification problems use
-            [`CrossEntropyLoss`][getml.feature_learning.loss_functions.CrossEntropyLoss].
+            [`CrossEntropyLoss`][getml.feature_learning.loss_functions.CROSSENTROPYLOSS].
 
         max_length:
             The maximum length a subcondition might have. Multirel
             will create conditions in the form
-
-
-
-                (condition 1.1 AND condition 1.2 AND condition 1.3 )
-                OR ( condition 2.1 AND condition 2.2 AND condition 2.3 )
-                ...
-
+            ```sql
+            (condition 1.1 AND condition 1.2 AND condition 1.3 )
+            OR ( condition 2.1 AND condition 2.2 AND condition 2.3 )
+            ...
+            ```
             Using this parameter you can set the maximum number of
-            conditions allowed in the brackets. Range: [0, $\infty$]
+            conditions allowed in the brackets. Range: [0, ∞]
 
         min_df:
             Only relevant for columns with role [`text`][getml.data.roles.text].
             The minimum
             number of fields (i.e. rows) in [`text`][getml.data.roles.text] column a
             given word is required to appear in to be included in the bag of words.
-            Range: [1, $\infty$]
+            Range: [1, ∞]
 
         min_num_samples:
             Determines the minimum number of samples a subcondition
             should apply to in order for it to be considered. Higher
             values lead to less complex statements and less danger of
-            overfitting. Range: [1, $\infty$]
+            overfitting. Range: [1, ∞]
 
         num_features:
             Number of features generated by the feature learning
-            algorithm. Range: [1, $\infty$]
+            algorithm. Range: [1, ∞]
 
         num_subfeatures:
             The number of subfeatures you would like to extract in a
             subensemble (for snowflake data model only). See
             [Snowflake Schema][data-model-snowflake-schema] for more
-            information. Range: [1, $\infty$]
+            information. Range: [1, ∞]
 
         num_threads:
             Number of threads used by the feature learning algorithm. If set to
             zero or a negative value, the number of threads will be
             determined automatically by the getML engine. Range:
-            [$0$, $\infty$]
+            [0, ∞]
 
         propositionalization:
             The feature learner used for joins which are flagged to be
@@ -148,13 +160,13 @@ class Multirel(_FeatureLearner):
             from the population table. If the population table
             contains less than 20,000 samples, it will use standard
             bagging. When set to 0.0, there will be no sampling at
-            all. Range: [0, $\infty$]
+            all. Range: [0, ∞]
 
         seed:
             Seed used for the random number generator that underlies
             the sampling procedure to make the calculation
             reproducible. Internally, a `seed` of None will be mapped to
-            5543. Range: [0, $\infty$]
+            5543. Range: [0, ∞]
 
         share_aggregations:
             Every time a new feature is generated, the `aggregation`
@@ -185,26 +197,21 @@ class Multirel(_FeatureLearner):
             Determines the maximum number
             of words that are extracted in total from [`text`][getml.data.roles.text]
             columns. This can be interpreted as the maximum size of the bag of words.
-            Range: [0, $\infty$]
-
-    Note:
-        Not supported in the getML community edition.
+            Range: [0, ∞]
 
     """
 
     # ----------------------------------------------------------------
 
-    agg_sets: ClassVar[_Aggregations] = multirel_aggregations
+    agg_sets: ClassVar[MultirelAggregationsSets] = MULTIREL
 
     # ----------------------------------------------------------------
 
-    aggregation: List[_Aggregations] = field(
-        default_factory=lambda: multirel_aggregations.Default
-    )
+    aggregation: Iterable[MultirelAggregations] = MULTIREL.default
     allow_sets: bool = True
     delta_t: float = 0.0
     grid_factor: float = 1.0
-    loss_function: Optional[Union[CrossEntropyLoss, SquareLoss]] = None
+    loss_function: Optional[Union[CrossEntropyLossType, SquareLossType]] = None
     max_length: int = 4
     min_df: int = 30
     min_num_samples: int = 1
@@ -230,7 +237,7 @@ class Multirel(_FeatureLearner):
         variables and raises an exception if something is off.
 
         Args:
-            params (dict, optional): A dictionary containing
+            params: A dictionary containing
                 the parameters to validate. If not is passed,
                 the own parameters will be validated.
         """

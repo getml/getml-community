@@ -97,7 +97,7 @@ class StarSchema:
             the subsets separately using *train*, *validation*, *test*
             and *kwargs*.
 
-            Example:
+            ??? example
                 ```python
                 # Pass the subset.
                 star_schema = getml.data.StarSchema(
@@ -108,7 +108,7 @@ class StarSchema:
                 my_pipeline.fit(star_schema.my_subset)
                 ```
 
-    Example:
+    ??? example
         Note that this example is taken from the
         [loans notebook](https://nbviewer.getml.com/github/getml/getml-demo/blob/master/loans.ipynb).
 
@@ -356,7 +356,7 @@ class StarSchema:
         all joins take place on the population table. If you want to create more
         complex data models, use [`DataModel`][getml.data.DataModel] instead.
 
-        Example:
+        ??? example
             This example will construct a data model in which the
             'population_table' depends on the 'peripheral_table' via
             the 'join_key' column. In addition, only those rows in

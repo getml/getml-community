@@ -139,7 +139,7 @@ class DataFrames:
         Returns:
                 A container of filtered data frames.
 
-        Example:
+        ??? example
             ```python
             big_frames = getml.project.data_frames.filter(lambda frame: frame.memory_usage > 1000)
             ```
@@ -203,7 +203,7 @@ class DataFrames:
         Return:
                 A container of sorted data frames.
 
-        Example:
+        ??? example
             ```python
             by_num_rows = getml.project.data_frames.sort(lambda frame: frame.nrows())
             ```

@@ -10,6 +10,7 @@
 Reads data into an sqlite3 table.
 """
 
+from __future__ import annotations
 import sqlite3
 from typing import Any, List
 
@@ -22,7 +23,7 @@ def read_list(conn: sqlite3.Connection, table_name: str, data: List[List[Any]]) 
 
     Args:
         conn:
-            A sqlite3 connection created by [`connect`][getml.sqlite3.connect].
+            A sqlite3 connection created by [`connect`][getml.sqlite3.connect.connect].
 
         table_name:
             The name of the table to write to.

@@ -33,6 +33,13 @@ def connect_greenplum(
     But first, make sure your database is running, and you can reach it
     from your command line.
 
+    enterprise-adm: Enterprise edition
+        This feature is available in the getML
+        [Enterprise edition][getting-started-community-vs-enterprise].
+
+        For licences, technical support and more information, feel free to [contact us](
+        https://www.getml.com/contact)!
+
     Args:
         dbname:
             The name of the database to which you want to connect.
@@ -98,6 +105,7 @@ def connect_greenplum(
 
     Returns:
         The connection object.
+
     Note:
         By selecting an existing table of your database in
         [`from_db`][getml.DataFrame.from_db] function, you can create

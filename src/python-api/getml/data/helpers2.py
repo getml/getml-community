@@ -379,7 +379,7 @@ def to_placeholder(
     Returns:
         A list of placeholders.
 
-    Example:
+    ??? example
         Suppose we wanted to create a [`DataModel`][getml.data.DataModel]:
 
 

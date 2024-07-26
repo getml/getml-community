@@ -65,7 +65,7 @@ def read_s3(
             If you don't explicitly pass a connection,
             the engine will use the default connection.
 
-    Example:
+    ??? example
         Let's assume you have two CSV files - *file1.csv* and
         *file2.csv* - in the bucket. You can
         import their data into the getML engine using the following

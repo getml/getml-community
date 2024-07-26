@@ -30,7 +30,7 @@ def random(seed: int = 5849) -> FloatColumnView:
     Returns:
             FloatColumn containing random numbers
 
-    Example:
+    ??? example
         ```python
         population = getml.DataFrame('population')
         population.add(numpy.zeros(100), 'column_01')

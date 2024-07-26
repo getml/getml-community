@@ -96,7 +96,7 @@ def is_engine_alive() -> bool:
 
     Returns:
             True if the getML engine is running and ready to accept
-                commands and False otherwise.
+            commands and False otherwise.
 
     """
 

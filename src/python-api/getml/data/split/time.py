@@ -64,7 +64,7 @@ def time(
             You can name these sets whatever you want to (in our example,
             we called it 'other').
 
-    Example:
+    ??? example
         ```python
         validation_begin = getml.data.time.datetime(2010, 1, 1)
         test_begin = getml.data.time.datetime(2011, 1, 1)

@@ -51,7 +51,7 @@ class Placeholder:
             values must be lists of roles. If you pass a [`Roles`][getml.data.Roles]
             object, it will be used as is.
 
-    Example:
+    ??? example
         This example will construct a data model in which the
         'population_table' depends on the 'peripheral_table' via
         the 'join_key' column. In addition, only those rows in

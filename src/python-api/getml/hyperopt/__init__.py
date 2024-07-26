@@ -18,8 +18,14 @@
 * [`XGBoostClassifier`][getml.predictors.XGBoostClassifier]
 * [`XGBoostRegressor`][getml.predictors.XGBoostRegressor]
 
+enterprise-adm: Enterprise edition
+    This feature is available in the getML
+    [Enterprise edition][getting-started-community-vs-enterprise].
 
-Example:
+    For licences, technical support and more information, feel free to [contact us](
+    https://www.getml.com/contact)!
+
+??? example
     The easiest way to conduct a hyperparameter optimization
     is to use the built-in tuning routines. Note that these
     tuning routines usually take a day to complete unless
@@ -55,8 +61,8 @@ Example:
 
     feature_learner1 = feature_learning.Multirel(
         aggregation=[
-            aggregations.Count,
-            aggregations.Sum
+            aggregations.COUNT,
+            aggregations.SUM
         ],
         loss_function=loss_functions.SquareLoss,
         num_features=10,
@@ -140,8 +146,8 @@ Example:
 
     feature_learner1 = feature_learning.Multirel(
         aggregation=[
-            aggregations.Count,
-            aggregations.Sum
+            aggregations.COUNT,
+            aggregations.SUM
         ],
         loss_function=loss_functions.SquareLoss,
         num_features=10,

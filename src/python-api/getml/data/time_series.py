@@ -84,7 +84,7 @@ class TimeSeries(StarSchema):
             Name of a time stamp in *right_df* that serves as an upper limit
             on the join.
 
-    Example:
+    ??? example
         ```python
         # All rows before row 10500 will be used for training.
         split = getml.data.split.time(data_all, "rowid", test=10500)

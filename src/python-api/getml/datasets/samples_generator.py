@@ -28,13 +28,13 @@ def _aggregate(
     """
     Implements the aggregation."""
 
-    if aggregation == aggregations.Avg:
+    if aggregation == aggregations.AVG:
         return table[[col, join_key]].groupby([join_key], as_index=False).mean()
 
-    if aggregation == aggregations.Count:
+    if aggregation == aggregations.COUNT:
         return table[[col, join_key]].groupby([join_key], as_index=False).count()
 
-    if aggregation == aggregations.CountDistinct:
+    if aggregation == aggregations.COUNT_DISTINCT:
         series = (
             table[[col, join_key]].groupby([join_key], as_index=False)[col].nunique()
         )
@@ -45,7 +45,7 @@ def _aggregate(
 
         return output
 
-    if aggregation == aggregations.CountMinusCountDistinct:
+    if aggregation == aggregations.COUNT_MINUS_COUNT_DISTINCT:
         series = (
             table[[col, join_key]].groupby([join_key], as_index=False)[col].nunique()
         )
@@ -56,22 +56,22 @@ def _aggregate(
 
         return output
 
-    if aggregation == aggregations.Max:
+    if aggregation == aggregations.MAX:
         return table[[col, join_key]].groupby([join_key], as_index=False).max()
 
-    if aggregation == aggregations.Median:
+    if aggregation == aggregations.MEDIAN:
         return table[[col, join_key]].groupby([join_key], as_index=False).median()
 
-    if aggregation == aggregations.Min:
+    if aggregation == aggregations.MIN:
         return table[[col, join_key]].groupby([join_key], as_index=False).min()
 
-    if aggregation == aggregations.Stddev:
+    if aggregation == aggregations.STDDEV:
         return table[[col, join_key]].groupby([join_key], as_index=False).std()
 
-    if aggregation == aggregations.Sum:
+    if aggregation == aggregations.SUM:
         return table[[col, join_key]].groupby([join_key], as_index=False).sum()
 
-    if aggregation == aggregations.Var:
+    if aggregation == aggregations.VAR:
         return table[[col, join_key]].groupby([join_key], as_index=False).var()
 
     raise Exception("Aggregation '" + aggregation + "' not known!")
@@ -86,7 +86,7 @@ def make_categorical(
     random_state: Optional[int] = None,
     population_name: str = "",
     peripheral_name: str = "",
-    aggregation: str = aggregations.Count,
+    aggregation: str = aggregations.COUNT,
 ) -> Tuple[DataFrame, DataFrame]:
     """
     Generate a random dataset with categorical variables
@@ -125,7 +125,7 @@ def make_categorical(
         n_rows_population:
             Number of rows in the population table.
 
-        n_row_peripheral:
+        n_rows_peripheral:
             Number of rows in the peripheral table.
 
         random_state:
@@ -159,8 +159,10 @@ def make_categorical(
             column.
 
     Returns:
+        The dataframes are:
+
             * population ([`DataFrame`][getml.DataFrame]): Population table
-                * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
+            * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
     """
 
     if random_state is None:
@@ -254,7 +256,7 @@ def make_discrete(
     random_state: Optional[int] = None,
     population_name: str = "",
     peripheral_name: str = "",
-    aggregation: str = aggregations.Count,
+    aggregation: str = aggregations.COUNT,
 ) -> Tuple[DataFrame, DataFrame]:
     """
     Generate a random dataset with categorical variables
@@ -292,7 +294,7 @@ def make_discrete(
         n_rows_population:
             Number of rows in the population table.
 
-        n_row_peripheral:
+        n_rows_peripheral:
             Number of rows in the peripheral table.
 
         random_state:
@@ -326,8 +328,10 @@ def make_discrete(
             column.
 
     Returns:
+        The dataframes are:
+
             * population ([`DataFrame`][getml.DataFrame]): Population table
-                * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
+            * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
     """
 
     if random_state is None:
@@ -420,7 +424,7 @@ def make_numerical(
     random_state: Optional[int] = None,
     population_name: str = "",
     peripheral_name: str = "",
-    aggregation: str = aggregations.Count,
+    aggregation: str = aggregations.COUNT,
 ) -> Tuple[DataFrame, DataFrame]:
     """
     Generate a random dataset with continuous numerical variables
@@ -458,7 +462,7 @@ def make_numerical(
         n_rows_population:
             Number of rows in the population table.
 
-        n_row_peripheral:
+        n_rows_peripheral:
             Number of rows in the peripheral table.
 
         random_state:
@@ -492,8 +496,10 @@ def make_numerical(
             column.
 
     Returns:
+        The dataframes are:
+
             * population ([`DataFrame`][getml.DataFrame]): Population table
-                * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
+            * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
     """
 
     if random_state is None:
@@ -586,7 +592,7 @@ def make_same_units_categorical(
     random_state: Optional[int] = None,
     population_name: str = "",
     peripheral_name: str = "",
-    aggregation: str = aggregations.Count,
+    aggregation: str = aggregations.COUNT,
 ) -> Tuple[DataFrame, DataFrame]:
     """
     Generate a random dataset with categorical variables
@@ -625,7 +631,7 @@ def make_same_units_categorical(
         n_rows_population:
             Number of rows in the population table.
 
-        n_row_peripheral:
+        n_rows_peripheral:
             Number of rows in the peripheral table.
 
         random_state:
@@ -659,8 +665,10 @@ def make_same_units_categorical(
             column.
 
     Returns:
+        The dataframes are:
+
             * population ([`DataFrame`][getml.DataFrame]): Population table
-                * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
+            * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
     """
 
     if random_state is None:
@@ -782,7 +790,7 @@ def make_same_units_numerical(
     random_state: Optional[int] = None,
     population_name: str = "",
     peripheral_name: str = "",
-    aggregation: str = aggregations.Count,
+    aggregation: str = aggregations.COUNT,
 ) -> Tuple[DataFrame, DataFrame]:
     """
     Generate a random dataset with continuous numerical variables
@@ -820,7 +828,7 @@ def make_same_units_numerical(
         n_rows_population:
             Number of rows in the population table.
 
-        n_row_peripheral:
+        n_rows_peripheral:
             Number of rows in the peripheral table.
 
         random_state:
@@ -854,8 +862,10 @@ def make_same_units_numerical(
             column.
 
     Returns:
+        The dataframes are:
+
             * population ([`DataFrame`][getml.DataFrame]): Population table
-                * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
+            * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
     """
 
     if random_state is None:
@@ -974,8 +984,8 @@ def make_snowflake(
     population_name: str = "",
     peripheral_name1: str = "",
     peripheral_name2: str = "",
-    aggregation1: str = aggregations.Sum,
-    aggregation2: str = aggregations.Count,
+    aggregation1: str = aggregations.SUM,
+    aggregation2: str = aggregations.COUNT,
 ) -> Tuple[DataFrame, DataFrame, DataFrame]:
     """
     Generate a random dataset with continuous numerical variables
@@ -1077,9 +1087,11 @@ def make_snowflake(
             column in the second peripheral table.
 
     Returns:
+        The dataframes are:
+
             * population ([`DataFrame`][getml.DataFrame]): Population table
-                * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
-                * peripheral_2 ([`DataFrame`][getml.DataFrame]): Peripheral table
+            * peripheral ([`DataFrame`][getml.DataFrame]): Peripheral table
+            * peripheral_2 ([`DataFrame`][getml.DataFrame]): Peripheral table
     """
 
     if random_state is None:

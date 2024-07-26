@@ -195,8 +195,8 @@ def _is_monitor_alive() -> bool:
 
 
 def launch(
-    allow_push_notifications=True,
-    allow_remote_ips=False,
+    allow_push_notifications: bool = True,
+    allow_remote_ips: bool = False,
     home_directory: Optional[str] = None,
     http_port: Optional[int] = None,
     in_memory: bool = True,

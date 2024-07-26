@@ -32,8 +32,6 @@ def load_hyperopt(
     Returns:
         The hyperopt object.
 
-    Note:
-        Not supported in the getML community edition.
     """
     # This will be overwritten by .refresh(...) anyway
     dummy_pipeline = _make_dummy("123456")

@@ -8,13 +8,13 @@
 
 """This module contains communication routines to access various databases.
 
-The [`connect_bigquery`][getml.database.connect_bigquery],
-[`connect_hana`][getml.database.connect_hana],
-[`connect_greenplum`][getml.database.connect_greenplum],
-[`connect_mariadb`][getml.database.connect_mariadb],
-[`connect_mysql`][getml.database.connect_mysql],
-[`connect_postgres`][getml.database.connect_postgres], and
-[`connect_sqlite3`][getml.database.connect_sqlite3] functions establish a
+The [`connect_bigquery`][getml.database.connect_bigquery.connect_bigquery],
+[`connect_hana`][getml.database.connect_hana.connect_hana],
+[`connect_greenplum`][getml.database.connect_greenplum.connect_greenplum],
+[`connect_mariadb`][getml.database.connect_mariadb.connect_mariadb],
+[`connect_mysql`][getml.database.connect_mysql.connect_mysql],
+[`connect_postgres`][getml.database.connect_postgres.connect_postgres], and
+[`connect_sqlite3`][getml.database.connect_sqlite3.connect_sqlite3] functions establish a
 connection between a database and the getML engine. During the data
 import using either the [`read_db`][getml.DataFrame.read_db] or
 [`read_query`][getml.DataFrame.read_query] methods of a

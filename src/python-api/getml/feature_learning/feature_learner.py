@@ -43,8 +43,7 @@ class _FeatureLearner(ABC):
         """Compares the current instance with another one.
 
         Returns:
-            bool: Indicating whether the current instance and `other`
-                are the same.
+            Indicating whether the current instance and `other` are the same.
         """
 
         # Allow for in comparing for feature_learner names

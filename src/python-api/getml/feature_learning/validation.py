@@ -19,10 +19,10 @@ import numpy as np
 
 from getml import feature_learning
 from getml.data.helpers import _is_non_empty_typed_list, _is_typed_list
-from getml.helpers import _check_parameter_bounds
+from getml.helpers import _check_parameter_bounds, _is_iterable_not_str_of_type
 from getml.log import MIGHT_TAKE_LONG, logger
 
-from .aggregations import _all_aggregations, _multirel_subset
+from .aggregations.sets import _all_aggregations, _multirel_subset
 
 # --------------------------------------------------------------------
 
@@ -54,11 +54,11 @@ def _validate_dfs_model_parameters(**kwargs: Any) -> None:
     silent = kwargs["silent"]
     vocab_size = kwargs["vocab_size"]
 
-    if not _is_non_empty_typed_list(aggregation, str):
+    if not _is_iterable_not_str_of_type(aggregation, str):
         raise TypeError(
             """
             'aggregation' must be a non-empty
-            list of str found in getml.feature_learning.aggregations
+            non-string iterable of str found in getml.feature_learning.aggregations
             """
         )
 
@@ -358,7 +358,7 @@ def _validate_multirel_parameters(**kwargs: Any) -> None:
             {MIGHT_TAKE_LONG}
             You have set num_subfeatures to {num_subfeatures}.
             The multirel algorithm does not scale well to many columns.
-            You should consider using Relboost or RelboostTimeSeries instead.
+            You should consider using Relboost instead.
             """
         )
 
@@ -526,7 +526,7 @@ def _validate_time_series_parameters(**kwargs: Any) -> None:
     if horizon == 0.0 and lagged_targets:
         raise ValueError(
             """
-            If your horizon is 0.0, then you cannot
+            If your horizon is 0.0, then you cannot use
             lagged_targets. This is a data leak.
             """
         )

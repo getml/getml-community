@@ -38,7 +38,7 @@ def concat(name: str, **kwargs: DataFrame) -> Tuple[DataFrame, StringColumnView]
     Returns:
         A tuple containing the concatenated data frame and the split column.
 
-    Example:
+    ??? example
         A common use case for this functionality are [`TimeSeries`][getml.data.TimeSeries]:
         ```python
         data_train = getml.DataFrame.from_pandas(

@@ -11,6 +11,7 @@ Contains utility functions for reading CSV files
 into sqlite3.
 """
 
+from __future__ import annotations
 import csv
 import sqlite3
 from typing import List, Optional, Union
@@ -51,7 +52,7 @@ def read_csv(
 
     Args:
         conn:
-            A sqlite3 connection created by [`connect`][getml.sqlite3.connect].
+            A sqlite3 connection created by [`connect`][getml.sqlite3.connect.connect].
 
         fnames:
             The names of the CSV files.

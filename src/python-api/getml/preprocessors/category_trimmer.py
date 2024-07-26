@@ -11,6 +11,7 @@ Contains routines for preprocessing data frames.
 """
 
 from dataclasses import dataclass
+from typing import Optional, Dict, Any
 
 from .preprocessor import _Preprocessor
 from .validate import _validate
@@ -22,16 +23,16 @@ class CategoryTrimmer(_Preprocessor):
     Reduces the cardinality of high-cardinality categorical columns.
 
     Args:
-        max_num_categories (int, optional):
+        max_num_categories:
             The maximum cardinality allowed. If the cardinality is
             higher than that only the most frequent categories will
             be kept, all others will be trimmed.
 
-        min_freq (int, optional):
+        min_freq:
             The minimum frequency required for a category to be
             included.
 
-    Example:
+    ??? example
         ```python
         category_trimmer = getml.preprocessors.CategoryTrimmer()
 
@@ -50,12 +51,12 @@ class CategoryTrimmer(_Preprocessor):
     max_num_categories: int = 999
     min_freq: int = 30
 
-    def validate(self, params=None):
+    def validate(self, params: Optional[Dict[str, Any]] = None) -> None:
         """Checks both the types and the values of all instance
         variables and raises an exception if something is off.
 
         Args:
-            params (dict, optional):
+            params:
                 A dictionary containing
                 the parameters to validate. If not is passed,
                 the own parameters will be validated.

@@ -20,6 +20,24 @@ from .sql_string import SQLString
 class Feature:
     """
     Dataclass that holds data about a single feature.
+
+    Args:
+        index:
+            The index of the feature.
+        name:
+            The name of the feature.
+        pipeline:
+            The pipeline the feature is from.
+        target:
+            The target the feature is associated with.
+        targets:
+            The targets the feature is associated with.
+        importance:
+            The importance of the feature.
+        correlation:
+            The correlation of the feature with the target.
+        sql:
+            The SQL code of the feature.
     """
 
     index: int

@@ -10,6 +10,7 @@
 Contains a wrapper around connect.
 """
 
+from __future__ import annotations
 import sqlite3
 
 from .contains import _contains
@@ -83,8 +84,8 @@ def connect(database: str) -> sqlite3.Connection:
             create an in-memory database.
 
     Returns:
-            A new sqlite3 connection with all custom
-                functions and aggregations registered.
+        A new sqlite3 connection with all custom
+            functions and aggregations registered.
     """
 
     if not isinstance(database, str):

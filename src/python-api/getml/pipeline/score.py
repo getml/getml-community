@@ -34,6 +34,14 @@ class Score(ABC):
 class ClassificationScore(Score):
     """
     Dataclass that holds data of a scoring run for a classification pipeline.
+
+    Args:
+        accuracy:
+            The [`accuracy`][getml.pipeline.metrics.accuracy] of the classification.
+        auc:
+            The area under the curve: [`auc`][getml.pipeline.metrics.auc].
+        cross_entropy:
+            The [`cross_entropy`][getml.pipeline.metrics.cross_entropy].
     """
 
     accuracy: float
@@ -51,6 +59,14 @@ class ClassificationScore(Score):
 class RegressionScore(Score):
     """
     Dataclass that holds data of a scoring run for a regression pipeline.
+
+    Args:
+        mae:
+            The mean absolute error: [`mae`][getml.pipeline.metrics.mae]
+        rmse:
+            The root mean squared error: [`rmse`][getml.pipeline.metrics.rmse]
+        rsquared:
+            The squared correlation coefficient: [`rsquared`][getml.pipeline.metrics.rsquared]
     """
 
     mae: float

@@ -23,7 +23,7 @@ from getml.data.roles.types import (
 [`DataModel`][getml.data.DataModel] and used by the feature learning
 algorithm (see [`feature_learning`][getml.feature_learning]).
 
-Example:
+??? example
     ```python
     data_frame = getml.DataFrame.from_db(
         name=name,
@@ -173,7 +173,7 @@ If none of the formats works, the getML engine will try to interpret
 the time stamps as numerical values. If this fails, the time stamp will be set
 to NULL.
 
-Example:
+??? example
     ```python
     data_df = dict(
             date1=[getml.data.time.days(365), getml.data.time.days(366), getml.data.time.days(367)],
@@ -201,13 +201,13 @@ Note:
 unused_float: Final[UnusedFloat] = "unused_float"
 """Marks a [`FloatColumn`][getml.data.columns.columns.FloatColumn] as unused.
 
-The associated [`column`][getml.data.columns.columns] will be neither used in the
+The associated [`column`][getml.data.columns] will be neither used in the
 data model nor during feature learning or prediction.
 """
 
 unused_string: Final[UnusedString] = "unused_string"
 """Marks a [`StringColumn`][getml.data.columns.columns.StringColumn] as unused.
 
-The associated [`column`][getml.data.columns.columns] will be neither used in the
+The associated [`column`][getml.data.columns] will be neither used in the
 data model nor during feature learning or prediction.
 """

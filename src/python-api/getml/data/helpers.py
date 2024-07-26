@@ -89,7 +89,7 @@ def list_data_frames() -> Dict[str, List[str]]:
             - 'on_disk'
                 stored on disk.
 
-    Example:
+    ??? example
         ```python
         d, _ = getml.datasets.make_numerical()
         getml.data.list_data_frames()
