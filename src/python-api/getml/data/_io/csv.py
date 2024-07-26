@@ -14,7 +14,7 @@ from __future__ import annotations
 import itertools as it
 import numbers
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import TYPE_CHECKING, Iterable, List, Optional, Union
 
 import pyarrow.csv as pa_csv
 
@@ -33,7 +33,7 @@ def sniff_csv(
     quotechar: str = '"',
     sep: str = ",",
     skip: int = 0,
-    colnames: Optional[List[str]] = None,
+    colnames: Optional[Iterable[str]] = None,
 ) -> Roles:
     """Sniffs a list of CSV files and returns the result as a dictionary of
     roles.
@@ -87,9 +87,9 @@ def sniff_csv(
         raise ValueError("All CSV files must have the same schema!")
 
     if colnames is None:
-        colnames_: List[str] = schema.names
+        colnames_ = schema.names
     else:
-        colnames_: List[str] = colnames
+        colnames_ = colnames
 
     return sniff_schema(schema, colnames_)
 

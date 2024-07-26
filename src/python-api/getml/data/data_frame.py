@@ -886,16 +886,18 @@ class DataFrame:
     @overload
     @classmethod
     def from_arrow(
+        cls,
         table: pa.Table,
         name: str,
         roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
         ignore: bool = False,
-        dry: bool = False,
+        dry: Literal[False] = False,
     ) -> DataFrame: ...
 
     @overload
     @classmethod
     def from_arrow(
+        cls,
         table: pa.Table,
         name: str,
         roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
@@ -910,7 +912,7 @@ class DataFrame:
         name: str,
         roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
         ignore: bool = False,
-        dry: Literal[False] = False,
+        dry: bool = False,
     ) -> Union[DataFrame, Roles]:
         """Create a DataFrame from an Arrow Table.
 
@@ -968,8 +970,7 @@ class DataFrame:
 
         sniffed_roles = sniff_arrow(table)
 
-        if not ignore:
-            roles = _prepare_roles(roles, sniffed_roles)
+        roles = _prepare_roles(roles, sniffed_roles, ignore_sniffed_roles=ignore)
 
         if dry:
             return roles
@@ -981,7 +982,9 @@ class DataFrame:
     # --------------------------------------------------------------------
 
     @overload
+    @classmethod
     def from_csv(
+        cls,
         fnames: Union[str, Iterable[str]],
         name: str,
         num_lines_sniffed: None = None,
@@ -992,12 +995,14 @@ class DataFrame:
         colnames: Optional[Iterable[str]] = None,
         roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
         ignore: bool = False,
-        dry: bool = False,
+        dry: Literal[False] = False,
         verbose: bool = True,
     ) -> DataFrame: ...
 
     @overload
+    @classmethod
     def from_csv(
+        cls,
         fnames: Union[str, Iterable[str]],
         name: str,
         num_lines_sniffed: None = None,
@@ -1025,7 +1030,7 @@ class DataFrame:
         colnames: Optional[Iterable[str]] = None,
         roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
         ignore: bool = False,
-        dry: Literal[False] = False,
+        dry: bool = False,
         verbose: bool = True,
     ) -> Union[DataFrame, Roles]:
         """Create a DataFrame from CSV files.
@@ -1191,8 +1196,8 @@ class DataFrame:
             skip=int(skip),
             colnames=colnames,
         )
-        if not ignore:
-            roles = _prepare_roles(roles, sniffed_roles)
+
+        roles = _prepare_roles(roles, sniffed_roles, ignore_sniffed_roles=ignore)
 
         if dry:
             return roles
@@ -1219,7 +1224,7 @@ class DataFrame:
         name: str,
         roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
         ignore: bool = False,
-        dry: bool = False,
+        dry: Literal[False] = False,
         conn: Optional[Connection] = None,
     ) -> DataFrame: ...
 
@@ -1242,7 +1247,7 @@ class DataFrame:
         name: Optional[str] = None,
         roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
         ignore: bool = False,
-        dry: Literal[False] = False,
+        dry: bool = False,
         conn: Optional[Connection] = None,
     ) -> Union[DataFrame, Roles]:
         """Create a DataFrame from a table in a database.
@@ -1336,11 +1341,12 @@ class DataFrame:
 
         sniffed_roles = _sniff_db(table_name, conn)
 
-        if not ignore:
-            roles = _prepare_roles(roles, sniffed_roles)
+        roles = _prepare_roles(roles, sniffed_roles, ignore_sniffed_roles=ignore)
 
         if dry:
             return roles
+
+        # ------------------------------------------------------------
 
         data_frame = cls(name, roles)
 
@@ -1522,7 +1528,7 @@ class DataFrame:
         name: str,
         roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
         ignore: bool = False,
-        dry: bool = False,
+        dry: Literal[False] = False,
     ) -> DataFrame: ...
 
     @overload
@@ -1543,7 +1549,7 @@ class DataFrame:
         name: str,
         roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
         ignore: bool = False,
-        dry: Literal[False] = False,
+        dry: bool = False,
     ) -> Union[DataFrame, Roles]:
         """Create a DataFrame from a `pandas.DataFrame`.
 
@@ -1605,8 +1611,7 @@ class DataFrame:
 
         sniffed_roles = _sniff_pandas(pandas_df)
 
-        if not ignore:
-            roles = _prepare_roles(roles, sniffed_roles)
+        roles = _prepare_roles(roles, sniffed_roles, ignore_sniffed_roles=ignore)
 
         if dry:
             return roles
@@ -1625,7 +1630,7 @@ class DataFrame:
         name: str,
         roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
         ignore: bool = False,
-        dry: bool = False,
+        dry: Literal[False] = False,
         colnames: Iterable[str] = (),
     ) -> DataFrame: ...
 
@@ -1648,7 +1653,7 @@ class DataFrame:
         name: str,
         roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
         ignore: bool = False,
-        dry: Literal[False] = False,
+        dry: bool = False,
         colnames: Iterable[str] = (),
     ) -> Union[DataFrame, Roles]:
         """Create a DataFrame from parquet files.
@@ -1710,8 +1715,7 @@ class DataFrame:
 
         sniffed_roles = sniff_parquet(fnames, colnames)
 
-        if not ignore:
-            roles = _prepare_roles(roles, sniffed_roles)
+        roles = _prepare_roles(roles, sniffed_roles, ignore_sniffed_roles=ignore)
 
         if dry:
             return roles
@@ -1730,7 +1734,7 @@ class DataFrame:
         name: str,
         roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
         ignore: bool = False,
-        dry: bool = False,
+        dry: Literal[False] = False,
     ) -> DataFrame: ...
 
     @overload
@@ -1751,7 +1755,7 @@ class DataFrame:
         name: str,
         roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
         ignore: bool = False,
-        dry: Literal[False] = False,
+        dry: bool = False,
     ) -> Union[DataFrame, Roles]:
         """Create a DataFrame from a `pyspark.sql.DataFrame`.
 
@@ -1813,8 +1817,7 @@ class DataFrame:
 
         sniffed_roles = _sniff_pandas(head)
 
-        if not ignore:
-            roles = _prepare_roles(roles, sniffed_roles)
+        roles = _prepare_roles(roles, sniffed_roles, ignore_sniffed_roles=ignore)
 
         if dry:
             return roles
@@ -1840,10 +1843,11 @@ class DataFrame:
         colnames: Optional[Iterable[str]] = None,
         roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
         ignore: bool = False,
-        dry: bool = False,
+        dry: Literal[False] = False,
     ) -> DataFrame: ...
 
     @overload
+    @classmethod
     def from_s3(
         cls,
         bucket: str,
@@ -1874,7 +1878,7 @@ class DataFrame:
         colnames: Optional[Iterable[str]] = None,
         roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
         ignore: bool = False,
-        dry: Literal[False] = False,
+        dry: bool = False,
     ) -> Union[DataFrame, Roles]:
         """Create a DataFrame from CSV files located in an S3 bucket.
 
@@ -2052,7 +2056,7 @@ class DataFrame:
         cls,
         view: View,
         name: str,
-        dry: bool = False,
+        dry: Literal[False] = False,
     ) -> DataFrame: ...
 
     @overload
@@ -2069,7 +2073,7 @@ class DataFrame:
         cls,
         view: View,
         name: str,
-        dry: Literal[False] = False,
+        dry: bool = False,
     ) -> Union[DataFrame, Roles]:
         """Create a DataFrame from a [`View`][getml.data.View].
 

@@ -428,12 +428,16 @@ def _merge_join_keys(join_key: List[str], other_join_key: List[str]) -> Tuple[st
 def _prepare_roles(
     roles: Optional[Union[Roles, Dict[Role, Iterable[str]]]],
     sniffed_roles: Roles,
+    ignore_sniffed_roles: bool = False,
 ) -> Roles:
     if roles is None:
         roles = {}
 
     if isinstance(roles, dict):
         roles = Roles.from_dict(roles)
+
+    if ignore_sniffed_roles:
+        return roles
 
     roles = sniffed_roles.update(roles)
 
@@ -615,12 +619,12 @@ def _sniff_pandas(pandas_df: pd.DataFrame) -> Roles:
 
 def _sniff_s3(
     bucket: str,
-    keys: List[str],
+    keys: Iterable[str],
     region: str,
     num_lines_sniffed: Optional[int] = 1000,
     sep: Optional[str] = ",",
     skip: Optional[int] = 0,
-    colnames: Optional[List[str]] = None,
+    colnames: Optional[Iterable[str]] = None,
 ) -> Roles:
     """Sniffs a list of CSV files located in an S3 bucket
     and returns the result as a dictionary of roles.
