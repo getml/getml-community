@@ -139,7 +139,7 @@ from .concat import concat
 from .container import Container
 from .data_frame import DataFrame
 from .data_model import DataModel
-from .helpers import list_data_frames
+from .helpers import list_data_frames, OnType
 from .helpers2 import (
     _decode_data_model,
     _decode_placeholder,
@@ -151,7 +151,7 @@ from .helpers2 import (
     to_placeholder,
 )
 from .load_container import load_container
-from .placeholder import Placeholder
+from .placeholder import Placeholder, TimeStampsType
 from .roles.container import Roles
 from .star_schema import StarSchema
 from .subset import Subset
@@ -177,6 +177,8 @@ __all__ = (
     "load_data_frame",
     "list_data_frames",
     "make_target_columns",
+    "OnType",
+    "TimeStampsType",
     "random",
     "relationship",
     "roles",
