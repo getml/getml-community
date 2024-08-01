@@ -19,11 +19,9 @@
 * [`XGBoostRegressor`][getml.predictors.XGBoostRegressor]
 
 enterprise-adm: Enterprise edition
-    This feature is available in the getML
-    [Enterprise edition][getting-started-community-vs-enterprise].
+    This feature is exclusive to the Enterprise edition and is not available in the Community edition. Discover the [benefits of the Enterprise edition][enterprise-benefits] and [compare their features][enterprise-feature-list].
 
-    For licences, technical support and more information, feel free to [contact us](
-    https://www.getml.com/contact)!
+    For licensing information and technical support, please [contact us][contact-page].
 
 ??? example
     The easiest way to conduct a hyperparameter optimization
