@@ -1888,11 +1888,9 @@ class DataFrame:
         [`DataFrame`][getml.DataFrame] handle.
 
         enterprise-adm: Enterprise edition
-            This feature is available in the getML
-            [Enterprise edition][getting-started-community-vs-enterprise].
+            This feature is exclusive to the Enterprise edition and is not available in the Community edition. Discover the [benefits of the Enterprise edition][enterprise-benefits] and [compare their features][enterprise-feature-list].
 
-            For licences, technical support and more information, feel free to [contact us](
-            https://www.getml.com/contact)!
+            For licensing information and technical support, please [contact us][contact-page].
 
         Note:
             Note that S3 is not supported on Windows.
@@ -2703,11 +2701,9 @@ class DataFrame:
         header with the column names.
 
         enterprise-adm: Enterprise edition
-            This feature is available in the getML
-            [Enterprise edition][getting-started-community-vs-enterprise].
+            This feature is exclusive to the Enterprise edition and is not available in the Community edition. Discover the [benefits of the Enterprise edition][enterprise-benefits] and [compare their features][enterprise-feature-list].
 
-            For licences, technical support and more information, feel free to [contact us](
-            https://www.getml.com/contact)!
+            For licensing information and technical support, please [contact us][contact-page].
 
         Note:
             Note that S3 is not supported on Windows.
@@ -3678,11 +3674,9 @@ class DataFrame:
         located in an S3 bucket.
 
         enterprise-adm: Enterprise edition
-            This feature is available in the getML
-            [Enterprise edition][getting-started-community-vs-enterprise].
+            This feature is exclusive to the Enterprise edition and is not available in the Community edition. Discover the [benefits of the Enterprise edition][enterprise-benefits] and [compare their features][enterprise-feature-list].
 
-            For licences, technical support and more information, feel free to [contact us](
-            https://www.getml.com/contact)!
+            For licensing information and technical support, please [contact us][contact-page].
 
         Note:
             Note that S3 is not supported on Windows.

@@ -46,11 +46,9 @@ bigquery = _all_dialects[0]
 """BigQuery is a proprietary database system used by the Google Cloud.
 
 enterprise-adm: Enterprise edition
-    This feature is available in the getML
-    [Enterprise edition][getting-started-community-vs-enterprise].
+    This feature is exclusive to the Enterprise edition and is not available in the Community edition. Discover the [benefits of the Enterprise edition][enterprise-benefits] and [compare their features][enterprise-feature-list].
 
-    For licences, technical support and more information, feel free to [contact us](
-    https://www.getml.com/contact)!
+    For licensing information and technical support, please [contact us][contact-page].
 """
 
 human_readable_sql = _all_dialects[1]
@@ -62,11 +60,9 @@ mysql = _all_dialects[2]
 database systems.
 
 enterprise-adm: Enterprise edition
-    This feature is available in the getML
-    [Enterprise edition][getting-started-community-vs-enterprise].
+    This feature is exclusive to the Enterprise edition and is not available in the Community edition. Discover the [benefits of the Enterprise edition][enterprise-benefits] and [compare their features][enterprise-feature-list].
 
-    For licences, technical support and more information, feel free to [contact us](
-    https://www.getml.com/contact)!
+    For licensing information and technical support, please [contact us][contact-page].
 """
 
 postgres = _all_dialects[3]
@@ -75,11 +71,9 @@ used by PostgreSQL and its many derivatives like Redshift
 or Greenplum.
 
 enterprise-adm: Enterprise edition
-    This feature is available in the getML
-    [Enterprise edition][getting-started-community-vs-enterprise].
+    This feature is exclusive to the Enterprise edition and is not available in the Community edition. Discover the [benefits of the Enterprise edition][enterprise-benefits] and [compare their features][enterprise-feature-list].
 
-    For licences, technical support and more information, feel free to [contact us](
-    https://www.getml.com/contact)!
+    For licensing information and technical support, please [contact us][contact-page].
 """
 
 spark_sql = _all_dialects[4]
@@ -90,11 +84,9 @@ engine for large-scale data processing and a popular
 choice for productionizing machine learning pipelines.
 
 enterprise-adm: Enterprise edition
-    This feature is available in the getML
-    [Enterprise edition][getting-started-community-vs-enterprise].
+    This feature is exclusive to the Enterprise edition and is not available in the Community edition. Discover the [benefits of the Enterprise edition][enterprise-benefits] and [compare their features][enterprise-feature-list].
 
-    For licences, technical support and more information, feel free to [contact us](
-    https://www.getml.com/contact)!
+    For licensing information and technical support, please [contact us][contact-page].
 """
 
 sqlite3 = _all_dialects[5]
@@ -104,11 +96,9 @@ It is recommended for live prediction systems or when the amount
 of data handled is unlikely to be too large.
 
 enterprise-adm: Enterprise edition
-    This feature is available in the getML
-    [Enterprise edition][getting-started-community-vs-enterprise].
+    This feature is exclusive to the Enterprise edition and is not available in the Community edition. Discover the [benefits of the Enterprise edition][enterprise-benefits] and [compare their features][enterprise-feature-list].
 
-    For licences, technical support and more information, feel free to [contact us](
-    https://www.getml.com/contact)!
+    For licensing information and technical support, please [contact us][contact-page].
 """
 
 tsql = _all_dialects[6]
@@ -116,11 +106,9 @@ tsql = _all_dialects[6]
 databases.
 
 enterprise-adm: Enterprise edition
-    This feature is available in the getML
-    [Enterprise edition][getting-started-community-vs-enterprise].
+    This feature is exclusive to the Enterprise edition and is not available in the Community edition. Discover the [benefits of the Enterprise edition][enterprise-benefits] and [compare their features][enterprise-feature-list].
 
-    For licences, technical support and more information, feel free to [contact us](
-    https://www.getml.com/contact)!
+    For licensing information and technical support, please [contact us][contact-page].
 """
 
 
