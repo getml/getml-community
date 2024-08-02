@@ -7,12 +7,15 @@
 
 #include "engine/handlers/ViewParser.hpp"
 
+#include <ranges>
+
 #include "commands/Fingerprint.hpp"
 #include "containers/DataFrameContent.hpp"
 #include "engine/handlers/BoolOpParser.hpp"
 #include "engine/handlers/FloatOpParser.hpp"
 #include "engine/handlers/StringOpParser.hpp"
 #include "engine/utils/Getter.hpp"
+#include "fct/collect.hpp"
 #include "helpers/Aggregations.hpp"
 
 namespace engine {
@@ -391,7 +394,7 @@ void ViewParser::subselection(const ViewOp& _cmd,
     return;
   }
 
-  const auto handle = [this, &_cmd, _df](const auto& _json_col) {
+  const auto handle = [this, _df](const auto& _json_col) {
     using Type = std::decay_t<decltype(_json_col)>;
 
     if constexpr (std::is_same<Type, commands::BooleanColumnView>()) {
@@ -412,31 +415,21 @@ void ViewParser::subselection(const ViewOp& _cmd,
 
       assert_true(data_ptr);
 
-      const auto& key_float = *data_ptr;
+      auto const df_nrows = _df->nrows();
+      auto indices = fct::collect::vector(
+          *data_ptr |
+          std::ranges::views::transform([](Float const& index) -> std::size_t {
+            if (index < 0.0) {
+              throw std::runtime_error(
+                  "Index on a numerical subselection cannot be "
+                  "smaller than zero!");
+            }
+            return static_cast<std::size_t>(index);
+          }) |
+          std::ranges::views::filter([&df_nrows](std::size_t const& index)
+                                         -> bool { return index < df_nrows; }));
 
-      auto key = std::vector<size_t>(key_float.size());
-
-      for (size_t i = 0; i < key_float.size(); ++i) {
-        const auto ix_float = key_float[i];
-
-        if (ix_float < 0.0) {
-          throw std::runtime_error(
-              "Index on a numerical subselection cannot be "
-              "smaller than zero!");
-        }
-
-        const auto ix = static_cast<size_t>(ix_float);
-
-        if (ix >= _df->nrows()) {
-          throw std::runtime_error(
-              "Index on a numerical subselection out of "
-              "bounds!");
-        }
-
-        key[i] = ix;
-      }
-
-      _df->sort_by_key(key);
+      _df->sort_by_key(indices);
     }
   };
 
