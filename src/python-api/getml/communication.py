@@ -475,7 +475,9 @@ def send(cmd: Dict[str, Any]) -> None:
 # --------------------------------------------------------------------
 
 
-def send_and_get_socket(cmd: Dict[str, Any], port: int = port) -> socket.socket:
+def send_and_get_socket(
+    cmd: Dict[str, Any], specific_port: Optional[int] = None
+) -> socket.socket:
     """Sends a command to the getml engine and returns the established
     connection.
 
@@ -511,7 +513,9 @@ def send_and_get_socket(cmd: Dict[str, Any], port: int = port) -> socket.socket:
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
-        sock.connect(("localhost", port))
+        sock.connect(
+            ("localhost", specific_port if specific_port is not None else port)
+        )
     except ConnectionRefusedError:
         raise ConnectionRefusedError(_make_error_msg())
 

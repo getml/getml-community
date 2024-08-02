@@ -3,7 +3,7 @@ import pytest
 import getml
 
 
-def test_read_parquet(parquet_file, engine):
+def test_read_parquet(getml_project, parquet_file):
     df = getml.DataFrame.from_parquet(parquet_file, name="df")
     assert df.shape == (3, 2)
     assert df.columns == ["a", "b"]
@@ -11,7 +11,7 @@ def test_read_parquet(parquet_file, engine):
     assert df["b"].to_numpy().tolist() == [4, 5, 6]  # type: ignore
 
 
-def test_read_csv(csv_file, engine):
+def test_read_csv(getml_project, csv_file):
     df = getml.DataFrame.from_csv(csv_file, name="df")
     assert df.shape == (4, 4)
     assert sorted(df.columns) == sorted(["name", "column_01", "join_key", "time_stamp"])
@@ -25,12 +25,14 @@ def test_read_csv(csv_file, engine):
     ]
 
 
-def test_read_csv_num_lines_sniffed_deprecation_warning(csv_file, engine):
+def test_read_csv_num_lines_sniffed_deprecation_warning(getml_project, csv_file):
     with pytest.warns(DeprecationWarning):
         getml.DataFrame.from_csv(csv_file, num_lines_sniffed=10, name="df")
 
 
-def test_read_csv_custom_ts(csv_file_custom_ts, engine):
+def test_read_csv_custom_ts(getml_project, csv_file_custom_ts):
     df = getml.DataFrame(name="Testiana", roles={"time_stamp": ["time_stamp"]})
     df.read_csv(csv_file_custom_ts, time_formats=["date: %Y-%m-%d; time: %H:%M:%S"])
-    assert df.roles.time_stamp == ("time_stamp",)
+    assert df.roles.time_stamp == [
+        "time_stamp",
+    ]

@@ -12,8 +12,10 @@ def pytest_collection_modifyitems(items):
     for item in items:
         try:
             fixtures = item.fixturenames
-            if "engine" in fixtures:
+            if "getml_engine" in fixtures:
                 item.add_marker(pytest.mark.engine)
+            if "getml_project" in fixtures:
+                item.add_marker(pytest.mark.project)
         except:
             pass
 
@@ -28,15 +30,28 @@ def workdir(dir: str):
         os.chdir(cwd)
 
 
-@pytest.fixture
-def engine(request):
+@pytest.fixture(scope="module")
+def getml_engine():
+    print("Starting engine")
+    with TemporaryDirectory() as tmpdir:
+        getml.engine.launch(project_directory=tmpdir, log=True)
+
+        yield getml.engine
+
+        print("Shutting down engine")
+        getml.engine.shutdown()
+
+
+@pytest.fixture(scope="function")
+def getml_project(request, getml_engine):
     project_name = Path(request.node.name).stem
-    if not getml.engine.is_monitor_alive():
-        getml.engine.launch()
-    getml.engine.delete_project(project_name)
-    getml.engine.set_project(project_name)
-    yield
-    getml.engine.delete_project(project_name)
+    print(f"Using project: {project_name}")
+    getml_engine.set_project(project_name)
+
+    yield getml.project
+
+    print(f"Deleting project: {project_name}")
+    getml_engine.delete_project(project_name)
 
 
 @pytest.fixture
@@ -73,7 +88,7 @@ def df_or_view(request, df):
 
 
 @pytest.fixture
-def df(engine):
+def df():
     """
     Example data:
 

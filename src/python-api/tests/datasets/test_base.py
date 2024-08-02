@@ -10,25 +10,11 @@ import getml
 import pytest
 
 
-@pytest.fixture
-def engine():
-    """Test project for each test
-
-    This fixture is injected into each test resulting in a new project. The
-    code after 'yield' is exectued at the end of the test.
-    """
-    project_name = "test_base"
-    getml.engine.launch()
-    getml.engine.set_project(project_name)
-    yield None
-    getml.engine.delete_project(project_name)
-
-
 # --------------------------------------------------------------------
 
 
 @pytest.mark.slow
-def test_load_loans(engine):
+def test_load_loans(getml_project):
     dfs = getml.datasets.load_loans()
 
     assert [df.name for df in dfs] == [  # type: ignore
@@ -41,7 +27,7 @@ def test_load_loans(engine):
 
     assert isinstance(dfs[0], getml.DataFrame)  # type: ignore
 
-    assert getml.project.data_frames.in_memory == [
+    assert getml_project.data_frames.in_memory == [
         "meta",
         "order",
         "population_test",
@@ -56,10 +42,10 @@ def test_load_loans(engine):
 
 
 @pytest.mark.slow
-def test_load_occupancy(engine):
+def test_load_occupancy(getml_project):
     dfs = getml.datasets.load_occupancy()
 
-    assert getml.project.data_frames.in_memory == [
+    assert getml_project.data_frames.in_memory == [
         "population_test",
         "population_train",
         "population_validation",
@@ -72,10 +58,10 @@ def test_load_occupancy(engine):
 
 
 @pytest.mark.slow
-def test_load_interstate94(engine):
+def test_load_interstate94(getml_project):
     traffic = getml.datasets.load_interstate94()
 
-    assert getml.project.data_frames.in_memory == [
+    assert getml_project.data_frames.in_memory == [
         "traffic",
     ]
 
@@ -84,10 +70,10 @@ def test_load_interstate94(engine):
 
 
 @pytest.mark.slow
-def test_load_air_pollution(engine):
+def test_load_air_pollution(getml_project):
     population = getml.datasets.load_air_pollution()
 
-    assert getml.project.data_frames.in_memory == ["population"]
+    assert getml_project.data_frames.in_memory == ["population"]
 
     assert population["pm2.5"].role == getml.data.roles.target
 

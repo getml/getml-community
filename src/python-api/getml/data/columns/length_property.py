@@ -42,7 +42,7 @@ def _length_property(col) -> Union[int, str]:
     if nrows_to_display <= _ColumnFormatter.max_rows:
         return nrows_to_display
 
-    if isinstance(nrows, str):
-        return nrows
-    else:
+    try:
         return int(nrows)
+    except:
+        return nrows

@@ -29,6 +29,7 @@ from typing import (
     Tuple,
     Union,
 )
+from functools import lru_cache
 
 import numpy as np
 import pandas as pd
@@ -359,31 +360,38 @@ def _make_id() -> str:
 def _infer_arange_args_from_slice(
     slc: slice, df_or_view: Union[DataFrame, View]
 ) -> Tuple[int, int, int]:
-    start = slc.start or 0
-    end = 0
+    @lru_cache(maxsize=None)
+    def len_df_or_view():
+        return len(df_or_view)
+
+    if slc.step is 0:
+        raise ValueError("slice step cannot be zero")
+
+    start = slc.start
+    stop = slc.stop
+    step = slc.step or 1
 
     # as len forces an evaluation of the view, we want to call
     # it only if necessary and only once
-    if slc.stop is None or slc.stop < 0 or start < 0:
-        end = len(df_or_view)
 
-    if start < 0:
-        start = max(end + start, 0)
+    if start is None:
+        if step > 0:
+            start = 0
+        elif step < 0:
+            start = len_df_or_view() - 1
+    elif start < 0:
+        start = max(len_df_or_view() + start, 0)
 
-    if slc.stop is None:
-        stop = end
-    elif slc.stop < 0:
-        stop = max(end + slc.stop, 0)
-    else:
-        stop = slc.stop
+    if stop is None:
+        if step > 0:
+            stop = len_df_or_view()
+        elif step < 0:
+            stop = -1
+    elif stop < 0:
+        stop = max(len_df_or_view() + stop, 0)
 
-    step = slc.step or 1
-
-    if stop < start:
-        return 0, 0, step
-
-    if step < 0:
-        start, stop = stop, start
+    if (stop < start and step > 0) or (stop > start and step < 0):
+        return 0, 0, 1
 
     return start, stop, step
 

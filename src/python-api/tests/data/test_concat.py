@@ -56,35 +56,18 @@ def make_df2():
 # --------------------------------------------------------------------
 
 
-def test_concat():
-    project_name = "test_dataframe"
-    getml.engine.launch()
-    getml.engine.set_project(project_name)
+def test_concat(getml_project):
     df1 = make_df1()
     df2 = make_df2()
     df3 = getml.data.concat("CONCAT1", [df1, df2])
     assert df3.shape[0] == df1.shape[0] + df2.shape[0]
-    getml.engine.delete_project(project_name)
 
 
 # --------------------------------------------------------------------
 
 
-def test_concat_views():
-    project_name = "test_dataframe"
-    getml.engine.launch()
-    getml.engine.set_project(project_name)
+def test_concat_views(getml_project):
     df1 = make_df1()
     df2 = make_df2()
     df4 = getml.data.concat("CONCAT2", [df1, df2[:3]])
     assert df4.shape[0] == df1.shape[0] + 3
-    getml.engine.delete_project(project_name)
-
-
-# --------------------------------------------------------------------
-
-if __name__ == "__main__":
-    test_concat()
-    test_concat_views()
-
-# --------------------------------------------------------------------

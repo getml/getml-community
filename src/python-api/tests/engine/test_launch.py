@@ -1,3 +1,4 @@
+from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 import pytest
@@ -15,7 +16,8 @@ from getml.engine._launch import (
 def test_launch_non_native(mock_platform_system, system):
     mock_platform_system.return_value = system
     with pytest.raises(OSError) as exc_info:
-        getml.engine.launch()
+        with TemporaryDirectory() as tmpdir:
+            getml.engine.launch(project_directory=tmpdir, log=True)
     assert str(
         exc_info.value
     ) == PLATFORM_NOT_SUPPORTED_NATIVELY_ERROR_MSG_TEMPLATE.format(

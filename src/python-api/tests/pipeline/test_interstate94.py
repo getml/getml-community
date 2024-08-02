@@ -13,14 +13,11 @@ the Interstate94 dataset.
 import getml as getml
 
 
-def test_interstate94():
+def test_interstate94(getml_project):
     """
     This is an integration test based on
     the Interstate94 dataset.
     """
-
-    getml.engine.launch()
-    getml.set_project("interstate94")
 
     traffic = getml.datasets.load_interstate94(roles=False, units=False)
 
@@ -66,9 +63,3 @@ def test_interstate94():
     assert scores.rsquared > 0.981, "Expected an r-squared greater 0.981, got " + str(  # type: ignore
         scores.rsquared
     )
-
-    getml.project.suspend()
-
-
-if __name__ == "__main__":
-    test_interstate94()
