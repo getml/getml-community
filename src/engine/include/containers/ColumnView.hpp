@@ -10,6 +10,7 @@
 
 #include <arrow/api.h>
 
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -17,12 +18,10 @@
 #include <vector>
 
 #include "containers/ArrayMaker.hpp"
+#include "containers/Column.hpp"
 #include "containers/ColumnViewIterator.hpp"
-#include "containers/ULong.hpp"
-#include "debug/debug.hpp"
 #include "helpers/NullChecker.hpp"
 #include "helpers/SubroleParser.hpp"
-#include "strings/strings.hpp"
 
 namespace containers {
 
@@ -301,6 +300,12 @@ ColumnView<T> ColumnView<T>::from_bin_op(const ColumnView<T1>& _operand1,
 template <class T>
 ColumnView<T> ColumnView<T>::from_boolean_subselection(
     const ColumnView<T>& _data, const ColumnView<bool>& _indices) {
+  if (_data.is_infinite() || _indices.is_infinite()) {
+    throw std::runtime_error(
+        "The data and the indices must be finite for a boolean "
+        "subselection to work!");
+  }
+
   const bool nrows_do_not_match =
       std::holds_alternative<size_t>(_data.nrows()) &&
       std::holds_alternative<size_t>(_indices.nrows()) &&
@@ -313,12 +318,6 @@ ColumnView<T> ColumnView<T>::from_boolean_subselection(
         "operations on a boolean column to be possible: " +
         std::to_string(std::get<size_t>(_data.nrows())) + " vs. " +
         std::to_string(std::get<size_t>(_indices.nrows())) + ".");
-  }
-
-  if (_data.is_infinite()) {
-    throw std::runtime_error(
-        "The data or the indices must be finite for a boolean "
-        "subselection to work!");
   }
 
   const auto find_next =
@@ -367,35 +366,25 @@ ColumnView<T> ColumnView<T>::from_boolean_subselection(
     return 0;
   };
 
-  size_t ix = 0;
-
-  size_t next = 0;
-
-  const auto value_func = [_data, _indices, ix, next, find_next](
-                              const size_t _i) mutable -> std::optional<T> {
-    if (_i == next) [[likely]] {
-      const auto new_ix = find_next(ix, 0);
-      if (!new_ix) {
-        return std::nullopt;
-      }
-      ix = *new_ix;
-    } else if (_i < next) [[unlikely]] {
-      const auto new_ix = find_next(0, _i);
-      if (!new_ix) {
-        return std::nullopt;
-      }
-      ix = *new_ix;
-    } else if (_i > next) [[unlikely]] {
-      const auto new_ix = find_next(ix, _i - next);
-      if (!new_ix) {
-        return std::nullopt;
-      }
-      ix = *new_ix;
-    }
-
-    next = _i + 1;
-
-    return _data[ix++];
+  const auto value_func =
+      [_data, _indices, index = 0uz, next = 0uz,
+       find_next](const std::size_t _i) mutable -> std::optional<T> {
+    return ([&_i, &next, &index, &find_next]() -> std::optional<std::size_t> {
+             if (_i == next) [[likely]] {
+               return find_next(index, 0);
+             }
+             if (_i < next) {
+               return find_next(0, _i);
+             }
+             // _i > next
+             return find_next(index, _i - next);
+           })()
+        .and_then([&_data, &next, &_i,
+                   &index](std::size_t const& _index) -> std::optional<T> {
+          index = _index;
+          next = _i + 1;
+          return _data[index++];
+        });
   };
 
   return ColumnView<T>(value_func, NOT_KNOWABLE, _data.subroles(),
@@ -409,32 +398,18 @@ ColumnView<T> ColumnView<T>::from_numerical_subselection(
     const ColumnView<T>& _data, const ColumnView<Float>& _indices) {
   const auto value_func = [_data,
                            _indices](const size_t _i) -> std::optional<T> {
-    const auto ix_float = _indices[_i];
+    return _indices[_i].and_then(
+        [&_data](Float const& index) -> std::optional<T> {
+          assert_true(index_float >= 0.0);
 
-    if (!ix_float) {
-      return std::nullopt;
-    }
+          if (index < 0.0) {
+            throw std::runtime_error(
+                "Index on a numerical subselection cannot be smaller than "
+                "zero!");
+          }
 
-    assert_true(*ix_float >= 0.0);
-
-    if (*ix_float < 0.0) {
-      throw std::runtime_error(
-          "Index on a numerical subselection cannot be smaller than "
-          "zero!");
-    }
-
-    const auto ix = static_cast<size_t>(*ix_float);
-
-    const auto d = _data[ix];
-
-    assert_true(d);
-
-    if (!d) {
-      throw std::runtime_error(
-          "Index on a numerical subselection out of bounds!");
-    }
-
-    return *d;
+          return _data[static_cast<std::size_t>(index)];
+        });
   };
 
   return ColumnView<T>(value_func, NOT_KNOWABLE, _data.subroles(),
@@ -568,7 +543,7 @@ ColumnView<T> ColumnView<T>::from_tern_op(const ColumnView<T1>& _operand1,
 
 template <class T>
 ColumnView<T> ColumnView<T>::from_value(const T _value) {
-  const auto value_func = [_value](const size_t _i) -> std::optional<T> {
+  const auto value_func = [_value](const size_t) -> std::optional<T> {
     return _value;
   };
 
