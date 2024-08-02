@@ -30,10 +30,7 @@ def make_target_columns(data_frame, class_label):
     data_frame.set_role("class_label", getml.data.roles.unused_string)
 
 
-def test_save_and_load():
-    getml.engine.launch()
-    getml.engine.set_project("cora")
-
+def test_save_and_load(getml_project):
     getml.database.connect_mysql(
         host="db.relational-data.org",
         dbname="CORA",
@@ -75,7 +72,3 @@ def test_save_and_load():
     container2.train
     container2.test
     container2.split
-
-
-if __name__ == "__main__":
-    test_save_and_load()

@@ -3,19 +3,20 @@ This makes sure that the
 engine shutdown works as intended.
 """
 
+from tempfile import TemporaryDirectory
 import getml
+import pytest
 
 
-def test_shutdown():
+@pytest.mark.parametrize("loop", range(100))
+def test_shutdown(loop):
     """
     This makes sure that the
     engine shutdown works as intended.
     """
-    for _ in range(100):
-        getml.engine.launch(in_memory=True)
-        getml.engine.set_project("test_engine")
+    with TemporaryDirectory() as tmpdir:
+        getml.engine.launch(in_memory=True, project_directory=tmpdir)
+        project_name = f"test_shutdown_{loop}"
+        getml.engine.set_project(project_name)
+        getml.engine.delete_project(project_name)
         getml.engine.shutdown()
-
-
-if __name__ == "__main__":
-    test_shutdown()

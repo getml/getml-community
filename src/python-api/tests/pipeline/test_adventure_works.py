@@ -15,14 +15,11 @@ import numpy as np
 import pandas as pd
 
 
-def test_adventure_works():
+def test_adventure_works(getml_project):
     """
     This is an integration test based on
     the Adventure Works dataset.
     """
-
-    getml.engine.launch()
-    getml.set_project("adventure_works")
 
     conn = getml.database.connect_mysql(
         host="db.relational-data.org",

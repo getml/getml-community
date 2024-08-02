@@ -12,11 +12,10 @@ import pytest
 
 import getml.data as data
 import getml.data.roles as roles
-import getml.engine as engine
 
 
 @pytest.mark.parametrize("df_or_view", ["df", "view"], indirect=True)
-def test_column_eq_missmatch(df_or_view):
+def test_column_eq_missmatch(getml_project, df_or_view):
     with pytest.raises(TypeError):
         df_or_view.column_01 == "string"
         df_or_view.time_stamp == "string"
@@ -30,10 +29,7 @@ def test_column_eq_missmatch(df_or_view):
     df_or_view.targets >= 0
 
 
-def test_column_operators():
-    engine.launch()
-    engine.set_project("examples")
-
+def test_column_operators(getml_project):
     # ----------------
     # Create a data frame from a JSON string
 
@@ -243,11 +239,3 @@ def test_column_operators():
     my_other_view = my_df.where(data.random(seed=100) > 0.5)  # type: ignore
 
     deep_copy = my_df.copy("DEEPCOPY")
-
-    engine.delete_project("examples")
-
-
-# ----------------
-
-if __name__ == "__main__":
-    test_column_operators()

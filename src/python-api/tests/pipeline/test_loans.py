@@ -13,14 +13,11 @@ the loans dataset.
 import getml as getml
 
 
-def test_loans():
+def test_loans(getml_project):
     """
     This is an integration test based on
     the loans dataset.
     """
-    getml.engine.launch()
-    getml.set_project("loans")
-
     star_schema = _make_star_schema()
 
     fast_prop = getml.feature_learning.FastProp(  # pylint: disable=unexpected-keyword-arg

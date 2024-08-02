@@ -16,16 +16,13 @@ import getml as getml
 import numpy as np
 
 
-def test_save_load():
+def test_save_load(getml_project):
     """
     This is an integration test based on
     the loans dataset. The purpose is
     to make sure that saving and loading pipelines
     works as expected.
     """
-    getml.engine.launch()
-    getml.set_project("test_save_load")
-
     star_schema = _make_star_schema()
 
     fast_prop = getml.feature_learning.FastProp(  # pylint: disable=unexpected-keyword-arg
@@ -53,8 +50,9 @@ def test_save_load():
     predictions1 = pipe1.predict(star_schema.test)
     sql_code1 = pipe1.features.to_sql()
 
-    getml.engine.suspend_project("test_save_load")
-    getml.engine.set_project("test_save_load")
+    project_name = getml_project.name
+    getml.engine.suspend_project(project_name)
+    getml.engine.set_project(project_name)
 
     star_schema = _make_star_schema()
 
@@ -64,8 +62,6 @@ def test_save_load():
 
     assert np.allclose(predictions1, predictions2), "Must be the same"  # type: ignore
     assert sql_code1.to_str() == sql_code2.to_str(), "Must be the same"
-
-    getml.engine.delete_project("test_save_load")
 
 
 def _make_star_schema() -> getml.data.StarSchema:

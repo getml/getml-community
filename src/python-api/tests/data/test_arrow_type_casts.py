@@ -9,7 +9,7 @@ from getml.data._io.arrow import (
 )
 
 
-def test_from_arrow_utc_timestamp(timestamp_with_utc_tz_batch, engine):
+def test_from_arrow_utc_timestamp(getml_project, timestamp_with_utc_tz_batch):
     with pytest.warns(UserWarning) as warnings:
         df = getml.data.DataFrame.from_arrow(
             timestamp_with_utc_tz_batch,
@@ -33,7 +33,7 @@ def test_from_arrow_utc_timestamp(timestamp_with_utc_tz_batch, engine):
     assert df.to_arrow()["utc_time"].type.tz is None
 
 
-def test_from_arrow_non_utc_timestamp(timestamp_with_non_utc_tz_batch, engine):
+def test_from_arrow_non_utc_timestamp(timestamp_with_non_utc_tz_batch):
     with pytest.raises(TypeError) as exc_info:
         getml.data.DataFrame.from_arrow(
             timestamp_with_non_utc_tz_batch, name="tz_non_utc"
@@ -44,7 +44,7 @@ def test_from_arrow_non_utc_timestamp(timestamp_with_non_utc_tz_batch, engine):
     )
 
 
-def test_from_arrow_no_tz_timestamp(timestamp_without_tz_batch, engine):
+def test_from_arrow_no_tz_timestamp(getml_project, timestamp_without_tz_batch):
     df = getml.data.DataFrame.from_arrow(
         timestamp_without_tz_batch, name="tz_none", roles={"time_stamp": ["no_tz_time"]}
     )
@@ -58,7 +58,7 @@ def test_from_arrow_no_tz_timestamp(timestamp_without_tz_batch, engine):
     assert df.to_arrow()["no_tz_time"].type.tz is None
 
 
-def test_from_arrow_int(int_batch, engine):
+def test_from_arrow_int(getml_project, int_batch):
     with pytest.raises(OverflowError) as exc_info:
         getml.data.DataFrame.from_arrow(int_batch, name="int")
     assert str(exc_info.value) == INT64_EXCEEDS_FLOAT64_BOUNDS_ERROR_TEMPLATE.format(

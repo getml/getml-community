@@ -49,7 +49,7 @@ def test_init():
 # --------------------------------------------------------------------
 
 
-def test_from_pandas(engine, pandas_df):
+def test_from_pandas(getml_project, pandas_df):
     df = getml.DataFrame.from_pandas(name="databert", pandas_df=pandas_df)
 
     assert getml.data.list_data_frames()["in_memory"] == ["databert"]
@@ -59,7 +59,7 @@ def test_from_pandas(engine, pandas_df):
 # --------------------------------------------------------------------
 
 
-def test_from_pandas_with_roles(engine, pandas_df):
+def test_from_pandas_with_roles(getml_project, pandas_df):
     roles = {
         "join_key": ["join_key"],
         "time_stamp": ["time_stamp"],
@@ -76,7 +76,7 @@ def test_from_pandas_with_roles(engine, pandas_df):
 # --------------------------------------------------------------------
 
 
-def test_to_pandas(engine, pandas_df):
+def test_to_pandas(getml_project, pandas_df):
     df = getml.DataFrame.from_pandas(name="databert", pandas_df=pandas_df)
 
     pandas_df_reload = df.to_pandas()
@@ -88,7 +88,7 @@ def test_to_pandas(engine, pandas_df):
 # --------------------------------------------------------------------
 
 
-def test_read_pandas(engine, pandas_df):
+def test_read_pandas(getml_project, pandas_df):
     df = getml.DataFrame(name="testbert")
 
     with pytest.raises(Exception):
@@ -109,14 +109,15 @@ def test_read_pandas(engine, pandas_df):
 # --------------------------------------------------------------------
 
 
-def test_from_db(engine):
+@pytest.mark.skip("Not implemented yet")
+def test_from_db():
     pass
 
 
 # --------------------------------------------------------------------
 
 
-def test_from_json(engine, json_payload):
+def test_from_json(getml_project, json_payload):
     df = getml.DataFrame.from_json(json_payload, name="jason")
     assert df._unused_float_names == ["numbers"]
     assert df._unused_string_names == ["colors"]
@@ -125,7 +126,7 @@ def test_from_json(engine, json_payload):
 # --------------------------------------------------------------------
 
 
-def test_from_dict(engine):
+def test_from_dict(getml_project):
     data: Dict[str, Any] = dict(
         animals=["dog", "cat", "mouse"], weight=[12.2, 125.2, 12], number=[1, 2, 3]
     )
@@ -139,7 +140,7 @@ def test_from_dict(engine):
 # --------------------------------------------------------------------
 
 
-def test_from_csv(engine, csv_file):
+def test_from_csv(getml_project, csv_file):
     df = getml.DataFrame.from_csv([csv_file], name="Testiana", sep=",")
     assert set(df.roles.unused) == {"column_01", "join_key", "name", "time_stamp"}
     assert (df["column_01"].to_numpy() == np.array([0, 1, 2, 3])).all()
@@ -148,7 +149,7 @@ def test_from_csv(engine, csv_file):
 # --------------------------------------------------------------------
 
 
-def test_list_data_frames(engine, pandas_df):
+def test_list_data_frames(getml_project, pandas_df):
     d = getml.DataFrame.from_pandas(pandas_df, "schnippi")
     assert (
         json.dumps(getml.data.list_data_frames())
@@ -164,7 +165,7 @@ def test_list_data_frames(engine, pandas_df):
 # --------------------------------------------------------------------
 
 
-def test_load_data_frames(engine, pandas_df):
+def test_load_data_frames(getml_project, pandas_df):
     d = getml.DataFrame.from_pandas(pandas_df, "schnippi")
     d2 = getml.data.load_data_frame("schnippi")
     assert d == d2
@@ -173,7 +174,7 @@ def test_load_data_frames(engine, pandas_df):
 # --------------------------------------------------------------------
 
 
-def test_set_roles(engine):
+def test_set_roles(getml_project):
     d_num, _ = getml.datasets.make_numerical(n_rows_population=10, n_rows_peripheral=20)
     d_cat, d_cat_2 = getml.datasets.make_categorical(
         n_rows_population=10, n_rows_peripheral=20
@@ -203,7 +204,7 @@ def test_set_roles(engine):
 # --------------------------------------------------------------------
 
 
-def test_compare(engine):
+def test_compare(getml_project):
     databert_pop_1, databert_peri_1 = getml.datasets.make_numerical(
         random_state=829034, n_rows_population=10, n_rows_peripheral=20
     )
@@ -225,7 +226,7 @@ def test_compare(engine):
 # --------------------------------------------------------------------
 
 
-def test_print(engine):
+def test_print(getml_project):
     databert, _ = getml.datasets.make_numerical()
     assert "join_key" in str(databert)
 
@@ -233,7 +234,7 @@ def test_print(engine):
 # --------------------------------------------------------------------
 
 
-def test_delete(engine):
+def test_delete(getml_project):
     databert, _ = getml.datasets.make_numerical(random_state=123123)
     assert getml.data.list_data_frames()["in_memory"] == [
         "numerical_peripheral_123123",

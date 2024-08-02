@@ -13,14 +13,11 @@ the robot dataset.
 import getml as getml
 
 
-def test_robot():
+def test_robot(getml_project):
     """
     This is an integration test based on
     the robot dataset.
     """
-
-    getml.engine.launch()
-    getml.engine.set_project("robot")
 
     data_all = getml.data.DataFrame.from_csv(
         "https://static.getml.com/datasets/robotarm/robot-demo.csv", "data_all"
@@ -62,9 +59,3 @@ def test_robot():
     ), "Expected all r-squared values to be greater than 0.986, got " + str(
         scores.rsquared
     )
-
-    getml.project.suspend()
-
-
-if __name__ == "__main__":
-    test_robot()

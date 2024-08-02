@@ -11,7 +11,8 @@ Tests the data frames container.
 """
 
 import numpy as np
-from getml import data, datasets, engine, project
+import getml
+from getml import data, datasets
 
 
 def make_populations(base, percentiles):
@@ -29,13 +30,10 @@ def make_populations(base, percentiles):
     return population_tables
 
 
-def test_data_frames():
+def test_data_frames(getml_project):
     """
     Tests the data frames cotainer.
     """
-
-    engine.launch()
-    engine.set_project("examples")
 
     # Generate artificial datasets
     pop, _ = datasets.make_numerical()
@@ -48,19 +46,19 @@ def test_data_frames():
     # ----------------
 
     assert (
-        len(project.data_frames) == len(pops) + 3
+        len(getml_project.data_frames) == len(pops) + 3
     ), "Expected length of data frames container to equal the length of all populations + 2"
 
-    project.data_frames.save()
+    getml_project.data_frames.save()
 
-    names_in_memory = sorted(df.name for df in project.data_frames)
-    names_on_disk = sorted(project.data_frames.on_disk)
+    names_in_memory = sorted(df.name for df in getml_project.data_frames)
+    names_on_disk = sorted(getml_project.data_frames.on_disk)
 
     assert (
         names_on_disk == names_in_memory
     ), "Expected names for data frames in memory and in project folder to be the same"
 
-    dfs = project.data_frames.retrieve()
+    dfs = getml_project.data_frames.retrieve()
 
     assert names_in_memory == sorted(
         list(dfs.keys())
@@ -70,33 +68,26 @@ def test_data_frames():
         handle == df.name for handle, df in zip(dfs.keys(), dfs.values())
     ), "Expected handle to correspond to the name on engine"
 
-    project.data_frames.unload()
+    getml_project.data_frames.unload()
 
     assert (
-        len(project.data_frames.on_disk) > 1
+        len(getml_project.data_frames.on_disk) > 1
     ), "Expected data frames in project folder"
 
-    assert len(project.data_frames.in_memory) == 0, "Expected no data frames in memory"
+    assert (
+        len(getml_project.data_frames.in_memory) == 0
+    ), "Expected no data frames in memory"
 
-    project.data_frames.load()
+    getml_project.data_frames.load()
 
-    assert len(project.data_frames.in_memory) == len(
+    assert len(getml_project.data_frames.in_memory) == len(
         names_in_memory
     ), "Expected all data frames to reappear in memory"
 
-    project.data_frames.delete()
+    getml_project.data_frames.delete()
 
     assert (
-        len(project.data_frames.on_disk) == 0
+        len(getml_project.data_frames.on_disk) == 0
     ), "Expected no data frames in project folder"
 
     # ----------------
-
-    engine.delete_project("examples")
-
-
-# ----------------
-
-
-if __name__ == "__main__":
-    test_data_frames()

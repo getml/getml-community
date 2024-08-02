@@ -2,7 +2,7 @@ import getml
 from tests.conftest import workdir
 
 
-def test_write_csv(tmpdir):
+def test_write_csv(getml_project, tmpdir):
     with workdir(tmpdir):
         df = getml.DataFrame.from_dict(
             {
@@ -18,7 +18,7 @@ def test_write_csv(tmpdir):
         assert df2["a"].to_numpy().tolist() == [1, 2, 3]  # type: ignore
 
 
-def test_write_parquet(tmpdir):
+def test_write_parquet(getml_project, tmpdir):
     with workdir(tmpdir):
         df = getml.DataFrame.from_dict(
             {

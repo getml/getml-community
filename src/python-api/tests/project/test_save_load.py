@@ -10,15 +10,15 @@ import getml
 
 
 @pytest.fixture
-def bundle(df, tmpdir):
+def bundle(getml_project, df, tmpdir):
     df.save()
-    bundle = Path(f"{getml.project.name}.getml")
-    getml.project.save(bundle)
-    getml.project.delete()
+    bundle = Path(f"{getml_project.name}.getml")
+    getml_project.save(bundle)
+    getml_project.delete()
     yield bundle
 
 
-def test_save_project_bundle(engine, bundle, df):
+def test_save_project_bundle(getml_project, bundle, df):
     assert bundle.exists()
     assert bundle.stat().st_size > 0
     assert bundle.suffix == ".getml"
@@ -33,14 +33,14 @@ def test_save_project_bundle(engine, bundle, df):
         assert (output_dir / f"data/{df.name}").exists()
 
 
-def test_save_project_bundle_default_name(engine, df, tmpdir):
-    getml.project.save()
-    assert Path(f"{getml.project.name}.getml").exists()
+def test_save_project_bundle_default_name(getml_project, df, tmpdir):
+    getml_project.save()
+    assert Path(f"{getml_project.name}.getml").exists()
 
 
-def test_load_project(engine, bundle, df):
-    getml.project.load(bundle)
-    getml.project.data_frames.load()
-    assert df.name in [df.name for df in getml.project.data_frames.data]
-    assert getml.project.name == bundle.stem
-    assert [df.name for df in getml.project.data_frames.data]
+def test_load_project(getml_project, bundle, df):
+    getml_project.load(bundle)
+    getml_project.data_frames.load()
+    assert df.name in [df.name for df in getml_project.data_frames.data]
+    assert getml_project.name == bundle.stem
+    assert [df.name for df in getml_project.data_frames.data]
