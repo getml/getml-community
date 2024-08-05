@@ -6,7 +6,7 @@
 #
 
 [build-system]
-requires = ["wheel", "hatchling", "hatch-vcs"]
+requires = ["wheel~=0.43.0", "hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
