@@ -364,7 +364,7 @@ def _infer_arange_args_from_slice(
     def len_df_or_view():
         return len(df_or_view)
 
-    if slc.step is 0:
+    if slc.step == 0:
         raise ValueError("slice step cannot be zero")
 
     start = slc.start
