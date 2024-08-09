@@ -40,7 +40,7 @@ Note:
     script it has to run won't be killed the moment your remote
     connection becomes unstable, and
     you are able to recover them later on (see
-    [`remote_access`][remote-access]).
+    [`remote_access`][remote-access-anchor]).
 
     All data frame objects and models in the getML engine are
     bundled in projects. When loading an existing project, the
