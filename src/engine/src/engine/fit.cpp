@@ -7,6 +7,13 @@
 
 #include "engine/pipelines/fit.hpp"
 
+#include <rfl/Field.hpp>
+#include <rfl/as.hpp>
+#include <rfl/json.hpp>
+#include <rfl/make_named_tuple.hpp>
+#include <rfl/replace.hpp>
+#include <rfl/to_named_tuple.hpp>
+
 #include "commands/FeatureLearner.hpp"
 #include "commands/Fingerprint.hpp"
 #include "communication/communication.hpp"
@@ -22,12 +29,6 @@
 #include "featurelearners/AbstractFeatureLearner.hpp"
 #include "helpers/StringReplacer.hpp"
 #include "predictors/Predictor.hpp"
-#include <rfl/Field.hpp>
-#include <rfl/as.hpp>
-#include <rfl/json.hpp>
-#include <rfl/make_named_tuple.hpp>
-#include <rfl/replace.hpp>
-#include <rfl/to_named_tuple.hpp>
 
 namespace engine {
 namespace pipelines {
@@ -423,9 +424,7 @@ fit_feature_learners(
     const auto retrieved_fe = _params.fe_tracker()->retrieve(fingerprint);
 
     if (retrieved_fe) {
-      socket_logger->log(
-          "Retrieving features (because a similar feature "
-          "learner has already been fitted)...");
+      socket_logger->log("Retrieving features from cache...");
 
       socket_logger->log("Progress: 100%.");
 
