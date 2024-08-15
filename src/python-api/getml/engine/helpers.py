@@ -7,7 +7,7 @@
 
 
 """
-Contains various helper functions related to the getML engine.
+Contains various helper functions related to the getML Engine.
 """
 
 import json
@@ -49,7 +49,7 @@ def delete_project(name: str):
 
 def list_projects() -> List[str]:
     """
-    List all projects on the getML engine.
+    List all projects on the getML Engine.
 
     Returns:
             Lists the name of all the projects.
@@ -62,7 +62,7 @@ def list_projects() -> List[str]:
 
 def list_running_projects() -> List[str]:
     """
-    List all projects on the getML engine that are currently running.
+    List all projects on the getML Engine that are currently running.
 
     Returns:
         Lists the name of all the projects currently running.
@@ -76,7 +76,7 @@ def list_running_projects() -> List[str]:
 def set_project(name: str):
     """Creates a new project or loads an existing one.
 
-    If there is no project called `name` present on the engine, a new one will
+    If there is no project called `name` present on the Engine, a new one will
     be created.
 
     Args:
@@ -89,7 +89,7 @@ def set_project(name: str):
 
 
 def shutdown():
-    """Shuts down the getML engine.
+    """Shuts down the getML Engine.
 
     Note:
         All changes applied to the [`DataFrame`][getml.DataFrame]

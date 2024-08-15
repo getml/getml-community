@@ -563,7 +563,8 @@ class Container:
 
     def to_pandas(self) -> Dict[str, pd.DataFrame]:
         """
-        TODO
+        Returns a `Container`'s contents as a dictionary of `pandas.DataFrame`s.
+        `key` holds the data frame's `name`, value the data converted to a `pandas.DataFrame`.
         """
         subsets = (
             {name: df.to_pandas() for name, df in self._subsets.items()}

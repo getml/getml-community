@@ -134,7 +134,7 @@ func (p *Projects) List() []string {
 // --------------------------------------------------------
 
 // PortTaken checks whether a particular port is taken
-// by any process known to the monitor.
+// by any process known to the Monitor.
 func (p *Projects) PortTaken(port int) bool {
 
 	if port == p.Config.Monitor.HTTPPort {

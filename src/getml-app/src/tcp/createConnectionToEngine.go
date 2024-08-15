@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-// CreateConnectionToEngine creates a low-level socket connection to the getML engine
+// CreateConnectionToEngine creates a low-level socket connection to the getML Engine
 func createConnectionToEngine(port int) (*net.TCPConn, error) {
 
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", "localhost:"+strconv.Itoa(port))

@@ -175,7 +175,7 @@ def _make_subsets_from_split(population, split):
 
 def load_data_frame(name: str) -> DataFrame:
     """Retrieves a [`DataFrame`][getml.DataFrame] handler of data in the
-    getML engine.
+    getML Engine.
 
     A data frame object can be loaded regardless if it is held in
     memory or not. It only has to be present in the current project
@@ -187,7 +187,7 @@ def load_data_frame(name: str) -> DataFrame:
             Name of the data frame.
 
     Returns:
-            Handle the underlying data frame in the getML engine.
+            Handle the underlying data frame in the getML Engine.
 
     Examples:
         ```python
@@ -208,7 +208,7 @@ def load_data_frame(name: str) -> DataFrame:
         return DataFrame(name).load()
 
     raise ValueError(
-        "No data frame holding the name '" + name + "' present on the getML engine."
+        "No data frame holding the name '" + name + "' present on the getML Engine."
     )
 
 

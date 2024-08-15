@@ -89,7 +89,7 @@ class LinearRegression(_Predictor):
         Note:
             This method is called at end of the `__init__` constructor
             and every time before the predictor - or a class holding
-            it as an instance variable - is sent to the getML engine.
+            it as an instance variable - is sent to the getML Engine.
         """
 
         if params is None:

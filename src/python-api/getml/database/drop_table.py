@@ -28,7 +28,7 @@ def drop_table(name: str, conn: Optional[Connection] = None):
         conn:
             The database connection to be used.
             If you don't explicitly pass a connection,
-            the engine will use the default connection.
+            the Engine will use the default connection.
     """
 
     # -------------------------------------------

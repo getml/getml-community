@@ -47,7 +47,7 @@ class Plots:
 
     def lift_curve(self, target_num: int = 0) -> Tuple[np.ndarray, np.ndarray]:
         """
-        Returns the data for the lift curve, as displayed in the getML monitor.
+        Returns the data for the lift curve, as displayed in the getML Monitor.
 
         This requires that you call
         [`score`][getml.Pipeline.score] first. The data used
@@ -88,7 +88,7 @@ class Plots:
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Returns the data for the precision-recall curve, as displayed in the getML
-        monitor.
+        Monitor.
 
         This requires that you call
         [`score`][getml.Pipeline.score] first. The data used
@@ -126,7 +126,7 @@ class Plots:
 
     def roc_curve(self, target_num: int = 0) -> Tuple[np.ndarray, np.ndarray]:
         """
-        Returns the data for the ROC curve, as displayed in the getML monitor.
+        Returns the data for the ROC curve, as displayed in the getML Monitor.
 
         This requires that you call
         [`score`][getml.Pipeline.score] first. The data used

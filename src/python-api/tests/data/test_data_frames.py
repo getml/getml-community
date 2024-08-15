@@ -66,7 +66,7 @@ def test_data_frames(getml_project):
 
     assert all(
         handle == df.name for handle, df in zip(dfs.keys(), dfs.values())
-    ), "Expected handle to correspond to the name on engine"
+    ), "Expected handle to correspond to the name on Engine"
 
     getml_project.data_frames.unload()
 

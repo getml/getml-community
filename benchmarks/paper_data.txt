@@ -162,9 +162,9 @@ exist. However, researchers have paid comparatively little
 attention to an efficient implementation of propositionalization
 algorithms. The purpose of this study is to contribute to the
 closing of this gap.
-We design a database engine that is customized for propo-
+We design a database Engine that is customized for propo-
 sitionalization. We demonstate that propositionalization algo-
-rithms implemented on top of this engine are at least 60 times
+rithms implemented on top of this Engine are at least 60 times
 and up to 1000 times faster than implementations cited above.
 This speedup is about the same as the speedup attained by
 introducing GPUs to deep learning which is considered to be

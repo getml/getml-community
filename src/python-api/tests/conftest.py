@@ -32,13 +32,13 @@ def workdir(dir: str):
 
 @pytest.fixture(scope="module")
 def getml_engine():
-    print("Starting engine")
+    print("Starting Engine")
     with TemporaryDirectory() as tmpdir:
         getml.engine.launch(project_directory=tmpdir, log=True)
 
         yield getml.engine
 
-        print("Shutting down engine")
+        print("Shutting down Engine")
         getml.engine.shutdown()
 
 

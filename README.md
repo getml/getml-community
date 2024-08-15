@@ -17,7 +17,7 @@
 
 ## Introduction
 
-getML is a tool for automating feature engineering on relational data and time series. It includes a specifically customized database engine for this very purpose.
+getML is a tool for automating feature engineering on relational data and time series. It includes a specifically customized database Engine for this very purpose.
 
 This results in a speedup between _60_ to _1000_ times (see [Benchmarks](#benchmarks)) over other open-source tools like [featuretools](https://www.featuretools.com/) and [tsfresh](https://tsfresh.com/) for automated feature engineering. Also check out our [demonstrational notebooks](https://github.com/getml/getml-demo) to see more comparisons.
 
@@ -51,7 +51,7 @@ One big key feature over other tools like [featuretools](https://www.featuretool
 
 FastProp is not only faster, but can also provide an increased accuracy.
 
-For even better accuracy, getML provides advanced algorithms in its [professional and enterprise feature-sets](https://www.getml.com/pricing), namely [Multirel](https://docs.getml.com/latest/user_guide/feature_engineering/feature_engineering.html#multirel), [Relboost](https://docs.getml.com/latest/user_guide/feature_engineering/feature_engineering.html#relboost) and [RelMT](https://docs.getml.com/latest/user_guide/feature_engineering/feature_engineering.html#relmt). 
+For even better accuracy, getML provides advanced algorithms in its [professional and Enterprise feature-sets](https://www.getml.com/pricing), namely [Multirel](https://docs.getml.com/latest/user_guide/feature_engineering/feature_engineering.html#multirel), [Relboost](https://docs.getml.com/latest/user_guide/feature_engineering/feature_engineering.html#relboost) and [RelMT](https://docs.getml.com/latest/user_guide/feature_engineering/feature_engineering.html#relmt). 
 
 The standard version includes [preprocessors](https://docs.getml.com/latest/user_guide/preprocessing/preprocessing.html) (like CategoryTrimmer, EmailDomain, Imputation, Mapping, Seasonal, Substring, TextFieldSplitter), [predictors](https://docs.getml.com/latest/user_guide/predicting/predicting.html#using-getml) (like LinearRegression, LogisticRegression, XGBoostClassifier, XGBoostRegressor) and [hyperparameter optimizer](https://docs.getml.com/latest/user_guide/hyperopt/hyperopt.html#hyperparameter-optimization) (like RandomSearch, LatinHypercubeSearch, GaussianHyperparameterSearch).
 
@@ -59,7 +59,7 @@ It also gives access to [the getML Monitor](https://docs.getml.com/latest/user_g
 
 getML can [import data from various sources](https://docs.getml.com/latest/user_guide/importing_data/importing_data.html) like CSV, Pandas, JSON, SQLite, MySQL, MariaDB, PostgreSQL, Greenplum, ODBC. 
 
-While the standard version is open source, can be run on your local machine, and gets basic support via EMail and via this repository, it must not be used for productive purposes. The [professional and enterprise versions](https://www.getml.com/pricing) in contrast allows productive uses, gets also support via phone and chat, offers training sessions, as well as on-premise and cloud hosting, and export and deployment features. Get in [contact via email](mailto:hello@getml.com) or directly [schedule a meeting](https://getml.com/contact).
+While the standard version is open source, can be run on your local machine, and gets basic support via EMail and via this repository, it must not be used for productive purposes. The [professional and Enterprise versions](https://www.getml.com/pricing) in contrast allows productive uses, gets also support via phone and chat, offers training sessions, as well as on-premise and cloud hosting, and export and deployment features. Get in [contact via email](mailto:hello@getml.com) or directly [schedule a meeting](https://getml.com/contact).
 
 ### Features generate by getML
 

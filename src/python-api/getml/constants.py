@@ -39,9 +39,9 @@ TIME_FORMATS = [
 """The default time stamp formats to be used.
 
 Whenever a time stamp is parsed from a string,
-the getML engine tries different time stamp formats.
+the getML Engine tries different time stamp formats.
 
-The procedure works as follows: The engine tries to parse the string
+The procedure works as follows: The Engine tries to parse the string
 using the first format. If that fails, it will use the second format etc.
 
 If none of the time stamp formats work, then it tries to parse the string

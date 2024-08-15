@@ -26,7 +26,7 @@ def set_s3_access_key_id(value: str):
 
     In order to retrieve data from S3, you need to set the Access Key ID
     and the Secret Access Key. You can either set them as environment
-    variables before you start the getML engine, or you can set them from
+    variables before you start the getML Engine, or you can set them from
     this module.
 
     Args:
@@ -40,8 +40,8 @@ def set_s3_access_key_id(value: str):
     if not _is_alive():
         raise ConnectionRefusedError(
             """
-        Cannot connect to getML engine.
-        Make sure the engine is running on port '"""
+        Cannot connect to getML Engine.
+        Make sure the Engine is running on port '"""
             + str(comm.port)
             + """' and you are logged in.
         See `help(getml.engine)`."""
@@ -69,7 +69,7 @@ def set_s3_secret_access_key(value: str):
 
     In order to retrieve data from S3, you need to set the Access Key ID
     and the Secret Access Key. You can either set them as environment
-    variables before you start the getML engine, or you can set them from
+    variables before you start the getML Engine, or you can set them from
     this module.
 
     Args:
@@ -83,8 +83,8 @@ def set_s3_secret_access_key(value: str):
     if not _is_alive():
         raise ConnectionRefusedError(
             """
-        Cannot connect to getML engine.
-        Make sure the engine is running on port '"""
+        Cannot connect to getML Engine.
+        Make sure the Engine is running on port '"""
             + str(comm.port)
             + """' and you are logged in.
         See `help(getml.engine)`."""

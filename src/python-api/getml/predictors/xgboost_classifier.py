@@ -384,14 +384,14 @@ class XGBoostClassifier(_Predictor):
             Range: [10, ∞]
 
         external_memory:
-            When the in_memory flag of the engine is set to False,
+            When the in_memory flag of the Engine is set to False,
             XGBoost can use the external memory functionality.
             This reduces the memory consumption,
             but can also affect the quality of the predictions.
             External memory is deactivated by default and it
             is recommended to only use external memory
             for feature selection.
-            When the in_memory flag of the engine is set to True,
+            When the in_memory flag of the Engine is set to True,
             (the default value), XGBoost will never use
             external memory.
 
@@ -566,7 +566,7 @@ class XGBoostClassifier(_Predictor):
         Note:
             This method is called at end of the `__init__` constructor
             and every time before the predictor - or a class holding
-            it as an instance variable - is sent to the getML engine.
+            it as an instance variable - is sent to the getML Engine.
         """
 
         # ------------------------------------------------------------

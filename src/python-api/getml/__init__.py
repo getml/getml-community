@@ -13,7 +13,7 @@ and time series. The getML algorithms can produce features that are far
 more advanced than what any data scientist could write by hand or what
 could be accomplished by using simple brute force approaches.
 
-This is the official python client for the getML engine.
+This is the official python client for the getML Engine.
 
 Documentation and more details at https://docs.getml.com
 """

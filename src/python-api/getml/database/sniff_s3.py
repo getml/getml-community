@@ -62,7 +62,7 @@ def sniff_s3(
         conn:
             The database connection to be used.
             If you don't explicitly pass a connection,
-            the engine will use the default connection.
+            the Engine will use the default connection.
 
     Returns:
         Appropriate `CREATE TABLE` statement.
@@ -70,7 +70,7 @@ def sniff_s3(
     ??? example
         Let's assume you have two CSV files - *file1.csv* and
         *file2.csv* - in the bucket. You can
-        import their data into the getML engine using the following
+        import their data into the getML Engine using the following
         commands:
         ```python
         getml.engine.set_s3_access_key_id("YOUR-ACCESS-KEY-ID")
@@ -86,7 +86,7 @@ def sniff_s3(
         )
         ```
         You can also set the access credential as environment variables
-        before you launch the getML engine.
+        before you launch the getML Engine.
 
     """
 

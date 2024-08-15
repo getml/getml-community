@@ -387,7 +387,7 @@ class _DataFrameFormatColumn(_FormatColumn):
             )[0]
 
         if self.role in [numerical, target, join_key, unused_float]:
-            # this logic might be too simplistic, but data comes from the engine
+            # this logic might be too simplistic, but data comes from the Engine
             # in a standardized format anyway, so...¯\_(ツ)_/¯
             if any("." in cell for cell in self.data):
                 self.data = [float(cell) for cell in self.data]

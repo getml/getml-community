@@ -45,7 +45,7 @@ testdata_infer_arange_args_from_slice = [
     (slice(5, None, -1), (5, -1, -1)),
     (slice(None, 5, 1), (0, 5, 1)),
     (slice(None, 5, -1), (9, 5, -1)),
-    # we don't care about upper bounds on the python side and let the engine
+    # we don't care about upper bounds on the python side and let the Engine
     # handle it lazily
     (slice(0, 100, 1), (0, 100, 1)),
     (slice(0, 100, -1), (0, 0, 1)),

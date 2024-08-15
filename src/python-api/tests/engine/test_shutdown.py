@@ -1,6 +1,6 @@
 """
 This makes sure that the
-engine shutdown works as intended.
+Engine shutdown works as intended.
 """
 
 from tempfile import TemporaryDirectory
@@ -12,7 +12,7 @@ import pytest
 def test_shutdown(loop):
     """
     This makes sure that the
-    engine shutdown works as intended.
+    Engine shutdown works as intended.
     """
     with TemporaryDirectory() as tmpdir:
         getml.engine.launch(in_memory=True, project_directory=tmpdir)

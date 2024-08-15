@@ -57,7 +57,7 @@ def sniff_csv(
         conn:
             The database connection to be used.
             If you don't explicitly pass a connection,
-            the engine will use the default connection.
+            the Engine will use the default connection.
 
     Returns:
         Appropriate `CREATE TABLE` statement.

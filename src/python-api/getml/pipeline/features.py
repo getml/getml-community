@@ -163,7 +163,7 @@ class Features:
 
     def _load_features(self) -> List[Feature]:
         """
-        Loads the actual feature data from the engine.
+        Loads the actual feature data from the Engine.
         """
         features = []
 
@@ -269,7 +269,7 @@ class Features:
     ) -> Tuple[NDArray[np.str_], NDArray[np.float_]]:
         """
         Returns the data for the feature correlations,
-        as displayed in the getML monitor.
+        as displayed in the getML Monitor.
 
         Args:
             target_num:
@@ -369,7 +369,7 @@ class Features:
     ) -> Tuple[NDArray[np.str_], NDArray[np.float_]]:
         """
         Returns the data for the feature importances,
-        as displayed in the getML monitor.
+        as displayed in the getML Monitor.
 
         Args:
             target_num:
@@ -585,7 +585,7 @@ class Features:
                 The SQL dialect to use. Must be from
                 [`dialect`][getml.pipeline.dialect]. Please
                 note that not all dialects are supported
-                in the getML community edition.
+                in the getML Community edition.
 
             schema:
                 The schema in which to wrap all generated tables and
@@ -631,7 +631,7 @@ class Features:
             features which can be returned as SQL statements.
 
         Note:
-            The getML community edition only supports
+            The getML Community edition only supports
             transpilation to human-readable SQL. Passing
             'sqlite3' will also produce human-readable SQL.
 

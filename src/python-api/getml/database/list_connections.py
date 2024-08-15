@@ -8,7 +8,7 @@
 
 """
 Returns a list handles to all connections that are currently active on the
-engine.
+Engine.
 """
 
 import json
@@ -22,7 +22,7 @@ from .connection import Connection
 def list_connections() -> List[Connection]:
     """
     Returns a list handles to all connections
-    that are currently active on the engine.
+    that are currently active on the Engine.
 
     Returns:
         A list of Connection objects.

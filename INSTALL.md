@@ -13,13 +13,13 @@
 
 ## Overview <a name="overview"></a>
 
-There are three components of the getML community edition: 
-1. The Python API | Helps you interact with the getML engine
-2. The getML engine | The C++ backend of getML
-3. The CLI | A command line interface to install and interact with the engine
+There are three components of the getML Community edition: 
+1. The Python API | Helps you interact with the getML Engine
+2. The getML Engine | The C++ backend of getML
+3. The CLI | A command line interface to install and interact with the Engine
 
-On Linux, the getML community edition binary of the engine is shipped with the Python API.
-On macOS and Windows, you will have to run the engine in a Docker container.
+On Linux, the getML Community edition binary of the Engine is shipped with the Python API.
+On macOS and Windows, you will have to run the Engine in a Docker container.
 We are working on providing native support for macOS and Windows in the near future.
 The Python API is available for all platforms that support Python 3.8 or above.
 
@@ -34,7 +34,7 @@ pip install getml
 ```
 
 Alternatively, if you want to install the API from the source,
-you will have to install the engine separately unless you install the wheel file provided by following the steps in the [Compiling from Source](#compiling-from-source) section.
+you will have to install the Engine separately unless you install the wheel file provided by following the steps in the [Compiling from Source](#compiling-from-source) section.
 
 ```bash
 # Change directory 
@@ -46,8 +46,8 @@ pip3 install .
 
 ### Engine <a name="engine"></a>
 
-Even though the community edition of the engine is shipped with the Python API on Linux platforms,
-in some cases it might be preferred to install it separately. For example, if you want to use the [enterprise edition](https://.....) of the engine.
+Even though the Community edition of the Engine is shipped with the Python API on Linux platforms,
+in some cases it might be preferred to install it separately. For example, if you want to use the [Enterprise edition](https://.....) of the Engine.
 
 #### Linux <a name="engine-linux"></a>
 
@@ -57,7 +57,7 @@ You can also use `uname -m` to figure out the architecture.
 If it says something like `aarch64` or `arm64`, you need to use [`arm64`](https://static.getml.com/download/1.5.0/getml-1.5.0-arm64-community-edition-linux.tar.gz), otherwise go with [`x64`](https://static.getml.com/download/1.5.0/getml-1.5.0-x64-community-edition-linux.tar.gz).
 
 ```bash
-# Download the tar file of the engine
+# Download the tar file of the Engine
 wget https://static.getml.com/download/1.5.0/getml-1.5.0-ARCH-community-edition-linux.tar.gz
 
 # Extract the tar file
@@ -66,11 +66,11 @@ tar -xzf getml-1.5.0-ARCH-community-edition-linux.tar.gz
 # Change directory 
 cd getml-1.5.0-ARCH-community-edition-linux
 
-# Install the engine
+# Install the Engine
 ./getML install
 ```
 
-The output of the `install` command will tell you where the engine has been installed.
+The output of the `install` command will tell you where the Engine has been installed.
 It will look something like this:
 
 ```bash
@@ -84,12 +84,12 @@ Installation successful. To be able to call 'getML' from anywhere, add the follo
 /home/getml/.getML/getml-1.5.0-arm64-community-edition-linux
 ```
 
-To run the engine, execute:
+To run the Engine, execute:
 ```bash
 ./getML
 ```
 
-If the engine was installed to the user home directory, you can add the installation directory to your PATH if you want to call the getML CLI from anywhere.
+If the Engine was installed to the user home directory, you can add the installation directory to your PATH if you want to call the getML CLI from anywhere.
 
 ```bash
 export PATH=$PATH:/path/to/getml-1.5.0-ARCH-community-edition-linux
@@ -111,7 +111,7 @@ First, download the docker-compose file in your project directory by executing t
 wget https://raw.githubusercontent.com/getml/getml-community/1.5.0/runtime/docker-compose.yml
 ```
 
-By executing the following command, the getML service will be started. Further, a local directory `getml` will be created if it doesn't exist yet and mounted into the container. It will contain the files of the project. Also, the ports required for the Python API to communicate with the engine will be mapped to the host system.
+By executing the following command, the getML service will be started. Further, a local directory `getml` will be created if it doesn't exist yet and mounted into the container. It will contain the files of the project. Also, the ports required for the Python API to communicate with the Engine will be mapped to the host system.
 
 ```bash
 docker compose up
@@ -129,7 +129,7 @@ To shut down the service after you are done, press `Ctrl+c`.
 
 ### Python API <a name="deinstallation-python-api"></a>
 
-> :warning: **Project data might be deleted**: If you have not installed the engine separately and have not set the home directory to a custom location on engine launch, the project data will be deleted when you uninstall the Python API.
+> :warning: **Project data might be deleted**: If you have not installed the Engine separately and have not set the home directory to a custom location on Engine launch, the project data will be deleted when you uninstall the Python API.
 
 To uninstall the Python API, execute the following command in a terminal:
 
@@ -139,7 +139,7 @@ pip uninstall getml
 
 ### Linux <a name="deinstallation-linux"></a>
 
-> :warning: **Project data might be deleted**: If you have not set the home directory to a custom location on engine launch, the project data will be deleted when you remove the `.getML` directory.
+> :warning: **Project data might be deleted**: If you have not set the home directory to a custom location on Engine launch, the project data will be deleted when you remove the `.getML` directory.
 
 You will have to remove the folder `.getML` from your home directory. In a terminal, execute: 
 ```bash
@@ -177,7 +177,7 @@ Usage:
 Subcommands:
   [a]ll       Build all (whole package, [p]ackage + [py]thon API + tar+gz [ar]chive)
   [c]li       Build CLI
-  [e]ngine    Build engine
+  [e]ngine    Build Engine
   [p]ackage   Export runnable [e]ngine + [c]li package
   [py]thon    Package Python API
   [ar]chive   Create tar.gz archive of [p]ackage
@@ -188,7 +188,7 @@ Options:
   -o <path>   Set output path (default: build); passed to docker build
 ```
 
-Most of the time you probably want to build the (C++) engine:
+Most of the time you probably want to build the (C++) Engine:
 
 ```bash
 ./bin/getml build engine
@@ -212,7 +212,7 @@ The build pipeline is based on multi-stage
  Docker builds. There are two `Dockerfile`s:
 - One for CLI, wheel, and packaging located in the project root:
   [`./Dockerfile`](./Dockerfile)
-- One related to the engine and its dependencies in the engine subfolder:
+- One related to the Engine and its dependencies in the Engine subfolder:
   [`./src/engine/Dockerfile`](./src/engine/Dockerfile)
 
 As the second `Dockerfile` is a dependency for the first, we use [bake](https://docs.docker.com/build/bake/) to orchestrate the builds. The [bake file](docker-bake.hcl) holds definitions for all build targets and ensures the appropriate build contexts are set.

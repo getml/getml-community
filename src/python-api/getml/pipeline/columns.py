@@ -56,7 +56,7 @@ class Columns:
         peripheral:
             The abstract representation of peripheral tables used for this pipeline.
         data:
-            The columns to be stored in the container. If not provided, they are obtained from the engine.
+            The columns to be stored in the container. If not provided, they are obtained from the Engine.
 
     Note:
         The container is an iterable. So, in addition to
@@ -229,7 +229,7 @@ class Columns:
 
     def _load_columns(self) -> None:
         """
-        Loads the actual column data from the engine.
+        Loads the actual column data from the Engine.
         """
         columns = []
 

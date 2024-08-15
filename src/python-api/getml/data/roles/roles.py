@@ -42,7 +42,7 @@ algorithm (see [`feature_learning`][getml.feature_learning]).
 categorical: Final[Categorical] = "categorical"
 """Marks categorical columns.
 
-This role tells the getML engine to include the associated
+This role tells the getML Engine to include the associated
 [`StringColumn`][getml.data.columns.StringColumn] during feature
 learning.
 
@@ -72,7 +72,7 @@ the feature learning algorithm.
 numerical: Final[Numerical] = "numerical"
 """Marks numerical columns.
 
-This role tells the getML engine to include the associated
+This role tells the getML Engine to include the associated
 [`FloatColumn`][getml.data.columns.FloatColumn] during feature
 learning.
 
@@ -102,7 +102,7 @@ For classification problems, target variables can only assume the values
 text: Final[Text] = "text"
 """Marks text columns.
 
-This role tells the getML engine to include the associated
+This role tells the getML Engine to include the associated
 [`StringColumn`][getml.data.columns.StringColumn] during feature
 learning.
 
@@ -169,7 +169,7 @@ that is used to try to interpret the input strings. Possible format options are
 * %Z - time zone differential in RFC format (GMT or +NNNN)
 * %% - percent sign
 
-If none of the formats works, the getML engine will try to interpret
+If none of the formats works, the getML Engine will try to interpret
 the time stamps as numerical values. If this fails, the time stamp will be set
 to NULL.
 

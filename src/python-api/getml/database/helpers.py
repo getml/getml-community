@@ -29,7 +29,7 @@ FILE_SYSTEM_ERROR_MSG_TEMPLATE = cleandoc(
     Engine could not retrieve files:
     {fnames}
 
-    Is the engine running inside docker? When ingesting csvs to databases all
+    Is the Engine running inside docker? When ingesting csvs to databases all
     paths in `fnames` are interpreted as paths w.r.t. the container's filesystem.
 
     Hint: Use `docker cp <container>:/home/getml/assets` to copy the files into

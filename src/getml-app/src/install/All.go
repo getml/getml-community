@@ -18,7 +18,7 @@ func All(homeDir string, version string) {
 			"missing root rights. Trying local installation instead.")
 	} else {
 		copyFile("getML", "", UsrLocalBin, true)
-		println("Installation successful. The getML engine was installed into '" + installDir + "' and the cli was installed into '" + UsrLocalBin + "'.")
+		println("Installation successful. The getML Engine was installed into '" + installDir + "' and the cli was installed into '" + UsrLocalBin + "'.")
 		return
 	}
 

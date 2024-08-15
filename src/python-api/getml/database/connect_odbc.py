@@ -79,7 +79,7 @@ def connect_odbc(
               the produced queries look as follows:
               [TABLE_NAME].[COLUMN_NAME] (MS SQL Server style).
 
-            * If you pass more than two characters, the engine will throw an exception.
+            * If you pass more than two characters, the Engine will throw an exception.
 
         double_precision:
             The keyword used for double precision columns.
