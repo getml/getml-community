@@ -9,9 +9,7 @@
 #define HELPERS_FEATURE_HPP_
 
 #include <memory>
-#include <optional>
 
-#include "debug/debug.hpp"
 #include "helpers/Column.hpp"
 #include "memmap/Pool.hpp"
 

@@ -8,12 +8,10 @@
 #ifndef HELPERS_SCHEMAIMPL_HPP_
 #define HELPERS_SCHEMAIMPL_HPP_
 
-#include <memory>
 #include <optional>
+#include <rfl/Field.hpp>
 #include <string>
 #include <vector>
-
-#include <rfl/Field.hpp>
 
 namespace helpers {
 

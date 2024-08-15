@@ -7,14 +7,13 @@
 
 #include "engine/pipelines/check.hpp"
 
+#include <rfl/Field.hpp>
+#include <rfl/as.hpp>
+
 #include "commands/Fingerprint.hpp"
 #include "commands/WarningFingerprint.hpp"
 #include "engine/pipelines/FitPreprocessorsParams.hpp"
 #include "engine/pipelines/fit.hpp"
-#include "fct/collect.hpp"
-#include <rfl/Field.hpp>
-#include <rfl/as.hpp>
-#include <rfl/json.hpp>
 
 namespace engine {
 namespace pipelines {
@@ -47,14 +46,14 @@ void check(const Pipeline& _pipeline, const CheckParams& _params) {
 
   const auto [placeholder, peripheral_names] = _pipeline.make_placeholder();
 
-  const auto feature_learner_params = featurelearners::FeatureLearnerParams(
+  const auto feature_learner_params = featurelearners::FeatureLearnerParams{
       rfl::make_field<"dependencies_">(preprocessed.preprocessor_fingerprints_),
       rfl::make_field<"peripheral_">(peripheral_names),
       rfl::make_field<"peripheral_schema_">(modified_peripheral_schema),
       rfl::make_field<"placeholder_">(placeholder),
       rfl::make_field<"population_schema_">(modified_population_schema),
       rfl::make_field<"target_num_">(
-          featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS));
+          featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS)};
 
   const auto [feature_learners, fl_fingerprints] =
       init_feature_learners(_pipeline, feature_learner_params, _params);
@@ -79,8 +78,8 @@ void check(const Pipeline& _pipeline, const CheckParams& _params) {
   // TODO: Use rfl::Ref
   const auto to_ptr = [](const auto& _fl) { return _fl.ptr(); };
 
-  const auto fl_shared_ptr =
-      fct::collect::vector(feature_learners | VIEWS::transform(to_ptr));
+  const auto fl_shared_ptr = feature_learners | std::views::transform(to_ptr) |
+                             fct::ranges::to<std::vector>();
 
   const auto warner = preprocessors::data_model_checking::check(
       placeholder.ptr(), peripheral_names.ptr(), preprocessed.population_df_,

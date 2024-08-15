@@ -7,13 +7,11 @@
 
 #include "engine/pipelines/Pipeline.hpp"
 
-#include "engine/pipelines/make_placeholder.hpp"
-#include "engine/pipelines/staging.hpp"
-#include "fct/collect.hpp"
 #include <rfl/Field.hpp>
 #include <rfl/replace.hpp>
 #include <rfl/to_named_tuple.hpp>
-#include "transpilation/SQLDialectParser.hpp"
+
+#include "engine/pipelines/make_placeholder.hpp"
 
 namespace engine {
 namespace pipelines {
@@ -56,7 +54,8 @@ rfl::Ref<std::vector<std::string>> Pipeline::parse_peripheral() const {
     return rfl::get<"name_">(_p.val_);
   };
   return rfl::Ref<std::vector<std::string>>::make(
-      fct::collect::vector(*obj().peripheral() | VIEWS::transform(get_name)));
+      *obj().peripheral() | std::views::transform(get_name) |
+      fct::ranges::to<std::vector>());
 }
 
 // ----------------------------------------------------------------------
@@ -67,7 +66,7 @@ std::shared_ptr<std::string> Pipeline::parse_population() const {
 
 // ----------------------------------------------------------------------------
 
-MonitorSummary Pipeline::to_monitor(const helpers::StringIterator& _categories,
+MonitorSummary Pipeline::to_monitor(const helpers::StringIterator&,
                                     const std::string& _name) const {
   const auto not_fitted = MonitorSummaryNotFitted{
       .pipeline = rfl::replace(obj(), rfl::make_field<"name_">(_name)),

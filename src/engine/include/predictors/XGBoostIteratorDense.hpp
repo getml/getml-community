@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef PREDICTORS_XGBOOSTITERATORDENSE_HPP_
 #define PREDICTORS_XGBOOSTITERATORDENSE_HPP_
@@ -18,13 +18,9 @@
 #include <cstddef>
 #include <cstdio>
 #include <cstring>
+#include <functional>
 #include <memory>
-#include <stdexcept>
 #include <vector>
-
-// ------------------------------------------------------------------------
-
-#include "memmap/memmap.hpp"
 
 // ------------------------------------------------------------------------
 

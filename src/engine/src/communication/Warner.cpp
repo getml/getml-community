@@ -7,9 +7,10 @@
 
 #include "communication/Warner.hpp"
 
-#include "communication/Sender.hpp"
-#include <rfl/json.hpp>
+#include <rfl/json/write.hpp>
 #include <rfl/make_named_tuple.hpp>
+
+#include "communication/Sender.hpp"
 
 namespace communication {
 

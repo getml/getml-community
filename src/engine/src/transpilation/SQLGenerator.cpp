@@ -1,18 +1,17 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #include "transpilation/SQLGenerator.hpp"
 
-// ----------------------------------------------------------------------------
+#include <ranges>
+#include <sstream>
 
-#include "fct/fct.hpp"
-
-// ----------------------------------------------------------------------------
-
+#include "debug/throw_unless.hpp"
+#include "fct/to.hpp"
 #include "helpers/Macros.hpp"
 #include "helpers/StringReplacer.hpp"
 #include "helpers/StringSplitter.hpp"
@@ -348,7 +347,8 @@ std::string SQLGenerator::replace_non_alphanumeric(const std::string _old) {
     return str;
   };
 
-  const auto replaced = fct::collect::string(_old | VIEWS::transform(replace));
+  const auto replaced =
+      _old | std::views::transform(replace) | fct::ranges::to<std::string>();
 
   return shorten(trim(replaced));
 };

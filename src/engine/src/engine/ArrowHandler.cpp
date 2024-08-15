@@ -7,8 +7,13 @@
 
 #include "engine/handlers/ArrowHandler.hpp"
 
+#include <range/v3/view/concat.hpp>
+
+#include "containers/ArrayMaker.hpp"
+#include "engine/Int.hpp"
 #include "engine/handlers/ArrowSocketInputStream.hpp"
 #include "engine/handlers/ArrowSocketOutputStream.hpp"
+#include "io/Parser.hpp"
 
 namespace engine {
 namespace handlers {
@@ -33,7 +38,7 @@ std::vector<std::shared_ptr<arrow::ChunkedArray>> ArrowHandler::extract_arrays(
     const auto to_str = [this](const Int _i) -> std::string {
       return (*categories_)[_i].str();
     };
-    auto range = _col | VIEWS::transform(to_str);
+    auto range = _col | std::views::transform(to_str);
     return containers::ArrayMaker::make_string_array(range.begin(),
                                                      range.end());
   };
@@ -42,7 +47,7 @@ std::vector<std::shared_ptr<arrow::ChunkedArray>> ArrowHandler::extract_arrays(
     const auto to_str = [this](const Int _i) -> std::string {
       return (*join_keys_encoding_)[_i].str();
     };
-    auto range = _col | VIEWS::transform(to_str);
+    auto range = _col | std::views::transform(to_str);
     return containers::ArrayMaker::make_string_array(range.begin(),
                                                      range.end());
   };
@@ -59,37 +64,38 @@ std::vector<std::shared_ptr<arrow::ChunkedArray>> ArrowHandler::extract_arrays(
     const auto to_str = [](const strings::String& _str) -> std::string {
       return _str.str();
     };
-    auto range = _col | VIEWS::transform(to_str);
+    auto range = _col | std::views::transform(to_str);
     return containers::ArrayMaker::make_string_array(range.begin(),
                                                      range.end());
   };
 
-  const auto categoricals = fct::collect::vector(
-      _df.categoricals() | VIEWS::transform(categoricals_to_string_array));
+  const auto categoricals =
+      _df.categoricals() | std::views::transform(categoricals_to_string_array);
 
-  const auto join_keys = fct::collect::vector(
-      _df.join_keys() | VIEWS::transform(join_keys_to_string_array));
+  const auto join_keys =
+      _df.join_keys() | std::views::transform(join_keys_to_string_array);
 
-  const auto numericals = fct::collect::vector(
-      _df.numericals() | VIEWS::transform(to_float_or_ts_array));
+  const auto numericals =
+      _df.numericals() | std::views::transform(to_float_or_ts_array);
 
-  const auto targets = fct::collect::vector(
-      _df.targets() | VIEWS::transform(to_float_or_ts_array));
+  const auto targets =
+      _df.targets() | std::views::transform(to_float_or_ts_array);
 
-  const auto text =
-      fct::collect::vector(_df.text() | VIEWS::transform(to_string_array));
+  const auto text = _df.text() | std::views::transform(to_string_array);
 
-  const auto time_stamps = fct::collect::vector(
-      _df.time_stamps() | VIEWS::transform(to_float_or_ts_array));
+  const auto time_stamps =
+      _df.time_stamps() | std::views::transform(to_float_or_ts_array);
 
-  const auto unused_floats = fct::collect::vector(
-      _df.unused_floats() | VIEWS::transform(to_float_or_ts_array));
+  const auto unused_floats =
+      _df.unused_floats() | std::views::transform(to_float_or_ts_array);
 
-  const auto unused_strings = fct::collect::vector(
-      _df.unused_strings() | VIEWS::transform(to_string_array));
+  const auto unused_strings =
+      _df.unused_strings() | std::views::transform(to_string_array);
 
-  return fct::join::vector({categoricals, join_keys, numericals, targets, text,
-                            time_stamps, unused_floats, unused_strings});
+  return ranges::views::concat(categoricals, join_keys, numericals, targets,
+                               text, time_stamps, unused_floats,
+                               unused_strings) |
+         fct::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------------------------------
@@ -110,35 +116,35 @@ std::shared_ptr<arrow::Schema> ArrowHandler::df_to_schema(
     return arrow::field(_col.name(), arrow::utf8());
   };
 
-  const auto categoricals = fct::collect::vector(
-      _df.categoricals() | VIEWS::transform(to_string_field));
+  const auto categoricals =
+      _df.categoricals() | std::views::transform(to_string_field);
 
   const auto join_keys =
-      fct::collect::vector(_df.join_keys() | VIEWS::transform(to_string_field));
+      _df.join_keys() | std::views::transform(to_string_field);
 
-  const auto numericals = fct::collect::vector(
-      _df.numericals() | VIEWS::transform(to_float_or_ts_field));
+  const auto numericals =
+      _df.numericals() | std::views::transform(to_float_or_ts_field);
 
-  const auto targets = fct::collect::vector(
-      _df.targets() | VIEWS::transform(to_float_or_ts_field));
+  const auto targets =
+      _df.targets() | std::views::transform(to_float_or_ts_field);
 
-  const auto text =
-      fct::collect::vector(_df.text() | VIEWS::transform(to_string_field));
+  const auto text = _df.text() | std::views::transform(to_string_field);
 
-  const auto time_stamps = fct::collect::vector(
-      _df.time_stamps() | VIEWS::transform(to_float_or_ts_field));
+  const auto time_stamps =
+      _df.time_stamps() | std::views::transform(to_float_or_ts_field);
 
-  const auto unused_floats = fct::collect::vector(
-      _df.unused_floats() | VIEWS::transform(to_float_or_ts_field));
+  const auto unused_floats =
+      _df.unused_floats() | std::views::transform(to_float_or_ts_field);
 
-  const auto unused_strings = fct::collect::vector(
-      _df.unused_strings() | VIEWS::transform(to_string_field));
+  const auto unused_strings =
+      _df.unused_strings() | std::views::transform(to_string_field);
 
   const auto all_fields =
-      std::vector({categoricals, join_keys, numericals, targets, text,
-                   time_stamps, unused_floats, unused_strings});
+      ranges::views::concat(categoricals, join_keys, numericals, targets, text,
+                            time_stamps, unused_floats, unused_strings) |
+      fct::ranges::to<std::vector>();
 
-  return arrow::schema(fct::collect::vector(all_fields | VIEWS::join));
+  return arrow::schema(all_fields);
 }
 
 // ----------------------------------------------------------------------------
@@ -643,7 +649,7 @@ ArrowHandler::write_null_to_float_column(
   assert_true(_chunk);
 
   if (_chunk->type()->Equals(arrow::null())) {
-    return [](const std::int64_t _i) { return NAN; };
+    return [](const std::int64_t) { return NAN; };
   }
 
   return std::nullopt;
@@ -657,7 +663,7 @@ ArrowHandler::write_null_to_string_column(
   assert_true(_chunk);
 
   if (_chunk->type()->Equals(arrow::null())) {
-    return [](const std::int64_t _i) { return strings::String(nullptr); };
+    return [](const std::int64_t) { return strings::String(nullptr); };
   }
 
   return std::nullopt;
@@ -1087,7 +1093,7 @@ typename ArrowHandler::FloatFunction ArrowHandler::write_to_float_column(
   throw std::runtime_error("Unsupported field type for field '" + _name +
                            "': " + _chunk->type()->name() + ".");
 
-  return [](const std::int64_t _i) -> Float { return 0.0; };
+  return [](const std::int64_t) -> Float { return 0.0; };
 }
 
 // ----------------------------------------------------------------------------
@@ -1140,9 +1146,8 @@ typename ArrowHandler::StringFunction ArrowHandler::write_to_string_column(
   throw std::runtime_error("Unsupported field type for field '" + _name +
                            "': " + _chunk->type()->name() + ".");
 
-  return [](const std::int64_t _i) -> strings::String {
-    return strings::String("");
-  };
+  return
+      [](const std::int64_t) -> strings::String { return strings::String(""); };
 }
 
 // ----------------------------------------------------------------------------

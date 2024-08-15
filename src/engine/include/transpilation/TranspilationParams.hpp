@@ -9,11 +9,10 @@
 #define TRANSPILATION_TRANSPILATIONPARAMS_HPP_
 
 #include <cstddef>
-#include <string>
-
 #include <rfl/Field.hpp>
 #include <rfl/Literal.hpp>
 #include <rfl/NamedTuple.hpp>
+#include <string>
 
 namespace transpilation {
 

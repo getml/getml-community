@@ -8,7 +8,9 @@
 #ifndef CONTAINERS_COLUMN_HPP_
 #define CONTAINERS_COLUMN_HPP_
 
+#include <cstddef>
 #include <fstream>
+#include <ranges>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -17,12 +19,11 @@
 
 #include "containers/ColumnViewIterator.hpp"
 #include "containers/ULong.hpp"
-#include "debug/debug.hpp"
+#include "fct/to.hpp"
 #include "helpers/Column.hpp"
 #include "helpers/Endianness.hpp"
 #include "helpers/NullChecker.hpp"
 #include "helpers/SubroleParser.hpp"
-#include "strings/strings.hpp"
 
 namespace containers {
 
@@ -218,7 +219,7 @@ class Column {
   const std::string &name() const { return name_; }
 
   /// Returns number of bytes occupied by the data
-  const ULong nbytes() const {
+  ULong nbytes() const {
     if constexpr (std::is_same<T, strings::String>()) {
       ULong nbytes = nrows() * (sizeof(T) + 1);
 
@@ -297,7 +298,7 @@ class Column {
   void set_unit(const std::string &_unit) { unit_ = _unit; }
 
   /// Trivial getter.
-  const size_t size() const { return nrows(); }
+  size_t size() const { return nrows(); }
 
   /// Trivial getter
   const std::vector<std::string> &subroles() const { return subroles_; }
@@ -372,7 +373,7 @@ class Column {
     _input->read(&(str[0]), str_size);
 
     *_str = std::move(str);
-  };
+  }
 
   /// Called by load_little_endian(...).
   template <class StringType>
@@ -393,7 +394,7 @@ class Column {
     _input->read(&(str[0]), str_size);
 
     *_str = std::move(str);
-  };
+  }
 
   /// Called by save_big_endian(...).
   template <class StringType>
@@ -404,7 +405,7 @@ class Column {
     _output->write(reinterpret_cast<const char *>(&str_size), sizeof(size_t));
 
     _output->write(_str.c_str(), _str.size());
-  };
+  }
 
   /// Called by save_little_endian(...).
   template <class StringType>
@@ -417,7 +418,7 @@ class Column {
     _output->write(reinterpret_cast<const char *>(&str_size), sizeof(size_t));
 
     _output->write(_str.c_str(), _str.size());
-  };
+  }
 
   // -------------------------------
 
@@ -677,14 +678,13 @@ Column<T> Column<T>::where(const std::vector<bool> &_condition) const {
 
   const auto get_val = [this](size_t _i) -> T { return (*this)[_i]; };
 
-  const auto iota = fct::iota<size_t>(0, nrows());
+  auto range = std::views::iota(0uz, nrows()) | std::views::filter(include) |
+               std::views::transform(get_val);
 
-  auto range = iota | VIEWS::filter(include) | VIEWS::transform(get_val);
-
-  const auto data_ptr = pool() ? Variant(std::make_shared<MemmapVector>(
-                                     pool(), range.begin(), range.end()))
-                               : Variant(std::make_shared<std::vector<T>>(
-                                     fct::collect::vector(range)));
+  const auto data_ptr =
+      pool() ? Variant(std::make_shared<MemmapVector>(pool(), range.begin(),
+                                                      range.end()))
+             : Variant(range | fct::ranges::to_shared_ptr_vector());
 
   Column<T> trimmed(data_ptr);
 

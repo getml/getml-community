@@ -9,7 +9,7 @@
 
 #include <rfl/Field.hpp>
 #include <rfl/NamedTuple.hpp>
-#include <rfl/json.hpp>
+#include <rfl/json/write.hpp>
 
 namespace io {
 

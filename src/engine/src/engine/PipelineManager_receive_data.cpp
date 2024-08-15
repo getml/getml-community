@@ -5,24 +5,19 @@
 // for details.
 //
 
-#include <stdexcept>
+#include <rfl/always_false.hpp>
 
-#include "commands/DataFramesOrViews.hpp"
 #include "commands/ProjectCommand.hpp"
 #include "containers/Roles.hpp"
 #include "engine/handlers/ColumnManager.hpp"
 #include "engine/handlers/DataFrameManager.hpp"
 #include "engine/handlers/PipelineManager.hpp"
-#include "engine/pipelines/pipelines.hpp"
-#include <rfl/always_false.hpp>
-#include "transpilation/TranspilationParams.hpp"
-#include "transpilation/transpilation.hpp"
 
 namespace engine {
 namespace handlers {
 
 typename PipelineManager::FullTransformOp PipelineManager::receive_data(
-    const typename Command::TransformOp& _cmd,
+    const typename Command::TransformOp&,
     const rfl::Ref<containers::Encoding>& _categories,
     const rfl::Ref<containers::Encoding>& _join_keys_encoding,
     const rfl::Ref<std::map<std::string, containers::DataFrame>>& _data_frames,

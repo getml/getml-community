@@ -8,7 +8,10 @@
 #ifndef FEATURELEARNERS_FEATURELEARNERPARAMS_HPP_
 #define FEATURELEARNERS_FEATURELEARNERPARAMS_HPP_
 
-#include <memory>
+#include <rfl/Field.hpp>
+#include <rfl/NamedTuple.hpp>
+#include <rfl/Ref.hpp>
+#include <rfl/TaggedUnion.hpp>
 #include <string>
 #include <vector>
 
@@ -16,10 +19,6 @@
 #include "featurelearners/Int.hpp"
 #include "helpers/Placeholder.hpp"
 #include "helpers/Schema.hpp"
-#include <rfl/Field.hpp>
-#include <rfl/NamedTuple.hpp>
-#include <rfl/Ref.hpp>
-#include <rfl/TaggedUnion.hpp>
 
 namespace featurelearners {
 
@@ -40,4 +39,3 @@ struct FeatureLearnerParams {
 }  // namespace featurelearners
 
 #endif  // FEATURELEARNERS_FEATURELEARNERPARAMS_HPP_
-

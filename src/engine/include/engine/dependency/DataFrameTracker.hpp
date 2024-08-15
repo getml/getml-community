@@ -9,15 +9,14 @@
 #define ENGINE_DEPENDENCY_DATAFRAMETRACKER_HPP_
 
 #include <map>
-#include <memory>
 #include <optional>
+#include <rfl/Ref.hpp>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "commands/Fingerprint.hpp"
-#include "containers/containers.hpp"
-#include <rfl/Ref.hpp>
+#include "containers/DataFrame.hpp"
 
 namespace engine {
 namespace dependency {
@@ -82,4 +81,3 @@ class DataFrameTracker {
 }  // namespace engine
 
 #endif  // ENGINE_DEPENDENCY_DATAFRAMETRACKER_HPP_
-

@@ -9,16 +9,13 @@
 #define FASTPROP_CONTAINERS_ABSTRACTFEATURE_HPP_
 
 #include <memory>
-#include <vector>
-
-#include "fastprop/Float.hpp"
-#include "fastprop/Int.hpp"
-#include "fastprop/containers/Condition.hpp"
-#include "fastprop/enums/enums.hpp"
 #include <rfl/Field.hpp>
 #include <rfl/NamedTuple.hpp>
-#include "strings/strings.hpp"
-#include "transpilation/transpilation.hpp"
+#include <vector>
+
+#include "fastprop/Int.hpp"
+#include "fastprop/containers/Condition.hpp"
+#include "fastprop/enums/Aggregation.hpp"
 
 namespace fastprop {
 namespace containers {

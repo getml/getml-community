@@ -19,4 +19,3 @@ using Purpose = rfl::Literal<"feature_selectors_", "predictors_">;
 }  // namespace engine
 
 #endif
-

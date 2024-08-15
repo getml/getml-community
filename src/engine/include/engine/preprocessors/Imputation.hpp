@@ -9,23 +9,22 @@
 #define ENGINE_PREPROCESSORS_IMPUTATION_HPP_
 
 #include <memory>
+#include <rfl/Field.hpp>
+#include <rfl/Literal.hpp>
+#include <rfl/NamedTuple.hpp>
+#include <rfl/Ref.hpp>
 #include <utility>
 #include <vector>
 
 #include "commands/Fingerprint.hpp"
 #include "commands/Preprocessor.hpp"
-#include "containers/containers.hpp"
 #include "engine/Float.hpp"
 #include "engine/preprocessors/Params.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
+#include "fct/to.hpp"
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/Macros.hpp"
 #include "helpers/StringIterator.hpp"
-#include <rfl/Field.hpp>
-#include <rfl/Literal.hpp>
-#include <rfl/NamedTuple.hpp>
-#include <rfl/Ref.hpp>
-#include "strings/strings.hpp"
 
 namespace engine {
 namespace preprocessors {
@@ -110,9 +109,9 @@ class Imputation : public Preprocessor {
 
   /// The preprocessor does not generate any SQL scripts.
   std::vector<std::string> to_sql(
-      const helpers::StringIterator& _categories,
-      const std::shared_ptr<const transpilation::SQLDialectGenerator>&
-          _sql_dialect_generator) const final {
+      const helpers::StringIterator&,
+      const std::shared_ptr<const transpilation::SQLDialectGenerator>&)
+      const final {
     return {};
   }
 
@@ -158,7 +157,7 @@ class Imputation : public Preprocessor {
 
   /// Retrieves the column description from the map.
   std::vector<helpers::ColumnDescription> column_descriptions() const {
-    return fct::collect::vector(*cols_ | VIEWS::keys);
+    return *cols_ | std::views::keys | fct::ranges::to<std::vector>();
   }
 
   /// Retrieve the column description of all columns in cols_.
@@ -186,12 +185,14 @@ class Imputation : public Preprocessor {
 
   /// Retrieves the means from the map.
   std::vector<Float> means() const {
-    return fct::collect::vector(*cols_ | VIEWS::values | VIEWS::keys);
+    return *cols_ | std::views::values | std::views::keys |
+           fct::ranges::to<std::vector>();
   }
 
   /// Retrieves the means from the map.
   std::vector<bool> needs_dummies() const {
-    return fct::collect::vector(*cols_ | VIEWS::values | VIEWS::values);
+    return *cols_ | std::views::values | std::views::values |
+           fct::ranges::to<std::vector>();
   }
 
  private:
@@ -210,4 +211,3 @@ class Imputation : public Preprocessor {
 }  // namespace engine
 
 #endif  // ENGINE_PREPROCESSORS_IMPUTATION_HPP_
-

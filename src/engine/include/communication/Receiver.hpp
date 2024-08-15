@@ -11,7 +11,7 @@
 #include <Poco/Net/StreamSocket.h>
 
 #include <algorithm>
-#include <memory>
+#include <rfl/Ref.hpp>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -20,7 +20,6 @@
 #include "communication/Logger.hpp"
 #include "communication/ULong.hpp"
 #include "helpers/Endianness.hpp"
-#include <rfl/Ref.hpp>
 
 namespace communication {
 

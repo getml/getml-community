@@ -7,8 +7,10 @@
 
 #include "engine/handlers/ViewManager.hpp"
 
-#include "engine/handlers/ViewParser.hpp"
 #include <rfl/always_false.hpp>
+
+#include "engine/handlers/DataFrameManager.hpp"
+#include "engine/handlers/ViewParser.hpp"
 
 namespace engine {
 namespace handlers {

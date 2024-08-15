@@ -7,10 +7,12 @@
 
 #include "commands/DatabaseCommand.hpp"
 
+#include <rfl/json/read.hpp>
+
 namespace commands {
 
 DatabaseCommand DatabaseCommand::from_json_obj(const InputVarType& _obj) {
-  return DatabaseCommand(rfl::json::read<ReflectionType>(_obj).value());
+  return DatabaseCommand{rfl::json::read<ReflectionType>(_obj).value()};
 }
 
 }  // namespace commands

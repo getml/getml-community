@@ -8,6 +8,14 @@
 #ifndef COMMANDS_FINGERPRINT_HPP_
 #define COMMANDS_FINGERPRINT_HPP_
 
+#include <rfl/Field.hpp>
+#include <rfl/Flatten.hpp>
+#include <rfl/Literal.hpp>
+#include <rfl/NamedTuple.hpp>
+#include <rfl/TaggedUnion.hpp>
+#include <rfl/define_tagged_union.hpp>
+#include <rfl/define_variant.hpp>
+#include <rfl/json/Reader.hpp>
 #include <variant>
 #include <vector>
 
@@ -18,14 +26,6 @@
 #include "commands/Preprocessor.hpp"
 #include "commands/XGBoostHyperparams.hpp"
 #include "fastprop/Hyperparameters.hpp"
-#include <rfl/Field.hpp>
-#include <rfl/Flatten.hpp>
-#include <rfl/Literal.hpp>
-#include <rfl/NamedTuple.hpp>
-#include <rfl/TaggedUnion.hpp>
-#include <rfl/define_tagged_union.hpp>
-#include <rfl/define_variant.hpp>
-#include <rfl/json.hpp>
 
 namespace commands {
 

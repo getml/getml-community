@@ -8,6 +8,12 @@
 #ifndef COMMANDS_VIEWCOMMAND_HPP_
 #define COMMANDS_VIEWCOMMAND_HPP_
 
+#include <rfl/Field.hpp>
+#include <rfl/Literal.hpp>
+#include <rfl/NamedTuple.hpp>
+#include <rfl/Ref.hpp>
+#include <rfl/TaggedUnion.hpp>
+#include <rfl/json/Reader.hpp>
 #include <string>
 #include <variant>
 
@@ -15,12 +21,6 @@
 #include "commands/FloatColumnOrFloatColumnView.hpp"
 #include "commands/Int.hpp"
 #include "commands/StringColumnOrStringColumnView.hpp"
-#include <rfl/Field.hpp>
-#include <rfl/Literal.hpp>
-#include <rfl/NamedTuple.hpp>
-#include <rfl/Ref.hpp>
-#include <rfl/TaggedUnion.hpp>
-#include <rfl/json.hpp>
 
 namespace commands {
 

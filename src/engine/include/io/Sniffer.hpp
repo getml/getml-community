@@ -8,7 +8,6 @@
 #ifndef IO_SNIFFER_HPP_
 #define IO_SNIFFER_HPP_
 
-#include <memory>
 #include <optional>
 #include <string>
 #include <vector>

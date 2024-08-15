@@ -48,7 +48,7 @@ ENV CMAKE_CXX_COMPILER_LAUNCHER=ccache CMAKE_C_COMPILER_LAUNCHER=ccache
 
 ENV VCPKG_FORCE_SYSTEM_BINARIES=1
 ENV VCPKG_ROOT="/src/vcpkg"
-RUN git clone --branch "2024.04.26" https://github.com/microsoft/vcpkg $VCPKG_ROOT \
+RUN git clone --branch "2024.06.15" https://github.com/microsoft/vcpkg $VCPKG_ROOT \
     && /src/vcpkg/bootstrap-vcpkg.sh -disableMetrics
 
 

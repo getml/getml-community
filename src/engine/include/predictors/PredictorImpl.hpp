@@ -8,20 +8,16 @@
 #ifndef PREDICTORS_PREDICTORIMPL_HPP_
 #define PREDICTORS_PREDICTORIMPL_HPP_
 
-#include <memory>
-#include <optional>
+#include <rfl/Field.hpp>
+#include <rfl/NamedTuple.hpp>
 #include <string>
 #include <vector>
 
-#include "debug/debug.hpp"
 #include "helpers/Saver.hpp"
-#include "memmap/memmap.hpp"
 #include "predictors/CSRMatrix.hpp"
 #include "predictors/Encoding.hpp"
 #include "predictors/FloatFeature.hpp"
 #include "predictors/IntFeature.hpp"
-#include <rfl/Field.hpp>
-#include <rfl/NamedTuple.hpp>
 
 namespace predictors {
 
@@ -141,7 +137,7 @@ class PredictorImpl {
   }
 
   /// Trivial (const) getter.
-  const size_t num_autofeatures() const {
+  size_t num_autofeatures() const {
     size_t n = 0;
     for (const auto& vec : autofeatures_) {
       n += vec.size();
@@ -150,7 +146,7 @@ class PredictorImpl {
   }
 
   /// Trivial (const) getter.
-  const size_t num_manual_features() const {
+  size_t num_manual_features() const {
     return categorical_colnames_.size() + numerical_colnames_.size();
   }
 

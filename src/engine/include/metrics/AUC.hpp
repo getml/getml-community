@@ -8,7 +8,7 @@
 #ifndef METRICS_AUC_HPP_
 #define METRICS_AUC_HPP_
 
-#include <cstdint>
+#include <rfl/NamedTuple.hpp>
 #include <utility>
 #include <vector>
 
@@ -16,8 +16,6 @@
 #include "metrics/Float.hpp"
 #include "metrics/MetricImpl.hpp"
 #include "metrics/Scores.hpp"
-#include "multithreading/multithreading.hpp"
-#include <rfl/NamedTuple.hpp>
 
 namespace metrics {
 

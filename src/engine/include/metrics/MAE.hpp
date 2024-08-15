@@ -8,13 +8,11 @@
 #ifndef METRICS_MAE_HPP_
 #define METRICS_MAE_HPP_
 
-#include <cstdint>
+#include <rfl/Field.hpp>
 
 #include "metrics/Features.hpp"
 #include "metrics/Float.hpp"
 #include "metrics/MetricImpl.hpp"
-#include "multithreading/multithreading.hpp"
-#include <rfl/Field.hpp>
 
 namespace metrics {
 

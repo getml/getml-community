@@ -11,9 +11,11 @@
 #include <cmath>
 #include <memory>
 #include <optional>
+#include <rfl/NamedTuple.hpp>
+#include <rfl/Ref.hpp>
+#include <rfl/from_named_tuple.hpp>
 #include <vector>
 
-#include "debug/debug.hpp"
 #include "predictors/Fingerprint.hpp"
 #include "predictors/FloatFeature.hpp"
 #include "predictors/IntFeature.hpp"
@@ -21,9 +23,6 @@
 #include "predictors/Predictor.hpp"
 #include "predictors/PredictorImpl.hpp"
 #include "predictors/StandardScaler.hpp"
-#include <rfl/NamedTuple.hpp>
-#include <rfl/Ref.hpp>
-#include <rfl/from_named_tuple.hpp>
 
 namespace predictors {
 
@@ -45,7 +44,7 @@ class LinearRegression : public Predictor {
                    const std::vector<Fingerprint>& _dependencies)
       : dependencies_(_dependencies),
         hyperparams_(rfl::Ref<LinearRegressionHyperparams>::make(_hyperparams)),
-        impl_(_impl){};
+        impl_(_impl) {};
 
   ~LinearRegression() = default;
 
@@ -148,10 +147,9 @@ class LinearRegression : public Predictor {
 
  private:
   /// Calculates the gradients needed for the updates.
-  const void calculate_gradients(const size_t _begin, const size_t _end,
-                                 const unsigned int* _indices,
-                                 const Float* _data, const Float _delta,
-                                 std::vector<Float>* _gradients) {
+  void calculate_gradients(const size_t _begin, const size_t _end,
+                           const unsigned int* _indices, const Float* _data,
+                           const Float _delta, std::vector<Float>* _gradients) {
     assert_true(_gradients->size() == weights_.size());
 
     for (auto ix = _begin; ix < _end; ++ix) {
@@ -162,8 +160,8 @@ class LinearRegression : public Predictor {
   }
 
   /// Applies the L2 regularization term for numerical optimization.
-  const void calculate_regularization(const Float _bsize_float,
-                                      std::vector<Float>* _gradients) {
+  void calculate_regularization(const Float _bsize_float,
+                                std::vector<Float>* _gradients) {
     if (hyperparams().reg_lambda() > 0.0) {
       for (size_t i = 0; i < weights_.size(); ++i) {
         (*_gradients)[i] +=
@@ -176,9 +174,8 @@ class LinearRegression : public Predictor {
   const PredictorImpl& impl() const { return *impl_; }
 
   /// Returns a sparse prediction.
-  const Float predict_sparse(const size_t _begin, const size_t _end,
-                             const unsigned int* _indices,
-                             const Float* _data) const {
+  Float predict_sparse(const size_t _begin, const size_t _end,
+                       const unsigned int* _indices, const Float* _data) const {
     Float yhat = weights_.back();
     for (auto ix = _begin; ix < _end; ++ix) {
       assert_true(_indices[ix] < weights_.size());

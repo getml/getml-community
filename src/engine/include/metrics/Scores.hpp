@@ -8,20 +8,18 @@
 #ifndef METRICS_SCORES_HPP_
 #define METRICS_SCORES_HPP_
 
+#include <rfl/Field.hpp>
+#include <rfl/NamedTuple.hpp>
+#include <rfl/define_named_tuple.hpp>
 #include <stdexcept>
 #include <string>
-#include <utility>
 #include <variant>
 #include <vector>
 
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/Saver.hpp"
-#include "metrics/Features.hpp"
 #include "metrics/Float.hpp"
 #include "metrics/Int.hpp"
-#include <rfl/Field.hpp>
-#include <rfl/NamedTuple.hpp>
-#include <rfl/define_named_tuple.hpp>
 
 namespace metrics {
 

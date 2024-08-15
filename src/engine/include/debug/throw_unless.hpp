@@ -1,12 +1,14 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef DEBUG_THROW_UNLESS_HPP_
 #define DEBUG_THROW_UNLESS_HPP_
+
+#include "debug/Assert.hpp"
 
 // ----------------------------------------------------------------------------
 

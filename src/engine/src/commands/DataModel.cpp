@@ -7,6 +7,8 @@
 
 #include "commands/DataModel.hpp"
 
+#include <rfl/json/read.hpp>
+
 namespace commands {
 
 DataModel DataModel::from_json_obj(const InputVarType& _json_obj) {

@@ -10,14 +10,12 @@
 
 #include <Poco/Net/StreamSocket.h>
 
-#include <memory>
-#include <string>
+#include <rfl/Ref.hpp>
 #include <vector>
 
 #include "commands/WarningFingerprint.hpp"
 #include "communication/Warning.hpp"
 #include "communication/Warnings.hpp"
-#include <rfl/Ref.hpp>
 
 namespace communication {
 

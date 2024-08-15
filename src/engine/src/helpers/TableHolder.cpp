@@ -9,7 +9,6 @@
 
 #include <stdexcept>
 
-#include "fct/fct.hpp"
 #include "helpers/Macros.hpp"
 
 namespace helpers {
@@ -85,7 +84,7 @@ size_t TableHolder::count_text(const std::vector<DataFrame>& _peripheral) {
     return _df.name_.find(helpers::Macros::text_field()) != std::string::npos;
   };
 
-  return RANGES::count_if(_peripheral, is_text);
+  return std::ranges::count_if(_peripheral, is_text);
 }
 
 // ----------------------------------------------------------------------------
@@ -168,10 +167,9 @@ std::vector<DataFrameView> TableHolder::parse_main_tables(
   };
 
   auto relevant_text_fields =
-      _params.peripheral_ | VIEWS::filter(is_relevant_text_field);
+      _params.peripheral_ | std::views::filter(is_relevant_text_field);
 
-  const auto num_fields =
-      std::distance(relevant_text_fields.begin(), relevant_text_fields.end());
+  const auto num_fields = std::ranges::distance(relevant_text_fields);
 
   for (Int i = 0; i < num_fields; ++i) {
     const auto params = CreateSubviewParams{
@@ -407,10 +405,9 @@ std::vector<std::optional<TableHolder>> TableHolder::parse_subtables(
   };
 
   auto relevant_text_fields =
-      _params.peripheral_ | VIEWS::filter(is_relevant_text_field);
+      _params.peripheral_ | std::views::filter(is_relevant_text_field);
 
-  const auto num_fields =
-      std::distance(relevant_text_fields.begin(), relevant_text_fields.end());
+  const auto num_fields = std::ranges::distance(relevant_text_fields);
 
   for (Int i = 0; i < num_fields; ++i) {
     result.push_back(std::nullopt);
@@ -432,8 +429,9 @@ WordIndexContainer TableHolder::word_indices() const {
 
   const auto population = extract_word_indices(main_tables_.at(0).df());
 
-  const auto peripheral = fct::collect::vector(
-      peripheral_tables_ | VIEWS::transform(extract_word_indices));
+  const auto peripheral = peripheral_tables_ |
+                          std::views::transform(extract_word_indices) |
+                          fct::ranges::to<std::vector>();
 
   return WordIndexContainer(population, peripheral);
 }

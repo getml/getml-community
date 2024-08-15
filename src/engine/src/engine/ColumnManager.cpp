@@ -9,9 +9,8 @@
 
 #include <Poco/TemporaryFile.h>
 
-#include <rfl.hpp>
+#include <rfl/as.hpp>
 
-#include "commands/DataFrameFromJSON.hpp"
 #include "containers/Roles.hpp"
 #include "engine/handlers/AggOpParser.hpp"
 #include "engine/handlers/ArrowHandler.hpp"
@@ -19,8 +18,7 @@
 #include "engine/handlers/DataFrameManager.hpp"
 #include "engine/handlers/FloatOpParser.hpp"
 #include "engine/handlers/StringOpParser.hpp"
-#include "engine/handlers/ViewParser.hpp"
-#include "metrics/metrics.hpp"
+#include "multithreading/WriteLock.hpp"
 
 namespace engine {
 namespace handlers {

@@ -7,9 +7,10 @@
 
 #include "database/MySQL.hpp"
 
+#include <rfl/json/write.hpp>
+
 #include "database/CSVBuffer.hpp"
 #include "database/ContentGetter.hpp"
-#include <rfl/json.hpp>
 
 namespace database {
 
@@ -108,8 +109,7 @@ std::vector<std::string> MySQL::get_colnames_from_query(
 // ----------------------------------------------------------------------------
 
 std::vector<io::Datatype> MySQL::get_coltypes_from_query(
-    const std::string& _query,
-    const std::vector<std::string>& _colnames) const {
+    const std::string& _query, const std::vector<std::string>&) const {
   const auto conn = make_connection();
 
   const auto result = exec(_query, conn);

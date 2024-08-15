@@ -5,12 +5,13 @@
 // for details.
 //
 
+#include <range/v3/view/concat.hpp>
+#include <rfl/NamedTuple.hpp>
 #include <string>
 #include <vector>
 
-#include "fct/join.hpp"
+#include "fct/to.hpp"
 #include "helpers/Schema.hpp"
-#include <rfl/NamedTuple.hpp>
 
 #ifndef COMMANDS_ROLES_HPP_
 #define COMMANDS_ROLES_HPP_
@@ -48,14 +49,16 @@ struct Roles {
 
   /// Retrieves the roles from the schema.
   static Roles from_schema(const helpers::Schema& _schema) {
-    return Roles{.val_ = f_categorical(_schema.categoricals()) *
-                         f_join_key(_schema.join_keys()) *
-                         f_numerical(fct::join::vector<std::string>(
-                             {_schema.discretes(), _schema.numericals()})) *
-                         f_target(_schema.targets()) * f_text(_schema.text()) *
-                         f_time_stamp(_schema.time_stamps()) *
-                         f_unused_float(_schema.unused_floats()) *
-                         f_unused_string(_schema.unused_strings())};
+    return Roles{.val_ =
+                     f_categorical(_schema.categoricals()) *
+                     f_join_key(_schema.join_keys()) *
+                     f_numerical(ranges::views::concat(_schema.discretes(),
+                                                       _schema.numericals()) |
+                                 fct::ranges::to<std::vector>()) *
+                     f_target(_schema.targets()) * f_text(_schema.text()) *
+                     f_time_stamp(_schema.time_stamps()) *
+                     f_unused_float(_schema.unused_floats()) *
+                     f_unused_string(_schema.unused_strings())};
   }
 
   /// Normally used for recursion, but here it is used

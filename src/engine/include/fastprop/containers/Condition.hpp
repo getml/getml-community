@@ -10,16 +10,16 @@
 
 #include <cstddef>
 #include <memory>
+#include <rfl/Field.hpp>
+#include <rfl/NamedTuple.hpp>
 #include <string>
 
 #include "fastprop/Float.hpp"
 #include "fastprop/Int.hpp"
-#include "fastprop/enums/enums.hpp"
+#include "fastprop/enums/DataUsed.hpp"
 #include "helpers/Schema.hpp"
 #include "helpers/StringIterator.hpp"
-#include <rfl/Field.hpp>
-#include <rfl/NamedTuple.hpp>
-#include "transpilation/transpilation.hpp"
+#include "transpilation/SQLDialectGenerator.hpp"
 
 namespace fastprop {
 namespace containers {

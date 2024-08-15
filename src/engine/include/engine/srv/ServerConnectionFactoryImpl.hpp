@@ -12,15 +12,9 @@
 #include <Poco/Net/TCPServerConnectionFactory.h>
 
 #include <atomic>
-#include <memory>
-
-#include "communication/communication.hpp"
-#include "containers/containers.hpp"
-#include "debug/debug.hpp"
-#include "engine/config/config.hpp"
-#include "engine/handlers/handlers.hpp"
-#include "engine/srv/RequestHandler.hpp"
 #include <rfl/Ref.hpp>
+
+#include "engine/srv/RequestHandler.hpp"
 
 namespace engine {
 namespace srv {

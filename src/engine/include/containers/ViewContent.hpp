@@ -9,13 +9,13 @@
 #define CONTAINERS_VIEWCONTENT_HPP_
 
 #include <cstdint>
+#include <rfl/Field.hpp>
+#include <rfl/NamedTuple.hpp>
 #include <string>
 #include <variant>
 #include <vector>
 
 #include "containers/DataFrameContent.hpp"
-#include <rfl/Field.hpp>
-#include <rfl/NamedTuple.hpp>
 
 namespace containers {
 

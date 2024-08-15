@@ -8,12 +8,12 @@
 #ifndef ENGINE_PREPROCESSORS_PREPROCESSORPARSER_HPP_
 #define ENGINE_PREPROCESSORS_PREPROCESSORPARSER_HPP_
 
+#include <rfl/Ref.hpp>
 #include <vector>
 
 #include "commands/Fingerprint.hpp"
 #include "commands/Preprocessor.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
-#include <rfl/Ref.hpp>
 
 namespace engine {
 namespace preprocessors {
@@ -32,4 +32,3 @@ struct PreprocessorParser {
 }  // namespace engine
 
 #endif  // ENGINE_PREPROCESSORS_PREPROCESSORPARSER_HPP_
-

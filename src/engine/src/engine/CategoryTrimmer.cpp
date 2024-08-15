@@ -7,16 +7,14 @@
 
 #include "engine/preprocessors/CategoryTrimmer.hpp"
 
+#include <rfl/replace.hpp>
+
 #include "containers/Column.hpp"
 #include "containers/DataFrame.hpp"
-#include "engine/preprocessors/PreprocessorImpl.hpp"
-#include "fct/IotaRange.hpp"
-#include "fct/collect.hpp"
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/Loader.hpp"
 #include "helpers/NullChecker.hpp"
 #include "helpers/Saver.hpp"
-#include <rfl/replace.hpp>
 #include "transpilation/SQLGenerator.hpp"
 
 namespace engine {
@@ -88,8 +86,9 @@ CategoryTrimmer::fit_transform(const Params& _params) {
   population_sets_ =
       fit_df(_params.population_df(), MarkerType::make<"[POPULATION]">());
 
-  peripheral_sets_ = fct::collect::vector(_params.peripheral_dfs() |
-                                          VIEWS::transform(fit_peripheral));
+  peripheral_sets_ = _params.peripheral_dfs() |
+                     std::views::transform(fit_peripheral) |
+                     fct::ranges::to<std::vector>();
 
   (*_params.categories())[strings::String(TRIMMED)];
 
@@ -127,8 +126,8 @@ std::vector<typename CategoryTrimmer::CategoryPair> CategoryTrimmer::fit_df(
     return std::make_pair(to_column_description(_col), to_set(_col));
   };
 
-  return fct::collect::vector(_df.categoricals() | VIEWS::filter(include) |
-                              VIEWS::transform(to_pair));
+  return _df.categoricals() | std::views::filter(include) |
+         std::views::transform(to_pair) | fct::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------
@@ -153,11 +152,12 @@ rfl::Ref<const std::set<Int>> CategoryTrimmer::make_category_set(
 
   const auto get_first = [](const Pair& p) -> Int { return p.first; };
 
-  const auto range = counts | VIEWS::filter(count_greater_than_min_freq) |
-                     VIEWS::transform(get_first) |
-                     VIEWS::take(max_num_categories_);
+  const auto range = counts | std::views::filter(count_greater_than_min_freq) |
+                     std::views::transform(get_first) |
+                     std::views::take(max_num_categories_) |
+                     fct::ranges::to<std::set>();
 
-  return rfl::Ref<const std::set<Int>>::make(fct::collect::set(range));
+  return rfl::Ref<const std::set<Int>>::make(range);
 }
 
 // ----------------------------------------------------
@@ -255,10 +255,9 @@ CategoryTrimmer::transform(const Params& _params) const {
                         _params.peripheral_dfs().at(_i));
   };
 
-  const auto iota = fct::IotaRange<size_t>(0, peripheral_sets_.size());
-
-  const auto peripheral_dfs =
-      fct::collect::vector(iota | VIEWS::transform(make_peripheral_df));
+  const auto peripheral_dfs = std::views::iota(0uz, peripheral_sets_.size()) |
+                              std::views::transform(make_peripheral_df) |
+                              fct::ranges::to<std::vector>();
 
   return std::make_pair(population_df, peripheral_dfs);
 }
@@ -305,8 +304,8 @@ containers::DataFrame CategoryTrimmer::transform_df(
     return new_col;
   };
 
-  const auto trimmed_columns =
-      _sets | VIEWS::transform(get_col) | VIEWS::transform(make_trimmed_column);
+  const auto trimmed_columns = _sets | std::views::transform(get_col) |
+                               std::views::transform(make_trimmed_column);
 
   auto df = _df;
 

@@ -7,12 +7,14 @@
 
 #include "commands/FloatColumnOrFloatColumnView.hpp"
 
+#include <rfl/json/read.hpp>
+
 namespace commands {
 
 FloatColumnOrFloatColumnView FloatColumnOrFloatColumnView::from_json_obj(
     const InputVarType& _obj) {
-  return FloatColumnOrFloatColumnView(
-      rfl::json::read<ReflectionType>(_obj).value());
+  return FloatColumnOrFloatColumnView{
+      rfl::json::read<ReflectionType>(_obj).value()};
 }
 
 }  // namespace commands

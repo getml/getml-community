@@ -9,12 +9,11 @@
 #define HELPERS_SAVER_HPP_
 
 #include <fstream>
-#include <string>
-
 #include <rfl/Literal.hpp>
 #include <rfl/always_false.hpp>
-#include <rfl/json.hpp>
+#include <rfl/json/write.hpp>
 #include <rfl/visit.hpp>
+#include <string>
 
 namespace helpers {
 
@@ -25,7 +24,7 @@ struct Saver {
   template <class T>
   static void save(const std::string& _fname, const T& _obj,
                    const Format& _format) {
-    const auto handle_variant = [&]<typename U>(const U& _format) {
+    const auto handle_variant = [&]<typename U>(const U&) {
       if constexpr (std::is_same<U, rfl::Literal<"json">>()) {
         save_as_json(_fname, _obj);
       } else {

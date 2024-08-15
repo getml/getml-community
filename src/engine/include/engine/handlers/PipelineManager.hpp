@@ -11,26 +11,20 @@
 #include <Poco/Net/StreamSocket.h>
 
 #include <map>
-#include <memory>
-#include <string>
-#include <variant>
-
-#include "commands/DataFramesOrViews.hpp"
-#include "commands/Pipeline.hpp"
-#include "commands/PipelineCommand.hpp"
-#include "communication/communication.hpp"
-#include "containers/Roles.hpp"
-#include "debug/debug.hpp"
-#include "engine/config/config.hpp"
-#include "engine/handlers/DatabaseManager.hpp"
-#include "engine/handlers/PipelineManagerParams.hpp"
-#include "engine/handlers/ViewParser.hpp"
-#include "engine/pipelines/FittedPipeline.hpp"
-#include "engine/pipelines/pipelines.hpp"
-#include "metrics/Scores.hpp"
 #include <rfl/Literal.hpp>
 #include <rfl/NamedTuple.hpp>
 #include <rfl/define_named_tuple.hpp>
+#include <string>
+#include <variant>
+
+#include "commands/Pipeline.hpp"
+#include "commands/PipelineCommand.hpp"
+#include "containers/Roles.hpp"
+#include "engine/handlers/DatabaseManager.hpp"
+#include "engine/handlers/PipelineManagerParams.hpp"
+#include "engine/pipelines/FittedPipeline.hpp"
+#include "metrics/Scores.hpp"
+#include "multithreading/WeakWriteLock.hpp"
 
 namespace engine {
 namespace handlers {

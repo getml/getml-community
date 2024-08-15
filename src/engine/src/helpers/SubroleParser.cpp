@@ -9,11 +9,11 @@
 
 // ----------------------------------------------------------------------------
 
+#include <algorithm>
+#include <ranges>
 #include <stdexcept>
 
-// ----------------------------------------------------------------------------
-
-#include "fct/fct.hpp"
+#include "fct/to.hpp"
 
 // ----------------------------------------------------------------------------
 namespace helpers {
@@ -31,10 +31,10 @@ bool SubroleParser::contains_any(const std::vector<std::string>& _column,
 bool SubroleParser::contains_any(const std::vector<Subrole>& _column,
                                  const std::vector<Subrole>& _targets) {
   const auto in_column = [&_column](const Subrole _s) -> bool {
-    return std::find(_column.begin(), _column.end(), _s) != _column.end();
+    return std::ranges::find(_column, _s) != _column.end();
   };
 
-  return std::any_of(_targets.begin(), _targets.end(), in_column);
+  return std::ranges::any_of(_targets, in_column);
 }
 
 // ----------------------------------------------------------------------------
@@ -121,7 +121,8 @@ std::vector<Subrole> SubroleParser::parse(
     return SubroleParser::parse(_str);
   };
 
-  return fct::collect::vector(_vec | VIEWS::transform(to_subrole));
+  return _vec | std::views::transform(to_subrole) |
+         fct::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------------------------------

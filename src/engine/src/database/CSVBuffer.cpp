@@ -7,6 +7,9 @@
 
 #include "database/CSVBuffer.hpp"
 
+#include "debug/assert_true.hpp"
+#include "io/Parser.hpp"
+
 namespace database {
 
 std::string CSVBuffer::make_buffer(const std::vector<std::string>& _line,

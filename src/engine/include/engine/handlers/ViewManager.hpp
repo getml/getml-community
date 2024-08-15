@@ -11,19 +11,13 @@
 #include <Poco/Net/StreamSocket.h>
 
 #include <map>
-#include <memory>
-#include <string>
-
-#include "commands/ViewCommand.hpp"
-#include "communication/communication.hpp"
-#include "containers/containers.hpp"
-#include "debug/debug.hpp"
-#include "engine/config/config.hpp"
-#include "engine/handlers/DataFrameManager.hpp"
-#include "engine/handlers/DataFrameManagerParams.hpp"
 #include <rfl/Field.hpp>
 #include <rfl/NamedTuple.hpp>
 #include <rfl/Ref.hpp>
+#include <string>
+
+#include "commands/ViewCommand.hpp"
+#include "engine/handlers/DataFrameManagerParams.hpp"
 
 namespace engine {
 namespace handlers {

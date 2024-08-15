@@ -7,12 +7,14 @@
 
 #include "commands/StringColumnOrStringColumnView.hpp"
 
+#include <rfl/json/read.hpp>
+
 namespace commands {
 
 StringColumnOrStringColumnView StringColumnOrStringColumnView::from_json_obj(
     const InputVarType& _obj) {
-  return StringColumnOrStringColumnView(
-      rfl::json::read<ReflectionType>(_obj).value());
+  return StringColumnOrStringColumnView{
+      rfl::json::read<ReflectionType>(_obj).value()};
 }
 
 }  // namespace commands

@@ -11,17 +11,12 @@
 #include <Poco/Net/StreamSocket.h>
 
 #include <map>
-#include <memory>
 #include <string>
 
 #include "commands/ProjectCommand.hpp"
-#include "communication/communication.hpp"
-#include "containers/containers.hpp"
-#include "debug/debug.hpp"
-#include "engine/config/config.hpp"
 #include "engine/handlers/DataFrameManager.hpp"
 #include "engine/handlers/ProjectManagerParams.hpp"
-#include "engine/pipelines/pipelines.hpp"
+#include "multithreading/WriteLock.hpp"
 
 namespace engine {
 namespace handlers {

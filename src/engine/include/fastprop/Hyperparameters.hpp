@@ -8,11 +8,12 @@
 #ifndef FASTPROP_HYPERPARAMETERS_HPP_
 #define FASTPROP_HYPERPARAMETERS_HPP_
 
+#include <rfl/Field.hpp>
+#include <rfl/Literal.hpp>
+
 #include "fastprop/Float.hpp"
 #include "fastprop/Int.hpp"
 #include "fastprop/enums/Aggregation.hpp"
-#include <rfl/Field.hpp>
-#include <rfl/Literal.hpp>
 
 namespace fastprop {
 

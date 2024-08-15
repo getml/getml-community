@@ -9,16 +9,13 @@
 #define ENGINE_PIPELINES_MAKEPLACEHOLDER_HPP_
 
 #include <memory>
-#include <optional>
-#include <set>
-#include <stdexcept>
+#include <rfl/Ref.hpp>
 #include <string>
 #include <vector>
 
 #include "commands/DataModel.hpp"
 #include "engine/Float.hpp"
 #include "helpers/Placeholder.hpp"
-#include <rfl/Ref.hpp>
 
 namespace engine {
 namespace pipelines {

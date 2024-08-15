@@ -8,14 +8,11 @@
 #ifndef HELPERS_DATAFRAME_HPP_
 #define HELPERS_DATAFRAME_HPP_
 
-#include <map>
 #include <memory>
 #include <string>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
-#include "debug/debug.hpp"
 #include "helpers/Column.hpp"
 #include "helpers/CreateSubviewParams.hpp"
 #include "helpers/DataFrameParams.hpp"
@@ -23,7 +20,6 @@
 #include "helpers/Index.hpp"
 #include "helpers/Int.hpp"
 #include "helpers/Schema.hpp"
-#include "textmining/textmining.hpp"
 
 namespace helpers {
 
@@ -49,6 +45,11 @@ struct DataFrame {
   DataFrame(const DataFrameParams& _params);
 
   ~DataFrame() = default;
+
+  DataFrame(DataFrame&&) = default;
+  DataFrame(DataFrame const&) = default;
+  auto operator=(DataFrame const&) -> DataFrame& = delete;
+  auto operator=(DataFrame&&) -> DataFrame& = delete;
 
   // ---------------------------------------------------------------------
 

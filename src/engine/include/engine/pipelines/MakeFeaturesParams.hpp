@@ -10,20 +10,16 @@
 
 #include <Poco/Net/StreamSocket.h>
 
-#include <map>
 #include <memory>
-#include <optional>
-#include <string>
+#include <rfl/Ref.hpp>
 #include <vector>
 
 #include "commands/DataFramesOrViews.hpp"
 #include "commands/Fingerprint.hpp"
-#include "commands/Predictor.hpp"
-#include "communication/communication.hpp"
-#include "containers/containers.hpp"
-#include "engine/dependency/dependency.hpp"
-#include "engine/pipelines/TransformParams.hpp"
-#include <rfl/Ref.hpp>
+#include "communication/Logger.hpp"
+#include "containers/Encoding.hpp"
+#include "engine/dependency/DataFrameTracker.hpp"
+#include "predictors/PredictorImpl.hpp"
 
 namespace engine {
 namespace pipelines {

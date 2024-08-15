@@ -8,11 +8,11 @@
 #ifndef ENGINE_PIPELINES_FINGERPRINTS_HPP_
 #define ENGINE_PIPELINES_FINGERPRINTS_HPP_
 
+#include <rfl/Field.hpp>
+#include <rfl/Ref.hpp>
 #include <vector>
 
 #include "commands/Fingerprint.hpp"
-#include <rfl/Field.hpp>
-#include <rfl/Ref.hpp>
 
 namespace engine {
 namespace pipelines {
@@ -43,4 +43,3 @@ struct Fingerprints {
 }  // namespace engine
 
 #endif  // ENGINE_PIPELINES_FINGERPRINTS_HPP_
-
