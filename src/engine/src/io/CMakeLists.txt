@@ -11,5 +11,6 @@ target_link_libraries(
   PUBLIC
   Poco::Foundation
   reflectcpp::reflectcpp
+  range-v3::range-v3
 )
 

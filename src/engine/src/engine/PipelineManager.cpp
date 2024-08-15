@@ -7,25 +7,17 @@
 
 #include "engine/handlers/PipelineManager.hpp"
 
-#include <filesystem>
-#include <ranges>
-#include <stdexcept>
-
-#include "commands/DataFramesOrViews.hpp"
-#include "commands/ProjectCommand.hpp"
-#include "containers/Roles.hpp"
-#include "engine/handlers/ColumnManager.hpp"
-#include "engine/handlers/DataFrameManager.hpp"
-#include "engine/pipelines/ToSQLParams.hpp"
-#include "engine/pipelines/load_fitted.hpp"
-#include "engine/pipelines/pipelines.hpp"
-#include "engine/pipelines/to_sql.hpp"
 #include <rfl/Field.hpp>
 #include <rfl/always_false.hpp>
 #include <rfl/as.hpp>
 #include <rfl/make_named_tuple.hpp>
+#include <stdexcept>
+
+#include "commands/DataFramesOrViews.hpp"
+#include "containers/Roles.hpp"
+#include "engine/pipelines/ToSQLParams.hpp"
+#include "engine/pipelines/to_sql.hpp"
 #include "transpilation/TranspilationParams.hpp"
-#include "transpilation/transpilation.hpp"
 
 namespace engine {
 namespace handlers {
@@ -201,7 +193,7 @@ void PipelineManager::check(const typename Command::CheckOp& _cmd,
                  params_.data_frames_, params_.options_)
           .parse_all(cmd);
 
-  const auto params = pipelines::CheckParams(
+  const auto params = pipelines::CheckParams{
       rfl::make_field<"categories_">(local_categories),
       rfl::make_field<"cmd_">(cmd),
       rfl::make_field<"logger_">(params_.logger_.ptr()),
@@ -209,7 +201,7 @@ void PipelineManager::check(const typename Command::CheckOp& _cmd,
       rfl::make_field<"population_df_">(population_df),
       rfl::make_field<"preprocessor_tracker_">(params_.preprocessor_tracker_),
       rfl::make_field<"warning_tracker_">(params_.warning_tracker_),
-      rfl::make_field<"socket_">(_socket));
+      rfl::make_field<"socket_">(_socket)};
 
   pipelines::check::check(pipeline, params);
 
@@ -383,7 +375,7 @@ void PipelineManager::fit(const typename Command::FitOp& _cmd,
                  params_.data_frames_, params_.options_)
           .parse_all(cmd);
 
-  const auto params = pipelines::FitParams(
+  const auto params = pipelines::FitParams{
       rfl::make_field<"categories_">(local_categories),
       rfl::make_field<"cmd_">(cmd),
       rfl::make_field<"data_frames_">(data_frames()),
@@ -397,7 +389,7 @@ void PipelineManager::fit(const typename Command::FitOp& _cmd,
       rfl::make_field<"pred_tracker_">(params_.pred_tracker_),
       rfl::make_field<"preprocessor_tracker_">(params_.preprocessor_tracker_),
       rfl::make_field<"validation_df_">(validation_df),
-      rfl::make_field<"socket_">(_socket));
+      rfl::make_field<"socket_">(_socket)};
 
   const auto [fitted, scores] = pipelines::fit::fit(pipeline, params);
 
@@ -483,15 +475,13 @@ void PipelineManager::refresh(const typename Command::RefreshOp& _cmd,
 
 // ------------------------------------------------------------------------
 
-void PipelineManager::refresh_all(const typename Command::RefreshAllOp& _cmd,
+void PipelineManager::refresh_all(const typename Command::RefreshAllOp&,
                                   Poco::Net::StreamSocket* _socket) {
-  using namespace std::ranges::views;
-
   std::map<std::string, pipelines::Pipeline> updated_pipelines;
 
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
-  const auto names = pipelines() | keys;
+  const auto names = pipelines() | std::views::keys;
 
   auto vec = std::vector<RefreshPipelineType>();
 
@@ -538,9 +528,9 @@ typename PipelineManager::RefreshPipelineType PipelineManager::refresh_pipeline(
     return base;
   }
 
-  const auto peripheral_metadata =
-      fct::collect::vector(*_pipeline.fitted()->peripheral_schema_ |
-                           VIEWS::transform(extract_roles));
+  const auto peripheral_metadata = *_pipeline.fitted()->peripheral_schema_ |
+                                   std::views::transform(extract_roles) |
+                                   fct::ranges::to<std::vector>();
 
   const auto population_metadata =
       extract_roles(*_pipeline.fitted()->population_schema_);

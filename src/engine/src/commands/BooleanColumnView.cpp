@@ -7,10 +7,12 @@
 
 #include "commands/BooleanColumnView.hpp"
 
+#include <rfl/json/read.hpp>
+
 namespace commands {
 
 BooleanColumnView BooleanColumnView::from_json_obj(const InputVarType& _obj) {
-  return BooleanColumnView(rfl::json::read<ReflectionType>(_obj).value());
+  return BooleanColumnView{rfl::json::read<ReflectionType>(_obj).value()};
 }
 
 }  // namespace commands

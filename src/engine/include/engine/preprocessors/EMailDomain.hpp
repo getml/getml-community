@@ -9,23 +9,21 @@
 #define ENGINE_PREPROCESSORS_EMAILDOMAIN_HPP_
 
 #include <memory>
+#include <rfl/Field.hpp>
+#include <rfl/Literal.hpp>
+#include <rfl/NamedTuple.hpp>
+#include <rfl/Ref.hpp>
 #include <utility>
 #include <vector>
 
 #include "commands/Fingerprint.hpp"
 #include "commands/Preprocessor.hpp"
-#include "containers/containers.hpp"
 #include "engine/Int.hpp"
 #include "engine/preprocessors/Params.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/Macros.hpp"
 #include "helpers/StringIterator.hpp"
-#include <rfl/Field.hpp>
-#include <rfl/Literal.hpp>
-#include <rfl/NamedTuple.hpp>
-#include <rfl/Ref.hpp>
-#include "strings/strings.hpp"
 
 namespace engine {
 namespace preprocessors {
@@ -43,7 +41,7 @@ class EMailDomain : public Preprocessor {
   using ReflectionType = SaveLoad;
 
  public:
-  EMailDomain(const EMailDomainOp& _op,
+  EMailDomain(const EMailDomainOp&,
               const std::vector<commands::Fingerprint>& _dependencies)
       : dependencies_(_dependencies) {}
 
@@ -93,9 +91,9 @@ class EMailDomain : public Preprocessor {
 
   /// The preprocessor does not generate any SQL scripts.
   std::vector<std::string> to_sql(
-      const helpers::StringIterator& _categories,
-      const std::shared_ptr<const transpilation::SQLDialectGenerator>&
-          _sql_dialect_generator) const final {
+      const helpers::StringIterator&,
+      const std::shared_ptr<const transpilation::SQLDialectGenerator>&)
+      const final {
     return {};
   }
 
@@ -148,4 +146,3 @@ class EMailDomain : public Preprocessor {
 }  // namespace engine
 
 #endif  // ENGINE_PREPROCESSORS_EMAILDOMAIN_HPP_
-

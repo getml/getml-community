@@ -9,14 +9,14 @@
 #define FEATURELEARNERS_TRANSFORMPARAMS_HPP_
 
 #include <cstddef>
-#include <vector>
-
-#include "commands/DataFramesOrViews.hpp"
-#include "communication/communication.hpp"
-#include "featurelearners/FitParams.hpp"
 #include <rfl/Field.hpp>
 #include <rfl/Flatten.hpp>
 #include <rfl/NamedTuple.hpp>
+#include <vector>
+
+#include "commands/DataFramesOrViews.hpp"
+#include "communication/SocketLogger.hpp"
+#include "containers/DataFrame.hpp"
 
 namespace featurelearners {
 
@@ -50,4 +50,3 @@ struct TransformParams {
 }  // namespace featurelearners
 
 #endif  // FEATURELEARNERS_TRANSFORMPARAMS_HPP_
-

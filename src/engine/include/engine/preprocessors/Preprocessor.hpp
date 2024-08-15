@@ -10,15 +10,14 @@
 
 #include <memory>
 #include <optional>
+#include <rfl/Ref.hpp>
 #include <utility>
 #include <vector>
 
 #include "commands/Fingerprint.hpp"
-#include "containers/containers.hpp"
 #include "engine/preprocessors/Params.hpp"
 #include "helpers/Saver.hpp"
 #include "helpers/StringIterator.hpp"
-#include <rfl/Ref.hpp>
 
 namespace engine {
 namespace preprocessors {
@@ -34,7 +33,7 @@ class Preprocessor {
   static constexpr const char* TEXT_FIELD_SPLITTER = "TextFieldSplitter";
 
  public:
-  Preprocessor(){};
+  Preprocessor() {};
 
   virtual ~Preprocessor() = default;
 
@@ -77,4 +76,3 @@ class Preprocessor {
 }  // namespace engine
 
 #endif  // ENGINE_PREPROCESSORS_PREPROCESSOR_HPP_
-

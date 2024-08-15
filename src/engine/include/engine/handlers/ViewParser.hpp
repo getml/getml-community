@@ -12,18 +12,15 @@
 
 #include <map>
 #include <memory>
+#include <rfl/json/read.hpp>
 #include <string>
 
 #include "commands/DataFrameCommand.hpp"
 #include "commands/DataFrameOrView.hpp"
 #include "commands/DataFramesOrViews.hpp"
-#include "communication/communication.hpp"
+#include "containers/ColumnView.hpp"
 #include "containers/ViewContent.hpp"
-#include "containers/containers.hpp"
-#include "debug/debug.hpp"
-#include "engine/config/config.hpp"
 #include "engine/handlers/ArrowHandler.hpp"
-#include <rfl/json.hpp>
 
 namespace engine {
 namespace handlers {

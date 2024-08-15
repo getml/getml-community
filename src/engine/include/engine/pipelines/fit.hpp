@@ -10,23 +10,18 @@
 
 #include <Poco/Net/StreamSocket.h>
 
-#include <algorithm>
 #include <memory>
-#include <optional>
-#include <string>
 #include <utility>
-#include <variant>
 #include <vector>
 
 #include "commands/Fingerprint.hpp"
-#include "commands/Predictor.hpp"
 #include "containers/DataFrame.hpp"
 #include "engine/pipelines/FitParams.hpp"
-#include "engine/pipelines/FitPredictorsParams.hpp"
 #include "engine/pipelines/FitPreprocessorsParams.hpp"
 #include "engine/pipelines/FittedPipeline.hpp"
 #include "engine/pipelines/Pipeline.hpp"
 #include "engine/pipelines/Preprocessed.hpp"
+#include "engine/pipelines/Purpose.hpp"
 #include "metrics/Scores.hpp"
 
 namespace engine {
@@ -91,12 +86,8 @@ inline std::vector<rfl::Ref<const T>> to_const(
   const auto as_const_ref = [](const auto& _o) {
     return rfl::Ref<const T>(_o);
   };
-  auto range = _orig | VIEWS::transform(as_const_ref);
-  auto vec = std::vector<rfl::Ref<const T>>();
-  for (auto val : range) {
-    vec.emplace_back(std::move(val));
-  }
-  return vec;
+  return _orig | std::views::transform(as_const_ref) |
+         fct::ranges::to<std::vector>();
 }
 
 /// Transforms to a vector of const references.
@@ -104,7 +95,8 @@ template <class T>
 inline std::vector<std::vector<rfl::Ref<const T>>> to_const(
     const std::vector<std::vector<rfl::Ref<T>>>& _orig) {
   const auto as_const_ref = [](const auto& _o) { return fit::to_const(_o); };
-  return fct::collect::vector(_orig | VIEWS::transform(as_const_ref));
+  return _orig | std::views::transform(as_const_ref) |
+         fct::ranges::to<std::vector>();
 }
 
 /// Transforms to a vector of shared_ptrs to a vector of
@@ -115,12 +107,7 @@ inline std::vector<rfl::Ref<T>> to_ref(
   const auto as_ref = [](const auto& _o) {
     return rfl::Ref<T>::make(_o).value();
   };
-  auto range = _orig | VIEWS::transform(as_ref);
-  auto vec = std::vector<rfl::Ref<T>>();
-  for (auto val : range) {
-    vec.emplace_back(std::move(val));
-  }
-  return vec;
+  return _orig | std::views::transform(as_ref) | fct::ranges::to<std::vector>();
 }
 
 /// Transforms to a vector of references.
@@ -128,7 +115,8 @@ template <class T>
 inline std::vector<std::vector<rfl::Ref<T>>> to_ref(
     const std::vector<std::vector<std::shared_ptr<T>>>& _orig) {
   const auto as_const_ref = [](const auto& _o) { return fit::to_ref(_o); };
-  return fct::collect::vector(_orig | VIEWS::transform(as_const_ref));
+  return _orig | std::views::transform(as_const_ref) |
+         fct::ranges::to<std::vector>();
 }
 
 }  // namespace fit

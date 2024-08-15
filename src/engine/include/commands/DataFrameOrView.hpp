@@ -9,17 +9,17 @@
 #define COMMANDS_DATA_FRAME_OR_VIEW_HPP_
 
 #include <optional>
+#include <rfl/Field.hpp>
+#include <rfl/Literal.hpp>
+#include <rfl/NamedTuple.hpp>
+#include <rfl/Ref.hpp>
+#include <rfl/TaggedUnion.hpp>
 #include <string>
 #include <vector>
 
 #include "commands/BooleanColumnView.hpp"
 #include "commands/FloatColumnOrFloatColumnView.hpp"
 #include "commands/StringColumnOrStringColumnView.hpp"
-#include <rfl/Field.hpp>
-#include <rfl/Literal.hpp>
-#include <rfl/NamedTuple.hpp>
-#include <rfl/Ref.hpp>
-#include <rfl/TaggedUnion.hpp>
 
 namespace commands {
 

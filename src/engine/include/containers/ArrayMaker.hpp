@@ -17,8 +17,7 @@
 #include <vector>
 
 #include "containers/Float.hpp"
-#include "debug/debug.hpp"
-#include "fct/collect.hpp"
+#include "debug/throw_unless.hpp"
 #include "helpers/NullChecker.hpp"
 
 namespace containers {

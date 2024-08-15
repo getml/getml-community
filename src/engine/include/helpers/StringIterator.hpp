@@ -9,9 +9,11 @@
 #define HELPERS_STRINGITERATOR_HPP_
 
 #include <cstddef>
+#include <functional>
 
-#include "fct/fct.hpp"
-#include "strings/strings.hpp"
+#include "debug/assert_true.hpp"
+#include "debug/throw_unless.hpp"
+#include "strings/String.hpp"
 
 namespace helpers {
 
@@ -30,16 +32,6 @@ class StringIterator {
                                  ", size_: " + std::to_string(size_));
     return func_(_i);
   }
-
-  /// Iterator to the beginning.
-  auto begin() const {
-    auto iota = fct::iota<size_t>(0, size_);
-    auto range = iota | VIEWS::transform(func_);
-    return range.begin();
-  }
-
-  /// Iterator to the end.
-  auto end() const { return begin() + size_; }
 
   /// Accessor without boundary checks.
   strings::String operator[](size_t _i) const {

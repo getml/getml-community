@@ -7,9 +7,9 @@
 
 #include "predictors/XGBoostPredictor.hpp"
 
+#include <numeric>
 #include <optional>
 #include <stdexcept>
-#include <variant>
 
 #include "predictors/XGBoostIteratorSparse.hpp"
 

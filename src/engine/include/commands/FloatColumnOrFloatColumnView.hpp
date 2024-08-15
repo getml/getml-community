@@ -8,8 +8,11 @@
 #ifndef COMMANDS_FLOATCOLUMNORFLOATCOLUMNVIEW_HPP_
 #define COMMANDS_FLOATCOLUMNORFLOATCOLUMNVIEW_HPP_
 
-#include <rfl.hpp>
-#include <rfl/json.hpp>
+#include <rfl/Field.hpp>
+#include <rfl/Literal.hpp>
+#include <rfl/Ref.hpp>
+#include <rfl/TaggedUnion.hpp>
+#include <rfl/json/Reader.hpp>
 #include <variant>
 
 #include "commands/BooleanColumnView.hpp"
@@ -18,8 +21,8 @@
 
 namespace commands {
 
-class BooleanColumnView;
-class StringColumnOrStringColumnView;
+struct BooleanColumnView;
+struct StringColumnOrStringColumnView;
 
 struct FloatColumnOrFloatColumnView {
   /// The command used for arange operations.

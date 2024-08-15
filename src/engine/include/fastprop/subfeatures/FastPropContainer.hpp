@@ -9,11 +9,11 @@
 #define FASTPROP_SUBFEATURES_FASTPROPCONTAINER_HPP_
 
 #include <memory>
-#include <vector>
-
-#include "fastprop/algorithm/algorithm.hpp"
 #include <rfl/Field.hpp>
 #include <rfl/NamedTuple.hpp>
+#include <vector>
+
+#include "fastprop/algorithm/FastProp.hpp"
 #include "transpilation/SQLDialectGenerator.hpp"
 
 namespace fastprop {
@@ -87,4 +87,3 @@ class FastPropContainer {
 }  // namespace fastprop
 
 #endif  // FASTPROP_SUBFEATURES_FASTPROPCONTAINER_HPP_
-

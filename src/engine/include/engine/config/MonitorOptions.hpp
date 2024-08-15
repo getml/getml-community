@@ -8,10 +8,9 @@
 #ifndef ENGINE_CONFIG_MONITOROPTIONS_
 #define ENGINE_CONFIG_MONITOROPTIONS_
 
-#include <string>
-
 #include <rfl/Field.hpp>
 #include <rfl/NamedTuple.hpp>
+#include <string>
 
 namespace engine {
 namespace config {
@@ -33,13 +32,13 @@ struct MonitorOptions {
   ~MonitorOptions() = default;
 
   /// Trivial accessor
-  const size_t http_port() const { return http_port_; }
+  size_t http_port() const { return http_port_; }
 
   /// Trivial accessor.
   const std::string proxy_url() const { return proxy_url_; }
 
   /// Trivial accessor
-  const size_t tcp_port() const { return tcp_port_; }
+  size_t tcp_port() const { return tcp_port_; }
 
   /// Returns a URL under which the monitor can be reached.
   const std::string url() const {

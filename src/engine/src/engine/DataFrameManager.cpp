@@ -9,17 +9,15 @@
 
 #include <Poco/TemporaryFile.h>
 
-#include "commands/DataFrameFromJSON.hpp"
+#include <rfl/json/write.hpp>
+
 #include "containers/Roles.hpp"
-#include "engine/handlers/AggOpParser.hpp"
 #include "engine/handlers/ArrowHandler.hpp"
-#include "engine/handlers/BoolOpParser.hpp"
-#include "engine/handlers/ColumnManager.hpp"
 #include "engine/handlers/FloatOpParser.hpp"
 #include "engine/handlers/StringOpParser.hpp"
 #include "engine/handlers/ViewParser.hpp"
-#include "metrics/metrics.hpp"
-#include <rfl/json.hpp>
+#include "metrics/Summarizer.hpp"
+#include "multithreading/WriteLock.hpp"
 
 namespace engine {
 namespace handlers {
@@ -148,7 +146,7 @@ void DataFrameManager::add_int_column_to_df(
     const std::string& _name, const std::string& _role,
     const std::string& _unit, const containers::Column<strings::String>& _col,
     containers::DataFrame* _df, multithreading::WeakWriteLock* _weak_write_lock,
-    Poco::Net::StreamSocket* _socket) {
+    Poco::Net::StreamSocket*) {
   const auto pool = params_.options_.make_pool();
 
   const auto local_categories =
@@ -503,11 +501,11 @@ void DataFrameManager::concat(const typename Command::ConcatDataFramesOp& _cmd,
     return view_parser.parse(_cmd);
   };
 
-  auto range = data_frame_objs | VIEWS::transform(extract_df);
+  auto range = data_frame_objs | std::views::transform(extract_df);
 
   auto df = range[0].clone(name);
 
-  for (size_t i = 1; i < RANGES::size(range); ++i) {
+  for (size_t i = 1; i < std::ranges::size(range); ++i) {
     df.append(range[i]);
   }
 

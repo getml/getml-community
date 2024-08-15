@@ -18,4 +18,5 @@ target_link_libraries(
   reflectcpp::reflectcpp
   xgboost::xgboost
   Eigen3::Eigen
+  range-v3::range-v3
 )

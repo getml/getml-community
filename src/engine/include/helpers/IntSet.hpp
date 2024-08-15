@@ -12,7 +12,7 @@
 #include <utility>
 #include <vector>
 
-#include "debug/debug.hpp"
+#include "debug/assert_true.hpp"
 
 namespace helpers {
 
@@ -58,7 +58,7 @@ class IntSet {
   }
 
   /// Trivial getter
-  const size_t maximum_value() const { return maximum_value_; }
+  size_t maximum_value() const { return maximum_value_; }
 
   /// Resizes the container.
   void resize(size_t _size) { *this = std::move(IntSet(_size)); }

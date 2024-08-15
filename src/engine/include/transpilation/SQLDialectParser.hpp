@@ -8,11 +8,8 @@
 #ifndef SQL_SQLDIALECTPARSER_HPP_
 #define SQL_SQLDIALECTPARSER_HPP_
 
-#include <cstddef>
-#include <memory>
-#include <string>
-
 #include <rfl/Ref.hpp>
+
 #include "transpilation/SQLDialectGenerator.hpp"
 #include "transpilation/TranspilationParams.hpp"
 

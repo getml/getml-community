@@ -8,12 +8,11 @@
 #ifndef ENGINE_PIPELINES_PREPROCESSED_HPP_
 #define ENGINE_PIPELINES_PREPROCESSED_HPP_
 
+#include <rfl/Ref.hpp>
 #include <vector>
 
 #include "commands/Fingerprint.hpp"
 #include "containers/DataFrame.hpp"
-#include "engine/preprocessors/preprocessors.hpp"
-#include <rfl/Ref.hpp>
 
 namespace engine {
 namespace pipelines {
@@ -40,4 +39,3 @@ struct Preprocessed {
 }  // namespace engine
 
 #endif  // ENGINE_PIPELINES_PREPROCESSED_HPP_
-

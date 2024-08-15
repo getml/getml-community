@@ -9,15 +9,11 @@
 #define PREDICTORS_ENCODING_HPP_
 
 #include <memory>
-
-#include "memmap/memmap.hpp"
-#include "predictors/Float.hpp"
-#include "predictors/FloatFeature.hpp"
-#include "predictors/Int.hpp"
-#include "predictors/IntFeature.hpp"
 #include <rfl/Field.hpp>
 #include <rfl/NamedTuple.hpp>
-#include <rfl/json.hpp>
+
+#include "predictors/Int.hpp"
+#include "predictors/IntFeature.hpp"
 
 namespace predictors {
 

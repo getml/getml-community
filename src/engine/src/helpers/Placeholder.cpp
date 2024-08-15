@@ -7,6 +7,9 @@
 
 #include "helpers/Placeholder.hpp"
 
+#include <rfl/json/read.hpp>
+#include <rfl/json/write.hpp>
+
 namespace helpers {
 
 // ----------------------------------------------------------------------------

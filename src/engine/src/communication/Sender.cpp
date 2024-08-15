@@ -7,6 +7,8 @@
 
 #include "communication/Sender.hpp"
 
+#include <numeric>
+
 namespace communication {
 // ------------------------------------------------------------------------
 
@@ -36,10 +38,10 @@ void Sender::send_categorical_column(const std::vector<std::string>& _col,
 
   for (size_t j = 0; j < _col.size(); ++j) {
     if (j != 0) [[likely]] {
-        std::copy(GETML_SEP, GETML_SEP + SEP_SIZE, data.data() + i);
+      std::copy(GETML_SEP, GETML_SEP + SEP_SIZE, data.data() + i);
 
-        i += SEP_SIZE;
-      }
+      i += SEP_SIZE;
+    }
 
     const auto& str = _col[j];
 

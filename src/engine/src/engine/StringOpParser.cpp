@@ -7,10 +7,13 @@
 
 #include "engine/handlers/StringOpParser.hpp"
 
+#include <rfl/visit.hpp>
+
+#include "communication/Warner.hpp"
 #include "engine/handlers/BoolOpParser.hpp"
 #include "engine/handlers/FloatOpParser.hpp"
 #include "engine/utils/Aggregations.hpp"
-#include <rfl/visit.hpp>
+#include "io/Parser.hpp"
 
 namespace engine {
 namespace handlers {
@@ -48,7 +51,7 @@ containers::ColumnView<strings::String> StringOpParser::boolean_as_string(
 // ----------------------------------------------------------------------------
 
 void StringOpParser::check(const containers::Column<strings::String>& _col,
-                           const std::string& _name,
+                           const std::string&,
                            const rfl::Ref<const communication::Logger>& _logger,
                            Poco::Net::StreamSocket* _socket) const {
   communication::Warner warner;

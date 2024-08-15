@@ -5,18 +5,10 @@
 // for details.
 //
 
-#include <stdexcept>
-
-#include "commands/DataFramesOrViews.hpp"
-#include "commands/ProjectCommand.hpp"
-#include "containers/Roles.hpp"
-#include "engine/handlers/ColumnManager.hpp"
-#include "engine/handlers/DataFrameManager.hpp"
-#include "engine/handlers/PipelineManager.hpp"
-#include "engine/pipelines/pipelines.hpp"
 #include <rfl/always_false.hpp>
-#include "transpilation/TranspilationParams.hpp"
-#include "transpilation/transpilation.hpp"
+
+#include "containers/Roles.hpp"
+#include "engine/handlers/PipelineManager.hpp"
 
 namespace engine {
 namespace handlers {

@@ -8,21 +8,23 @@
 #ifndef COMMANDS_STRINGCOLUMNORSTRINGCOLUMNVIEW_HPP_
 #define COMMANDS_STRINGCOLUMNORSTRINGCOLUMNVIEW_HPP_
 
-#include <rfl.hpp>
-#include <rfl/json.hpp>
+#include <rfl/Field.hpp>
+#include <rfl/Literal.hpp>
+#include <rfl/Ref.hpp>
+#include <rfl/TaggedUnion.hpp>
+#include <rfl/json/Reader.hpp>
 #include <string>
 #include <variant>
 
 #include "commands/BooleanColumnView.hpp"
-#include "commands/Float.hpp"
 #include "commands/FloatColumnOrFloatColumnView.hpp"
 
 namespace commands {
 
-class BooleanColumnView;
-class FloatColumnOrFloatColumnView;
+struct BooleanColumnView;
+struct FloatColumnOrFloatColumnView;
 
-class StringColumnOrStringColumnView {
+struct StringColumnOrStringColumnView {
  public:
   /// The command used to concat two strings.
   struct StringBinaryOp {

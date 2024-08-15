@@ -10,7 +10,10 @@
 
 #include <Poco/Net/StreamSocket.h>
 
-#include <string>
+#include <rfl/Field.hpp>
+#include <rfl/Literal.hpp>
+#include <rfl/NamedTuple.hpp>
+#include <rfl/Ref.hpp>
 #include <vector>
 
 #include "commands/Fingerprint.hpp"
@@ -18,10 +21,6 @@
 #include "engine/pipelines/Pipeline.hpp"
 #include "engine/pipelines/Purpose.hpp"
 #include "predictors/PredictorImpl.hpp"
-#include <rfl/Field.hpp>
-#include <rfl/Literal.hpp>
-#include <rfl/NamedTuple.hpp>
-#include <rfl/Ref.hpp>
 
 namespace engine {
 namespace pipelines {

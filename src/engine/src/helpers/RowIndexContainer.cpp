@@ -7,8 +7,6 @@
 
 #include "helpers/RowIndexContainer.hpp"
 
-#include "fct/fct.hpp"
-
 namespace helpers {
 // ----------------------------------------------------------------------------
 
@@ -41,7 +39,8 @@ typename RowIndexContainer::RowIndices RowIndexContainer::make_row_indices(
         return std::make_shared<const textmining::RowIndex>(*word_index);
       };
 
-  return fct::collect::vector(_word_indices | VIEWS::transform(make_row_index));
+  return _word_indices | std::views::transform(make_row_index) |
+         fct::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------------------------------

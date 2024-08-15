@@ -15,4 +15,5 @@ target_link_libraries(
   reflectcpp::reflectcpp
   xgboost::xgboost
   SQLite::SQLite3
+  range-v3::range-v3
 )

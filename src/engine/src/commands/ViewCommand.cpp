@@ -7,12 +7,12 @@
 
 #include "commands/ViewCommand.hpp"
 
-#include <rfl/json.hpp>
+#include <rfl/json/read.hpp>
 
 namespace commands {
 
 ViewCommand ViewCommand::from_json_obj(const InputVarType& _obj) {
-  return ViewCommand(rfl::json::read<ReflectionType>(_obj).value());
+  return ViewCommand{rfl::json::read<ReflectionType>(_obj).value()};
 }
 
 }  // namespace commands

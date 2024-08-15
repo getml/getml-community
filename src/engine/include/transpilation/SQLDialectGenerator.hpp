@@ -11,14 +11,13 @@
 #include <cstddef>
 #include <memory>
 #include <optional>
+#include <rfl/Ref.hpp>
 #include <string>
-#include <utility>
 #include <vector>
 
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/Schema.hpp"
 #include "helpers/enums/Aggregation.hpp"
-#include <rfl/Ref.hpp>
 #include "transpilation/FeatureTableParams.hpp"
 #include "transpilation/SQLParams.hpp"
 #include "transpilation/TrimmingGenerator.hpp"

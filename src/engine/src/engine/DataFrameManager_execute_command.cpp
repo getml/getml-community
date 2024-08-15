@@ -5,8 +5,9 @@
 // for details.
 //
 
-#include "engine/handlers/DataFrameManager.hpp"
 #include <rfl/always_false.hpp>
+
+#include "engine/handlers/DataFrameManager.hpp"
 
 namespace engine {
 namespace handlers {

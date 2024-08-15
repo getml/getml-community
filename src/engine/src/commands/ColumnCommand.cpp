@@ -7,12 +7,12 @@
 
 #include "commands/ColumnCommand.hpp"
 
-#include <rfl/json.hpp>
+#include <rfl/json/read.hpp>
 
 namespace commands {
 
 ColumnCommand ColumnCommand::from_json_obj(const InputVarType& _obj) {
-  return ColumnCommand(rfl::json::read<ReflectionType>(_obj).value());
+  return ColumnCommand{rfl::json::read<ReflectionType>(_obj).value()};
 }
 
 }  // namespace commands

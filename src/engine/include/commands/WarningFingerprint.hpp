@@ -8,14 +8,12 @@
 #ifndef COMMANDS_WARNINGFINGERPRINT_HPP_
 #define COMMANDS_WARNINGFINGERPRINT_HPP_
 
-#include <cstddef>
-#include <string>
-#include <vector>
-
-#include "commands/Fingerprint.hpp"
 #include <rfl/Field.hpp>
 #include <rfl/NamedTuple.hpp>
 #include <rfl/Ref.hpp>
+#include <vector>
+
+#include "commands/Fingerprint.hpp"
 
 namespace commands {
 

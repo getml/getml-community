@@ -10,10 +10,8 @@
 
 #include <memory>
 #include <optional>
-#include <rfl.hpp>
 #include <vector>
 
-#include "debug/debug.hpp"
 #include "helpers/Saver.hpp"
 #include "logging/AbstractLogger.hpp"
 #include "predictors/Fingerprint.hpp"
@@ -25,7 +23,7 @@ namespace predictors {
 /// Abstract base class for a predictor
 class Predictor {
  public:
-  Predictor(){};
+  Predictor() {};
 
   virtual ~Predictor() = default;
 

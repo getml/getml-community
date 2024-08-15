@@ -11,13 +11,15 @@
 #include <algorithm>
 #include <cmath>
 #include <map>
+#include <numeric>
+#include <ranges>
 #include <stdexcept>
 #include <string>
 #include <unordered_set>
 #include <utility>
 #include <vector>
 
-#include "fct/fct.hpp"
+#include "fct/Range.hpp"
 #include "helpers/Float.hpp"
 #include "helpers/NullChecker.hpp"
 
@@ -29,8 +31,8 @@ class Aggregations {
   template <class IteratorType>
   static Float assert_equal(IteratorType _begin, IteratorType _end) {
     if (std::distance(_begin, _end) <= 0) [[unlikely]] {
-        return NAN;
-      }
+      return NAN;
+    }
 
     const auto assert_equal = [](const Float init, const Float val) {
       if (init != val) {
@@ -50,8 +52,8 @@ class Aggregations {
     const auto divisor = count(_begin, _end);
 
     if (divisor == 0.0) [[unlikely]] {
-        return NAN;
-      }
+      return NAN;
+    }
 
     const auto numerator = sum(_begin, _end);
 
@@ -76,8 +78,8 @@ class Aggregations {
   static Float count_above_mean(IteratorType _begin, IteratorType _end) {
     // Needed to catch numerical instability issues.
     if (all_same(_begin, _end)) [[unlikely]] {
-        return 0.0;
-      }
+      return 0.0;
+    }
 
     const auto mean = avg(_begin, _end);
 
@@ -96,8 +98,8 @@ class Aggregations {
   static Float count_below_mean(IteratorType _begin, IteratorType _end) {
     // Needed to catch numerical instability issues.
     if (all_same(_begin, _end)) [[unlikely]] {
-        return 0.0;
-      }
+      return 0.0;
+    }
 
     const auto mean = avg(_begin, _end);
 
@@ -165,8 +167,8 @@ class Aggregations {
     const auto n = count(_begin, _end);
 
     if (n == 0.0) [[unlikely]] {
-        return NAN;
-      }
+      return NAN;
+    }
 
     return count_distinct(_begin, _end) / n;
   }
@@ -179,8 +181,8 @@ class Aggregations {
     const auto get_first = [_half_life, log05](const Float _init,
                                                const auto& _pair) -> Float {
       if (NullChecker::is_null(_pair.second)) [[unlikely]] {
-          return _init;
-        }
+        return _init;
+      }
       return _init + std::exp(log05 * _pair.first / _half_life);
     };
 
@@ -193,8 +195,8 @@ class Aggregations {
     const auto get_both = [_half_life, log05](const Float _init,
                                               const auto& _pair) -> Float {
       if (NullChecker::is_null(_pair.second)) [[unlikely]] {
-          return _init;
-        }
+        return _init;
+      }
       return _init + std::exp(log05 * _pair.first / _half_life) * _pair.second;
     };
 
@@ -229,9 +231,9 @@ class Aggregations {
 
     auto range = fct::Range(_begin, _end);
 
-    auto range_not_null = range | VIEWS::filter(second_is_not_null);
+    auto range_not_null = range | std::views::filter(second_is_not_null);
 
-    auto range_weights = range_not_null | VIEWS::transform(calc_weight);
+    auto range_weights = range_not_null | std::views::transform(calc_weight);
 
     const auto sum_weights = sum(range_weights.begin(), range_weights.end());
 
@@ -239,9 +241,9 @@ class Aggregations {
       return NAN;
     }
 
-    auto range_x = range_not_null | VIEWS::transform(get_first);
+    auto range_x = range_not_null | std::views::transform(get_first);
 
-    auto range_y = range_not_null | VIEWS::transform(get_second);
+    auto range_y = range_not_null | std::views::transform(get_second);
 
     const auto mean_x = sum(range_x.begin(), range_x.end()) / sum_weights;
 
@@ -281,8 +283,8 @@ class Aggregations {
   template <class IteratorType>
   static Float first(IteratorType _begin, IteratorType _end) {
     if (std::distance(_begin, _end) <= 0) [[unlikely]] {
-        return NAN;
-      }
+      return NAN;
+    }
 
     using Pair = std::pair<Float, Float>;
 
@@ -290,7 +292,7 @@ class Aggregations {
       return p1.first < p2.first;
     };
 
-    const auto p = *RANGES::min_element(_begin, _end, ts_is_smaller);
+    const auto p = *std::ranges::min_element(_begin, _end, ts_is_smaller);
 
     return p.second;
   }
@@ -301,13 +303,13 @@ class Aggregations {
     const auto n = count(_begin, _end);
 
     if (n == 0.0) [[unlikely]] {
-        return NAN;
-      }
+      return NAN;
+    }
 
     // Needed to catch numerical instability issues.
     if (all_same(_begin, _end)) [[unlikely]] {
-        return 0.0;
-      }
+      return 0.0;
+    }
 
     const auto mean = avg(_begin, _end);
 
@@ -330,8 +332,8 @@ class Aggregations {
   template <class IteratorType>
   static Float last(IteratorType _begin, IteratorType _end) {
     if (std::distance(_begin, _end) <= 0) [[unlikely]] {
-        return NAN;
-      }
+      return NAN;
+    }
 
     using Pair = std::pair<Float, Float>;
 
@@ -339,7 +341,7 @@ class Aggregations {
       return p1.first < p2.first;
     };
 
-    const auto p = *RANGES::max_element(_begin, _end, ts_is_smaller);
+    const auto p = *std::ranges::max_element(_begin, _end, ts_is_smaller);
 
     return p.second;
   }
@@ -357,8 +359,8 @@ class Aggregations {
   template <class IteratorType>
   static Float median(IteratorType _begin, IteratorType _end) {
     if (std::distance(_begin, _end) <= 0) [[unlikely]] {
-        return NAN;
-      }
+      return NAN;
+    }
 
     auto values = std::vector<Float>(_begin, _end);
 
@@ -387,8 +389,8 @@ class Aggregations {
     const auto freq = count_frequencies<T>(_begin, _end);
 
     if (freq.size() == 0) [[unlikely]] {
-        return NullChecker::make_null<T>();
-      }
+      return NullChecker::make_null<T>();
+    }
 
     using Pair = std::pair<T, size_t>;
 
@@ -405,8 +407,8 @@ class Aggregations {
     const auto max = maximum(_begin, _end);
 
     if (std::isnan(max)) [[unlikely]] {
-        return 0.0;
-      }
+      return 0.0;
+    }
 
     const auto count_op = [max](const Float init, const Float val) {
       if (val == max) {
@@ -424,8 +426,8 @@ class Aggregations {
     const auto min = minimum(_begin, _end);
 
     if (std::isnan(min)) [[unlikely]] {
-        return 0.0;
-      }
+      return 0.0;
+    }
 
     const auto count_op = [min](const Float init, const Float val) {
       if (val == min) {
@@ -448,18 +450,18 @@ class Aggregations {
     auto values = std::vector<Float>(_begin, _end);
 
     if (values.size() == 0) [[unlikely]] {
-        return NAN;
-      }
+      return NAN;
+    }
 
-    RANGES::sort(values);
+    std::ranges::sort(values);
 
     const auto ix_float = static_cast<Float>(values.size() - 1) * _q;
 
     const auto ix = static_cast<size_t>(ix_float);
 
     if (ix == values.size() - 1) [[unlikely]] {
-        return values[ix];
-      }
+      return values[ix];
+    }
 
     const auto share = ix_float - static_cast<Float>(ix);
 
@@ -472,13 +474,13 @@ class Aggregations {
     const auto n = count(_begin, _end);
 
     if (n == 0.0) [[unlikely]] {
-        return NAN;
-      }
+      return NAN;
+    }
 
     // Needed to catch numerical instability issues.
     if (all_same(_begin, _end)) [[unlikely]] {
-        return 0.0;
-      }
+      return 0.0;
+    }
 
     const auto mean = avg(_begin, _end);
 
@@ -486,8 +488,8 @@ class Aggregations {
 
     const auto skewness = [mean, std, n](const Float init, const Float val) {
       if (NullChecker::is_null(val)) [[unlikely]] {
-          return init;
-        }
+        return init;
+      }
       const auto diff = (val - mean) / std;
       return init + diff * diff * diff / n;
     };
@@ -506,8 +508,8 @@ class Aggregations {
   static Float sum(IteratorType _begin, IteratorType _end) {
     const auto sum = [](const Float init, const Float val) {
       if (NullChecker::is_null(val)) [[unlikely]] {
-          return init;
-        }
+        return init;
+      }
       return init + val;
     };
 
@@ -522,19 +524,19 @@ class Aggregations {
   static Float time_since_first_maximum(IteratorType _begin,
                                         IteratorType _end) {
     if (std::distance(_begin, _end) <= 0) [[unlikely]] {
-        return NAN;
-      }
+      return NAN;
+    }
 
     using Pair = std::pair<Float, Float>;
 
     const auto is_smaller = [](const Pair& p1, const Pair& p2) -> Float {
       if (p1.second == p2.second) [[unlikely]] {
-          return p1.first < p2.first;
-        }
+        return p1.first < p2.first;
+      }
       return p1.second < p2.second;
     };
 
-    const auto p = *RANGES::max_element(_begin, _end, is_smaller);
+    const auto p = *std::ranges::max_element(_begin, _end, is_smaller);
 
     return p.first;
   }
@@ -547,19 +549,19 @@ class Aggregations {
   static Float time_since_first_minimum(IteratorType _begin,
                                         IteratorType _end) {
     if (std::distance(_begin, _end) <= 0) [[unlikely]] {
-        return NAN;
-      }
+      return NAN;
+    }
 
     using Pair = std::pair<Float, Float>;
 
     const auto is_smaller = [](const Pair& p1, const Pair& p2) -> Float {
       if (p1.second == p2.second) [[unlikely]] {
-          return p1.first > p2.first;
-        }
+        return p1.first > p2.first;
+      }
       return p1.second < p2.second;
     };
 
-    const auto p = *RANGES::min_element(_begin, _end, is_smaller);
+    const auto p = *std::ranges::min_element(_begin, _end, is_smaller);
 
     return p.first;
   }
@@ -571,19 +573,19 @@ class Aggregations {
   template <class IteratorType>
   static Float time_since_last_maximum(IteratorType _begin, IteratorType _end) {
     if (std::distance(_begin, _end) <= 0) [[unlikely]] {
-        return NAN;
-      }
+      return NAN;
+    }
 
     using Pair = std::pair<Float, Float>;
 
     const auto is_smaller = [](const Pair& p1, const Pair& p2) -> Float {
       if (p1.second == p2.second) [[unlikely]] {
-          return p1.first > p2.first;
-        }
+        return p1.first > p2.first;
+      }
       return p1.second < p2.second;
     };
 
-    const auto p = *RANGES::max_element(_begin, _end, is_smaller);
+    const auto p = *std::ranges::max_element(_begin, _end, is_smaller);
 
     return p.first;
   }
@@ -595,19 +597,19 @@ class Aggregations {
   template <class IteratorType>
   static Float time_since_last_minimum(IteratorType _begin, IteratorType _end) {
     if (std::distance(_begin, _end) <= 0) [[unlikely]] {
-        return NAN;
-      }
+      return NAN;
+    }
 
     using Pair = std::pair<Float, Float>;
 
     const auto is_smaller = [](const Pair& p1, const Pair& p2) -> Float {
       if (p1.second == p2.second) [[unlikely]] {
-          return p1.first < p2.first;
-        }
+        return p1.first < p2.first;
+      }
       return p1.second < p2.second;
     };
 
-    const auto p = *RANGES::min_element(_begin, _end, is_smaller);
+    const auto p = *std::ranges::min_element(_begin, _end, is_smaller);
 
     return p.first;
   }
@@ -629,11 +631,11 @@ class Aggregations {
 
     auto range = fct::Range(_begin, _end);
 
-    auto range_x =
-        range | VIEWS::filter(second_is_not_null) | VIEWS::transform(get_first);
+    auto range_x = range | std::views::filter(second_is_not_null) |
+                   std::views::transform(get_first);
 
-    auto range_y = range | VIEWS::filter(second_is_not_null) |
-                   VIEWS::transform(get_second);
+    auto range_y = range | std::views::filter(second_is_not_null) |
+                   std::views::transform(get_second);
 
     const auto mean_x = avg(range_x.begin(), range_x.end());
 
@@ -658,7 +660,7 @@ class Aggregations {
       return _init + x_centered * y_centered;
     };
 
-    auto range_xy = range | VIEWS::filter(second_is_not_null);
+    auto range_xy = range | std::views::filter(second_is_not_null);
 
     const auto xy =
         std::accumulate(range_xy.begin(), range_xy.end(), 0.0, calc_xy);
@@ -681,8 +683,8 @@ class Aggregations {
 
     const auto variance = [mean, n](const Float init, const Float val) {
       if (NullChecker::is_null(val)) [[unlikely]] {
-          return init;
-        }
+        return init;
+      }
       const auto diff = val - mean;
       return init + diff * diff / n;
     };
@@ -696,8 +698,8 @@ class Aggregations {
     const auto mean = avg(_begin, _end);
 
     if (NullChecker::is_null(mean) || mean == 0.0) [[unlikely]] {
-        return NAN;
-      }
+      return NAN;
+    }
 
     const auto variance = var(_begin, _end);
 

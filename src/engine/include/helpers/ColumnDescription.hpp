@@ -8,11 +8,10 @@
 #ifndef HELPERS_COLUMNDESCRIPTION_HPP_
 #define HELPERS_COLUMNDESCRIPTION_HPP_
 
-#include <string>
-
 #include <rfl/Field.hpp>
 #include <rfl/Literal.hpp>
 #include <rfl/NamedTuple.hpp>
+#include <string>
 
 namespace helpers {
 

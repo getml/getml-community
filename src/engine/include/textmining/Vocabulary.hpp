@@ -12,18 +12,15 @@
 
 #include <map>
 #include <memory>
+#include <ranges>
 #include <set>
 #include <string>
 #include <utility>
 #include <vector>
 
-// -------------------------------------------------------------------------
-
-#include "fct/fct.hpp"
-#include "strings/strings.hpp"
-
-// -------------------------------------------------------------------------
-
+#include "fct/Range.hpp"
+#include "fct/to.hpp"
+#include "strings/String.hpp"
 #include "textmining/Int.hpp"
 
 // -------------------------------------------------------------------------
@@ -46,23 +43,18 @@ class Vocabulary {
       return p.second >= _min_df;
     };
 
-    const auto get_first = [](const Pair& p) -> strings::String {
-      return p.first;
-    };
+    auto range = df_count | std::views::filter(count_greater_than_min_df) |
+                 std::views::keys;
 
-    const auto range_with_max_size =
-        df_count | VIEWS::filter(count_greater_than_min_df) |
-        VIEWS::transform(get_first) | VIEWS::take(_max_size);
+    auto vocab = [&range, &_max_size]() {
+      if (_max_size > 0) {
+        return range | std::views::take(_max_size) |
+               fct::ranges::to_shared_ptr_vector();
+      }
+      return range | fct::ranges::to_shared_ptr_vector();
+    }();
 
-    const auto range_without_max_size =
-        df_count | VIEWS::filter(count_greater_than_min_df) |
-        VIEWS::transform(get_first);
-
-    auto vocab = std::make_shared<std::vector<strings::String>>(
-        _max_size > 0 ? fct::collect::vector(range_with_max_size)
-                      : fct::collect::vector(range_without_max_size));
-
-    std::sort(vocab->begin(), vocab->end());
+    std::ranges::sort(*vocab);
 
     return vocab;
   }
@@ -100,7 +92,7 @@ class Vocabulary {
       return Vocabulary::process_text_field(_text_field);
     };
 
-    const auto range = _range | VIEWS::transform(process);
+    const auto range = _range | std::views::transform(process);
 
     const auto df_map = make_map(range);
 
@@ -112,7 +104,7 @@ class Vocabulary {
       return p1.second > p2.second;
     };
 
-    std::sort(df_vec.begin(), df_vec.end(), by_count);
+    std::ranges::sort(df_vec, by_count);
 
     return df_vec;
   }

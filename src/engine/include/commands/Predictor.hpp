@@ -8,10 +8,11 @@
 #ifndef COMMANDS_PREDICTOR_HPP_
 #define COMMANDS_PREDICTOR_HPP_
 
+#include <rfl/TaggedUnion.hpp>
+
 #include "commands/LinearRegressionHyperparams.hpp"
 #include "commands/LogisticRegressionHyperparams.hpp"
 #include "commands/XGBoostHyperparams.hpp"
-#include <rfl/TaggedUnion.hpp>
 
 namespace commands {
 

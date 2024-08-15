@@ -11,13 +11,13 @@
 #include <Poco/Net/StreamSocket.h>
 
 #include <memory>
-#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "containers/DataFrame.hpp"
 #include "containers/NumericalFeatures.hpp"
+#include "engine/Float.hpp"
 #include "engine/pipelines/FittedPipeline.hpp"
 #include "engine/pipelines/Pipeline.hpp"
 #include "engine/pipelines/Predictors.hpp"

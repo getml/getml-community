@@ -7,6 +7,7 @@
 
 #include "containers/InMemoryEncoding.hpp"
 
+#include "debug/assert_true.hpp"
 #include "helpers/NullChecker.hpp"
 
 namespace containers {

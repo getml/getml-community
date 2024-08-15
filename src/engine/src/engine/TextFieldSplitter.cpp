@@ -7,20 +7,21 @@
 
 #include "engine/preprocessors/TextFieldSplitter.hpp"
 
-#include "engine/preprocessors/PreprocessorImpl.hpp"
+#include <rfl/replace.hpp>
+
+#include "fct/to.hpp"
+#include "helpers/ColumnDescription.hpp"
 #include "helpers/Loader.hpp"
 #include "helpers/Saver.hpp"
-#include <rfl/replace.hpp>
 
 namespace engine {
 namespace preprocessors {
 
 containers::DataFrame TextFieldSplitter::add_rowid(
     const containers::DataFrame& _df) const {
-  const auto range = fct::iota<Int>(0, _df.nrows());
-
-  const auto ptr =
-      std::make_shared<std::vector<Int>>(fct::collect::vector(range));
+  // FIXME: _df.nrows() can be bigger than Int
+  const auto ptr = std::views::iota(Int{0}, static_cast<Int>(_df.nrows())) |
+                   fct::ranges::to_shared_ptr_vector();
 
   const auto rowid = containers::Column<Int>(ptr, helpers::Macros::rowid());
 
@@ -39,9 +40,8 @@ containers::DataFrame TextFieldSplitter::remove_text_fields(
     return _df.text(_i).name();
   };
 
-  const auto iota = fct::iota<size_t>(0, _df.num_text());
-
-  const auto names = iota | VIEWS::transform(get_name);
+  const auto names =
+      std::views::iota(0uz, _df.num_text()) | std::views::transform(get_name);
 
   auto df = _df;
 
@@ -85,17 +85,9 @@ std::vector<rfl::Ref<helpers::ColumnDescription>> TextFieldSplitter::fit_df(
                                                       _df.text(_i).name());
   };
 
-  const auto iota = fct::iota<size_t>(0, _df.num_text());
-
-  auto range = iota | VIEWS::transform(to_column_description);
-
-  auto vec = std::vector<rfl::Ref<helpers::ColumnDescription>>();
-
-  for (auto val : range) {
-    vec.emplace_back(std::move(val));
-  }
-
-  return vec;
+  return std::views::iota(0uz, _df.num_text()) |
+         std::views::transform(to_column_description) |
+         fct::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------
@@ -160,7 +152,7 @@ TextFieldSplitter::split_text_fields_on_col(
 // ----------------------------------------------------
 
 std::vector<std::string> TextFieldSplitter::to_sql(
-    const helpers::StringIterator& _categories,
+    const helpers::StringIterator&,
     const std::shared_ptr<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator) const {
   assert_true(_sql_dialect_generator);
@@ -170,7 +162,7 @@ std::vector<std::string> TextFieldSplitter::to_sql(
     return _sql_dialect_generator->split_text_fields(_desc.ptr());
   };
 
-  return fct::collect::vector(cols_ | VIEWS::transform(split));
+  return cols_ | std::views::transform(split) | fct::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------
@@ -184,10 +176,9 @@ TextFieldSplitter::transform(const Params& _params) const {
 
   const auto population_df = modify_if_applicable(_params.population_df());
 
-  const auto range =
-      _params.peripheral_dfs() | VIEWS::transform(modify_if_applicable);
-
-  auto peripheral_dfs = fct::collect::vector(range);
+  auto peripheral_dfs = _params.peripheral_dfs() |
+                        std::views::transform(modify_if_applicable) |
+                        fct::ranges::to<std::vector>();
 
   transform_df(MarkerType::make<"[POPULATION]">(), _params.population_df(),
                &peripheral_dfs);
@@ -224,8 +215,9 @@ void TextFieldSplitter::transform_df(
     return df;
   };
 
-  auto data_frames = cols_ | VIEWS::filter(matching_description) |
-                     VIEWS::transform(get_col) | VIEWS::transform(make_df);
+  auto data_frames = cols_ | std::views::filter(matching_description) |
+                     std::views::transform(get_col) |
+                     std::views::transform(make_df);
 
   for (const auto df : data_frames) {
     _peripheral_dfs->push_back(df);

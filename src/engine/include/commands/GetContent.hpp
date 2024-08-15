@@ -9,9 +9,10 @@
 #define COMMANDS_GETCONTENT_HPP_
 
 #include <cstddef>
-
 #include <rfl/Field.hpp>
 #include <rfl/NamedTuple.hpp>
+
+#include "commands/Int.hpp"
 
 namespace commands {
 
@@ -23,4 +24,3 @@ using GetContent =
 }  // namespace commands
 
 #endif  // COMMANDS_GETCONTENT_HPP_
-

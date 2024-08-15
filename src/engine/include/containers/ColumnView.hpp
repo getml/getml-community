@@ -10,7 +10,14 @@
 
 #include <arrow/api.h>
 
+#include <format>
 #include <optional>
+#include <range/v3/algorithm/move.hpp>
+#include <range/v3/view/cache1.hpp>
+#include <range/v3/view/iota.hpp>
+#include <range/v3/view/take_while.hpp>
+#include <range/v3/view/transform.hpp>
+#include <ranges>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -20,6 +27,7 @@
 #include "containers/ArrayMaker.hpp"
 #include "containers/Column.hpp"
 #include "containers/ColumnViewIterator.hpp"
+#include "fct/to.hpp"
 #include "helpers/NullChecker.hpp"
 #include "helpers/SubroleParser.hpp"
 
@@ -172,18 +180,6 @@ class ColumnView {
   std::shared_ptr<arrow::ChunkedArray> make_array(
       const IteratorType1 _begin, const IteratorType2 _end) const;
 
-#if (defined(_WIN32) || defined(_WIN64) || defined(__APPLE__))
-#else
-  /// Generates the vector in parallel.
-  std::shared_ptr<std::vector<T>> make_parallel(
-      const size_t _begin, const size_t _expected_length) const;
-#endif
-
-  /// Generates the vector sequentially.
-  std::shared_ptr<std::vector<T>> make_sequential(
-      const size_t _begin, const size_t _expected_length,
-      const bool _nrows_must_match) const;
-
  private:
   /// Functiona returning the Number of rows (if that is knowable).
   const NRowsType nrows_;
@@ -300,10 +296,9 @@ ColumnView<T> ColumnView<T>::from_bin_op(const ColumnView<T1>& _operand1,
 template <class T>
 ColumnView<T> ColumnView<T>::from_boolean_subselection(
     const ColumnView<T>& _data, const ColumnView<bool>& _indices) {
-  if (_data.is_infinite() || _indices.is_infinite()) {
+  if (_data.is_infinite()) {
     throw std::runtime_error(
-        "The data and the indices must be finite for a boolean "
-        "subselection to work!");
+        "The data must be finite for a boolean subselection to work!");
   }
 
   const bool nrows_do_not_match =
@@ -400,7 +395,7 @@ ColumnView<T> ColumnView<T>::from_numerical_subselection(
                            _indices](const size_t _i) -> std::optional<T> {
     return _indices[_i].and_then(
         [&_data](Float const& index) -> std::optional<T> {
-          assert_true(index_float >= 0.0);
+          assert_true(index >= 0.0);
 
           if (index < 0.0) {
             throw std::runtime_error(
@@ -588,7 +583,7 @@ std::shared_ptr<arrow::ChunkedArray> ColumnView<T>::to_array(
 
   if constexpr (std::is_same<T, strings::String>()) {
     const auto to_str = [](const strings::String& _str) { return _str.str(); };
-    auto range = *this | VIEWS::transform(to_str);
+    auto range = *this | std::views::transform(to_str);
     return make_array(range.begin(), range.end());
   } else {
     return make_array(begin(), end());
@@ -612,9 +607,8 @@ auto ColumnView<T>::to_column(const size_t _begin,
     const auto to_str = [](const std::string& _str) -> strings::String {
       return strings::String::parse_null(_str);
     };
-    const auto range = *data_ptr | VIEWS::transform(to_str);
-    const auto new_data_ptr = std::make_shared<std::vector<strings::String>>(
-        range.begin(), range.end());
+    auto const new_data_ptr = *data_ptr | std::views::transform(to_str) |
+                              fct::ranges::to_shared_ptr_vector();
     auto col = Column<strings::String>(new_data_ptr);
     col.set_unit(unit());
     return col;
@@ -683,65 +677,6 @@ void ColumnView<T>::check_expected_length(
 
 // -------------------------------------------------------------------------
 
-#if (defined(_WIN32) || defined(_WIN64) || defined(__APPLE__))
-#else
-template <class T>
-std::shared_ptr<std::vector<T>> ColumnView<T>::make_parallel(
-    const size_t _begin, const size_t _expected_length) const {
-  const auto data_ptr = std::make_shared<std::vector<T>>(_expected_length);
-
-  const auto range = fct::iota<size_t>(0, _expected_length);
-
-  const auto deep_copy = *this;
-
-  const auto extract_value = [deep_copy, _begin, _expected_length,
-                              data_ptr](const size_t _i) {
-    const auto val = deep_copy.value_func_(_begin + _i);
-
-    if (val) {
-      (*data_ptr)[_i] = *val;
-    } else {
-      throw std::runtime_error("Expected " +
-                               std::to_string(_begin + _expected_length) +
-                               " elements, but there were fewer.");
-    }
-  };
-
-  multithreading::parallel_for_each(range.begin(), range.end(), extract_value);
-
-  return data_ptr;
-}
-#endif
-
-// -------------------------------------------------------------------------
-
-template <class T>
-std::shared_ptr<std::vector<T>> ColumnView<T>::make_sequential(
-    const size_t _begin, const size_t _expected_length,
-    const bool _nrows_must_match) const {
-  const auto data_ptr = std::make_shared<std::vector<T>>();
-
-  for (size_t i = 0; i < _expected_length; ++i) {
-    const auto val = value_func_(_begin + i);
-
-    if (!val) {
-      break;
-    }
-
-    data_ptr->push_back(*val);
-  }
-
-  if (_nrows_must_match && data_ptr->size() != _expected_length) {
-    throw std::runtime_error("Expected " + std::to_string(_expected_length) +
-                             " nrows, but got " +
-                             std::to_string(data_ptr->size()) + ".");
-  }
-
-  return data_ptr;
-}
-
-// -------------------------------------------------------------------------
-
 template <class T>
 std::shared_ptr<std::vector<T>> ColumnView<T>::to_vector(
     const size_t _begin, const std::optional<size_t> _expected_length,
@@ -753,15 +688,27 @@ std::shared_ptr<std::vector<T>> ColumnView<T>::to_vector(
 
   check_expected_length(expected_length, _nrows_must_match, !_expected_length);
 
-#if (defined(_WIN32) || defined(_WIN64) || defined(__APPLE__))
-  const auto data_ptr =
-      make_sequential(_begin, expected_length, _nrows_must_match);
-#else
-  const auto data_ptr =
-      length_is_known
-          ? make_parallel(_begin, expected_length)
-          : make_sequential(_begin, expected_length, _nrows_must_match);
-#endif
+  auto values_view = ranges::views::iota(_begin, _begin + expected_length) |
+                     ranges::views::transform(
+                         [this](auto i) { return this->value_func_(i); }) |
+                     ranges::views::cache1 |
+                     ranges::views::take_while([](auto const& optional) {
+                       return optional.has_value();
+                     }) |
+                     ranges::views::transform(
+                         [](auto const& optional) { return optional.value(); });
+
+  auto data_ptr = std::make_shared<std::vector<T>>();
+  if (length_is_known) {
+    data_ptr->reserve(expected_length);
+  }
+  ranges::move(values_view, std::back_inserter(*data_ptr));
+
+  if ((length_is_known || _nrows_must_match) &&
+      data_ptr->size() != expected_length) {
+    throw std::runtime_error(std::format("Expected {} nrows, but got {}.",
+                                         expected_length, data_ptr->size()));
+  }
 
   check_exceeds_expected(_begin, _nrows_must_match, expected_length);
 
@@ -795,7 +742,7 @@ std::shared_ptr<arrow::ChunkedArray> ColumnView<T>::unique() const {
 
   if constexpr (std::is_same<T, strings::String>()) {
     const auto to_str = [](const strings::String& _str) { return _str.str(); };
-    auto range = unique_values | VIEWS::transform(to_str);
+    auto range = unique_values | std::views::transform(to_str);
     return make_array(range.begin(), range.end());
   } else {
     return make_array(unique_values.begin(), unique_values.end());

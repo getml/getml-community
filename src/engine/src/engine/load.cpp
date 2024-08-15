@@ -7,17 +7,13 @@
 
 #include "engine/pipelines/load.hpp"
 
+#include <rfl/Field.hpp>
 #include <string>
-#include <tuple>
-#include <utility>
-#include <vector>
 
 #include "commands/Pipeline.hpp"
 #include "engine/pipelines/PipelineJSON.hpp"
 #include "engine/pipelines/load_fitted.hpp"
 #include "helpers/Loader.hpp"
-#include "metrics/metrics.hpp"
-#include <rfl/Field.hpp>
 
 namespace engine {
 namespace pipelines {
@@ -45,4 +41,3 @@ Pipeline load(const std::string& _path,
 }  // namespace load
 }  // namespace pipelines
 }  // namespace engine
-

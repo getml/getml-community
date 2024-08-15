@@ -7,18 +7,11 @@
 
 #include <Poco/TemporaryFile.h>
 
-#include "commands/DataFrameFromJSON.hpp"
-#include "containers/Roles.hpp"
-#include "engine/handlers/AggOpParser.hpp"
-#include "engine/handlers/ArrowHandler.hpp"
-#include "engine/handlers/BoolOpParser.hpp"
-#include "engine/handlers/ColumnManager.hpp"
-#include "engine/handlers/DataFrameManager.hpp"
-#include "engine/handlers/FloatOpParser.hpp"
-#include "engine/handlers/StringOpParser.hpp"
-#include "engine/handlers/ViewParser.hpp"
-#include "metrics/metrics.hpp"
 #include <rfl/always_false.hpp>
+#include <rfl/visit.hpp>
+
+#include "containers/Roles.hpp"
+#include "engine/handlers/ColumnManager.hpp"
 
 namespace engine {
 namespace handlers {

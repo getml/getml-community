@@ -12,12 +12,9 @@
 
 #include <condition_variable>
 #include <mutex>
-#include <thread>
-
-// ----------------------------------------------------------------------------
-
-#include "debug/debug.hpp"
 #include <rfl/Ref.hpp>
+
+#include "debug/assert_true.hpp"
 
 // ----------------------------------------------------------------------------
 

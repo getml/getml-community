@@ -8,14 +8,14 @@
 #ifndef ENGINE_PIPELINES_PIPELINEJSON_HPP_
 #define ENGINE_PIPELINES_PIPELINEJSON_HPP_
 
+#include <rfl/Field.hpp>
+#include <rfl/Flatten.hpp>
+#include <rfl/Ref.hpp>
 #include <string>
 #include <vector>
 
 #include "engine/pipelines/Fingerprints.hpp"
 #include "helpers/Schema.hpp"
-#include <rfl/Field.hpp>
-#include <rfl/Flatten.hpp>
-#include <rfl/Ref.hpp>
 
 namespace engine {
 namespace pipelines {
@@ -57,4 +57,3 @@ struct PipelineJSON {
 }  // namespace engine
 
 #endif  // ENGINE_PIPELINES_PIPELINEJSON_HPP_
-

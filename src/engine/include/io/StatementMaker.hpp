@@ -8,11 +8,12 @@
 #ifndef IO_STATEMENTMAKER_HPP_
 #define IO_STATEMENTMAKER_HPP_
 
+#include <range/v3/view/join.hpp>
 #include <string>
 #include <vector>
 
-#include "debug/debug.hpp"
-#include "fct/fct.hpp"
+#include "debug/assert_true.hpp"
+#include "fct/to.hpp"
 #include "helpers/StringSplitter.hpp"
 #include "io/Datatype.hpp"
 
@@ -33,8 +34,11 @@ class StatementMaker {
   static std::string handle_schema(const std::string& _table_name,
                                    const std::string& _quotechar1,
                                    const std::string& _quotechar2) {
-    return fct::join::string(helpers::StringSplitter::split(_table_name, "."),
-                             _quotechar2 + "." + _quotechar1);
+    auto const splitted_table_names =
+        helpers::StringSplitter::split(_table_name, ".");
+    return splitted_table_names |
+           ranges::views::join(_quotechar2 + "." + _quotechar1) |
+           fct::ranges::to<std::string>();
   }
 
  public:
