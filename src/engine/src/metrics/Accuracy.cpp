@@ -7,6 +7,8 @@
 
 #include "metrics/Accuracy.hpp"
 
+#include <numeric>
+
 namespace metrics {
 
 typename Accuracy::ResultType Accuracy::score(const Features _yhat,

@@ -9,11 +9,10 @@
 #define DATABASE_TABLECONTENT_HPP_
 
 #include <cstdint>
-#include <string>
-#include <vector>
-
 #include <rfl/Field.hpp>
 #include <rfl/NamedTuple.hpp>
+#include <string>
+#include <vector>
 
 namespace database {
 

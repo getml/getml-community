@@ -8,20 +8,21 @@
 #ifndef FEATURELEARNERS_FEATURELEARNER_HPP_
 #define FEATURELEARNERS_FEATURELEARNER_HPP_
 
+#include <cstddef>
 #include <map>
 #include <memory>
 #include <optional>
-#include <rfl.hpp>
+#include <rfl/replace.hpp>
 #include <string>
 #include <tuple>
 #include <type_traits>
 #include <vector>
 
 #include "commands/Fingerprint.hpp"
-#include "containers/containers.hpp"
-#include "debug/debug.hpp"
-#include "fastprop/algorithm/algorithm.hpp"
-#include "fastprop/subfeatures/subfeatures.hpp"
+#include "fastprop/subfeatures/FastPropContainer.hpp"
+#include "fastprop/subfeatures/Maker.hpp"
+#include "fastprop/subfeatures/MakerParams.hpp"
+#include "fct/to.hpp"
 #include "featurelearners/AbstractFeatureLearner.hpp"
 #include "featurelearners/FeatureLearnerParams.hpp"
 #include "featurelearners/FitParams.hpp"
@@ -352,8 +353,8 @@ FeatureLearner<FeatureLearnerType>::column_importances(
   const auto is_non_zero = [](const auto& p) -> bool { return p.second > 0.0; };
 
   const auto filter_non_zeros = [is_non_zero](const auto& _importances) {
-    return fct::collect::map<helpers::ColumnDescription, Float>(
-        _importances | VIEWS::filter(is_non_zero));
+    return _importances | std::views::filter(is_non_zero) |
+           fct::ranges::to<std::map>();
   };
 
   if constexpr (!has_propositionalization_) {
@@ -404,32 +405,32 @@ FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
     return false;
   };
 
-  const auto targets =
-      fct::collect::vector(_schema.targets() | VIEWS::filter(include_target));
+  const auto targets = _schema.targets() | std::views::filter(include_target) |
+                       fct::ranges::to<std::vector>();
 
   const auto include = [this, &_df](const std::string& _colname) -> bool {
     return parse_subroles(_df.subroles(_colname));
   };
 
-  const auto categoricals = _apply_subroles
-                                ? fct::collect::vector(_schema.categoricals() |
-                                                       VIEWS::filter(include))
-                                : _schema.categoricals();
+  const auto categoricals = _apply_subroles ? _schema.categoricals() |
+                                                  std::views::filter(include) |
+                                                  fct::ranges::to<std::vector>()
+                                            : _schema.categoricals();
 
-  const auto discretes =
-      _apply_subroles
-          ? fct::collect::vector(_schema.discretes() | VIEWS::filter(include))
-          : _schema.discretes();
+  const auto discretes = _apply_subroles ? _schema.discretes() |
+                                               std::views::filter(include) |
+                                               fct::ranges::to<std::vector>()
+                                         : _schema.discretes();
 
-  const auto numericals =
-      _apply_subroles
-          ? fct::collect::vector(_schema.numericals() | VIEWS::filter(include))
-          : _schema.numericals();
+  const auto numericals = _apply_subroles ? _schema.numericals() |
+                                                std::views::filter(include) |
+                                                fct::ranges::to<std::vector>()
+                                          : _schema.numericals();
 
-  const auto text =
-      _apply_subroles
-          ? fct::collect::vector(_schema.text() | VIEWS::filter(include))
-          : _schema.text();
+  const auto text = _apply_subroles
+                        ? _schema.text() | std::views::filter(include) |
+                              fct::ranges::to<std::vector>()
+                        : _schema.text();
 
   const auto schema = rfl::replace(
       _schema.reflection(), rfl::make_field<"categorical_">(categoricals),
@@ -480,10 +481,9 @@ FeatureLearner<FeatureLearnerType>::extract_tables_by_colnames(
         _peripheral_schema.at(_i), _peripheral_dfs.at(_i), t, _apply_subroles);
   };
 
-  const auto iota = fct::iota<size_t>(0, _peripheral_schema.size());
-
   const auto peripheral_tables =
-      fct::collect::vector(iota | VIEWS::transform(to_peripheral));
+      std::views::iota(0uz, _peripheral_schema.size()) |
+      std::views::transform(to_peripheral) | fct::ranges::to<std::vector>();
 
   return std::make_pair(population_table, peripheral_tables);
 }
@@ -790,7 +790,7 @@ void FeatureLearner<FeatureLearnerType>::save(
 
 template <typename FeatureLearnerType>
 std::vector<std::string> FeatureLearner<FeatureLearnerType>::to_sql(
-    const helpers::StringIterator& _categories, const bool _targets,
+    const helpers::StringIterator& _categories, const bool,
     const bool _subfeatures,
     const std::shared_ptr<const transpilation::SQLDialectGenerator>&
         _sql_dialect_generator,
@@ -910,4 +910,3 @@ std::string FeatureLearner<FeatureLearnerType>::type() const {
 }  // namespace featurelearners
 
 #endif  // FEATURELEARNERS_FEATURELEARNER_HPP_
-

@@ -8,17 +8,17 @@
 #ifndef COMMANDS_PIPELINECOMMAND_HPP_
 #define COMMANDS_PIPELINECOMMAND_HPP_
 
-#include <string>
-
-#include "commands/DataFramesOrViews.hpp"
-#include "commands/Int.hpp"
 #include <rfl/Field.hpp>
 #include <rfl/Flatten.hpp>
 #include <rfl/Literal.hpp>
 #include <rfl/NamedTuple.hpp>
 #include <rfl/Ref.hpp>
 #include <rfl/TaggedUnion.hpp>
-#include <rfl/json.hpp>
+#include <rfl/json/Reader.hpp>
+#include <string>
+
+#include "commands/DataFrameOrView.hpp"
+#include "commands/Int.hpp"
 #include "transpilation/TranspilationParams.hpp"
 
 namespace commands {

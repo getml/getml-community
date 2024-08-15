@@ -7,9 +7,10 @@
 
 #include "database/Postgres.hpp"
 
+#include <rfl/json/write.hpp>
+
 #include "database/CSVBuffer.hpp"
 #include "database/ContentGetter.hpp"
-#include <rfl/json.hpp>
 
 namespace database {
 

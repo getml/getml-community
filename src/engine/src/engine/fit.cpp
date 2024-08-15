@@ -9,15 +9,13 @@
 
 #include <rfl/Field.hpp>
 #include <rfl/as.hpp>
-#include <rfl/json.hpp>
 #include <rfl/make_named_tuple.hpp>
 #include <rfl/replace.hpp>
 #include <rfl/to_named_tuple.hpp>
+#include <utility>
 
 #include "commands/FeatureLearner.hpp"
 #include "commands/Fingerprint.hpp"
-#include "communication/communication.hpp"
-#include "engine/dependency/dependency.hpp"
 #include "engine/pipelines/FeatureLearnerParser.hpp"
 #include "engine/pipelines/FitPredictorsParams.hpp"
 #include "engine/pipelines/MakeFeaturesParams.hpp"
@@ -25,7 +23,6 @@
 #include "engine/pipelines/score.hpp"
 #include "engine/pipelines/transform.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
-#include "fct/collect.hpp"
 #include "featurelearners/AbstractFeatureLearner.hpp"
 #include "helpers/StringReplacer.hpp"
 #include "predictors/Predictor.hpp"
@@ -134,16 +131,14 @@ std::vector<size_t> calculate_importance_index(
     return std::make_pair(_i, sum_importances.at(_i));
   };
 
-  const auto iota = fct::iota<size_t>(0, sum_importances.size());
-
-  auto pairs = fct::collect::vector(iota | VIEWS::transform(make_pair));
-
-  std::sort(
-      pairs.begin(), pairs.end(),
-      [](const std::pair<size_t, Float>& p1,
-         const std::pair<size_t, Float>& p2) { return p1.second > p2.second; });
-
-  return fct::collect::vector(pairs | VIEWS::keys);
+  auto pairs = std::views::iota(0uz, sum_importances.size()) |
+               std::views::transform(make_pair) |
+               fct::ranges::to<std::vector>();
+  std::ranges::sort(pairs, [](const std::pair<size_t, Float>& p1,
+                              const std::pair<size_t, Float>& p2) {
+    return p1.second > p2.second;
+  });
+  return pairs | std::views::keys | fct::ranges::to<std::vector>();
 }
 
 // ------------------------------------------------------------------------
@@ -182,12 +177,13 @@ rfl::Ref<const std::vector<commands::Fingerprint>> extract_df_fingerprints(
   const auto population =
       std::vector<commands::Fingerprint>({_population_df.fingerprint()});
 
-  const auto peripheral =
-      fct::collect::vector(_peripheral_dfs | VIEWS::transform(get_fingerprint));
+  const auto peripheral = _peripheral_dfs |
+                          std::views::transform(get_fingerprint) |
+                          fct::ranges::to<std::vector>();
 
   return rfl::Ref<const std::vector<commands::Fingerprint>>::make(
-      fct::join::vector<commands::Fingerprint>(
-          {placeholder, population, peripheral}));
+      ranges::views::concat(placeholder, population, peripheral) |
+      fct::ranges::to<std::vector>());
 }
 
 // ----------------------------------------------------------------------
@@ -198,7 +194,7 @@ rfl::Ref<const std::vector<commands::Fingerprint>> extract_fl_fingerprints(
     const rfl::Ref<const std::vector<commands::Fingerprint>>& _dependencies) {
   if (_feature_learners.size() == 0) {
     return rfl::Ref<const std::vector<commands::Fingerprint>>::make(
-        fct::collect::vector(*_dependencies));
+        *_dependencies | fct::ranges::to<std::vector>());
   }
 
   const auto get_fingerprint = [](const auto& _fl) {
@@ -206,8 +202,8 @@ rfl::Ref<const std::vector<commands::Fingerprint>> extract_fl_fingerprints(
   };
 
   return rfl::Ref<const std::vector<commands::Fingerprint>>::make(
-      fct::collect::vector(_feature_learners |
-                           VIEWS::transform(get_fingerprint)));
+      _feature_learners | std::views::transform(get_fingerprint) |
+      fct::ranges::to<std::vector>());
 }
 
 // ----------------------------------------------------------------------
@@ -224,12 +220,12 @@ extract_predictor_fingerprints(
   const auto get_fingerprint = [](const auto& _p) { return _p->fingerprint(); };
 
   const auto get_fingerprints = [get_fingerprint](const auto& _ps) {
-    return _ps | VIEWS::transform(get_fingerprint);
+    return _ps | std::views::transform(get_fingerprint);
   };
 
   return rfl::Ref<const std::vector<commands::Fingerprint>>::make(
-      fct::join::vector<commands::Fingerprint>(
-          _predictors | VIEWS::transform(get_fingerprints)));
+      _predictors | std::views::transform(get_fingerprints) | std::views::join |
+      fct::ranges::to<std::vector>());
 }
 
 // ----------------------------------------------------------------------
@@ -240,7 +236,7 @@ extract_preprocessor_fingerprints(
     const rfl::Ref<const std::vector<commands::Fingerprint>>& _dependencies) {
   if (_preprocessors.size() == 0) {
     return rfl::Ref<const std::vector<commands::Fingerprint>>::make(
-        fct::collect::vector(*_dependencies));
+        *_dependencies | fct::ranges::to<std::vector>());
   }
 
   const auto get_fingerprint = [](const auto& _fl) {
@@ -248,7 +244,8 @@ extract_preprocessor_fingerprints(
   };
 
   return rfl::Ref<const std::vector<commands::Fingerprint>>::make(
-      fct::collect::vector(_preprocessors | VIEWS::transform(get_fingerprint)));
+      _preprocessors | std::views::transform(get_fingerprint) |
+      fct::ranges::to<std::vector>());
 }
 
 // ----------------------------------------------------------------------
@@ -268,8 +265,9 @@ extract_schemata(const containers::DataFrame& _population_df,
       rfl::Ref<const helpers::Schema>::make(extract_schema(_population_df));
 
   const auto peripheral_schema =
-      rfl::Ref<const std::vector<helpers::Schema>>::make(fct::collect::vector(
-          _peripheral_dfs | VIEWS::transform(extract_schema)));
+      rfl::Ref<const std::vector<helpers::Schema>>::make(
+          _peripheral_dfs | std::views::transform(extract_schema) |
+          fct::ranges::to<std::vector>());
 
   return std::make_pair(population_schema, peripheral_schema);
 }
@@ -293,14 +291,14 @@ std::pair<rfl::Ref<const FittedPipeline>, rfl::Ref<const metrics::Scores>> fit(
 
   const auto [placeholder, peripheral] = _pipeline.make_placeholder();
 
-  const auto feature_learner_params = featurelearners::FeatureLearnerParams(
+  const auto feature_learner_params = featurelearners::FeatureLearnerParams{
       rfl::make_field<"dependencies_">(preprocessed.preprocessor_fingerprints_),
       rfl::make_field<"peripheral_">(peripheral),
       rfl::make_field<"peripheral_schema_">(modified_peripheral_schema),
       rfl::make_field<"placeholder_">(placeholder),
       rfl::make_field<"population_schema_">(modified_population_schema),
       rfl::make_field<"target_num_">(
-          featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS));
+          featurelearners::AbstractFeatureLearner::USE_ALL_TARGETS)};
 
   const auto [feature_learners, fl_fingerprints] = fit_feature_learners(
       _pipeline, _params, preprocessed.population_df_,
@@ -337,9 +335,8 @@ std::pair<rfl::Ref<const FittedPipeline>, rfl::Ref<const metrics::Scores>> fit(
 
   const auto dependencies =
       rfl::Ref<const std::vector<commands::Fingerprint>>::make(
-          fct::join::vector<commands::Fingerprint>(
-              {fct::collect::vector(*fs_fingerprints),
-               validation_fingerprint}));
+          ranges::views::concat(*fs_fingerprints, validation_fingerprint) |
+          fct::ranges::to<std::vector>());
 
   const auto fit_predictors_params =
       rfl::replace(fit_feature_selectors_params,
@@ -406,7 +403,8 @@ fit_feature_learners(
     return std::make_pair(
         to_const(feature_learners),
         rfl::Ref<const std::vector<commands::Fingerprint>>::make(
-            fct::collect::vector(*_feature_learner_params.dependencies())));
+            *_feature_learner_params.dependencies() |
+            fct::ranges::to<std::vector>()));
   }
 
   const auto [modified_population_schema, modified_peripheral_schema] =
@@ -435,13 +433,13 @@ fit_feature_learners(
       continue;
     }
 
-    const auto params = featurelearners::FitParams(
+    const auto params = featurelearners::FitParams{
         rfl::make_field<"cmd_">(_params.cmd()),
         rfl::make_field<"peripheral_dfs_">(_peripheral_dfs),
         rfl::make_field<"population_df_">(_population_df),
         rfl::make_field<"prefix_">(std::to_string(i + 1) + "_"),
         rfl::make_field<"socket_logger_">(socket_logger),
-        rfl::make_field<"temp_dir_">(_params.categories()->temp_dir()));
+        rfl::make_field<"temp_dir_">(_params.categories()->temp_dir())};
 
     fe->fit(params);
 
@@ -603,7 +601,7 @@ fit_transform_preprocessors(
     return std::make_pair(
         to_const(preprocessors),
         rfl::Ref<const std::vector<commands::Fingerprint>>::make(
-            fct::collect::vector(*_dependencies)));
+            *_dependencies | fct::ranges::to<std::vector>()));
   }
 
   const auto [placeholder, peripheral_names] = _pipeline.make_placeholder();
@@ -670,8 +668,8 @@ std::vector<std::string> get_targets(
   const auto get_target = [](const auto& _col) -> std::string {
     return _col.name();
   };
-  return fct::collect::vector(_population_df.targets() |
-                              VIEWS::transform(get_target));
+  return _population_df.targets() | std::views::transform(get_target) |
+         fct::ranges::to<std::vector>();
 }
 
 // ------------------------------------------------------------------------
@@ -702,14 +700,9 @@ init_feature_learners(
           const commands::FeatureLearner& _hyperparameters) {
         const auto make = std::bind(make_fl_for_one_target, _params,
                                     _hyperparameters, std::placeholders::_1);
-        const auto iota = fct::iota<Int>(0, _num_targets);
-        auto range = iota | VIEWS::transform(make);
-        auto vec =
-            std::vector<rfl::Ref<featurelearners::AbstractFeatureLearner>>();
-        for (auto val : range) {
-          vec.emplace_back(std::move(val));
-        }
-        return vec;
+        // FIXME: _num_targets can be bigger than Int
+        return std::views::iota(Int{0}, static_cast<Int>(_num_targets)) |
+               std::views::transform(make) | fct::ranges::to<std::vector>();
       };
 
   const auto to_fl = [&_feature_learner_params, make_fl_for_all_targets](
@@ -732,8 +725,8 @@ init_feature_learners(
 
   const auto obj_vector = _pipeline.obj().feature_learners();
 
-  return fct::join::vector<rfl::Ref<featurelearners::AbstractFeatureLearner>>(
-      obj_vector | VIEWS::transform(to_fl));
+  return obj_vector | std::views::transform(to_fl) | std::views::join |
+         fct::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------------------------
@@ -754,7 +747,7 @@ std::vector<std::vector<rfl::Ref<predictors::Predictor>>> init_predictors(
 
     using TargetNumber = typename commands::Fingerprint::TargetNumber;
 
-    const auto target_num = TargetNumber(rfl::make_field<"target_num_">(t));
+    const auto target_num = TargetNumber{rfl::make_field<"target_num_">(t)};
 
     auto dependencies = _dependencies;
 
@@ -777,21 +770,14 @@ std::vector<std::vector<rfl::Ref<predictors::Predictor>>> init_predictors(
 std::vector<rfl::Ref<preprocessors::Preprocessor>> init_preprocessors(
     const Pipeline& _pipeline,
     const rfl::Ref<const std::vector<commands::Fingerprint>>& _dependencies) {
-  auto dependencies = fct::collect::vector(*_dependencies);
+  auto dependencies = *_dependencies | fct::ranges::to<std::vector>();
 
   const auto parse = [&dependencies](const auto& _cmd) {
     return preprocessors::PreprocessorParser::parse(_cmd.val_, dependencies);
   };
 
-  const auto commands = _pipeline.obj().preprocessors();
-
-  auto range = commands | VIEWS::transform(parse);
-
-  auto vec = std::vector<rfl::Ref<preprocessors::Preprocessor>>();
-
-  for (auto val : range) {
-    vec.emplace_back(std::move(val));
-  }
+  auto vec = _pipeline.obj().preprocessors() | std::views::transform(parse) |
+             fct::ranges::to<std::vector>();
 
   const auto mapping_to_end = [](const auto& _p) -> bool {
     return _p->type() != preprocessors::Preprocessor::MAPPING;
@@ -843,23 +829,25 @@ rfl::Ref<const predictors::PredictorImpl> make_feature_selector_impl(
 
   const auto categorical_colnames =
       _pipeline.include_categorical()
-          ? fct::collect::vector(_population_df.categoricals() |
-                                 VIEWS::filter(is_not_comparison_only) |
-                                 VIEWS::filter(is_not_on_blacklist) |
-                                 VIEWS::transform(get_name))
+          ? _population_df.categoricals() |
+                std::views::filter(is_not_comparison_only) |
+                std::views::filter(is_not_on_blacklist) |
+                std::views::transform(get_name) | fct::ranges::to<std::vector>()
           : std::vector<std::string>();
 
-  const auto numerical_colnames = fct::collect::vector(
-      _population_df.numericals() | VIEWS::filter(is_not_comparison_only) |
-      VIEWS::filter(is_not_on_blacklist) |
-      VIEWS::filter(does_not_contain_null) | VIEWS::transform(get_name));
+  const auto numerical_colnames =
+      _population_df.numericals() | std::views::filter(is_not_comparison_only) |
+      std::views::filter(is_not_on_blacklist) |
+      std::views::filter(does_not_contain_null) |
+      std::views::transform(get_name) | fct::ranges::to<std::vector>();
 
   const auto get_num_features = [](const auto& _fl) -> size_t {
     return _fl->num_features();
   };
 
-  const auto num_autofeatures = fct::collect::vector(
-      _feature_learners | VIEWS::transform(get_num_features));
+  const auto num_autofeatures = _feature_learners |
+                                std::views::transform(get_num_features) |
+                                fct::ranges::to<std::vector>();
 
   const auto fs_impl = rfl::Ref<predictors::PredictorImpl>::make(
       num_autofeatures, categorical_colnames, numerical_colnames);
@@ -966,7 +954,8 @@ rfl::Ref<const metrics::Scores> make_scores(
 
   const auto [n1, n2, n3] = _fitted.feature_names();
 
-  const auto feature_names = fct::join::vector<std::string>({n1, n2, n3});
+  const auto feature_names =
+      ranges::views::concat(n1, n2, n3) | fct::ranges::to<std::vector>();
 
   scores->update(
       rfl::make_field<"column_descriptions_">(c_desc),

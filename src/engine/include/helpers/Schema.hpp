@@ -8,15 +8,13 @@
 #ifndef HELPERS_SCHEMA_HPP_
 #define HELPERS_SCHEMA_HPP_
 
-#include <memory>
-#include <optional>
+#include <rfl/Field.hpp>
+#include <rfl/NamedTuple.hpp>
 #include <string>
 #include <vector>
 
-#include "debug/debug.hpp"
+#include "debug/assert_true.hpp"
 #include "helpers/SchemaImpl.hpp"
-#include <rfl/Field.hpp>
-#include <rfl/NamedTuple.hpp>
 
 namespace helpers {
 
@@ -28,6 +26,11 @@ class Schema {
   Schema(const SchemaImpl& _impl);
 
   ~Schema();
+
+  Schema(Schema&&) = default;
+  Schema(Schema const&) = default;
+  auto operator=(Schema const&) -> Schema& = delete;
+  auto operator=(Schema&&) -> Schema& = delete;
 
   /// Expresses the schema as a named tuple.
   SchemaImpl reflection() const;

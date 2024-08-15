@@ -9,13 +9,12 @@
 #define DATABASE_COMMAND_HPP_
 
 #include <optional>
-#include <string>
-#include <vector>
-
 #include <rfl/Field.hpp>
 #include <rfl/Literal.hpp>
 #include <rfl/TaggedUnion.hpp>
 #include <rfl/define_named_tuple.hpp>
+#include <string>
+#include <vector>
 
 namespace database {
 

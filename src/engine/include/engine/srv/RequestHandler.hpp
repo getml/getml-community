@@ -12,20 +12,15 @@
 #include <Poco/Net/TCPServerConnection.h>
 
 #include <atomic>
-#include <memory>
+#include <rfl/Ref.hpp>
+#include <rfl/define_tagged_union.hpp>
 
-#include "communication/communication.hpp"
-#include "containers/containers.hpp"
-#include "debug/debug.hpp"
-#include "engine/config/config.hpp"
 #include "engine/handlers/ColumnManager.hpp"
 #include "engine/handlers/DataFrameManager.hpp"
 #include "engine/handlers/DatabaseManager.hpp"
 #include "engine/handlers/PipelineManager.hpp"
 #include "engine/handlers/ProjectManager.hpp"
 #include "engine/handlers/ViewManager.hpp"
-#include <rfl/Ref.hpp>
-#include <rfl/define_tagged_union.hpp>
 
 namespace engine {
 namespace srv {

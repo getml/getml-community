@@ -7,7 +7,8 @@
 
 #include "engine/pipelines/make_placeholder.hpp"
 
-#include "debug/debug.hpp"
+#include <set>
+
 #include "helpers/Macros.hpp"
 #include "transpilation/SQLGenerator.hpp"
 

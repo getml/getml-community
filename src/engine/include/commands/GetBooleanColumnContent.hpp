@@ -8,11 +8,12 @@
 #ifndef COMMANDS_GETBOOLEANCOLUMNCONTENT_HPP_
 #define COMMANDS_GETBOOLEANCOLUMNCONTENT_HPP_
 
+#include <rfl/Field.hpp>
+#include <rfl/make_named_tuple.hpp>
+
 #include "commands/BasicCommand.hpp"
 #include "commands/BooleanColumnView.hpp"
 #include "commands/GetContent.hpp"
-#include <rfl/Field.hpp>
-#include <rfl/make_named_tuple.hpp>
 
 namespace commands {
 
@@ -25,4 +26,3 @@ using GetBooleanColumnContent =
 }  // namespace commands
 
 #endif  // COMMANDS_GETBOOLEANCOLUMN_HPP_
-

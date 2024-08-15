@@ -16,18 +16,16 @@
 #include <cstdio>
 #include <cstring>
 #include <memory>
-#include <stdexcept>
+#include <rfl/Ref.hpp>
 #include <string>
 #include <tuple>
 #include <vector>
 
-#include "memmap/memmap.hpp"
 #include "predictors/CSRMatrix.hpp"
 #include "predictors/FloatFeature.hpp"
 #include "predictors/IntFeature.hpp"
 #include "predictors/PredictorImpl.hpp"
 #include "predictors/XGBoostIteratorDense.hpp"
-#include <rfl/Ref.hpp>
 
 namespace predictors {
 
@@ -119,7 +117,8 @@ class XGBoostIteratorSparse {
         "{\"data\": [%lu, false], \"shape\": [%lu], \"typestr\": "
         "\"%s\", \"version\": 3}";
     memset(_array, '\0', ARRAY_SIZE);
-    sprintf(_array, format, (size_t)(_ptr), _size, _typestr.c_str());
+    sprintf(_array, format, reinterpret_cast<std::size_t>(_ptr), _size,
+            _typestr.c_str());
   }
 
  private:

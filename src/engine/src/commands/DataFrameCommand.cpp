@@ -7,10 +7,12 @@
 
 #include "commands/DataFrameCommand.hpp"
 
+#include <rfl/json/read.hpp>
+
 namespace commands {
 
 DataFrameCommand DataFrameCommand::from_json_obj(const InputVarType& _obj) {
-  return DataFrameCommand(rfl::json::read<ReflectionType>(_obj).value());
+  return DataFrameCommand{rfl::json::read<ReflectionType>(_obj).value()};
 }
 
 }  // namespace commands

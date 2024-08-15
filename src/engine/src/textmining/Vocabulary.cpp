@@ -7,6 +7,7 @@
 
 #include "textmining/Vocabulary.hpp"
 
+#include "fct/to.hpp"
 #include "textmining/StringSplitter.hpp"
 
 namespace textmining {
@@ -31,7 +32,8 @@ std::vector<std::string> Vocabulary::split_text_field(
   };
 
   const auto remove_empty = [is_non_empty](const auto& vec) {
-    return fct::collect::vector(vec | VIEWS::filter(is_non_empty));
+    return vec | std::views::filter(is_non_empty) |
+           fct::ranges::to<std::vector>();
   };
 
   const auto splitted = StringSplitter::split(_text_field.to_lower().str());

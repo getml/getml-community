@@ -9,16 +9,14 @@
 #define ENGINE_HANDLERS_STRINGOPPARSER_HPP_
 
 #include <map>
-#include <memory>
 #include <string>
 
 #include "commands/StringColumnOrStringColumnView.hpp"
-#include "communication/communication.hpp"
-#include "containers/containers.hpp"
-#include "debug/debug.hpp"
-#include "engine/Float.hpp"
+#include "communication/Logger.hpp"
+#include "containers/ColumnView.hpp"
+#include "containers/DataFrame.hpp"
+#include "containers/Encoding.hpp"
 #include "engine/Int.hpp"
-#include <rfl/json.hpp>
 
 namespace engine {
 namespace handlers {

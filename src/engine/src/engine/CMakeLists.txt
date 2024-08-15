@@ -62,4 +62,5 @@ target_link_libraries(
   arrow::arrow
   parquet::parquet
   SQLite::SQLite3
+  range-v3::range-v3
 )

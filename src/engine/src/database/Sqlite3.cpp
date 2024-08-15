@@ -7,8 +7,9 @@
 
 #include "database/Sqlite3.hpp"
 
+#include <rfl/json/write.hpp>
+
 #include "database/ContentGetter.hpp"
-#include <rfl/json.hpp>
 
 namespace database {
 

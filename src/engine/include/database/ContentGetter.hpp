@@ -8,12 +8,11 @@
 #ifndef DATABASE_CONTENTGETTER_HPP_
 #define DATABASE_CONTENTGETTER_HPP_
 
-#include <cstddef>
 #include <cstdint>
+#include <rfl/Ref.hpp>
 
 #include "database/Iterator.hpp"
 #include "database/TableContent.hpp"
-#include <rfl/Ref.hpp>
 
 namespace database {
 

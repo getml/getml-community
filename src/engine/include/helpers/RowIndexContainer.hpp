@@ -13,7 +13,6 @@
 
 #include "helpers/VocabularyContainer.hpp"
 #include "helpers/WordIndexContainer.hpp"
-#include "textmining/textmining.hpp"
 
 namespace helpers {
 

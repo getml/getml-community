@@ -8,8 +8,9 @@
 #ifndef COMMANDS_LINEARREGRESSIONHYPERPARMAS_HPP_
 #define COMMANDS_LINEARREGRESSIONHYPERPARMAS_HPP_
 
-#include "commands/LinearHyperparams.hpp"
 #include <rfl/Literal.hpp>
+
+#include "commands/LinearHyperparams.hpp"
 
 namespace commands {
 

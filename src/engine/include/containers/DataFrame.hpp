@@ -8,6 +8,8 @@
 #ifndef CONTAINERS_DATAFRAME_HPP_
 #define CONTAINERS_DATAFRAME_HPP_
 
+#include <Poco/DateTimeFormat.h>
+#include <Poco/DateTimeFormatter.h>
 #include <Poco/File.h>
 
 #include <memory>
@@ -26,12 +28,11 @@
 #include "containers/Int.hpp"
 #include "containers/MonitorSummary.hpp"
 #include "containers/Schema.hpp"
-#include "database/database.hpp"
+#include "database/Connector.hpp"
+#include "fct/to.hpp"
 #include "helpers/DataFrameParams.hpp"
 #include "helpers/Macros.hpp"
-#include "strings/strings.hpp"
 #include "transpilation/HumanReadableSQLGenerator.hpp"
-#include "transpilation/transpilation.hpp"
 
 namespace containers {
 
@@ -159,7 +160,7 @@ class DataFrame {
 
   /// Get the number of rows or return 0, if the DataFrame contains no
   /// columns.
-  const size_t nrows() const;
+  size_t nrows() const;
 
   /// Returns the role of the column signified by _name.
   std::string role(const std::string &_name) const;
@@ -439,7 +440,7 @@ class DataFrame {
   std::string name() const { return name_; }
 
   /// Get the number of columns.
-  const size_t ncols() const {
+  size_t ncols() const {
     return unused_floats_.size() + unused_strings_.size() + join_keys_.size() +
            time_stamps_.size() + categoricals_.size() + numericals_.size() +
            targets_.size() + text_.size();
@@ -749,7 +750,7 @@ class DataFrame {
                      const std::string &_path,
                      const std::string &_prefix) const;
 
-  /// Saves a string to a textfile.
+  ///  Saves a string to a textfile.
   void save_text(const std::string &_tpath, const std::string &_fname,
                  const std::string &_text) const;
 
@@ -972,8 +973,9 @@ DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
                          col.unit());
   };
 
-  const auto categoricals = fct::collect::vector(
-      schema.categoricals() | VIEWS::transform(get_categorical));
+  const auto categoricals = schema.categoricals() |
+                            std::views::transform(get_categorical) |
+                            fct::ranges::to<std::vector>();
 
   const auto get_join_key = [this, parse](const std::string &_name) {
     const auto &col = join_key(_name);
@@ -981,15 +983,16 @@ DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
                          col.unit());
   };
 
-  const auto join_keys =
-      fct::collect::vector(schema.join_keys() | VIEWS::transform(get_join_key));
+  const auto join_keys = schema.join_keys() |
+                         std::views::transform(get_join_key) |
+                         fct::ranges::to<std::vector>();
 
   const auto get_index = [this](const std::string &_name) {
     return index(_name).map();
   };
 
-  const auto indices =
-      fct::collect::vector(schema.join_keys() | VIEWS::transform(get_index));
+  const auto indices = schema.join_keys() | std::views::transform(get_index) |
+                       fct::ranges::to<std::vector>();
 
   const auto get_numerical = [this, parse](const std::string &_name) {
     const auto &col = numerical(_name);
@@ -997,11 +1000,13 @@ DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
                            col.unit());
   };
 
-  const auto discretes = fct::collect::vector(schema.discretes() |
-                                              VIEWS::transform(get_numerical));
+  const auto discretes = schema.discretes() |
+                         std::views::transform(get_numerical) |
+                         fct::ranges::to<std::vector>();
 
-  const auto numericals = fct::collect::vector(schema.numericals() |
-                                               VIEWS::transform(get_numerical));
+  const auto numericals = schema.numericals() |
+                          std::views::transform(get_numerical) |
+                          fct::ranges::to<std::vector>();
 
   const auto get_target = [this, parse](const std::string &_name) {
     const auto &col = target(_name);
@@ -1009,10 +1014,10 @@ DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
                            col.unit());
   };
 
-  const auto targets = _targets
-                           ? fct::collect::vector(schema.targets() |
-                                                  VIEWS::transform(get_target))
-                           : std::vector<FloatColumnType>();
+  const auto targets = _targets ? schema.targets() |
+                                      std::views::transform(get_target) |
+                                      fct::ranges::to<std::vector>()
+                                : std::vector<FloatColumnType>();
 
   const auto get_text = [this, parse](const std::string &_name) {
     const auto &col = text(_name);
@@ -1020,8 +1025,8 @@ DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
                             col.unit());
   };
 
-  const auto text =
-      fct::collect::vector(schema.text() | VIEWS::transform(get_text));
+  const auto text = schema.text() | std::views::transform(get_text) |
+                    fct::ranges::to<std::vector>();
 
   const auto get_time_stamp = [this, parse](const std::string &_name) {
     const auto &col = time_stamp(_name);
@@ -1029,8 +1034,9 @@ DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
                            col.unit());
   };
 
-  const auto time_stamps = fct::collect::vector(
-      schema.time_stamps() | VIEWS::transform(get_time_stamp));
+  const auto time_stamps = schema.time_stamps() |
+                           std::views::transform(get_time_stamp) |
+                           fct::ranges::to<std::vector>();
 
   const auto params = helpers::DataFrameParams{.categoricals_ = categoricals,
                                                .discretes_ = discretes,

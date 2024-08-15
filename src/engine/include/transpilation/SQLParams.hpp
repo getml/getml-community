@@ -1,14 +1,14 @@
 #ifndef TRANSPILATION_SQLPARAMS_HPP_
 #define TRANSPILATION_SQLPARAMS_HPP_
 
-#include <string>
-#include <vector>
-
 #include <rfl/Field.hpp>
 #include <rfl/NamedTuple.hpp>
 #include <rfl/Ref.hpp>
 #include <rfl/define_named_tuple.hpp>
 #include <rfl/remove_fields.hpp>
+#include <string>
+#include <vector>
+
 #include "transpilation/FeatureTableParams.hpp"
 
 namespace transpilation {

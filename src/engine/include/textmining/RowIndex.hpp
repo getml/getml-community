@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef TEXTMINING_ROWINDEX_HPP_
 #define TEXTMINING_ROWINDEX_HPP_
@@ -16,13 +16,6 @@
 
 // -------------------------------------------------------------------------
 
-#include "debug/debug.hpp"
-#include "fct/fct.hpp"
-#include "strings/strings.hpp"
-
-// -------------------------------------------------------------------------
-
-#include "textmining/Float.hpp"
 #include "textmining/Int.hpp"
 #include "textmining/WordIndex.hpp"
 
@@ -47,7 +40,7 @@ class RowIndex {
   }
 
   /// The size of the vocabulary.
-  const size_t size() const { return vocabulary().size(); }
+  size_t size() const { return vocabulary().size(); }
 
   /// Trivial (const) accessor.
   const std::vector<strings::String>& vocabulary() const {

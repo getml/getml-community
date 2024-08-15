@@ -15,8 +15,10 @@
 #include "engine/handlers/FloatOpParser.hpp"
 #include "engine/handlers/StringOpParser.hpp"
 #include "engine/utils/Getter.hpp"
-#include "fct/collect.hpp"
+#include "fct/compose.hpp"
+#include "fct/to.hpp"
 #include "helpers/Aggregations.hpp"
+#include "io/Parser.hpp"
 
 namespace engine {
 namespace handlers {
@@ -158,7 +160,7 @@ typename ViewParser::ColumnViewVariant ViewParser::make_column_view(
     if constexpr (std::is_same<
                       Type, typename commands::StringColumnOrStringColumnView::
                                 ReflectionType>()) {
-      const auto col = commands::StringColumnOrStringColumnView(_col);
+      const auto col = commands::StringColumnOrStringColumnView{_col};
       return StringOpParser(categories_, join_keys_encoding_, data_frames_)
           .parse(col);
     }
@@ -166,7 +168,7 @@ typename ViewParser::ColumnViewVariant ViewParser::make_column_view(
     if constexpr (std::is_same<Type,
                                typename commands::FloatColumnOrFloatColumnView::
                                    ReflectionType>()) {
-      const auto col = commands::FloatColumnOrFloatColumnView(_col);
+      const auto col = commands::FloatColumnOrFloatColumnView{_col};
       return FloatOpParser(categories_, join_keys_encoding_, data_frames_)
           .parse(col);
     }
@@ -234,7 +236,7 @@ std::optional<size_t> ViewParser::make_nrows(
 
   const auto calc_nrows_float = fct::compose(calc_nrows, to_float);
 
-  auto range = _column_views | VIEWS::transform(calc_nrows_float);
+  auto range = _column_views | std::views::transform(calc_nrows_float);
 
   return static_cast<size_t>(
       helpers::Aggregations::assert_equal(range.begin(), range.end()));
@@ -257,8 +259,8 @@ std::vector<std::string> ViewParser::make_string_vector(
       return _str.str();
     };
 
-    return fct::collect::vector(*str_col.to_vector(_start, _length, false) |
-                                VIEWS::transform(to_str));
+    return *str_col.to_vector(_start, _length, false) |
+           std::views::transform(to_str) | fct::ranges::to<std::vector>();
   }
 
   const auto float_col = std::get<containers::ColumnView<Float>>(_column_view);
@@ -266,15 +268,16 @@ std::vector<std::string> ViewParser::make_string_vector(
   const auto float_vec = *float_col.to_vector(_start, _length, false);
 
   if (float_col.unit().find("time stamp") != std::string::npos) {
-    return fct::collect::vector(float_vec |
-                                VIEWS::transform(io::Parser::ts_to_string));
+    return float_vec | std::views::transform(io::Parser::ts_to_string) |
+           fct::ranges::to<std::vector>();
   }
 
   const auto to_string = [](const Float _val) {
     return io::Parser::to_string(_val);
   };
 
-  return fct::collect::vector(float_vec | VIEWS::transform(to_string));
+  return float_vec | std::views::transform(to_string) |
+         fct::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------------------------------
@@ -308,11 +311,12 @@ containers::ViewContent ViewParser::get_content(
     return result;
   };
 
-  const auto column_views =
-      fct::collect::vector(_cols | VIEWS::transform(to_column_view));
+  const auto column_views = _cols | std::views::transform(to_column_view) |
+                            fct::ranges::to<std::vector>();
 
-  const auto data = transpose(
-      fct::collect::vector(column_views | VIEWS::transform(to_string_vector)));
+  const auto data =
+      transpose(column_views | std::views::transform(to_string_vector) |
+                fct::ranges::to<std::vector>());
 
   const auto nrows = make_nrows(column_views, _force_nrows);
 
@@ -375,8 +379,8 @@ ViewParser::parse_all(const commands::DataFramesOrViews& _cmd) const {
 
   const auto population = to_df(population_obj);
 
-  const auto peripheral =
-      fct::collect::vector(peripheral_objs | VIEWS::transform(to_df));
+  const auto peripheral = peripheral_objs | std::views::transform(to_df) |
+                          fct::ranges::to<std::vector>();
 
   const auto validation =
       validation_obj
@@ -416,9 +420,9 @@ void ViewParser::subselection(const ViewOp& _cmd,
       assert_true(data_ptr);
 
       auto const df_nrows = _df->nrows();
-      auto indices = fct::collect::vector(
+      auto indices =
           *data_ptr |
-          std::ranges::views::transform([](Float const& index) -> std::size_t {
+          std::views::transform([](Float const& index) -> std::size_t {
             if (index < 0.0) {
               throw std::runtime_error(
                   "Index on a numerical subselection cannot be "
@@ -426,8 +430,10 @@ void ViewParser::subselection(const ViewOp& _cmd,
             }
             return static_cast<std::size_t>(index);
           }) |
-          std::ranges::views::filter([&df_nrows](std::size_t const& index)
-                                         -> bool { return index < df_nrows; }));
+          std::views::filter([&df_nrows](std::size_t const& index) -> bool {
+            return index < df_nrows;
+          }) |
+          fct::ranges::to<std::vector>();
 
       _df->sort_by_key(indices);
     }

@@ -7,6 +7,9 @@
 
 #include "database/sniff.hpp"
 
+#include "debug/assert_true.hpp"
+#include "io/StatementMaker.hpp"
+
 namespace database::sniff {
 
 std::string query(const rfl::Ref<const Connector>& _conn,

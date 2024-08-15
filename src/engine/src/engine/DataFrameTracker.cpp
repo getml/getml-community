@@ -7,8 +7,10 @@
 
 #include "engine/dependency/DataFrameTracker.hpp"
 
+#include <range/v3/view/concat.hpp>
+#include <rfl/json/write.hpp>
+
 #include "engine/utils/Getter.hpp"
-#include <rfl/json.hpp>
 
 namespace engine {
 namespace dependency {
@@ -82,16 +84,18 @@ commands::Fingerprint DataFrameTracker::make_build_history(
     const std::vector<commands::Fingerprint>& _dependencies,
     const containers::DataFrame& _population_df,
     const std::vector<containers::DataFrame>& _peripheral_dfs) const {
-  const auto data_frames = fct::join::vector<containers::DataFrame>(
-      {std::vector<containers::DataFrame>({_population_df}), _peripheral_dfs});
+  const auto populations = std::vector{_population_df};
+  const auto data_frames = ranges::views::concat(populations, _peripheral_dfs) |
+                           fct::ranges::to<std::vector>();
 
   const auto get_fingerprint =
       [](const containers::DataFrame& _df) -> commands::Fingerprint {
     return _df.fingerprint();
   };
 
-  const auto df_fingerprints =
-      fct::collect::vector(data_frames | VIEWS::transform(get_fingerprint));
+  const auto df_fingerprints = data_frames |
+                               std::views::transform(get_fingerprint) |
+                               fct::ranges::to<std::vector>();
 
   using PipelineBuildHistory =
       typename commands::Fingerprint::PipelineBuildHistory;

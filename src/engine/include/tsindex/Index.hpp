@@ -10,10 +10,6 @@
 
 // ----------------------------------------------------------------------------
 
-#include "fct/fct.hpp"
-
-// ----------------------------------------------------------------------------
-
 #include "tsindex/Float.hpp"
 #include "tsindex/InMemoryIndex.hpp"
 #include "tsindex/Int.hpp"

@@ -7,6 +7,8 @@
 
 #include "fastprop/containers/AbstractFeature.hpp"
 
+#include <sstream>
+
 #include "fastprop/containers/SQLMaker.hpp"
 
 namespace fastprop {

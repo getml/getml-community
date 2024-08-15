@@ -7,6 +7,7 @@
 
 #include "engine/pipelines/transform.hpp"
 
+#include <rfl/as.hpp>
 #include <stdexcept>
 
 #include "engine/pipelines/FittedPipeline.hpp"
@@ -15,9 +16,6 @@
 #include "engine/pipelines/score.hpp"
 #include "engine/pipelines/staging.hpp"
 #include "metrics/Scores.hpp"
-#include <rfl/as.hpp>
-#include <rfl/json.hpp>
-#include "transpilation/SQLDialectParser.hpp"
 
 namespace engine {
 namespace pipelines {
@@ -126,7 +124,7 @@ containers::NumericalFeatures generate_autofeatures(
     const MakeFeaturesParams& _params,
     const std::vector<rfl::Ref<const featurelearners::AbstractFeatureLearner>>&
         _feature_learners,
-    const predictors::PredictorImpl& _predictor_impl) {
+    const predictors::PredictorImpl&) {
   auto autofeatures = containers::NumericalFeatures();
 
   for (size_t i = 0; i < _feature_learners.size(); ++i) {

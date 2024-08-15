@@ -10,11 +10,12 @@
 #include <Poco/Path.h>
 #include <Poco/TemporaryFile.h>
 
+#include <rfl/Field.hpp>
 #include <stdexcept>
 
 #include "containers/DataFramePrinter.hpp"
-#include <rfl/Field.hpp>
-#include <rfl/json.hpp>
+#include "database/Getter.hpp"
+#include "fct/to.hpp"
 
 namespace containers {
 
@@ -1385,7 +1386,7 @@ ULong DataFrame::nbytes() const {
 
 // ----------------------------------------------------------------------------
 
-const size_t DataFrame::nrows() const {
+size_t DataFrame::nrows() const {
   if (unused_floats_.size() > 0) {
     return unused_floats_.at(0).nrows();
   }
@@ -1715,11 +1716,13 @@ containers::MonitorSummary DataFrame::to_monitor() const {
   const auto get_unit = [](const auto &_col) { return _col.unit(); };
 
   const auto get_colnames = [get_colname](const auto &_cols) {
-    return fct::collect::vector(_cols | VIEWS::transform(get_colname));
+    return _cols | std::views::transform(get_colname) |
+           fct::ranges::to<std::vector>();
   };
 
   const auto get_units = [get_unit](const auto &_cols) {
-    return fct::collect::vector(_cols | VIEWS::transform(get_unit));
+    return _cols | std::views::transform(get_unit) |
+           fct::ranges::to<std::vector>();
   };
 
   return rfl::make_field<"categorical_">(get_colnames(categoricals_)) *
@@ -1770,32 +1773,38 @@ Schema DataFrame::to_schema(const bool _separate_discrete) const {
     return _col.name();
   };
 
-  const auto categoricals =
-      fct::collect::vector(categoricals_ | VIEWS::transform(get_name));
+  const auto categoricals = categoricals_ |
+                            std::views::transform(get_name) |
+                            fct::ranges::to<std::vector>();
 
-  const auto discretes = fct::collect::vector(
-      numericals_ | VIEWS::filter(is_discrete) | VIEWS::transform(get_name));
+  const auto discretes = numericals_ | std::views::filter(is_discrete) |
+                         std::views::transform(get_name) |
+                         fct::ranges::to<std::vector>();
 
-  const auto join_keys =
-      fct::collect::vector(join_keys_ | VIEWS::transform(get_name));
+  const auto join_keys = join_keys_ | std::views::transform(get_name) |
+                         fct::ranges::to<std::vector>();
 
   const auto numericals =
-      fct::collect::vector(numericals_ | VIEWS::filter(is_not_discrete) |
-                           VIEWS::transform(get_name));
+      numericals_ | std::views::filter(is_not_discrete) |
+      std::views::transform(get_name) | fct::ranges::to<std::vector>();
 
-  const auto targets =
-      fct::collect::vector(targets_ | VIEWS::transform(get_name));
+  const auto targets = targets_ | std::views::transform(get_name) |
+                       fct::ranges::to<std::vector>();
 
-  const auto text = fct::collect::vector(text_ | VIEWS::transform(get_name));
+  const auto text = text_ | std::views::transform(get_name) |
+                    fct::ranges::to<std::vector>();
 
-  const auto time_stamps =
-      fct::collect::vector(time_stamps_ | VIEWS::transform(get_name));
+  const auto time_stamps = time_stamps_ |
+                           std::views::transform(get_name) |
+                           fct::ranges::to<std::vector>();
 
-  const auto unused_floats =
-      fct::collect::vector(unused_floats_ | VIEWS::transform(get_name));
+  const auto unused_floats = unused_floats_ |
+                             std::views::transform(get_name) |
+                             fct::ranges::to<std::vector>();
 
-  const auto unused_strings =
-      fct::collect::vector(unused_strings_ | VIEWS::transform(get_name));
+  const auto unused_strings = unused_strings_ |
+                              std::views::transform(get_name) |
+                              fct::ranges::to<std::vector>();
 
   const auto impl = helpers::SchemaImpl{.categoricals = categoricals,
                                         .discretes = discretes,

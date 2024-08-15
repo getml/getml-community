@@ -7,7 +7,9 @@
 
 #include "helpers/DataFrame.hpp"
 
-#include "fct/fct.hpp"
+#include <range/v3/view/concat.hpp>
+
+#include "fct/to.hpp"
 #include "helpers/Macros.hpp"
 
 namespace helpers {
@@ -77,8 +79,6 @@ DataFrame::DataFrame(const DataFrameParams& _params)
   }
 #endif  // NDEBUG
 }
-
-// ----------------------------------------------------------------------------
 
 DataFrame DataFrame::create_subview(const CreateSubviewParams& _params) const {
   const auto ix_join_key =
@@ -188,7 +188,8 @@ size_t DataFrame::find_ix_join_key(
     return " '" + (*_make_staging_table_colname)(colname) + "',";
   };
 
-  auto names = fct::collect::string(join_keys_ | VIEWS::transform(get_name));
+  auto names = join_keys_ | std::views::transform(get_name) | std::views::join |
+               fct::ranges::to<std::string>();
 
   if (names.size() > 0) {
     names.back() = '.';
@@ -229,7 +230,8 @@ size_t DataFrame::find_ix_time_stamp(
     return (*_make_staging_table_colname)(colname);
   };
 
-  auto names = fct::collect::string(time_stamps_ | VIEWS::transform(get_name));
+  auto names = time_stamps_ | std::views::transform(get_name) |
+               std::views::join | fct::ranges::to<std::string>();
 
   if (names.size() > 0) {
     names.back() = '.';
@@ -258,11 +260,11 @@ std::vector<Column<Float>> DataFrame::make_numericals_and_time_stamps(
     return _upper_time_stamp == "" || _ts.name_ != _upper_time_stamp;
   };
 
-  const auto time_stamps =
-      fct::collect::vector(time_stamps_ | VIEWS::filter(is_not_upper));
+  const auto time_stamps = time_stamps_ | std::views::filter(is_not_upper) |
+                           fct::ranges::to<std::vector>();
 
-  return fct::join::vector<Column<Float>>(
-      {numericals_, _additional, targets, time_stamps});
+  return ranges::views::concat(numericals_, _additional, targets, time_stamps) |
+         fct::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------------------------------
@@ -303,7 +305,7 @@ std::shared_ptr<tsindex::Index> DataFrame::make_ts_index(
   const auto memory = upper_ts[0] - lower_ts.begin()[0];
 
   const auto unique_join_keys =
-      fct::collect::set(*_params.population_join_keys_);
+      *_params.population_join_keys_ | fct::ranges::to<std::set>();
 
   const auto find_rownums =
       [this, _ix_join_key](const Int jk) -> fct::Range<const size_t*> {
@@ -311,9 +313,8 @@ std::shared_ptr<tsindex::Index> DataFrame::make_ts_index(
     return fct::Range<const size_t*>(p.first, p.second);
   };
 
-  const auto rownums =
-      std::make_shared<std::vector<size_t>>(fct::join::vector<size_t>(
-          unique_join_keys | VIEWS::transform(find_rownums)));
+  const auto rownums = unique_join_keys | std::views::transform(find_rownums) |
+                       std::views::join | fct::ranges::to_shared_ptr_vector();
 
   const auto params = tsindex::IndexParams{.join_keys_ = join_keys,
                                            .lower_ts_ = lower_ts,

@@ -9,26 +9,20 @@
 #ifndef ENGINE_PIPELINES_PIPELINE_HPP_
 #define ENGINE_PIPELINES_PIPELINE_HPP_
 
+#include <Poco/DateTimeFormat.h>
+#include <Poco/DateTimeFormatter.h>
+#include <Poco/LocalDateTime.h>
 #include <Poco/Net/StreamSocket.h>
 #include <Poco/TemporaryFile.h>
 
-#include <fstream>
 #include <memory>
-#include <optional>
 #include <string>
-#include <tuple>
 #include <utility>
 #include <vector>
 
 #include "commands/Pipeline.hpp"
-#include "containers/containers.hpp"
-#include "engine/Float.hpp"
-#include "engine/Int.hpp"
-#include "engine/pipelines/CheckParams.hpp"
-#include "engine/pipelines/FitParams.hpp"
 #include "engine/pipelines/FittedPipeline.hpp"
 #include "engine/pipelines/MonitorSummary.hpp"
-#include "engine/pipelines/TransformParams.hpp"
 #include "helpers/Placeholder.hpp"
 #include "helpers/StringIterator.hpp"
 #include "metrics/Scores.hpp"

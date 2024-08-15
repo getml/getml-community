@@ -8,19 +8,16 @@
 #ifndef METRICS_SUMMARIZER_HPP_
 #define METRICS_SUMMARIZER_HPP_
 
-#include <cstdint>
+#include <rfl/Field.hpp>
+#include <rfl/NamedTuple.hpp>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "debug/debug.hpp"
 #include "metrics/Features.hpp"
 #include "metrics/Float.hpp"
 #include "metrics/Int.hpp"
 #include "metrics/Scores.hpp"
-#include <rfl/Field.hpp>
-#include <rfl/NamedTuple.hpp>
-#include "strings/strings.hpp"
 
 namespace metrics {
 
@@ -131,8 +128,8 @@ class Summarizer {
   }
 
   /// Helper function
-  static const Float get(const size_t _i, const size_t _j,
-                         const Features& _features) {
+  static Float get(const size_t _i, const size_t _j,
+                   const Features& _features) {
     assert_true(_j < _features.size());
     assert_true(_i < _features[_j].size());
     return _features[_j][_i];

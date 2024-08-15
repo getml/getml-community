@@ -9,6 +9,9 @@
 #define FASTPROP_ALGORITHM_FASTPROP_HPP_
 
 #include <map>
+#include <rfl/Field.hpp>
+#include <rfl/NamedTuple.hpp>
+#include <rfl/Ref.hpp>
 #include <string>
 #include <utility>
 #include <vector>
@@ -18,19 +21,18 @@
 #include "fastprop/algorithm/Memoization.hpp"
 #include "fastprop/algorithm/TableHolder.hpp"
 #include "fastprop/algorithm/TransformParams.hpp"
-#include "fastprop/containers/containers.hpp"
+#include "fastprop/containers/Column.hpp"
+#include "fastprop/containers/DataFrame.hpp"
+#include "fastprop/containers/DataFrameView.hpp"
+#include "fastprop/containers/Features.hpp"
+#include "fastprop/containers/Match.hpp"
+#include "fastprop/containers/Placeholder.hpp"
 #include "helpers/ColumnDescription.hpp"
-#include "helpers/ImportanceMaker.hpp"
 #include "helpers/Macros.hpp"
-#include "helpers/Matchmaker.hpp"
 #include "helpers/Schema.hpp"
 #include "helpers/VocabularyContainer.hpp"
 #include "helpers/VocabularyTree.hpp"
-#include "multithreading/multithreading.hpp"
-#include <rfl/Field.hpp>
-#include <rfl/NamedTuple.hpp>
-#include <rfl/Ref.hpp>
-#include "transpilation/SQLDialectParser.hpp"
+#include "multithreading/Communicator.hpp"
 
 namespace fastprop {
 namespace algorithm {
@@ -382,7 +384,7 @@ class FastProp {
   }
 
   /// Whether this is a classification problem
-  const bool is_classification() const {
+  bool is_classification() const {
     return hyperparameters().loss_function() ==
            Hyperparameters::CROSS_ENTROPY_LOSS;
   }

@@ -11,16 +11,17 @@
 #include <Poco/Net/StreamSocket.h>
 
 #include <memory>
-#include <optional>
-#include <vector>
-
-#include "commands/DataFramesOrViews.hpp"
-#include "communication/communication.hpp"
-#include "containers/containers.hpp"
-#include "engine/dependency/dependency.hpp"
 #include <rfl/Field.hpp>
 #include <rfl/NamedTuple.hpp>
 #include <rfl/Ref.hpp>
+#include <vector>
+
+#include "commands/DataFramesOrViews.hpp"
+#include "communication/Logger.hpp"
+#include "containers/DataFrame.hpp"
+#include "containers/Encoding.hpp"
+#include "engine/dependency/PreprocessorTracker.hpp"
+#include "engine/dependency/WarningTracker.hpp"
 
 namespace engine {
 namespace pipelines {

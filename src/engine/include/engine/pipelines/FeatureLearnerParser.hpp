@@ -8,10 +8,11 @@
 #ifndef ENGINE_PIPELINES_FEATURELEARNERPARSER_HPP_
 #define ENGINE_PIPELINES_FEATURELEARNERPARSER_HPP_
 
+#include <rfl/Ref.hpp>
+
 #include "commands/FeatureLearner.hpp"
 #include "featurelearners/AbstractFeatureLearner.hpp"
 #include "featurelearners/FeatureLearnerParams.hpp"
-#include <rfl/Ref.hpp>
 
 namespace engine {
 namespace pipelines {
@@ -27,4 +28,3 @@ struct FeatureLearnerParser {
 }  // namespace engine
 
 #endif  // ENGINE_PIPELINES_FEATURELEARNERPARSER_HPP_
-

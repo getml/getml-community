@@ -12,18 +12,21 @@
 
 #include <memory>
 #include <optional>
+#include <rfl/Field.hpp>
+#include <rfl/NamedTuple.hpp>
+#include <rfl/Ref.hpp>
+#include <rfl/named_tuple_t.hpp>
 #include <string>
 #include <vector>
 
 #include "commands/DataFramesOrViews.hpp"
 #include "commands/Fingerprint.hpp"
-#include "communication/communication.hpp"
-#include "containers/containers.hpp"
-#include "engine/dependency/dependency.hpp"
-#include <rfl/Field.hpp>
-#include <rfl/NamedTuple.hpp>
-#include <rfl/Ref.hpp>
-#include <rfl/named_tuple_t.hpp>
+#include "containers/DataFrame.hpp"
+#include "containers/Encoding.hpp"
+#include "engine/dependency/DataFrameTracker.hpp"
+#include "engine/dependency/FETracker.hpp"
+#include "engine/dependency/PredTracker.hpp"
+#include "engine/dependency/PreprocessorTracker.hpp"
 
 namespace engine {
 namespace pipelines {

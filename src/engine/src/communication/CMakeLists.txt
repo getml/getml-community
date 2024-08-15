@@ -16,4 +16,5 @@ target_link_libraries(
   reflectcpp::reflectcpp
   xgboost::xgboost
   $<$<BOOL:${USE_CONAN}>:yyjson::yyjson>
+  range-v3::range-v3
 )

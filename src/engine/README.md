@@ -25,6 +25,81 @@ $ cmake --build --preset $PRESET_NAME
 ```
 
 
+### Requirements
+
+For dependencies either
+
+* [VCPKG](https://learn.microsoft.com/en-gb/vcpkg/get_started/get-started) (see [vcpkg.json](./vcpkg.json)) or
+* [Conan](https://docs.conan.io/2/installation.html) (see [conanfile.py](./conanfile.py)) or
+* system packages (check [CMakeLists.txt](CMakeLists.txt)) can be used.
+
+
+#### AlmaLinux
+
+* readline-devel
+* openssl-devel
+* bison
+* zlib-devel
+* flex
+* zip
+* perl-IPC-Cmd
+
+Using GCC >= 13
+
+* gcc-toolset-13-gcc-c++
+* libgomp-devel
+
+Using Clang >= 18
+
+* llvm-toolset >= 18
+* libomp-devel >= 18
+
+From external
+
+* [ninja-build](https://github.com/ninja-build/ninja/) (for faster builds)
+
+
+#### Debian
+
+* cmake
+* ninja-build
+* git
+* curl
+* zip
+* unzip
+* tar
+* pkg-config
+* flex
+* bison
+* autoconf
+* libtool
+
+Using GCC >= 13
+
+* gcc
+* g++
+* gcc-13
+* g++-13
+* libgomp1
+
+Using Clang >= 18
+
+* clang
+* clang-18
+* libc++-18-dev
+* libc++abi-18-dev
+* libomp-18-dev
+* libomp-dev
+
+Extras
+
+* pipx (e.g. for conan and ninja-build)
+* ccache (for faster re-builds)
+* mold (for faster linking)
+* clang-tidy (for static code analysis)
+* clang-format (for code formatting)
+
+
 ### Possible `configuration` presets
 
 ```bash
@@ -73,6 +148,19 @@ Available build presets:
   "debug-full-vcpkg"                         - Debug full (vcpkg)
   "debug-vcpkg-aarch64-linux"                - Debug (aarch64-linux) (vcpkg)
   "debug-conan"                              - Debug (conan)
+```
+
+
+### Possible `test` presets
+
+```bash
+$ cmake --list-presets=test 
+Available test presets:                                                       
+                                                                              
+  "release"     - Release                                                     
+  "debug"       - Debug                                                       
+  "debug-vcpgk" - Debug (vcpkg)                                               
+  "debug-conan" - Debug (conan)                                               
 ```
 
 
@@ -150,6 +238,14 @@ Make sure to install conan: [https://conan.io/](https://conan.io/)
 ```bash
 $ CONAN_BINARY=$(which conan) cmake --workflow --preset debug-conan
 $ CONAN_BINARY=$(which conan) cmake --workflow --preset release-conan
+```
+
+For setting a specific profile, use the `CONAN_PROFILE` variable. The profile must be available in the conan profiles
+under `~/.conan2/profiles/`.
+
+```bash
+$ CONAN_BINARY=$(which conan) CONAN_PROFILE=debug-clang18 cmake --workflow --preset debug-conan
+$ CONAN_BINARY=$(which conan) CONAN_PROFILE=release-gcc cmake --workflow --preset release-conan
 ```
 
 
@@ -344,6 +440,56 @@ $ docker build \
 
 $ docker run -it engine-run-debian
 ```
+
+
+## Running Tests
+
+For running tests, first they need to be enabled and built. Then they can be ran via `ctest`.
+
+```bash
+$ cmake --preset debug-conan -DBUILD_TESTS=ON
+$ cmake --build --preset debug-conan
+$ ctest --preset debug-conan
+```
+
+Alternatively, each test suite can be executed from its own executable.
+
+```bash
+$ ./build/debug-conan-build/test/unit/fct/test_to
+```
+
+On failures, GDB, LLDB or other debuggers can be used.
+
+```bash
+$ gdb --tui --args ./build/debug-conan-build/test/unit/fct/test_to --gtest_break_on_failure
+$ lldb ./build/debug-conan-build/test/unit/fct/test_to -- --gtest_break_on_failure
+```
+
+### Code Coverage
+
+To generate code coverage, the `lcov` and `genhtml` tools can be used as follows.
+
+1) Add coverage flags to the build of the tests.
+
+```cmake 
+# test/CMakeLists.txt
+# ...
+  target_compile_options(${target} PRIVATE --coverage) 
+  target_link_options(${target} PRIVATE --coverage)    
+# ...
+```
+
+2) Run the tests and generate the coverage report.
+
+```bash
+$ lcov --zerocounters --directory .
+$ ctest --preset debug-conan
+$ lcov --capture --directory . --output-file coverage.info --ignore-errors inconsistent
+$ genhtml coverage.info --output-directory coverage
+$ python3 -m http.server --directory coverage
+```
+
+3) Open the browser at [http://localhost:8000](http://localhost:8000) to see the coverage report.
 
 
 ## Set up for LSP (Language Server Protocol) e.g. clangd

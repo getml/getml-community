@@ -8,16 +8,11 @@
 #ifndef ENGINE_PREPROCESSORS_PREPROCESSORIMPL_HPP_
 #define ENGINE_PREPROCESSORS_PREPROCESSORIMPL_HPP_
 
-#include <memory>
-#include <optional>
-#include <utility>
+#include <rfl/Ref.hpp>
 #include <vector>
 
-#include "communication/Warnings.hpp"
-#include "containers/containers.hpp"
 #include "engine/preprocessors/data_model_checking.hpp"
 #include "helpers/ColumnDescription.hpp"
-#include <rfl/Ref.hpp>
 
 namespace engine {
 namespace preprocessors {
@@ -58,4 +53,3 @@ struct PreprocessorImpl {
 }  // namespace engine
 
 #endif  // ENGINE_PREPROCESSORS_PREPROCESSORIMPL_HPP_
-

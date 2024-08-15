@@ -10,14 +10,13 @@
 
 #include <Poco/Net/StreamSocket.h>
 
-#include <algorithm>
 #include <memory>
 #include <optional>
 #include <utility>
 #include <vector>
 
 #include "commands/Fingerprint.hpp"
-#include "communication/communication.hpp"
+#include "containers/CategoricalFeatures.hpp"
 #include "containers/DataFrame.hpp"
 #include "engine/pipelines/FeaturesOnlyParams.hpp"
 #include "engine/pipelines/FittedPipeline.hpp"

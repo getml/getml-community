@@ -7,6 +7,8 @@
 
 #include "helpers/VocabularyContainer.hpp"
 
+#include "fct/to.hpp"
+
 namespace helpers {
 
 // ----------------------------------------------------------------------------
@@ -41,12 +43,13 @@ VocabularyContainer VocabularyContainer::make_container(
 
   const auto extract_from_df =
       [extract_from_col](const DataFrame& df) -> VocabForDf {
-    auto range = df.text_ | VIEWS::transform(extract_from_col);
+    auto range = df.text_ | std::views::transform(extract_from_col);
     return VocabForDf(range.begin(), range.end());
   };
 
-  const auto peripheral_dfs =
-      fct::collect::vector(_peripheral | VIEWS::transform(extract_from_df));
+  const auto peripheral_dfs = _peripheral |
+                              std::views::transform(extract_from_df) |
+                              fct::ranges::to<std::vector>();
 
   const auto population_dfs = extract_from_df(_population);
 

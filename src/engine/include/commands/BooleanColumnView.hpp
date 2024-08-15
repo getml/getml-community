@@ -8,18 +8,20 @@
 #ifndef COMMANDS_BOOLEANBINARYOP_HPP_
 #define COMMANDS_BOOLEANBINARYOP_HPP_
 
-#include <rfl.hpp>
-#include <rfl/json.hpp>
+#include <rfl/Field.hpp>
+#include <rfl/Literal.hpp>
+#include <rfl/Ref.hpp>
+#include <rfl/TaggedUnion.hpp>
+#include <rfl/json/Reader.hpp>
 #include <variant>
 
-#include "commands/Float.hpp"
 #include "commands/FloatColumnOrFloatColumnView.hpp"
 #include "commands/StringColumnOrStringColumnView.hpp"
 
 namespace commands {
 
-class FloatColumnOrFloatColumnView;
-class StringColumnOrStringColumnView;
+struct FloatColumnOrFloatColumnView;
+struct StringColumnOrStringColumnView;
 
 struct BooleanColumnView {
   /// The command used for boolean binary operations.

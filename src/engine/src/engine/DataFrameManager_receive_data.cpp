@@ -5,8 +5,10 @@
 // for details.
 //
 
-#include <rfl.hpp>
-#include <rfl/json.hpp>
+#include <rfl/Ref.hpp>
+#include <rfl/as.hpp>
+#include <rfl/json/read.hpp>
+#include <rfl/visit.hpp>
 
 #include "engine/handlers/DataFrameManager.hpp"
 

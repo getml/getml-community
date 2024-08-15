@@ -8,14 +8,14 @@
 #ifndef HELPERS_COLUMN_HPP_
 #define HELPERS_COLUMN_HPP_
 
+#include <ranges>
 #include <type_traits>
 #include <variant>
 
 #include "fct/AccessIterator.hpp"
-#include "fct/fct.hpp"
 #include "helpers/Subrole.hpp"
-#include "memmap/memmap.hpp"
-#include "strings/strings.hpp"
+#include "memmap/StringVector.hpp"
+#include "strings/String.hpp"
 
 namespace helpers {
 
@@ -46,6 +46,11 @@ struct Column {
         unit_(_unit) {}
 
   ~Column() = default;
+
+  Column(Column&&) = default;
+  Column(Column const&) = default;
+  auto operator=(Column const&) -> Column& = delete;
+  auto operator=(Column&&) -> Column& = delete;
 
   /// Iterator begin
   auto begin() const {
@@ -114,8 +119,7 @@ struct Column {
   auto make_range() const {
     const auto col = *this;
     const auto get_value = [col](const size_t _i) -> T { return col[_i]; };
-    auto iota = fct::iota<size_t>(0, nrows_);
-    return iota | VIEWS::transform(get_value);
+    return std::views::iota(0uz, nrows_) | std::views::transform(get_value);
   }
 
   /// Pointer to the underlying data.

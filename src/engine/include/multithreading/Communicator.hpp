@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef MULTITHREADING_COMMUNICATOR_HPP_
 #define MULTITHREADING_COMMUNICATOR_HPP_
@@ -78,7 +78,7 @@ class Communicator {
   inline std::atomic<size_t>& num_threads_left() { return num_threads_left_; }
 
   /// To ensure compatability with MPI
-  inline const size_t rank() {
+  inline size_t rank() {
     return ((std::this_thread::get_id() == main_thread_id_) ? (0) : (1));
   }
 

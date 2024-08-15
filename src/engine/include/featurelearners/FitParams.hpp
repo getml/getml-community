@@ -10,15 +10,14 @@
 
 #include <memory>
 #include <optional>
+#include <rfl/Field.hpp>
+#include <rfl/NamedTuple.hpp>
 #include <string>
 #include <vector>
 
 #include "commands/DataFramesOrViews.hpp"
-#include "communication/communication.hpp"
-#include "containers/containers.hpp"
-#include "featurelearners/Int.hpp"
-#include <rfl/Field.hpp>
-#include <rfl/NamedTuple.hpp>
+#include "communication/SocketLogger.hpp"
+#include "containers/DataFrame.hpp"
 
 namespace featurelearners {
 
@@ -49,4 +48,3 @@ struct FitParams {
 }  // namespace featurelearners
 
 #endif  // FEATURELEARNERS_FITPARAMS_HPP_
-

@@ -10,13 +10,13 @@
 
 #include <cstddef>
 #include <optional>
-#include <string>
-
-#include "commands/NotSupportedInCommunity.hpp"
 #include <rfl/Field.hpp>
 #include <rfl/Literal.hpp>
 #include <rfl/NamedTuple.hpp>
 #include <rfl/TaggedUnion.hpp>
+#include <string>
+
+#include "commands/NotSupportedInCommunity.hpp"
 
 namespace commands {
 

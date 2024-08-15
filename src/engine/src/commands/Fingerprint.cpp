@@ -7,7 +7,8 @@
 
 #include "commands/Fingerprint.hpp"
 
-#include <rfl/json.hpp>
+#include <rfl/json/read.hpp>
+#include <rfl/json/write.hpp>
 
 namespace commands {
 

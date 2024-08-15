@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef TEXTMINING_WORDINDEX_HPP_
 #define TEXTMINING_WORDINDEX_HPP_
@@ -16,12 +16,7 @@
 
 // -------------------------------------------------------------------------
 
-#include "debug/debug.hpp"
-#include "fct/fct.hpp"
-#include "strings/strings.hpp"
-
-// -------------------------------------------------------------------------
-
+#include "debug/assert_msg.hpp"
 #include "textmining/Int.hpp"
 #include "textmining/Vocabulary.hpp"
 
@@ -103,8 +98,8 @@ class WordIndex {
     for (const auto& textfield : _range) {
       const auto processed = Vocabulary::process_text_field(textfield);
 
-      auto range = processed | VIEWS::transform(to_number) |
-                   VIEWS::filter(in_vocabulary);
+      auto range = processed | std::views::transform(to_number) |
+                   std::views::filter(in_vocabulary);
 
       size_t num_words = 0;
 

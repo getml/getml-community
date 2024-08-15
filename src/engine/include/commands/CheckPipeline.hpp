@@ -8,13 +8,11 @@
 #ifndef COMMANDS_CHECK_PIPELINE_HPP_
 #define COMMANDS_CHECK_PIPELINE_HPP_
 
-#include <optional>
-#include <vector>
-
-#include "commands/DataFramesOrViews.hpp"
 #include <rfl/Field.hpp>
 #include <rfl/NamedTuple.hpp>
 #include <rfl/define_named_tuple.hpp>
+
+#include "commands/DataFramesOrViews.hpp"
 
 namespace commands {
 

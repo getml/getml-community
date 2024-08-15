@@ -7,10 +7,12 @@
 
 #include "predictors/XGBoostIteratorSparse.hpp"
 
-#include <cstdint>
+#include <cstddef>
+#include <ranges>
 
-#include "debug/debug.hpp"
+#include "fct/to.hpp"
 #include "helpers/Endianness.hpp"
+#include "predictors/FloatFeature.hpp"
 
 namespace predictors {
 
@@ -92,11 +94,13 @@ XGBoostIteratorSparse::make_proxy_csr() const {
     return fct::Range(_col.data() + begin, _col.data() + end);
   };
 
-  const auto ranges_categorical =
-      fct::collect::vector(X_categorical_ | VIEWS::transform(get_subrange));
+  const auto ranges_categorical = X_categorical_ |
+                                  std::views::transform(get_subrange) |
+                                  fct::ranges::to<std::vector>();
 
-  const auto ranges_numerical =
-      fct::collect::vector(X_numerical_ | VIEWS::transform(get_subrange));
+  const auto ranges_numerical = X_numerical_ |
+                                std::views::transform(get_subrange) |
+                                fct::ranges::to<std::vector>();
 
   using DataType = CSRMatrixType::DataType;
   using IndicesType = CSRMatrixType::IndicesType;
