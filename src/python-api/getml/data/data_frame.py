@@ -5,7 +5,7 @@
 # for details.
 #
 
-"""Handler for the data stored in the getML engine."""
+"""Handler for the data stored in the getML Engine."""
 
 from __future__ import annotations
 
@@ -101,10 +101,10 @@ if TYPE_CHECKING:
 
 
 class DataFrame:
-    """Handler for the data stored in the getML engine.
+    """Handler for the data stored in the getML Engine.
 
     The [`DataFrame`][getml.DataFrame] class represents a data frame
-    object in the getML engine but does not contain any actual data
+    object in the getML Engine but does not contain any actual data
     itself. To create such a data frame object, fill it with data via
     the Python API, and to retrieve a handler for it, you can use one
     of the [`from_csv`][getml.DataFrame.from_csv],
@@ -115,19 +115,19 @@ class DataFrame:
     particularities of each of those flavors of the unified
     import interface.
 
-    If the data frame object is already present in the engine -
+    If the data frame object is already present in the Engine -
     either in memory as a temporary object or on disk when
     [`save`][getml.DataFrame.save] was called earlier -, the
     [`load_data_frame`][getml.data.load_data_frame] function will create a new
     handler without altering the underlying data. For more information
-    about the lifecycle of the data in the getML engine and its
+    about the lifecycle of the data in the getML Engine and its
     synchronization with the Python API please see the
     corresponding [User Guide][python-api-lifecycles].
 
     Attributes:
         name:
             Unique identifier used to link the handler with
-            the underlying data frame object in the engine.
+            the underlying data frame object in the Engine.
 
         roles:
             Maps the [`roles`][getml.data.roles] to the
@@ -141,7 +141,7 @@ class DataFrame:
             Otherwise, you can use the [`Roles`][getml.data.Roles] class.
 
     ??? example
-        Creating a new data frame object in the getML engine and importing
+        Creating a new data frame object in the getML Engine and importing
         data is done by one the class functions
         [`from_csv`][getml.DataFrame.from_csv],
         [`from_db`][getml.DataFrame.from_db],
@@ -160,7 +160,7 @@ class DataFrame:
         df_table = getml.DataFrame.from_pandas(table, name = 'table')
         ```
         In addition to creating a new data frame object in the getML
-        engine and filling it with all the content of `table`, the
+        Engine and filling it with all the content of `table`, the
         [`from_pandas`][getml.DataFrame.from_pandas] function also
         returns a [`DataFrame`][getml.DataFrame] handler to the
         underlying data.
@@ -169,10 +169,10 @@ class DataFrame:
         session. You can use their [`save`][getml.DataFrame.save]
         method to write them to disk, the
         [`list_data_frames`][getml.data.list_data_frames] function to list all
-        available objects in the engine, and
+        available objects in the Engine, and
         [`load_data_frame`][getml.data.load_data_frame] to create a
         [`DataFrame`][getml.DataFrame] handler for a data set already
-        present in the getML engine (see
+        present in the getML Engine (see
         [User Guide][python-api] for details).
 
         ```python
@@ -277,7 +277,7 @@ class DataFrame:
     # ----------------------------------------------------------------
 
     def _delete(self, mem_only: bool = False):
-        """Deletes the data frame from the getML engine.
+        """Deletes the data frame from the getML Engine.
 
         If called with the `mem_only` option set to True, the data
         frame corresponding to the handler represented by the current
@@ -917,7 +917,7 @@ class DataFrame:
         """Create a DataFrame from an Arrow Table.
 
         This is one of the fastest way to get data into the
-        getML engine.
+        getML Engine.
 
         Args:
             table:
@@ -1035,8 +1035,8 @@ class DataFrame:
     ) -> Union[DataFrame, Roles]:
         """Create a DataFrame from CSV files.
 
-        The getML engine will construct a data
-        frame object in the engine, fill it with the data read from
+        The getML Engine will construct a data
+        frame object in the Engine, fill it with the data read from
         the CSV file(s), and return a corresponding
         [`DataFrame`][getml.DataFrame] handle.
 
@@ -1106,7 +1106,7 @@ class DataFrame:
         ??? example
             Let's assume you have two CSV files - *file1.csv* and
             *file2.csv* - in the current working directory. You can
-            import their data into the getML engine using.
+            import their data into the getML Engine using.
             ```python
             df_expd = data.DataFrame.from_csv(
                 fnames=["file1.csv", "file2.csv"],
@@ -1252,7 +1252,7 @@ class DataFrame:
     ) -> Union[DataFrame, Roles]:
         """Create a DataFrame from a table in a database.
 
-        It will construct a data frame object in the engine, fill it
+        It will construct a data frame object in the Engine, fill it
         with the data read from table `table_name` in the connected
         database (see [`database`][getml.database]), and return a
         corresponding [`DataFrame`][getml.DataFrame] handle.
@@ -1288,7 +1288,7 @@ class DataFrame:
 
             conn:
                 The database connection to be used.
-                If you don't explicitly pass a connection, the engine
+                If you don't explicitly pass a connection, the Engine
                 will use the default connection.
 
         Returns:
@@ -1467,7 +1467,7 @@ class DataFrame:
     ) -> Union[DataFrame, Roles]:
         """Create a new DataFrame from a JSON string.
 
-        It will construct a data frame object in the engine, fill it
+        It will construct a data frame object in the Engine, fill it
         with the data read from the JSON string, and return a
         corresponding [`DataFrame`][getml.DataFrame] handle.
 
@@ -1553,7 +1553,7 @@ class DataFrame:
     ) -> Union[DataFrame, Roles]:
         """Create a DataFrame from a `pandas.DataFrame`.
 
-        It will construct a data frame object in the engine, fill it
+        It will construct a data frame object in the Engine, fill it
         with the data read from the `pandas.DataFrame`, and
         return a corresponding [`DataFrame`][getml.DataFrame] handle.
 
@@ -1659,7 +1659,7 @@ class DataFrame:
         """Create a DataFrame from parquet files.
 
         This is one of the fastest way to get data into the
-        getML engine.
+        getML Engine.
 
         Args:
             fnames:
@@ -1759,7 +1759,7 @@ class DataFrame:
     ) -> Union[DataFrame, Roles]:
         """Create a DataFrame from a `pyspark.sql.DataFrame`.
 
-        It will construct a data frame object in the engine, fill it
+        It will construct a data frame object in the Engine, fill it
         with the data read from the `pyspark.sql.DataFrame`, and
         return a corresponding [`DataFrame`][getml.DataFrame] handle.
 
@@ -1883,7 +1883,7 @@ class DataFrame:
         """Create a DataFrame from CSV files located in an S3 bucket.
 
         This classmethod will construct a data
-        frame object in the engine, fill it with the data read from
+        frame object in the Engine, fill it with the data read from
         the CSV file(s), and return a corresponding
         [`DataFrame`][getml.DataFrame] handle.
 
@@ -1953,7 +1953,7 @@ class DataFrame:
         ??? example
             Let's assume you have two CSV files - *file1.csv* and
             *file2.csv* - in the bucket. You can
-            import their data into the getML engine using the following
+            import their data into the getML Engine using the following
             commands:
             ```python
             getml.engine.set_s3_access_key_id("YOUR-ACCESS-KEY-ID")
@@ -1969,7 +1969,7 @@ class DataFrame:
             ```
 
             You can also set the access credential as environment variables
-            before you launch the getML engine.
+            before you launch the getML Engine.
 
             Also refer to the documentation on [`from_csv`][getml.DataFrame.from_csv]
             for further information on overriding the CSV sniffer for greater
@@ -2076,7 +2076,7 @@ class DataFrame:
         """Create a DataFrame from a [`View`][getml.data.View].
 
         This classmethod will construct a data
-        frame object in the engine, fill it with the data read from
+        frame object in the Engine, fill it with the data read from
         the [`View`][getml.data.View], and return a corresponding
         [`DataFrame`][getml.DataFrame] handle.
 
@@ -2145,7 +2145,7 @@ class DataFrame:
 
         The data frame object holding the same name as the current
         [`DataFrame`][getml.DataFrame] instance will be loaded from
-        disk into the getML engine and updates the current handler
+        disk into the getML Engine and updates the current handler
         using [`refresh`][getml.DataFrame.refresh].
 
         ??? example
@@ -2159,7 +2159,7 @@ class DataFrame:
             can find our underlying data frame object 'test' listed
             under the 'in_memory' key (it was created and imported by
             [`make_numerical`][getml.datasets.make_numerical]). This means the
-            getML engine does only hold it in memory (RAM) yet, and we
+            getML Engine does only hold it in memory (RAM) yet, and we
             still have to [`save`][getml.DataFrame.save] it to
             disk in order to [`load`][getml.DataFrame.load] it
             again or to prevent any loss of information between
@@ -2172,7 +2172,7 @@ class DataFrame:
 
         Returns:
                 Updated handle the underlying data frame in the getML
-                engine.
+                Engine.
 
         Note:
             When invoking [`load`][getml.DataFrame.load] all
@@ -2200,7 +2200,7 @@ class DataFrame:
             Alternatively, [`load_data_frame`][getml.data.load_data_frame]
             offers an easier way of creating
             [`DataFrame`][getml.DataFrame] handlers to data in the
-            getML engine.
+            getML Engine.
 
         """
 
@@ -2224,7 +2224,7 @@ class DataFrame:
     @property
     def _monitor_url(self) -> Optional[str]:
         """
-        A link to the data frame in the getML monitor.
+        A link to the data frame in the getML Monitor.
         """
         url = comm._monitor_url()
         return (
@@ -2237,7 +2237,7 @@ class DataFrame:
 
     def nbytes(self) -> np.uint64:
         """Size of the data stored in the underlying data frame in the getML
-        engine.
+        Engine.
 
         Returns:
                 Size of the underlying object in bytes.
@@ -2304,10 +2304,10 @@ class DataFrame:
         table: Union[pa.RecordBatch, pa.Table, Iterable[pa.RecordBatch]],
         append: bool = False,
     ) -> DataFrame:
-        """Uploads a `pyarrow.Table` or `pyarrow.RecordBatch` to the getML engine.
+        """Uploads a `pyarrow.Table` or `pyarrow.RecordBatch` to the getML Engine.
 
         Replaces the actual content of the underlying data frame in
-        the getML engine with `table`.
+        the getML Engine with `table`.
 
         Args:
             table:
@@ -2315,7 +2315,7 @@ class DataFrame:
 
             append:
                 If a data frame object holding the same `name` is
-                already present in the getML engine, should the content in
+                already present in the getML Engine, should the content in
                 `query` be appended or replace the existing data?
 
         Returns:
@@ -2324,7 +2324,7 @@ class DataFrame:
         Note:
             For columns containing `pandas.Timestamp` there can
             be small inconsistencies in the order of microseconds
-            when sending the data to the getML engine. This is due to
+            when sending the data to the getML Engine. This is due to
             the way the underlying information is stored.
         """
 
@@ -2915,7 +2915,7 @@ class DataFrame:
             conn:
                 The database connection to be used.
                 If you don't explicitly pass a connection,
-                the engine will use the default connection.
+                the Engine will use the default connection.
 
         Returns:
                 Handler of the underlying data.
@@ -2966,16 +2966,16 @@ class DataFrame:
         """Uploads a `pandas.DataFrame`.
 
         Replaces the actual content of the underlying data frame in
-        the getML engine with `pandas_df`.
+        the getML Engine with `pandas_df`.
 
         Args:
             pandas_df:
                 Data the underlying data frame object in the getML
-                engine should obtain.
+                Engine should obtain.
 
             append:
                 If a data frame object holding the same ``name`` is
-                already present in the getML engine, should the content in
+                already present in the getML Engine, should the content in
                 `query` be appended or replace the existing data?
 
         Returns:
@@ -2983,7 +2983,7 @@ class DataFrame:
         Note:
             For columns containing `pandas.Timestamp` there can
             occur small inconsistencies in the order of microseconds
-            when sending the data to the getML engine. This is due to
+            when sending the data to the getML Engine. This is due to
             the way the underlying information is stored.
         """
 
@@ -3013,16 +3013,16 @@ class DataFrame:
         """Uploads a `pyspark.sql.DataFrame`.
 
         Replaces the actual content of the underlying data frame in
-        the getML engine with `pandas_df`.
+        the getML Engine with `pandas_df`.
 
         Args:
             spark_df:
                 Data the underlying data frame object in the getML
-                engine should obtain.
+                Engine should obtain.
 
             append:
                 If a data frame object holding the same ``name`` is
-                already present in the getML engine, should the content in
+                already present in the getML Engine, should the content in
                 `query` be appended or replace the existing data?
 
         Returns:
@@ -3067,13 +3067,13 @@ class DataFrame:
 
             append:
                 If a data frame object holding the same ``name`` is
-                already present in the getML engine, should the content in
+                already present in the getML Engine, should the content in
                 `query` be appended or replace the existing data?
 
             conn:
                 The database connection to be used.
                 If you don't explicitly pass a connection,
-                the engine will use the default connection.
+                the Engine will use the default connection.
 
         Returns:
                 Handler of the underlying data.
@@ -3122,7 +3122,7 @@ class DataFrame:
 
     def refresh(self) -> DataFrame:
         """Aligns meta-information of the current instance with the
-        corresponding data frame in the getML engine.
+        corresponding data frame in the getML Engine.
 
         This method can be used to avoid encoding conflicts. Note that
         [`load`][getml.DataFrame.load] as well as several other
@@ -3130,7 +3130,7 @@ class DataFrame:
 
         Returns:
                 Updated handle the underlying data frame in the getML
-                engine.
+                Engine.
 
         """
 
@@ -3225,7 +3225,7 @@ class DataFrame:
     # ------------------------------------------------------------
 
     def save(self) -> DataFrame:
-        """Writes the underlying data in the getML engine to disk.
+        """Writes the underlying data in the getML Engine to disk.
 
         Returns:
                 The current instance.
@@ -3445,7 +3445,7 @@ class DataFrame:
     def to_arrow(self) -> pa.Table:
         """Creates a `pyarrow.Table` from the current instance.
 
-        Loads the underlying data from the getML engine and constructs
+        Loads the underlying data from the getML Engine and constructs
         a `pyarrow.Table`.
 
         Returns:
@@ -3521,7 +3521,7 @@ class DataFrame:
             conn:
                 The database connection to be used.
                 If you don't explicitly pass a connection,
-                the engine will use the default connection.
+                the Engine will use the default connection.
         """
 
         conn = conn or database.Connection()
@@ -3569,7 +3569,7 @@ class DataFrame:
     def to_json(self):
         """Creates a JSON string from the current instance.
 
-        Loads the underlying data from the getML engine and constructs
+        Loads the underlying data from the getML Engine and constructs
         a JSON string.
         """
         return self.to_pandas().to_json()
@@ -3579,7 +3579,7 @@ class DataFrame:
     def to_pandas(self) -> pd.DataFrame:
         """Creates a `pandas.DataFrame` from the current instance.
 
-        Loads the underlying data from the getML engine and constructs
+        Loads the underlying data from the getML Engine and constructs
         `pandas.DataFrame`.
 
         Returns:
@@ -3636,7 +3636,7 @@ class DataFrame:
     ) -> pyspark.sql.DataFrame:
         """Creates a `pyspark.sql.DataFrame` from the current instance.
 
-        Loads the underlying data from the getML engine and constructs
+        Loads the underlying data from the getML Engine and constructs
         a `pyspark.sql.DataFrame`.
 
         Args:

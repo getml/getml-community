@@ -6,7 +6,7 @@
 #
 
 
-"""Loads a hyperparameter optimization object from the getML engine into Python."""
+"""Loads a hyperparameter optimization object from the getML Engine into Python."""
 
 from typing import Union
 
@@ -23,7 +23,7 @@ from .hyperopt import (
 def load_hyperopt(
     name: str,
 ) -> Union[GaussianHyperparameterSearch, LatinHypercubeSearch, RandomSearch]:
-    """Loads a hyperparameter optimization object from the getML engine into Python.
+    """Loads a hyperparameter optimization object from the getML Engine into Python.
 
     Args:
         name:

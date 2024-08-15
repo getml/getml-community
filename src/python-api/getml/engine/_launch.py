@@ -208,11 +208,11 @@ def launch(
     token: Optional[str] = None,
 ):
     """
-    Launches the getML engine.
+    Launches the getML Engine.
 
     Args:
       allow_push_notifications:
-        Whether you want to allow the getML monitor to send push notifications to your desktop.
+        Whether you want to allow the getML Monitor to send push notifications to your desktop.
 
       allow_remote_ips:
         Whether you want to allow remote IPs to access the http-port.
@@ -223,12 +223,12 @@ def launch(
         All binaries will be installed there.
 
       http_port:
-        The local port of the getML monitor.
+        The local port of the getML Monitor.
         This port can only be accessed from your local computer,
         unless you set `allow_remote_ips=True`.
 
       in_memory:
-        Whether you want the engine to process everything in memory.
+        Whether you want the Engine to process everything in memory.
 
       install:
         Reinstalls getML, even if it is already installed.
@@ -237,23 +237,23 @@ def launch(
         Whether you want to automatically launch your browser.
 
       log:
-        Whether you want the engine log to appear in the logfile (more detailed logging).
-        The engine log also appears in the 'Log' page of the monitor.
+        Whether you want the Engine log to appear in the logfile (more detailed logging).
+        The Engine log also appears in the 'Log' page of the Monitor.
 
       project_directory:
         The directory in which to store all of your projects.
 
       proxy_url:
-        The URL of any proxy server that that redirects to the getML monitor.
+        The URL of any proxy server that that redirects to the getML Monitor.
 
       token:
         The token used for authentication.
-        Authentication is required when remote IPs are allowed to access the monitor.
+        Authentication is required when remote IPs are allowed to access the Monitor.
         If authentication is required and no token is passed,
         a random hexcode will be generated as the token."""
 
     if _is_monitor_alive():
-        print("getML engine is already running.")
+        print("getML Engine is already running.")
         return
     if platform.system() != System.LINUX:
         raise OSError(
@@ -285,4 +285,4 @@ def launch(
     Popen(cmd, cwd=cwd, shell=False, stdout=logfile, stdin=logfile, stderr=logfile)
     while not _is_monitor_alive():
         sleep(0.1)
-    print(f"Launched the getML engine. The log output will be stored in {log_path}.")
+    print(f"Launched the getML Engine. The log output will be stored in {log_path}.")

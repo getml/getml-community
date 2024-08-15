@@ -143,7 +143,7 @@ def suspend() -> None:
 def switch(name: str) -> None:
     """Creates a new project or loads an existing one.
 
-    If there is no project called `name` present on the engine, a new one will
+    If there is no project called `name` present on the Engine, a new one will
     be created. See the [User guide][project-management] for more
     information.
 

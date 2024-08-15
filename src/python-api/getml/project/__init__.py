@@ -38,8 +38,8 @@ __all__ = _all + ["DataFrames", "Hyperopts", "Pipelines"] + ["__getattr__"]  # n
 class ProjectModule(ModuleType):
     def __repr__(self):
         output = "No project set. To set: `getml.set_project(...)`"
-        # resolving name has the side effect of reaching out to the monitor and
-        # the engine and therefore triggers a message if either is unreachable
+        # resolving name has the side effect of reaching out to the Monitor and
+        # the Engine and therefore triggers a message if either is unreachable
         project_name = self.name  # pylint: disable=E1101
         if is_alive():
             output = f"Current project:\n\n{project_name}"

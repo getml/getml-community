@@ -15,12 +15,12 @@ The [`connect_bigquery`][getml.database.connect_bigquery.connect_bigquery],
 [`connect_mysql`][getml.database.connect_mysql.connect_mysql],
 [`connect_postgres`][getml.database.connect_postgres.connect_postgres], and
 [`connect_sqlite3`][getml.database.connect_sqlite3.connect_sqlite3] functions establish a
-connection between a database and the getML engine. During the data
+connection between a database and the getML Engine. During the data
 import using either the [`read_db`][getml.DataFrame.read_db] or
 [`read_query`][getml.DataFrame.read_query] methods of a
 [`DataFrame`][getml.DataFrame] instance or the corresponding
 [`from_db`][getml.DataFrame.from_db] class method all data will be
-directly loaded from the database into the engine without ever passing
+directly loaded from the database into the Engine without ever passing
 the Python interpreter.
 
 In addition, several auxiliary functions that might be handy during

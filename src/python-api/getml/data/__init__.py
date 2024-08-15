@@ -6,24 +6,24 @@
 #
 
 """Contains functionalities for importing, handling, and retrieving
-data from the getML engine.
+data from the getML Engine.
 
-All data relevant for the getML suite has to be present in the getML
-engine. Its Python API itself does not store any of the data used for
+All data relevant for the getML Suite has to be present in the getML
+Engine. Its Python API itself does not store any of the data used for
 training or prediction. Instead, it provides a handler class for the
-data frame objects in the getML engine, the
+data frame objects in the getML Engine, the
 [`DataFrame`][getml.DataFrame]. Either using this overall handler for
 the underlying data set or the individual [`columns`][getml.data.columns]
-it is composed of, one can both import and retrieve data from the engine
+it is composed of, one can both import and retrieve data from the Engine
 as well as performing operations on them. In addition to the data
-frame objects, the engine also uses an abstract and lightweight
+frame objects, the Engine also uses an abstract and lightweight
 version of the underlying data model, which is represented by the
 [`Placeholder`][getml.data.Placeholder].
 
-In general, working with data within the getML suite is organized in
+In general, working with data within the getML Suite is organized in
 three different steps.
 
-* [Importing the data][importing-data] into the getML engine .
+* [Importing the data][importing-data] into the getML Engine .
 * [Annotating the data][annotating-data] by assigning
   [`roles`][getml.data.roles] to the individual [`columns`][getml.data.columns]
 * [Constructing the data model][data-model] by deriving
@@ -31,7 +31,7 @@ three different steps.
   represent the data schema.
 
 ??? example
-    Creating a new data frame object in the getML engine and importing
+    Creating a new data frame object in the getML Engine and importing
     data is done by one of the class methods
     [`from_csv`][getml.DataFrame.from_csv],
     [`from_db`][getml.DataFrame.from_db],
@@ -40,7 +40,7 @@ three different steps.
 
     In this example we chose to directly load data from a public
     database in the internet. But, firstly, we have to connect the
-    getML engine to the database (see [MySQL interface][mysql] in the user
+    getML Engine to the database (see [MySQL interface][mysql] in the user
     guide for further details).
 
 
@@ -55,7 +55,7 @@ three different steps.
     )
     ```
 
-    Using the established connection, we can tell the engine to
+    Using the established connection, we can tell the Engine to
     construct a new data frame object called `df_loan`, fill it with
     the data of `loan` table contained in the MySQL database, and
     return a [`DataFrame`][getml.DataFrame] handler associated with

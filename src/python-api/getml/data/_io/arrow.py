@@ -41,7 +41,7 @@ representable is the negative of this maximum value.
 INT_ENCODING_HINTS_PARTIAL = cleandoc(
     """
     If your column contains catergorical values, you can either cast the column to
-    string before sending the data to the getML engine or explicitly set the
+    string before sending the data to the getML Engine or explicitly set the
     column's role to 'categorical' in `from_...` or `read_...` methods.
 
     If your column contains numerical values, rescale your integers to be within the
@@ -116,7 +116,7 @@ UNPARAMETERIZED_TYPE_CONVERSION_MAPPING = {
 }
 """
 Mapping from unsupported native unparameterized arrow types to supported types
-that can be handled by the getML engine.
+that can be handled by the getML Engine.
 
 Arrow's parameterized types (e.g. decimals) are not included here, as they are
 parameterized and keeping track of all possible parameterizations would be cumbersome.

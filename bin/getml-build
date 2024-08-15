@@ -28,7 +28,7 @@ show_help() {
 		Subcommands:
 		  [a]ll       Build all (whole package, [p]ackage + [py]thon API + tar+gz [ar]chive)
 		  [c]li       Build cli
-		  [e]ngine    Build engine
+		  [e]ngine    Build Engine
 		  [p]ackage   Export runable [e]ngine + [c]li package
 		  [py]thon    Package Python API
 		  [r]untime   Build docker runtime image

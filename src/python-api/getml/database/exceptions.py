@@ -16,7 +16,7 @@ FILE_SYSTEM_MISMATCH_ERROR_MSG_TEMPLATE = cleandoc(
     Engine could not retrieve file:
     {file_name!r}
 
-    Is the engine running inside docker? When working with getML's database
+    Is the Engine running inside docker? When working with getML's database
     module, file paths are interpreted as paths inside the docker container.
 
     Hint: Use `docker cp <container>:/home/getml/assets` to copy the files into

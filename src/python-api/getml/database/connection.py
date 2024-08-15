@@ -7,7 +7,7 @@
 
 
 """
-A handle to a database connection on the getML engine.
+A handle to a database connection on the getML Engine.
 """
 
 import json
@@ -19,7 +19,7 @@ from getml.utilities.formatting import _SignatureFormatter
 
 class Connection:
     """
-    A handle to a database connection on the getML engine.
+    A handle to a database connection on the getML Engine.
 
     Attributes:
         conn_id:

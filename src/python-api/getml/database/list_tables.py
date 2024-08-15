@@ -26,7 +26,7 @@ def list_tables(conn: Optional[Connection] = None) -> List[str]:
         conn:
             The database connection to be used.
             If you don't explicitly pass a connection,
-            the engine will use the default connection.
+            the Engine will use the default connection.
 
     Returns:
         A list of strings containing the names of the tables and views.

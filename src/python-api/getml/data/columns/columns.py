@@ -363,7 +363,7 @@ class BooleanColumnView(_View):
 
 
 class StringColumn(_Column):
-    """Handle for categorical data that is kept in the getML engine
+    """Handle for categorical data that is kept in the getML Engine
 
     Attributes:
         name:
@@ -499,7 +499,7 @@ class StringColumnView(_View):
     # executed yet.
     col2 = col1.substr(4, 3)
 
-    # This is where the engine executes
+    # This is where the Engine executes
     # the substring operation.
     my_df.add(col2, "short_names", roles.categorical)
 
@@ -589,9 +589,9 @@ class StringColumnView(_View):
 
 
 class FloatColumn(_Column):
-    """Handle for numerical data in the engine.
+    """Handle for numerical data in the Engine.
 
-    This is a handler for all numerical data in the getML engine,
+    This is a handler for all numerical data in the getML Engine,
     including time stamps.
 
     Attributes:

@@ -35,7 +35,7 @@ func makeRunCommand(
 		&conf.InMemory,
 		"in-memory",
 		conf.InMemory,
-		"Whether you want the engine to process everything in memory.")
+		"Whether you want the Engine to process everything in memory.")
 
 	cmd.BoolVar(
 		&conf.Monitor.AllowRemoteIPs,
@@ -48,7 +48,7 @@ func makeRunCommand(
 		&conf.Monitor.HTTPPort,
 		"http-port",
 		conf.Monitor.HTTPPort,
-		"The local port of the getML monitor."+
+		"The local port of the getML Monitor."+
 			" This port can only be accessed from your local computer,"+
 			" unless you set allow-remote-ips=True.")
 
@@ -57,15 +57,15 @@ func makeRunCommand(
 	&conf.Monitor.HTTPSPort,
 	"https-port",
 	conf.Monitor.HTTPSPort,
-	"The remote and encrypted port of the getML monitor."+
+	"The remote and encrypted port of the getML Monitor."+
 	" This port can be accessed remotely, but it is encrypted.")*/
 
 	cmd.BoolVar(
 		&conf.Monitor.Log,
 		"log",
 		conf.Monitor.Log,
-		"Whether you want the engine log to appear in the command line."+
-			" The engine log also appears in the 'Log' page of the monitor.")
+		"Whether you want the Engine log to appear in the command line."+
+			" The Engine log also appears in the 'Log' page of the Monitor.")
 
 	cmd.IntVar(
 		&conf.Monitor.TCPPort,
@@ -78,21 +78,21 @@ func makeRunCommand(
 		&conf.Monitor.ProxyURL,
 		"proxy-url",
 		conf.Monitor.ProxyURL,
-		"The URL of any proxy server that that redirects to the getML monitor.")
+		"The URL of any proxy server that that redirects to the getML Monitor.")
 
 	cmd.StringVar(
 		&conf.Monitor.Token,
 		"token",
 		"",
 		"The token used for authentication. Authentication is required when remote IPs are "+
-			"allowed to access the monitor. If authentication is required and no token is passed, "+
+			"allowed to access the Monitor. If authentication is required and no token is passed, "+
 			"a random hexcode will be generated as the token.")
 
 	cmd.BoolVar(
 		&conf.Monitor.AllowPushNotifications,
 		"allow-push-notifications",
 		conf.Monitor.AllowPushNotifications,
-		"Whether you want to allow the getML monitor to send push notifications to your desktop.")
+		"Whether you want to allow the getML Monitor to send push notifications to your desktop.")
 
 	cmd.BoolVar(
 		&conf.Monitor.LaunchBrowser,

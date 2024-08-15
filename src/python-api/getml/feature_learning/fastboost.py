@@ -66,7 +66,7 @@ class Fastboost(_FeatureLearner):
         num_threads:
             Number of threads used by the feature learning algorithm. If set to
             zero or a negative value, the number of threads will be
-            determined automatically by the getML engine. Range:
+            determined automatically by the getML Engine. Range:
             [0, ∞]
 
         reg_lambda:

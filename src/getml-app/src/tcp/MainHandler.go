@@ -44,7 +44,7 @@ func handleName(nameByte []byte) (string, error) {
 
 // -------------------------------------------------------------------------------------------
 
-// MainHandler manages the engine processes.
+// MainHandler manages the Engine processes.
 type MainHandler struct {
 	args []string
 
@@ -249,7 +249,7 @@ func (m *MainHandler) DeleteProject(nameByte []byte, c net.Conn) {
 
 // -------------------------------------------------------------------------------------------
 
-// Exit shuts down the getML monitor.
+// Exit shuts down the getML Monitor.
 func (m *MainHandler) Exit() {
 
 	os.Exit(-1)
@@ -277,14 +277,14 @@ func (m *MainHandler) findFreePort() (int, error) {
 
 // -------------------------------------------------------------------------------------------
 
-// IsAlive confirms that the monitor is still alive.
+// IsAlive confirms that the Monitor is still alive.
 func (m *MainHandler) IsAlive(c net.Conn) {
 	sendString(c, "yes")
 }
 
 // -------------------------------------------------------------------------------------------
 
-// GetStartMessage returns the start message to the monitor.
+// GetStartMessage returns the start message to the Monitor.
 func (m *MainHandler) GetStartMessage(c net.Conn) {
 
 	m.projects.Lock.RLock()
@@ -716,7 +716,7 @@ func (m *MainHandler) SuspendProject(nameByte []byte, c net.Conn) {
 
 // -------------------------------------------------------------------------------------------
 
-// ShutdownLocal handles a request by the engine to shut down.
+// ShutdownLocal handles a request by the Engine to shut down.
 func (m *MainHandler) ShutdownLocal() {
 	m.projects.KillAll()
 	os.Exit(0)

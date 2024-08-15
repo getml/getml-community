@@ -11,7 +11,7 @@ Handlers for 1-d arrays storing the data of an individual variable.
 
 Like the [`DataFrame`][getml.DataFrame], the
 [`columns`][getml.data.columns] do not contain any actual data themselves
-but are only handlers to objects within the getML engine. These
+but are only handlers to objects within the getML Engine. These
 containers store data of a single variable in a one-dimensional array
 of a uniform type.
 

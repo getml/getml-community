@@ -97,7 +97,7 @@ class View:
     - Views are immutable. In-place operations on a view are not
       possible. Any operation on a view will result in a new view.
 
-    - Views have no direct representation on the getML engine, and
+    - Views have no direct representation on the getML Engine, and
       therefore they do not need to have an identifying name.
 
     Attributes:
@@ -500,7 +500,7 @@ class View:
         Args:
             force:
                 If the number of rows is unknown,
-                do you want to force the engine to calculate it anyway?
+                do you want to force the Engine to calculate it anyway?
                 This is a relatively expensive operation, therefore
                 you might not necessarily want this.
 
@@ -547,11 +547,11 @@ class View:
 
     def refresh(self) -> View:
         """Aligns meta-information of the current instance with the
-        corresponding data frame in the getML engine.
+        corresponding data frame in the getML Engine.
 
         Returns:
                 Updated handle the underlying data frame in the getML
-                engine.
+                Engine.
 
         """
         self._base = self.__dict__["_base"].refresh()
@@ -636,7 +636,7 @@ class View:
     def to_arrow(self) -> pyarrow.Table:
         """Creates a `pyarrow.Table` from the view.
 
-        Loads the underlying data from the getML engine and constructs
+        Loads the underlying data from the getML Engine and constructs
         a `pyarrow.Table`.
 
         Returns:
@@ -650,7 +650,7 @@ class View:
     def to_json(self) -> str:
         """Creates a JSON string from the current instance.
 
-        Loads the underlying data from the getML engine and constructs
+        Loads the underlying data from the getML Engine and constructs
         a JSON string.
 
         Returns:
@@ -727,7 +727,7 @@ class View:
             conn:
                 The database connection to be used.
                 If you don't explicitly pass a connection,
-                the engine will use the default connection.
+                the Engine will use the default connection.
         """
 
         conn = conn or Connection()
@@ -765,7 +765,7 @@ class View:
     def to_pandas(self) -> pd.DataFrame:
         """Creates a `pandas.DataFrame` from the view.
 
-        Loads the underlying data from the getML engine and constructs
+        Loads the underlying data from the getML Engine and constructs
         a `pandas.DataFrame`.
 
         Returns:
@@ -822,7 +822,7 @@ class View:
     ) -> pyspark.sql.DataFrame:
         """Creates a `pyspark.sql.DataFrame` from the current instance.
 
-        Loads the underlying data from the getML engine and constructs
+        Loads the underlying data from the getML Engine and constructs
         a `pyspark.sql.DataFrame`.
 
         Args:

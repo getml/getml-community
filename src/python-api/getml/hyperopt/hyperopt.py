@@ -37,7 +37,7 @@ from .validation import _validate_hyperopt
 def _get_json_obj(name):
     """
     Retrieves a JSON representation of the hyperopt object *name*
-    from the engine.
+    from the Engine.
     """
 
     cmd: Dict[str, Any] = {}
@@ -157,7 +157,7 @@ class _Hyperopt:
 
     def _getml_deserialize(self) -> Dict[str, Any]:
         """
-        Expresses the hyperparameter optimization in a form the engine can understand.
+        Expresses the hyperparameter optimization in a form the Engine can understand.
         """
         cmd = self._append_underscore(self.__dict__)
 
@@ -366,7 +366,7 @@ class _Hyperopt:
     # ------------------------------------------------------------
 
     def refresh(self) -> _Hyperopt:
-        """Reloads the hyperparameter optimization from the engine.
+        """Reloads the hyperparameter optimization from the Engine.
 
         Returns:
                 Current instance

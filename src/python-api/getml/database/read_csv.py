@@ -61,7 +61,7 @@ def read_csv(
         conn:
             The database connection to be used.
             If you don't explicitly pass a connection,
-            the engine will use the default connection.
+            the Engine will use the default connection.
 
     ??? example
         Let's assume you have two CSV files - *file1.csv* and

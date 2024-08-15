@@ -7,7 +7,7 @@
 
 package config
 
-// MonitorConfig contains all variables related to the monitor
+// MonitorConfig contains all variables related to the Monitor
 // that CAN be changed by the user.
 type MonitorConfig struct {
 	AllowPushNotifications bool `json:"allowPushNotifications"`

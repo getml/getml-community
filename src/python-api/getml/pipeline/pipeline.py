@@ -750,7 +750,7 @@ class Pipeline:
 
     def _getml_deserialize(self) -> Dict[str, Any]:
         """
-        Expresses the pipeline in a form the engine can understand.
+        Expresses the pipeline in a form the Engine can understand.
         """
 
         cmd = dict()
@@ -1155,7 +1155,7 @@ class Pipeline:
 
     def delete(self) -> None:
         """
-        Deletes the pipeline from the engine.
+        Deletes the pipeline from the Engine.
 
         Note:
             Caution: You can not undo this action!
@@ -1384,7 +1384,7 @@ class Pipeline:
     def id(self) -> str:
         """
         ID of the pipeline. This is used to uniquely identify
-        the pipeline on the engine.
+        the pipeline on the Engine.
 
         Returns:
             The ID of the pipeline.
@@ -1537,7 +1537,7 @@ class Pipeline:
     # ------------------------------------------------------------
 
     def refresh(self) -> Pipeline:
-        """Reloads the pipeline from the engine.
+        """Reloads the pipeline from the Engine.
 
         This discards all local changes you have made since the
         last time you called [`fit`][getml.Pipeline.fit].

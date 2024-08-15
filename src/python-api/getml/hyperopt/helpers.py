@@ -6,7 +6,7 @@
 #
 
 
-"""Lists all hyperparameter optimization objects present in the engine."""
+"""Lists all hyperparameter optimization objects present in the Engine."""
 
 import json
 from typing import Any, Dict, List
@@ -17,7 +17,7 @@ import getml.communication as comm
 
 
 def list_hyperopts() -> List[str]:
-    """Lists all hyperparameter optimization objects present in the engine.
+    """Lists all hyperparameter optimization objects present in the Engine.
 
     Note that this function only lists hyperopts which are part of the
     current project. See [`set_project`][getml.engine.set_project] for

@@ -32,22 +32,22 @@ from getml.version import __version__
 
 port = 1708
 """
-The default starting port for getML engines. The port is automatically set
-according to the worker engine process spawned when setting a project.
-The monitor (app) automatically looks up a free port (starting from 1708).
+The default starting port for getML Engines. The port is automatically set
+according to the worker Engine process spawned when setting a project.
+The Monitor (app) automatically looks up a free port (starting from 1708).
 Setting the port here has no effect.
 """
 
 tcp_port = 1711
 """
-The TCP port of the getML monitor (app) that schedules engine workers
+The TCP port of the getML Monitor (app) that schedules Engine workers
 """
 
 # --------------------------------------------------------------------
 
 ENGINE_CANNOT_CONNECT_ERROR_MSG_TEMPLATE = cleandoc(
     """
-    Cannot reach the getML engine. Please make sure you have set a project.
+    Cannot reach the getML Engine. Please make sure you have set a project.
 
     To set: `getml.engine.set_project(...)`
 
@@ -58,7 +58,7 @@ ENGINE_CANNOT_CONNECT_ERROR_MSG_TEMPLATE = cleandoc(
 
 MONITOR_CANNOT_CONNECT_ERROR_MSG = cleandoc(
     """
-    Cannot reach the getML monitor. Please make sure the getML app is running.
+    Cannot reach the getML Monitor. Please make sure the getML app is running.
     """
 )
 
@@ -70,10 +70,10 @@ SEP_SIZE = np.uint64(10)
 
 
 def is_monitor_alive() -> bool:
-    """Checks if the getML monitor is running.
+    """Checks if the getML Monitor is running.
 
     Returns:
-        `True` if the getML monitor is running and ready to accept commands and `False` otherwise.
+        `True` if the getML Monitor is running and ready to accept commands and `False` otherwise.
     """
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -92,10 +92,10 @@ def is_monitor_alive() -> bool:
 
 
 def is_engine_alive() -> bool:
-    """Checks if the getML engine is running.
+    """Checks if the getML Engine is running.
 
     Returns:
-            True if the getML engine is running and ready to accept
+            True if the getML Engine is running and ready to accept
             commands and False otherwise.
 
     """
@@ -181,7 +181,7 @@ def _make_error_msg() -> str:
 
 
 def recv_data(sock: socket.socket, size: Union[numbers.Real, int]) -> bytes:
-    """Receives data (of any type) sent by the getml engine.
+    """Receives data (of any type) sent by the getML Engine.
 
     Args:
         sock: The socket to receive the data from.
@@ -216,7 +216,7 @@ def recv_data(sock: socket.socket, size: Union[numbers.Real, int]) -> bytes:
 
         if not chunk:
             raise OSError(
-                """The getML engine died unexpectedly.
+                """The getML Engine died unexpectedly.
                     If this wasn't done on purpose, please get in contact
                     with our support or file a bug report."""
             )
@@ -233,7 +233,7 @@ def recv_data(sock: socket.socket, size: Union[numbers.Real, int]) -> bytes:
 
 def recv_float_matrix(sock: socket.socket) -> np.ndarray:
     """
-    Receives a matrix (type np.float64) from the getml engine.
+    Receives a matrix (type np.float64) from the getML Engine.
 
     Args:
         sock: The socket to receive the matrix from.
@@ -303,7 +303,7 @@ def recv_bytes(sock: socket.socket) -> bytes:
 
 def recv_string(sock: socket.socket) -> str:
     """
-    Receives a string from the getml engine
+    Receives a string from the getML Engine
     (an actual string, not a bytestring).
 
     Args:
@@ -338,7 +338,7 @@ def recv_string(sock: socket.socket) -> str:
 
 def recv_string_column(sock: socket.socket) -> np.ndarray:
     """
-    Receives a column of type string from the getml engine
+    Receives a column of type string from the getML Engine
 
     Args:
         sock: The socket to receive the column from.
@@ -387,7 +387,7 @@ class _Issue(NamedTuple):
 
 def recv_issues(sock: socket.socket) -> List[_Issue]:
     """
-    Receives a set of warnings to raise from the getml engine.
+    Receives a set of warnings to raise from the getML Engine.
 
     Args:
         sock: The socket to receive the warnings from.
@@ -420,10 +420,10 @@ def recv_issues(sock: socket.socket) -> List[_Issue]:
 
 
 def send(cmd: Dict[str, Any]) -> None:
-    """Sends a command to the getml engine and closes the established
+    """Sends a command to the getML Engine and closes the established
     connection.
 
-    Creates a socket and sends a command to the getML engine using the
+    Creates a socket and sends a command to the getML Engine using the
     module-wide variable [`port`][getml.communication.port].
 
     A message (string) from the `socket.socket` will be
@@ -432,15 +432,15 @@ def send(cmd: Dict[str, Any]) -> None:
     properly. Else, an Exception will be thrown containing the
     message.
 
-    In case another message is supposed to be sent by the engine,
+    In case another message is supposed to be sent by the Engine,
     [`send_and_get_socket`][getml.communication.send_and_get_socket] has to be used
     and the calling function must handle the message itself!
 
     Please be very careful when altering the routing/calling behavior
-    of the socket communication! The engine is quite sensitive and might freeze.
+    of the socket communication! The Engine is quite sensitive and might freeze.
 
     Args:
-        cmd: A dictionary specifying the command the engine is
+        cmd: A dictionary specifying the command the Engine is
             supposed to execute. It _must_ contain at least two string
             values with the corresponding keys being named "name_" and
             "type_".
@@ -478,10 +478,10 @@ def send(cmd: Dict[str, Any]) -> None:
 def send_and_get_socket(
     cmd: Dict[str, Any], specific_port: Optional[int] = None
 ) -> socket.socket:
-    """Sends a command to the getml engine and returns the established
+    """Sends a command to the getML Engine and returns the established
     connection.
 
-    Creates a socket and sends a command to the getML engine using the
+    Creates a socket and sends a command to the getML Engine using the
     module-wide variable [`port`][getml.communication.port].
 
     The function will return the socket it opened and the calling
@@ -490,22 +490,22 @@ def send_and_get_socket(
     itself!
 
     Please be very careful when altering the routing/calling behavior
-    of the socket communication! The engine is quite sensitive and might freeze.
+    of the socket communication! The Engine is quite sensitive and might freeze.
     Especially implemented handling of
     socket sessions (their passing from function to function) must not
     be altered or separated in distinct calls to the
     [`send`][getml.communication.send] function! Some commands have
-    to be sent via the same socket or the engine will not be able to
+    to be sent via the same socket or the Engine will not be able to
     handle them and might block.
 
     Args:
-        cmd: A dictionary specifying the command the engine is
+        cmd: A dictionary specifying the command the Engine is
             supposed to execute. It _must_ contain at least two string
             values with the corresponding keys being named "name_" and
             "type_"."
 
     Returns:
-        A socket which, using the Python API, can communicate with the getML engine.
+        A socket which, using the Python API, can communicate with the getML Engine.
     """
 
     if not isinstance(cmd, dict):

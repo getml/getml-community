@@ -32,7 +32,7 @@ def get(query: str, conn: Optional[Connection] = None) -> pd.DataFrame:
         conn:
             The database connection to be used.
             If you don't explicitly pass a connection,
-            the engine will use the default connection.
+            the Engine will use the default connection.
 
     Returns:
         The result of the query as a pandas dataframe.

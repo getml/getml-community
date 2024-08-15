@@ -61,7 +61,7 @@ def _refresh_all() -> List[Pipeline]:
 
 
 def list_pipelines() -> List[str]:
-    """Lists all pipelines present in the engine.
+    """Lists all pipelines present in the Engine.
 
     Note that this function only lists pipelines which are part of the
     current project. See [`set_project`][getml.engine.set_project] for
@@ -93,7 +93,7 @@ def list_pipelines() -> List[str]:
 
 
 def load(name: str) -> Pipeline:
-    """Loads a pipeline from the getML engine into Python.
+    """Loads a pipeline from the getML Engine into Python.
 
     Args:
         name: The name of the pipeline to be loaded.

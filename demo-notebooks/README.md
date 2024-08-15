@@ -45,7 +45,7 @@ http://localhost:8888/lab?token=<generated_token>
 
 ### On the Machine (Linux/x64 & arm64)
 
-Alternatively, getML and the notebooks can be run natively on the local Linux machine by having certain software installed, like Python and some Python libraries, Jupyter-Lab and the getML engine. The [getML Python library](https://github.com/getml/getml-community/) provides an engine version without [enterprise features](https://www.getml.com/pricing).
+Alternatively, getML and the notebooks can be run natively on the local Linux machine by having certain software installed, like Python and some Python libraries, Jupyter-Lab and the getML Engine. The [getML Python library](https://github.com/getml/getml-community/) provides an Engine version without [Enterprise features](https://www.getml.com/pricing).
 
 The following commands will set up a Python environment with necessary Python libraries and Jupyter-Lab
 

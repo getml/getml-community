@@ -17,7 +17,7 @@ import (
 // -------------------------------------------------------------
 
 // Server is the the TCP server that communicates
-// with the engine.
+// with the Engine.
 type Server struct {
 	mainHandler *MainHandler
 

@@ -68,7 +68,7 @@ arrow_cast_exception_handler = ArrowCastExceptionHandlerRegistry()
 
 class EngineExceptionHandlerRegistry:
     """
-    A registry for handlers of exceptions originating from the getML engine.
+    A registry for handlers of exceptions originating from the getML Engine.
     Instances of this class can be used as a decorator to register exception
     handlers. As all exceptions are sent as raw strings, the handlers have to
     parse the exceptions themselves.
@@ -92,7 +92,7 @@ engine_exception_handler = EngineExceptionHandlerRegistry()
 
 def handle_engine_exception(msg: str, extra: Optional[Dict[str, Any]] = None) -> None:
     """
-    Handles exceptions raised by the getML engine. Iterates over all
+    Handles exceptions raised by the getML Engine. Iterates over all
     registered handlers and calls them with the error message.
     Registered handlers parse the message and may raise an exception
     themselves.
@@ -101,7 +101,7 @@ def handle_engine_exception(msg: str, extra: Optional[Dict[str, Any]] = None) ->
     raised inside and OSError as is.
 
     Args:
-        msg: Error message returned by the getML engine.
+        msg: Error message returned by the getML Engine.
     """
 
     if extra is None:

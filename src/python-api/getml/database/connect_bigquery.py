@@ -44,7 +44,7 @@ def connect_bigquery(
 
         google_application_credentials:
             The path of the Google application credentials.
-            (Must be located on the machine hosting the getML engine).
+            (Must be located on the machine hosting the getML Engine).
 
         time_formats:
             The list of formats tried when parsing time stamps.

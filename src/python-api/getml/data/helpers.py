@@ -568,7 +568,7 @@ def _sniff_db(table_name: str, conn: Optional[Connection] = None) -> Roles:
 
         conn: The database
             connection to be used. If you don't explicitly pass a connection,
-            the engine will use the default connection.
+            the Engine will use the default connection.
 
     Returns:
         Keyword arguments (kwargs) that can be used to construct a DataFrame.

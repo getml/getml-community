@@ -6,15 +6,15 @@
 #
 
 """This module is a collection of utility functions for the overall
-communication and the session management of the getML engine.
+communication and the session management of the getML Engine.
 
-In order to log into the engine, you have to open your favorite
+In order to log into the Engine, you have to open your favorite
 internet browser and enter [http://localhost:1709](http://localhost:1709) in the navigation bar. This tells it to
 connect to a local TCP socket at port 1709 opened by the getML
-monitor. This will only be possible from within the same device!
+Monitor. This will only be possible from within the same device!
 
 ??? example
-    First of all, you need to start the getML engine.
+    First of all, you need to start the getML Engine.
     Next, you need to create a new project or
     load an existing one.
 
@@ -23,7 +23,7 @@ monitor. This will only be possible from within the same device!
     getml.engine.set_project('test')
     ```
     After doing all calculations for today you can shut down the getML
-    engine.
+    Engine.
 
     ```python
     print(getml.engine.is_alive())
@@ -31,9 +31,9 @@ monitor. This will only be possible from within the same device!
     ```
 
 Note:
-    The Python process and the getML engine must be located on
+    The Python process and the getML Engine must be located on
     the same machine. If you
-    intend to run the engine on a remote host, make sure to start your
+    intend to run the Engine on a remote host, make sure to start your
     Python session on that device as well. Also, when using SSH sessions,
     make sure to start Python using `python &` followed by `disown` or
     using `nohup python`. This ensures the Python process and all the
@@ -42,9 +42,9 @@ Note:
     you are able to recover them later on (see
     [`remote_access`][remote-access-anchor]).
 
-    All data frame objects and models in the getML engine are
+    All data frame objects and models in the getML Engine are
     bundled in projects. When loading an existing project, the
-    current memory of the engine will be flushed and all changes
+    current memory of the Engine will be flushed and all changes
     applied to [`DataFrame`][getml.DataFrame] instances after
     calling their [`save`][getml.DataFrame.save] method will
     be lost. Afterwards, all
@@ -56,7 +56,7 @@ Note:
     [`load_data_frame`][getml.data.load_data_frame] or
     [`load`][getml.DataFrame.load].
 
-    The getML engine reflects the separation of data into individual
+    The getML Engine reflects the separation of data into individual
     projects on the level of the filesystem too. All data
     belonging to a single project is stored in a dedicated folder in
     the 'projects' directory located in '.getML' in your home
