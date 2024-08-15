@@ -1,14 +1,15 @@
-# vcpkg_check_linkage(ONLY_STATIC_LIBRARY)
-
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO getml/reflect-cpp
     REF "v${VERSION}"
-    SHA512 a231f1d210df769dc2a5f6a98fc29b587c4cba65eaab04326b7cb0c514697566539e7e6ad91e3960b592d0256f44bf4af2ada4ef07589ccd156bb16b9196a021
+    SHA512 755f1474f3c58a950c6db010eeea388a11cf1caca66fbb75b1e03c86794fb3a9c6fa1509e0e78401d31055f43bcaddcd138da06d54e1e3507b2ea08d3a2d05b1
     HEAD_REF main
 )
 
-string(COMPARE EQUAL ${VCPKG_LIBRARY_LINKAGE} "dynamic" REFLECTCPP_BUILD_SHARED)
+if(VCPKG_TARGET_IS_WINDOWS)
+    vcpkg_check_linkage(ONLY_STATIC_LIBRARY)
+endif()
+string(COMPARE EQUAL "${VCPKG_LIBRARY_LINKAGE}" "dynamic" REFLECTCPP_BUILD_SHARED)
 
 vcpkg_cmake_configure(
     SOURCE_PATH ${SOURCE_PATH}
@@ -16,6 +17,7 @@ vcpkg_cmake_configure(
         ${FEATURE_OPTIONS}
         -DREFLECTCPP_BUILD_TESTS=OFF
         -DREFLECTCPP_BUILD_SHARED=${REFLECTCPP_BUILD_SHARED}
+        -DREFLECTCPP_USE_BUNDLED_DEPENDENCIES=OFF
 )
 
 vcpkg_cmake_install()
@@ -29,5 +31,5 @@ file(REMOVE_RECURSE
     "${CURRENT_PACKAGES_DIR}/debug/share"
 )
 
-file(INSTALL "${SOURCE_PATH}/LICENSE" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}" RENAME copyright)
+vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/LICENSE")
 configure_file("${CMAKE_CURRENT_LIST_DIR}/usage" "${CURRENT_PACKAGES_DIR}/share/${PORT}/usage" COPYONLY)

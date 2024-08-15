@@ -8,10 +8,9 @@
 #ifndef ENGINE_CONFIG_ENGINEOPTIONS_
 #define ENGINE_CONFIG_ENGINEOPTIONS_
 
-#include <string>
-
 #include <rfl/Field.hpp>
 #include <rfl/NamedTuple.hpp>
+#include <string>
 
 namespace engine {
 namespace config {
@@ -32,7 +31,7 @@ struct EngineOptions {
   ~EngineOptions() = default;
 
   /// Trivial accessor
-  const size_t port() const { return port_; }
+  size_t port() const { return port_; }
 
   /// Whether you want this to be in memory or memory mapped.
   bool in_memory_;

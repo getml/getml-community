@@ -9,16 +9,19 @@
 #define FASTPROP_ALGORITHM_AGGREGATOR_HPP_
 
 #include <memory>
+#include <ranges>
+#include <rfl/Ref.hpp>
 #include <utility>
 
-#include "debug/debug.hpp"
 #include "fastprop/Float.hpp"
-#include "fastprop/Hyperparameters.hpp"
 #include "fastprop/Int.hpp"
 #include "fastprop/algorithm/Memoization.hpp"
-#include "fastprop/containers/containers.hpp"
+#include "fastprop/containers/DataFrame.hpp"
+#include "fastprop/containers/Features.hpp"
+#include "fastprop/containers/Match.hpp"
+#include "fastprop/containers/SQLMaker.hpp"
 #include "helpers/Aggregations.hpp"
-#include <rfl/Ref.hpp>
+#include "textmining/WordIndex.hpp"
 
 namespace fastprop {
 namespace algorithm {
@@ -258,15 +261,16 @@ class Aggregator {
     const auto is_non_null = [](Int val) { return val >= 0; };
 
     if (_abstract_feature.conditions_.size() == 0) {
-      auto range = _matches | VIEWS::transform(_extract_value) |
-                   VIEWS::filter(is_non_null);
+      auto range = _matches | std::views::transform(_extract_value) |
+                   std::views::filter(is_non_null);
 
       return aggregate_categorical_range(range.begin(), range.end(),
                                          _abstract_feature.aggregation_);
     }
 
-    auto range = _matches | VIEWS::filter(_condition_function) |
-                 VIEWS::transform(_extract_value) | VIEWS::filter(is_non_null);
+    auto range = _matches | std::views::filter(_condition_function) |
+                 std::views::transform(_extract_value) |
+                 std::views::filter(is_non_null);
 
     return aggregate_categorical_range(range.begin(), range.end(),
                                        _abstract_feature.aggregation_);
@@ -416,7 +420,7 @@ class Aggregator {
     const auto pairs =
         fct::Range(_memoization->pairs_begin(), _memoization->pairs_end());
 
-    auto range = pairs | VIEWS::transform(substract_from_ts_output);
+    auto range = pairs | std::views::transform(substract_from_ts_output);
 
     return aggregate_first_last(range.begin(), range.end(),
                                 _abstract_feature.aggregation_);
@@ -460,13 +464,13 @@ class Aggregator {
       const containers::AbstractFeature &_abstract_feature,
       const rfl::Ref<Memoization> &_memoization) {
     if (_abstract_feature.conditions_.size() == 0) {
-      const auto range = _matches | VIEWS::transform(_extract_value) |
-                         VIEWS::filter(is_not_nan_or_inf);
+      const auto range = _matches | std::views::transform(_extract_value) |
+                         std::views::filter(is_not_nan_or_inf);
       _memoization->memorize_numerical(_abstract_feature, range);
     }
-    const auto range = _matches | VIEWS::filter(_condition_function) |
-                       VIEWS::transform(_extract_value) |
-                       VIEWS::filter(is_not_nan_or_inf);
+    const auto range = _matches | std::views::filter(_condition_function) |
+                       std::views::transform(_extract_value) |
+                       std::views::filter(is_not_nan_or_inf);
     _memoization->memorize_numerical(_abstract_feature, range);
   }
 
@@ -480,13 +484,13 @@ class Aggregator {
       const rfl::Ref<Memoization> &_memoization) {
     assert_true(is_first_last(_abstract_feature.aggregation_));
     if (_abstract_feature.conditions_.size() == 0) {
-      const auto range = _matches | VIEWS::transform(_extract_value) |
-                         VIEWS::filter(second_is_not_nan_or_inf);
+      const auto range = _matches | std::views::transform(_extract_value) |
+                         std::views::filter(second_is_not_nan_or_inf);
       _memoization->memorize_pairs(_abstract_feature, range);
     }
-    const auto range = _matches | VIEWS::filter(_condition_function) |
-                       VIEWS::transform(_extract_value) |
-                       VIEWS::filter(second_is_not_nan_or_inf);
+    const auto range = _matches | std::views::filter(_condition_function) |
+                       std::views::transform(_extract_value) |
+                       std::views::filter(second_is_not_nan_or_inf);
     _memoization->memorize_pairs(_abstract_feature, range);
   }
 };

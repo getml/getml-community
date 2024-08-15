@@ -1,9 +1,9 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef FASTPROP_ALGORITHM_MEMOIZATION_HPP_
 #define FASTPROP_ALGORITHM_MEMOIZATION_HPP_
@@ -20,7 +20,6 @@
 
 #include "fastprop/Float.hpp"
 #include "fastprop/containers/AbstractFeature.hpp"
-#include "fastprop/containers/SQLMaker.hpp"
 
 // ----------------------------------------------------------------------------
 
@@ -41,8 +40,8 @@ class Memoization {
     if (is_same(abstract_feature_numerical_, _abstract_feature)) {
       return;
     }
-    if constexpr (RANGES::sized_range<RangeType>) {
-      numerical_.resize(RANGES::size(_range));
+    if constexpr (std::ranges::sized_range<RangeType>) {
+      numerical_.resize(std::ranges::size(_range));
       std::copy(_range.begin(), _range.end(), numerical_.begin());
     } else {
       numerical_.clear();
@@ -58,8 +57,8 @@ class Memoization {
     if (is_same(abstract_feature_pairs_, _abstract_feature)) {
       return;
     }
-    if constexpr (RANGES::sized_range<RangeType>) {
-      pairs_.resize(RANGES::size(_range));
+    if constexpr (std::ranges::sized_range<RangeType>) {
+      pairs_.resize(std::ranges::size(_range));
       std::copy(_range.begin(), _range.end(), pairs_.begin());
     } else {
       pairs_.clear();

@@ -16,7 +16,7 @@
 #include "helpers/FeatureContainer.hpp"
 #include "helpers/RowIndexContainer.hpp"
 #include "helpers/WordIndexContainer.hpp"
-#include "logging/logging.hpp"
+#include "logging/AbstractLogger.hpp"
 
 namespace helpers {
 
@@ -49,4 +49,3 @@ struct FitParams {
 
 // ----------------------------------------------------------------------------
 #endif  // HELPERS_FITPARAMS_HPP_
-

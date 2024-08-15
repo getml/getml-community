@@ -5,6 +5,9 @@
 // for details.
 //
 
+#include "engine/preprocessors/PreprocessorParser.hpp"
+
+#include <rfl/visit.hpp>
 #include <stdexcept>
 
 #include "engine/preprocessors/CategoryTrimmer.hpp"
@@ -13,9 +16,6 @@
 #include "engine/preprocessors/Seasonal.hpp"
 #include "engine/preprocessors/Substring.hpp"
 #include "engine/preprocessors/TextFieldSplitter.hpp"
-#include "engine/preprocessors/preprocessors.hpp"
-#include <rfl/json.hpp>
-#include <rfl/visit.hpp>
 
 namespace engine {
 namespace preprocessors {

@@ -287,7 +287,37 @@
       "configurePreset": "debug-conan"
     }
   ],
-  "testPresets": [],
+  "testPresets": [{
+    "name": "release",
+    "displayName": "Release",
+    "description": "Release test",
+    "configurePreset": "release",
+    "output": {
+        "shortProgress": true,
+        "outputOnFailure": true
+    }
+  }, {
+    "name": "debug",
+    "displayName": "Debug",
+    "description": "Debug test",
+    "configurePreset": "debug",
+    "output": {
+        "shortProgress": false,
+        "outputOnFailure": true
+    }
+  }, {
+    "name": "debug-vcpgk",
+    "displayName": "Debug (vcpkg)",
+    "description": "Debug test using vcpkg",
+    "configurePreset": "debug-vcpkg",
+    "inherits": "debug"
+  }, {
+    "name": "debug-conan",
+    "displayName": "Debug (conan)",
+    "description": "Debug test using conan",
+    "configurePreset": "debug-conan",
+    "inherits": "debug"
+  }],
   "packagePresets": [
     {
       "name": "release",

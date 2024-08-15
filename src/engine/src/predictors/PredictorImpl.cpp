@@ -7,10 +7,10 @@
 
 #include "predictors/PredictorImpl.hpp"
 
+#include <numeric>
 #include <thread>
 
 #include "helpers/Saver.hpp"
-#include <rfl/json.hpp>
 
 namespace predictors {
 

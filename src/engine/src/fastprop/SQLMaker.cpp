@@ -6,6 +6,7 @@
 //
 
 #include "fastprop/containers/SQLMaker.hpp"
+#include "debug/assert_msg.hpp"
 
 namespace fastprop {
 namespace containers {

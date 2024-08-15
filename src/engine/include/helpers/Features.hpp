@@ -8,12 +8,10 @@
 #ifndef HELPERS_AUTOFEATURES_HPP_
 #define HELPERS_AUTOFEATURES_HPP_
 
-#include "debug/debug.hpp"
-#include "fct/fct.hpp"
+#include "fct/to.hpp"
 #include "helpers/Column.hpp"
 #include "helpers/Feature.hpp"
 #include "helpers/Float.hpp"
-#include "helpers/Int.hpp"
 
 namespace helpers {
 
@@ -67,8 +65,9 @@ class Features {
 
   /// Returns a set of safe features.
   std::vector<Feature<Float>> to_safe_features() const {
-    return fct::collect::vector(vec_ | VIEWS::transform(get_ptr<false>) |
-                                VIEWS::transform(to_feature<true>));
+    return vec_ | std::views::transform(get_ptr<false>) |
+           std::views::transform(to_feature<true>) |
+           fct::ranges::to<std::vector>();
   }
 
   /// ---------------------------------------------------------------------
@@ -104,7 +103,8 @@ class Features {
     const auto pool = _temp_dir ? std::make_shared<memmap::Pool>(*_temp_dir)
                                 : std::shared_ptr<memmap::Pool>();
     const auto variants = make_variants(_nrows, _ncols, pool);
-    return fct::collect::vector(variants | VIEWS::transform(to_feature<false>));
+    return variants | std::views::transform(to_feature<false>) |
+           fct::ranges::to<std::vector>();
   }
 
   /// Transform a variant to a feature.

@@ -7,6 +7,8 @@
 
 #include "fastprop/algorithm/ConditionParser.hpp"
 
+#include "fct/to.hpp"
+
 namespace fastprop {
 namespace algorithm {
 // ----------------------------------------------------------------------------
@@ -22,10 +24,8 @@ ConditionParser::make_condition_functions(
                                                   _abstract_features.at(ix));
   };
 
-  auto range = _index | VIEWS::transform(make_function);
-
-  return std::vector<std::function<bool(const containers::Match &)>>(
-      range.begin(), range.end());
+  return _index | std::views::transform(make_function) |
+         fct::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------------------------------
@@ -133,10 +133,8 @@ ConditionParser::parse_conditions(
                                                    cond);
   };
 
-  auto range = _abstract_feature.conditions_ | VIEWS::transform(parse);
-
-  return std::vector<std::function<bool(const containers::Match &)>>(
-      range.begin(), range.end());
+  return _abstract_feature.conditions_ | std::views::transform(parse) |
+         fct::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------------------------------
@@ -159,7 +157,7 @@ ConditionParser::parse_single_condition(
     default:
       throw_unless(false,
                    "Unknown condition: '" + _condition.data_used_.name() + "'");
-      return [](const containers::Match &match) { return true; };
+      return [](const containers::Match &) { return true; };
   }
 }
 

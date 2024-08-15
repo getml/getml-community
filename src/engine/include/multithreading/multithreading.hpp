@@ -1,18 +1,14 @@
 // Copyright 2022 The SQLNet Company GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef MULTITHREADING_HPP_
 #define MULTITHREADING_HPP_
 
 // ----------------------------------------------------
-
-#ifndef __APPLE__
-#include "multithreading/parallel_for_each.hpp"
-#endif
 
 #include "multithreading/Communicator.hpp"
 #include "multithreading/ReadLock.hpp"

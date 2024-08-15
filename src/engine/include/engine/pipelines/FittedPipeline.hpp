@@ -12,10 +12,8 @@
 
 #include "engine/pipelines/Fingerprints.hpp"
 #include "engine/pipelines/Predictors.hpp"
-#include "engine/preprocessors/preprocessors.hpp"
-#include "fct/fct.hpp"
-#include "featurelearners/featurelearners.hpp"
-#include "predictors/predictors.hpp"
+#include "engine/preprocessors/Preprocessor.hpp"
+#include "featurelearners/AbstractFeatureLearner.hpp"
 
 namespace engine {
 namespace pipelines {
@@ -83,4 +81,3 @@ struct FittedPipeline {
 }  // namespace engine
 
 #endif  // ENGINE_PIPELINES_FITTEDPIPELINE_HPP_
-

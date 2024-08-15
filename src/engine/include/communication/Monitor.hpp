@@ -11,13 +11,13 @@
 #include <Poco/Net/StreamSocket.h>
 
 #include <memory>
+#include <rfl/Field.hpp>
+#include <rfl/NamedTuple.hpp>
+#include <rfl/json/write.hpp>
 #include <string>
 #include <thread>
 
-#include "engine/config/config.hpp"
-#include <rfl/Field.hpp>
-#include <rfl/NamedTuple.hpp>
-#include <rfl/json.hpp>
+#include "engine/config/Options.hpp"
 
 namespace communication {
 

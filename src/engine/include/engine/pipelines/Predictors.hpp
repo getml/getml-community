@@ -8,10 +8,11 @@
 #ifndef ENGINE_PIPELINES_PREDICTORS_HPP_
 #define ENGINE_PIPELINES_PREDICTORS_HPP_
 
+#include <rfl/Ref.hpp>
 #include <vector>
 
-#include "fct/fct.hpp"
-#include "predictors/predictors.hpp"
+#include "predictors/Predictor.hpp"
+#include "predictors/PredictorImpl.hpp"
 
 namespace engine {
 namespace pipelines {
@@ -52,4 +53,3 @@ struct Predictors {
 }  // namespace engine
 
 #endif  // ENGINE_PIPELINES_PREDICTORS_HPP_
-

@@ -7,13 +7,12 @@
 
 #include "engine/handlers/AggOpParser.hpp"
 
+#include <rfl/visit.hpp>
 #include <string>
 
-#include "engine/handlers/BoolOpParser.hpp"
 #include "engine/handlers/FloatOpParser.hpp"
 #include "engine/handlers/StringOpParser.hpp"
 #include "engine/utils/Aggregations.hpp"
-#include <rfl/visit.hpp>
 
 namespace engine {
 namespace handlers {
@@ -40,7 +39,7 @@ Float AggOpParser::float_aggregation(const FloatAggregationOp& _cmd) const {
   const auto col = FloatOpParser(categories_, join_keys_encoding_, data_frames_)
                        .parse(_cmd.col());
 
-  const auto handle = [this, &col](const auto& _literal) -> Float {
+  const auto handle = [&col](const auto& _literal) -> Float {
     using Type = std::decay_t<decltype(_literal)>;
 
     if constexpr (std::is_same<Type, rfl::Literal<"assert_equal">>()) {
@@ -94,9 +93,9 @@ Float AggOpParser::string_aggregation(const StringAggregationOp& _cmd) const {
     return _str.str();
   };
 
-  auto range = col | VIEWS::transform(to_str);
+  auto range = col | std::views::transform(to_str);
 
-  const auto handle = [this, &range](const auto& _literal) -> Float {
+  const auto handle = [&range](const auto& _literal) -> Float {
     using Type = std::decay_t<decltype(_literal)>;
 
     if constexpr (std::is_same<Type, rfl::Literal<"count_categorical">>()) {

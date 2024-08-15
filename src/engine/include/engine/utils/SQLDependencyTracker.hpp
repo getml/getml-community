@@ -8,12 +8,11 @@
 #ifndef ENGINE_UTILS_SQLDEPENDENCYTRACKER_HPP_
 #define ENGINE_UTILS_SQLDEPENDENCYTRACKER_HPP_
 
+#include <rfl/Field.hpp>
+#include <rfl/NamedTuple.hpp>
 #include <string>
 #include <tuple>
 #include <vector>
-
-#include <rfl/Field.hpp>
-#include <rfl/NamedTuple.hpp>
 
 namespace engine {
 namespace utils {

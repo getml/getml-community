@@ -7,6 +7,8 @@
 
 #include "metrics/AUC.hpp"
 
+#include <numeric>
+
 namespace metrics {
 
 Float AUC::calc_auc(const std::vector<Float>& _true_positive_rate,

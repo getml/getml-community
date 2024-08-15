@@ -9,6 +9,9 @@
 
 #include <Poco/DirectoryIterator.h>
 
+#include <rfl/always_false.hpp>
+#include <rfl/json/write.hpp>
+#include <rfl/make_named_tuple.hpp>
 #include <stdexcept>
 
 #include "commands/DataContainer.hpp"
@@ -17,9 +20,6 @@
 #include "engine/pipelines/SaveParams.hpp"
 #include "helpers/Loader.hpp"
 #include "helpers/Saver.hpp"
-#include <rfl/always_false.hpp>
-#include <rfl/json.hpp>
-#include <rfl/make_named_tuple.hpp>
 
 namespace engine {
 namespace handlers {
@@ -183,7 +183,7 @@ void ProjectManager::delete_project(
 
 // ------------------------------------------------------------------------
 
-void ProjectManager::list_data_frames(const typename Command::ListDfsOp& _cmd,
+void ProjectManager::list_data_frames(const typename Command::ListDfsOp&,
                                       Poco::Net::StreamSocket* _socket) const {
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
@@ -216,9 +216,8 @@ void ProjectManager::list_data_frames(const typename Command::ListDfsOp& _cmd,
 
 // ------------------------------------------------------------------------
 
-void ProjectManager::list_pipelines(
-    const typename Command::ListPipelinesOp& _cmd,
-    Poco::Net::StreamSocket* _socket) const {
+void ProjectManager::list_pipelines(const typename Command::ListPipelinesOp&,
+                                    Poco::Net::StreamSocket* _socket) const {
   multithreading::ReadLock read_lock(params_.read_write_lock_);
 
   std::vector<std::string> names;
@@ -238,7 +237,7 @@ void ProjectManager::list_pipelines(
 
 // ------------------------------------------------------------------------
 
-void ProjectManager::list_projects(const typename Command::ListProjectsOp& _cmd,
+void ProjectManager::list_projects(const typename Command::ListProjectsOp&,
                                    Poco::Net::StreamSocket* _socket) const {
   std::vector<std::string> project_names;
 
@@ -334,7 +333,7 @@ void ProjectManager::load_pipeline(const typename Command::LoadPipelineOp& _cmd,
 
 // ------------------------------------------------------------------------
 
-void ProjectManager::project_name(const typename Command::ProjectNameOp& _cmd,
+void ProjectManager::project_name(const typename Command::ProjectNameOp&,
                                   Poco::Net::StreamSocket* _socket) const {
   communication::Sender::send_string(params_.project_, _socket);
 }
@@ -444,7 +443,7 @@ void ProjectManager::set_project(const std::string& _project) {
 
 // ------------------------------------------------------------------------
 
-void ProjectManager::temp_dir(const typename Command::TempDirOp& _cmd,
+void ProjectManager::temp_dir(const typename Command::TempDirOp&,
                               Poco::Net::StreamSocket* _socket) const {
   communication::Sender::send_string(params_.options_.temp_dir(), _socket);
 }

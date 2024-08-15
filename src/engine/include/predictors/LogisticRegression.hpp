@@ -11,9 +11,10 @@
 #include <cmath>
 #include <memory>
 #include <optional>
+#include <rfl/NamedTuple.hpp>
+#include <rfl/Ref.hpp>
 #include <vector>
 
-#include "debug/debug.hpp"
 #include "predictors/Fingerprint.hpp"
 #include "predictors/FloatFeature.hpp"
 #include "predictors/IntFeature.hpp"
@@ -21,8 +22,6 @@
 #include "predictors/Predictor.hpp"
 #include "predictors/PredictorImpl.hpp"
 #include "predictors/StandardScaler.hpp"
-#include <rfl/NamedTuple.hpp>
-#include <rfl/Ref.hpp>
 
 namespace predictors {
 
@@ -45,7 +44,7 @@ class LogisticRegression : public Predictor {
       : dependencies_(_dependencies),
         hyperparams_(
             rfl::Ref<LogisticRegressionHyperparams>::make(_hyperparams)),
-        impl_(_impl){};
+        impl_(_impl) {};
 
   ~LogisticRegression() = default;
 
@@ -149,9 +148,8 @@ class LogisticRegression : public Predictor {
 
  private:
   /// Calculates the gradients needed for the updates (sparse).
-  const void calculate_gradients(const std::vector<FloatFeature>& _X,
-                                 const size_t _i, const Float _delta,
-                                 std::vector<Float>* _gradients) {
+  void calculate_gradients(const std::vector<FloatFeature>& _X, const size_t _i,
+                           const Float _delta, std::vector<Float>* _gradients) {
     assert_true(_gradients->size() == weights_.size());
     assert_true(_gradients->size() == _X.size() + 1);
 
@@ -163,10 +161,9 @@ class LogisticRegression : public Predictor {
   }
 
   /// Calculates the gradients needed for the updates (sparse).
-  const void calculate_gradients(const size_t _begin, const size_t _end,
-                                 const unsigned int* _indices,
-                                 const Float* _data, const Float _delta,
-                                 std::vector<Float>* _gradients) {
+  void calculate_gradients(const size_t _begin, const size_t _end,
+                           const unsigned int* _indices, const Float* _data,
+                           const Float _delta, std::vector<Float>* _gradients) {
     assert_true(_gradients->size() == weights_.size());
 
     for (auto ix = _begin; ix < _end; ++ix) {
@@ -178,8 +175,8 @@ class LogisticRegression : public Predictor {
   }
 
   /// Applies the L2 regularization term for numerical optimization.
-  const void calculate_regularization(const Float _bsize_float,
-                                      std::vector<Float>* _gradients) {
+  void calculate_regularization(const Float _bsize_float,
+                                std::vector<Float>* _gradients) {
     if (hyperparams().reg_lambda() > 0.0) {
       for (size_t i = 0; i < weights_.size(); ++i) {
         (*_gradients)[i] +=
@@ -197,8 +194,8 @@ class LogisticRegression : public Predictor {
   const PredictorImpl& impl() const { return *impl_; }
 
   /// Returns a dense prediction.
-  const Float predict_dense(const std::vector<FloatFeature>& _X,
-                            const size_t _i) const {
+  Float predict_dense(const std::vector<FloatFeature>& _X,
+                      const size_t _i) const {
     Float yhat = weights_.back();
     for (size_t j = 0; j < _X.size(); ++j) {
       yhat += _X[j][_i] * weights_[j];
@@ -209,9 +206,8 @@ class LogisticRegression : public Predictor {
   }
 
   /// Returns a sparse prediction.
-  const Float predict_sparse(const size_t _begin, const size_t _end,
-                             const unsigned int* _indices,
-                             const Float* _data) const {
+  Float predict_sparse(const size_t _begin, const size_t _end,
+                       const unsigned int* _indices, const Float* _data) const {
     Float yhat = weights_.back();
     for (auto ix = _begin; ix < _end; ++ix) {
       assert_true(_indices[ix] < weights_.size());

@@ -9,18 +9,11 @@
 #define ENGINE_HANDLERS_BOOLOPPARSER_HPP_
 
 #include <map>
-#include <memory>
 #include <string>
 
 #include "commands/BooleanColumnView.hpp"
-#include "communication/communication.hpp"
-#include "containers/containers.hpp"
-#include "debug/debug.hpp"
-#include "engine/Float.hpp"
-#include "engine/Int.hpp"
 #include "engine/handlers/FloatOpParser.hpp"
 #include "engine/handlers/StringOpParser.hpp"
-#include <rfl/json.hpp>
 
 namespace engine {
 namespace handlers {

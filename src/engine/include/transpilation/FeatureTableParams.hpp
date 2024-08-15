@@ -1,12 +1,11 @@
 #ifndef TRANSPILATION_FEATURETABLEPARAMS_HPP_
 #define TRANSPILATION_FEATURETABLEPARAMS_HPP_
 
-#include <string>
-#include <vector>
-
 #include <rfl/Field.hpp>
 #include <rfl/NamedTuple.hpp>
 #include <rfl/Ref.hpp>
+#include <string>
+#include <vector>
 
 namespace transpilation {
 

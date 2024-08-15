@@ -10,7 +10,6 @@
 
 #include <map>
 #include <memory>
-#include <rfl.hpp>
 #include <vector>
 
 #include "commands/Fingerprint.hpp"
@@ -101,4 +100,3 @@ class AbstractFeatureLearner {
 }  // namespace featurelearners
 
 #endif  // FEATURELEARNERS_ABSTRACTFEATURELEARNER_HPP_
-

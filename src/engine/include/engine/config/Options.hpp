@@ -8,11 +8,12 @@
 #ifndef ENGINE_CONFIG_OPTIONS_
 #define ENGINE_CONFIG_OPTIONS_
 
+#include <memory>
 #include <string>
 
 #include "engine/config/EngineOptions.hpp"
 #include "engine/config/MonitorOptions.hpp"
-#include "memmap/memmap.hpp"
+#include "memmap/Pool.hpp"
 
 namespace engine {
 namespace config {

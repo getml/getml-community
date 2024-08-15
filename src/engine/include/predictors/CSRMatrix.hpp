@@ -11,8 +11,7 @@
 #include <algorithm>
 #include <vector>
 
-#include "debug/debug.hpp"
-#include "fct/fct.hpp"
+#include "fct/Range.hpp"
 #include "predictors/Float.hpp"
 #include "predictors/FloatFeature.hpp"
 #include "predictors/Int.hpp"
@@ -43,7 +42,7 @@ class CSRMatrix {
       : CSRMatrix(fct::Range(_f.begin(), _f.end())) {}
 
   /// Constructs a CSRMatrix from a categorical feature.
-  CSRMatrix(const IntFeature& _f, const size_t _n_unique)
+  CSRMatrix(const IntFeature& _f, const size_t)
       : CSRMatrix(fct::Range(_f.begin(), _f.end())) {}
 
   // -----------------------------------------------------------
@@ -82,16 +81,16 @@ class CSRMatrix {
   const IndicesType* indices() const { return indices_.data(); }
 
   /// Trivial (const) accessor.
-  const size_t ncols() const { return ncols_; }
+  size_t ncols() const { return ncols_; }
 
   /// Trivial (const) accessor.
-  const size_t nrows() const {
+  size_t nrows() const {
     assert_true(indptr_.size() != 0);
     return indptr_.size() - 1;
   }
 
   /// Number of non-zero entries.
-  const size_t size() const {
+  size_t size() const {
     assert_true(data_.size() == indices_.size());
     return data_.size();
   }
@@ -340,7 +339,7 @@ CSRMatrix<DataType, IndicesType, IndptrType>::update_indices_from_int(
 
 template <typename DataType, typename IndicesType, typename IndptrType>
 void CSRMatrix<DataType, IndicesType, IndptrType>::update_indptr_from_int(
-    const fct::Range<const Int*>& _col, const size_t _num_non_negative) {
+    const fct::Range<const Int*>& _col, const size_t) {
   assert_true(_col.size() + 1 == indptr_.size());
 
   IndptrType num_added = 0;

@@ -7,9 +7,11 @@
 
 #include "database/QuerySplitter.hpp"
 
-#include "debug/debug.hpp"
-#include "fct/fct.hpp"
-#include "io/io.hpp"
+#include <ranges>
+
+#include "debug/assert_true.hpp"
+#include "fct/to.hpp"
+#include "io/Parser.hpp"
 
 namespace database {
 
@@ -69,8 +71,8 @@ std::vector<std::string> QuerySplitter::sanitize(
     return _str != "";
   };
 
-  return fct::collect::vector(_splitted | VIEWS::transform(io::Parser::trim) |
-                              VIEWS::filter(is_not_empty));
+  return _splitted | std::views::transform(io::Parser::trim) |
+         std::views::filter(is_not_empty) | fct::ranges::to<std::vector>();
 }
 
 }  // namespace database

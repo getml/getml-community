@@ -8,16 +8,16 @@
 #ifndef COMMANDS_DATABASECOMMAND_HPP_
 #define COMMANDS_DATABASECOMMAND_HPP_
 
-#include <string>
-
-#include "commands/Int.hpp"
-#include "database/Command.hpp"
 #include <rfl/Field.hpp>
 #include <rfl/Literal.hpp>
 #include <rfl/NamedTuple.hpp>
 #include <rfl/Ref.hpp>
 #include <rfl/TaggedUnion.hpp>
-#include <rfl/json.hpp>
+#include <rfl/json/Reader.hpp>
+#include <string>
+
+#include "commands/Int.hpp"
+#include "database/Command.hpp"
 
 namespace commands {
 

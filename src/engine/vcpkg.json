@@ -2,11 +2,15 @@
   "dependencies": [
     {
       "name": "arrow",
-      "version>=": "16.0.0#1",
+      "version>=": "16.1.0#1",
       "features": [
         "csv",
         "parquet"
       ]
+    },
+    {
+      "name": "thrift",
+      "version>=": "0.20.0#1"
     },
     {
       "name": "poco",
@@ -36,7 +40,7 @@
     },
     {
       "name": "reflectcpp",
-      "version>=": "0.11.1"
+      "version>=": "0.13.0"
     },
     {
       "name": "xgboost",
@@ -49,6 +53,14 @@
     {
       "name": "libunwind",
       "version>=": "1.8.1#0"
+    },
+    {
+      "name": "range-v3",
+      "version>=": "0.12.0#2"
+    },
+    {
+      "name": "gtest",
+      "version>=": "1.15.0#0"
     }
   ]
 }

@@ -7,6 +7,7 @@
 
 #include "fastprop/algorithm/RSquared.hpp"
 
+#include "fct/to.hpp"
 #include "helpers/Aggregations.hpp"
 
 namespace fastprop {
@@ -28,9 +29,8 @@ std::vector<Float> RSquared::calculate(
                                       feature, _rownums);
   };
 
-  auto range = _features | VIEWS::transform(calc_r);
-
-  return std::vector<Float>(range.begin(), range.end());
+  return _features | std::views::transform(calc_r) |
+         fct::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------------------------------
@@ -58,9 +58,8 @@ Float RSquared::calc_for_feature(
                                             _targets[_i]));
   };
 
-  const auto iota = fct::iota<size_t>(0, _targets.size());
-
-  auto range = iota | VIEWS::transform(apply);
+  auto range =
+      std::views::iota(0uz, _targets.size()) | std::views::transform(apply);
 
   return helpers::Aggregations::avg(range.begin(), range.end());
 }
@@ -88,9 +87,9 @@ Float RSquared::calc_for_target(const Float _mean_target,
     return _targets[i];
   };
 
-  const auto feature = _rownums | VIEWS::transform(get_feature);
+  const auto feature = _rownums | std::views::transform(get_feature);
 
-  const auto targets = _rownums | VIEWS::transform(get_target);
+  const auto targets = _rownums | std::views::transform(get_target);
 
   const auto var_feature =
       helpers::Aggregations::var(feature.begin(), feature.end());
@@ -129,14 +128,13 @@ std::vector<Float> RSquared::calc_mean_targets(
       return _target[i];
     };
 
-    const auto target = _rownums | VIEWS::transform(get_target);
+    const auto target = _rownums | std::views::transform(get_target);
 
     return helpers::Aggregations::avg(target.begin(), target.end());
   };
 
-  auto range = _targets | VIEWS::transform(calc_mean);
-
-  return std::vector<Float>(range.begin(), range.end());
+  return _targets | std::views::transform(calc_mean) |
+         fct::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------------------------------
@@ -151,14 +149,13 @@ std::vector<Float> RSquared::calc_var_targets(
       return _target[i];
     };
 
-    const auto target = _rownums | VIEWS::transform(get_target);
+    const auto target = _rownums | std::views::transform(get_target);
 
     return helpers::Aggregations::var(target.begin(), target.end());
   };
 
-  auto range = _targets | VIEWS::transform(calc_var);
-
-  return std::vector<Float>(range.begin(), range.end());
+  return _targets | std::views::transform(calc_var) |
+         fct::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------------------------------

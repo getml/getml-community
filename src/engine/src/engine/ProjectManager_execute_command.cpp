@@ -5,8 +5,9 @@
 // for details.
 //
 
-#include "engine/handlers/ProjectManager.hpp"
 #include <rfl/always_false.hpp>
+
+#include "engine/handlers/ProjectManager.hpp"
 
 namespace engine {
 namespace handlers {

@@ -8,6 +8,7 @@
 #include "metrics/Summarizer.hpp"
 
 #include <cmath>
+#include <numeric>
 
 namespace metrics {
 

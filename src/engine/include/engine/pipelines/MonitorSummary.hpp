@@ -9,15 +9,15 @@
 #define ENGINE_PIPELINES_MONITORSUMMARY_HPP_
 
 #include <cstddef>
+#include <rfl/Field.hpp>
+#include <rfl/Flatten.hpp>
+#include <rfl/Ref.hpp>
 #include <string>
 #include <variant>
 #include <vector>
 
 #include "commands/Pipeline.hpp"
 #include "helpers/Schema.hpp"
-#include <rfl/Field.hpp>
-#include <rfl/Flatten.hpp>
-#include <rfl/Ref.hpp>
 
 namespace engine {
 namespace pipelines {

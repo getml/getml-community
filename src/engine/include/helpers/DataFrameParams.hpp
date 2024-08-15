@@ -10,15 +10,14 @@
 
 #include <memory>
 #include <string>
-#include <utility>
 #include <vector>
 
 #include "helpers/Column.hpp"
 #include "helpers/Float.hpp"
 #include "helpers/Index.hpp"
 #include "helpers/Int.hpp"
-#include "textmining/textmining.hpp"
-#include "tsindex/tsindex.hpp"
+#include "textmining/RowIndex.hpp"
+#include "tsindex/Index.hpp"
 
 namespace helpers {
 

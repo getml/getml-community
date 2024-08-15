@@ -9,14 +9,13 @@
 #define HELPERS_VOCABULARYCONTAINER_HPP_
 
 #include <memory>
-#include <vector>
-
-#include "fct/collect.hpp"
-#include "helpers/DataFrame.hpp"
-#include "helpers/StringIterator.hpp"
 #include <rfl/Field.hpp>
 #include <rfl/NamedTuple.hpp>
-#include "strings/strings.hpp"
+#include <vector>
+
+#include "fct/to.hpp"
+#include "helpers/DataFrame.hpp"
+#include "helpers/StringIterator.hpp"
 
 namespace helpers {
 
@@ -56,7 +55,8 @@ class VocabularyContainer {
 
   /// Represents the peripheral vocabulary as a vector of iterators.
   const std::vector<std::vector<StringIterator>> peripheral_iterators() const {
-    return fct::collect::vector(peripheral() | VIEWS::transform(to_iterators));
+    return peripheral() | std::views::transform(to_iterators) |
+           fct::ranges::to<std::vector>();
   }
 
   /// Trivial (const) accessor
@@ -85,7 +85,8 @@ class VocabularyContainer {
       return StringIterator(std::bind(get_value, _vec, std::placeholders::_1),
                             _vec->size());
     };
-    return fct::collect::vector(_vocab | VIEWS::transform(make_iterator));
+    return _vocab | std::views::transform(make_iterator) |
+           fct::ranges::to<std::vector>();
   }
 
  private:
@@ -96,4 +97,3 @@ class VocabularyContainer {
 }  // namespace helpers
 
 #endif  // HELPERS_VOCABULARYCONTAINER_HPP_
-

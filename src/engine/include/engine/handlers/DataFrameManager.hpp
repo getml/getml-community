@@ -11,19 +11,17 @@
 #include <Poco/Net/StreamSocket.h>
 
 #include <map>
-#include <memory>
-#include <string>
-
-#include "commands/DataFrameCommand.hpp"
-#include "communication/communication.hpp"
-#include "containers/containers.hpp"
-#include "debug/debug.hpp"
-#include "engine/config/config.hpp"
-#include "engine/handlers/DataFrameManagerParams.hpp"
-#include "engine/handlers/DatabaseManager.hpp"
 #include <rfl/Field.hpp>
 #include <rfl/NamedTuple.hpp>
 #include <rfl/Ref.hpp>
+#include <string>
+
+#include "commands/DataFrameCommand.hpp"
+#include "engine/Float.hpp"
+#include "engine/Int.hpp"
+#include "engine/handlers/DataFrameManagerParams.hpp"
+#include "engine/handlers/DatabaseManager.hpp"
+#include "multithreading/WeakWriteLock.hpp"
 
 namespace engine {
 namespace handlers {

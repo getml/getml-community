@@ -10,7 +10,6 @@
 #include <algorithm>
 
 #include "engine/utils/Aggregations.hpp"
-#include "fct/fct.hpp"
 #include "helpers/Column.hpp"
 #include "helpers/Macros.hpp"
 #include "transpilation/HumanReadableSQLGenerator.hpp"
@@ -264,7 +263,8 @@ std::optional<helpers::Column<T>> to_helper_col(
 // ----------------------------------------------------------------------------
 
 size_t calc_num_joins(const helpers::Placeholder& _placeholder) {
-  auto range = _placeholder.joined_tables() | VIEWS::transform(calc_num_joins);
+  auto range =
+      _placeholder.joined_tables() | std::views::transform(calc_num_joins);
 
   return _placeholder.joined_tables().size() +
          std::accumulate(range.begin(), range.end(), 0);
@@ -286,8 +286,8 @@ communication::Warner check(
     return _df.name().find(helpers::Macros::text_field()) == std::string::npos;
   };
 
-  const auto peripheral =
-      fct::collect::vector(_peripheral | VIEWS::filter(is_not_text_field));
+  const auto peripheral = _peripheral | std::views::filter(is_not_text_field) |
+                          fct::ranges::to<std::vector>();
 
   check_peripheral_size(_peripheral_names, peripheral);
 

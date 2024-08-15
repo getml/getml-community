@@ -14,19 +14,14 @@ extern "C" {
 }
 
 #include <memory>
+#include <rfl/Ref.hpp>
 #include <string>
 #include <vector>
 
 #include "database/Command.hpp"
 #include "database/Connector.hpp"
-#include "database/DatabaseParser.hpp"
-#include "database/Float.hpp"
-#include "database/Int.hpp"
 #include "database/Sqlite3Iterator.hpp"
 #include "database/TableContent.hpp"
-#include "io/io.hpp"
-#include "multithreading/multithreading.hpp"
-#include <rfl/Ref.hpp>
 
 namespace database {
 
@@ -157,10 +152,7 @@ class Sqlite3 : public Connector {
   sqlite3* db() const { return db_.get(); }
 
   /// Callback function that does nothing.
-  static int do_nothing(void* NotUsed, int argc, char** argv,
-                        char** azColName) noexcept {
-    return 0;
-  }
+  static int do_nothing(void*, int, char**, char**) noexcept { return 0; }
 
   /// Frees the error message, then throws and exception.
   void throw_exception(char* _error_message) {

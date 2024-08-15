@@ -7,12 +7,12 @@
 
 #include "commands/ProjectCommand.hpp"
 
-#include <rfl/json.hpp>
+#include <rfl/json/read.hpp>
 
 namespace commands {
 
 ProjectCommand ProjectCommand::from_json_obj(const InputVarType& _obj) {
-  return ProjectCommand(rfl::json::read<ReflectionType>(_obj).value());
+  return ProjectCommand{rfl::json::read<ReflectionType>(_obj).value()};
 }
 
 }  // namespace commands

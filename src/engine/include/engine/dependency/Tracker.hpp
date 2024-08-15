@@ -9,14 +9,10 @@
 #define ENGINE_DEPENDENCY_TRACKER_HPP_
 
 #include <map>
-#include <memory>
 #include <optional>
-#include <string>
-#include <type_traits>
-
-#include "debug/debug.hpp"
 #include <rfl/Ref.hpp>
-#include <rfl/json.hpp>
+#include <rfl/json/write.hpp>
+#include <string>
 
 namespace engine {
 namespace dependency {
@@ -102,4 +98,3 @@ std::optional<rfl::Ref<T>> Tracker<T>::retrieve(
 }  // namespace engine
 
 #endif  // ENGINE_DEPENDENCY_TRACKER_HPP_
-

@@ -45,15 +45,17 @@ VocabularyContainer WordIndexContainer::vocabulary() const {
         return _word_index->vocabulary_ptr();
       };
 
-  const auto extract_vocab_for_df = [get_vocab](
-                                        const WordIndices& _word_indices) {
-    return fct::collect::vector(_word_indices | VIEWS::transform(get_vocab));
-  };
+  const auto extract_vocab_for_df =
+      [get_vocab](const WordIndices& _word_indices) {
+        return _word_indices | std::views::transform(get_vocab) |
+               fct::ranges::to<std::vector>();
+      };
 
   const auto population = extract_vocab_for_df(population_);
 
-  const auto peripheral = fct::collect::vector(
-      peripheral_ | VIEWS::transform(extract_vocab_for_df));
+  const auto peripheral = peripheral_ |
+                          std::views::transform(extract_vocab_for_df) |
+                          fct::ranges::to<std::vector>();
 
   return VocabularyContainer(population, peripheral);
 }
@@ -72,9 +74,8 @@ typename WordIndexContainer::WordIndices WordIndexContainer::make_word_indices(
         fct::Range(col.begin(), col.end()), voc);
   };
 
-  const auto iota = fct::iota<size_t>(0, _df.text_.size());
-
-  return fct::collect::vector(iota | VIEWS::transform(make_index));
+  return std::views::iota(0uz, _df.text_.size()) |
+         std::views::transform(make_index) | fct::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------------------------------

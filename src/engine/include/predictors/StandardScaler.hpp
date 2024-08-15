@@ -8,18 +8,13 @@
 #ifndef PREDICTORS_STANDARDSCALER_HPP_
 #define PREDICTORS_STANDARDSCALER_HPP_
 
-#include <memory>
+#include <rfl/Field.hpp>
+#include <rfl/NamedTuple.hpp>
 #include <vector>
 
 #include "predictors/CSRMatrix.hpp"
 #include "predictors/Float.hpp"
 #include "predictors/FloatFeature.hpp"
-#include "predictors/Int.hpp"
-#include "predictors/IntFeature.hpp"
-#include "predictors/PredictorImpl.hpp"
-#include <rfl/Field.hpp>
-#include <rfl/NamedTuple.hpp>
-#include <rfl/json.hpp>
 
 namespace predictors {
 
@@ -36,7 +31,7 @@ class StandardScaler {
  public:
   StandardScaler()
       : val_(ReflectionType{.mean = std::vector<Float>(),
-                            .std = std::vector<Float>()}){};
+                            .std = std::vector<Float>()}) {};
 
   StandardScaler(const ReflectionType& _val) : val_(_val) {}
 

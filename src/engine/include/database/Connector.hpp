@@ -8,14 +8,14 @@
 #ifndef DATABASE_CONNECTOR_HPP_
 #define DATABASE_CONNECTOR_HPP_
 
-#include <memory>
+#include <rfl/Ref.hpp>
 #include <string>
 #include <vector>
 
 #include "database/Iterator.hpp"
 #include "database/TableContent.hpp"
-#include "io/io.hpp"
-#include <rfl/Ref.hpp>
+#include "io/Datatype.hpp"
+#include "io/Reader.hpp"
 
 namespace database {
 

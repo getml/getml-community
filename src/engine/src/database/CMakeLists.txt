@@ -22,4 +22,5 @@ target_link_libraries(
   Poco::Foundation
   PostgreSQL::PostgreSQL
   SQLite::SQLite3
+  range-v3::range-v3
 )

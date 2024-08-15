@@ -209,7 +209,7 @@ class DataFrameView {
 
  private:
   /// Transforms the index.
-  const size_t row(size_t _i) const {
+  size_t row(size_t _i) const {
     assert_true(rows_);
     assert_true(_i < rows_->size());
     return (*rows_)[_i];

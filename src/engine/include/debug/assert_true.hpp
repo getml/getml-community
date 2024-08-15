@@ -8,6 +8,7 @@
 #ifndef DEBUG_ASSERT_TRUE_HPP_
 #define DEBUG_ASSERT_TRUE_HPP_
 
+#include "debug/Assert.hpp"
 // ----------------------------------------------------------------------------
 
 // NDEBUG implies no assertions.

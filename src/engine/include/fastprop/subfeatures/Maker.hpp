@@ -8,7 +8,6 @@
 #ifndef FASTPROP_SUBFEATURES_MAKER_HPP_
 #define FASTPROP_SUBFEATURES_MAKER_HPP_
 
-#include <algorithm>
 #include <memory>
 #include <optional>
 #include <utility>
@@ -64,4 +63,3 @@ class Maker {
 }  // namespace fastprop
 
 #endif  // FASTPROP_SUBFEATURES_MAKER_HPP_
-

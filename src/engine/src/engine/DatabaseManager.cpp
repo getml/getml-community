@@ -7,17 +7,21 @@
 
 #include "engine/handlers/DatabaseManager.hpp"
 
-#include "database/Command.hpp"
-#include "database/QuerySplitter.hpp"
-#include "fct/collect.hpp"
-#include "helpers/StringSplitter.hpp"
-#include "io/Parser.hpp"
 #include <rfl/Field.hpp>
 #include <rfl/Literal.hpp>
 #include <rfl/Ref.hpp>
 #include <rfl/always_false.hpp>
-#include <rfl/json.hpp>
+#include <rfl/json/write.hpp>
 #include <rfl/visit.hpp>
+
+#include "communication/Sender.hpp"
+#include "database/Command.hpp"
+#include "database/DatabaseParser.hpp"
+#include "database/DatabaseReader.hpp"
+#include "database/QuerySplitter.hpp"
+#include "database/Sqlite3.hpp"
+#include "database/sniff.hpp"
+#include "io/Parser.hpp"
 
 namespace engine {
 namespace handlers {
@@ -130,8 +134,8 @@ void DatabaseManager::execute(const typename Command::ExecuteOp& _cmd,
     return _str != "";
   };
 
-  auto queries = splitted | VIEWS::transform(io::Parser::trim) |
-                 VIEWS::filter(is_not_empty);
+  auto queries = splitted | std::views::transform(io::Parser::trim) |
+                 std::views::filter(is_not_empty);
 
   for (const auto query : queries) {
     logger().log(query);
@@ -293,11 +297,12 @@ void DatabaseManager::get_nrows(const typename Command::GetNRowsOp& _cmd,
 // ----------------------------------------------------------------------------
 
 void DatabaseManager::list_connections(
-    const typename Command::ListConnectionsOp& _cmd,
+    const typename Command::ListConnectionsOp&,
     Poco::Net::StreamSocket* _socket) const {
   multithreading::ReadLock read_lock(read_write_lock_);
 
-  const auto connections = fct::collect::vector(connector_map_ | VIEWS::keys);
+  const auto connections =
+      connector_map_ | std::views::keys | fct::ranges::to<std::vector>();
 
   read_lock.unlock();
 
@@ -412,7 +417,7 @@ void DatabaseManager::read_csv(const typename Command::ReadCSVOp& _cmd,
 
 // ----------------------------------------------------------------------------
 
-void DatabaseManager::refresh(const typename Command::RefreshOp& _cmd,
+void DatabaseManager::refresh(const typename Command::RefreshOp&,
                               Poco::Net::StreamSocket* _socket) {
   post_tables();
   communication::Sender::send_string("Success!", _socket);

@@ -9,12 +9,13 @@
 
 #include <algorithm>
 #include <map>
+#include <rfl/Field.hpp>
 
 #include "engine/pipelines/FittedPipeline.hpp"
+#include "fct/to.hpp"
 #include "metrics/Scorer.hpp"
 #include "metrics/Scores.hpp"
 #include "metrics/Summarizer.hpp"
-#include <rfl/Field.hpp>
 
 namespace engine {
 namespace pipelines {
@@ -90,7 +91,7 @@ std::shared_ptr<const metrics::Scores> calculate_feature_stats(
   const auto [n1, n2, n3] = _fitted.feature_names();
 
   scores->update(rfl::make_field<"feature_names_">(
-      fct::join::vector<std::string>({n1, n2, n3})));
+      ranges::views::concat(n1, n2, n3) | fct::ranges::to<std::vector>()));
 
   return scores;
 }
@@ -310,7 +311,7 @@ void fill_zeros(std::vector<helpers::ImportanceMaker>* _f_importances) {
 std::vector<Float> make_importance_factors(
     const size_t _num_features, const std::vector<size_t>& _autofeatures,
     const std::vector<Float>::const_iterator _begin,
-    const std::vector<Float>::const_iterator _end) {
+    const std::vector<Float>::const_iterator) {
   auto importance_factors = std::vector<Float>(_num_features);
 
   assert_true(_end >= _begin);
@@ -340,8 +341,8 @@ rfl::Ref<const metrics::Scores> score(
     return helpers::Feature<Float>(_col.data_ptr());
   };
 
-  const auto y = fct::collect::vector(_population_df.targets() |
-                                      VIEWS::transform(get_feature));
+  const auto y = _population_df.targets() | std::views::transform(get_feature) |
+                 fct::ranges::to<std::vector>();
 
   if (_yhat.size() != y.size()) {
     throw std::runtime_error(

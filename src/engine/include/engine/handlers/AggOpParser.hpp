@@ -9,16 +9,12 @@
 #define ENGINE_HANDLERS_AGGOPPARSER_HPP_
 
 #include <map>
-#include <memory>
 #include <string>
 
 #include "commands/Aggregation.hpp"
-#include "containers/containers.hpp"
-#include "debug/debug.hpp"
+#include "containers/DataFrame.hpp"
+#include "containers/Encoding.hpp"
 #include "engine/Float.hpp"
-#include "engine/Int.hpp"
-#include "fct/collect.hpp"
-#include <rfl/json.hpp>
 
 namespace engine {
 namespace handlers {

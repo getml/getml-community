@@ -11,15 +11,14 @@
 #include <cstddef>
 #include <memory>
 #include <optional>
+#include <rfl/Ref.hpp>
 #include <string>
 #include <tuple>
-#include <utility>
 #include <vector>
 
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/Schema.hpp"
 #include "helpers/enums/Aggregation.hpp"
-#include <rfl/Ref.hpp>
 #include "transpilation/FeatureTableParams.hpp"
 #include "transpilation/HumanReadableTrimming.hpp"
 #include "transpilation/SQLDialectGenerator.hpp"
@@ -37,9 +36,8 @@ class HumanReadableSQLGenerator : public SQLDialectGenerator {
   /// Generates the GROUP BY statement for the feature (it is not needed for
   /// some aggregations in some dialects, therefore it needs to be abstracted
   /// away.)
-  std::string group_by(
-      const helpers::enums::Aggregation _agg,
-      const std::string& _value_to_be_aggregated = "") const final {
+  std::string group_by(const helpers::enums::Aggregation,
+                       const std::string& = "") const final {
     return "GROUP BY t1.rowid";
   }
 

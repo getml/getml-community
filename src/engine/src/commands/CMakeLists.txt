@@ -20,4 +20,5 @@ target_link_libraries(
   PUBLIC
   reflectcpp::reflectcpp
   xgboost::xgboost
+  range-v3::range-v3
 )
