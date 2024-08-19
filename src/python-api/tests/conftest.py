@@ -1,11 +1,17 @@
+import decimal
 import os
+import platform
 from contextlib import contextmanager
+from datetime import datetime, timezone
+from inspect import cleandoc
 from pathlib import Path
-from tempfile import TemporaryDirectory
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 
+import pyarrow as pa
 import pytest
 
 import getml
+from getml.data._io.arrow import MAX_IEEE754_COMPATIBLE_INT
 
 
 def pytest_collection_modifyitems(items):
@@ -13,9 +19,13 @@ def pytest_collection_modifyitems(items):
         try:
             fixtures = item.fixturenames
             if "getml_engine" in fixtures:
-                item.add_marker(pytest.mark.engine)
-            if "getml_project" in fixtures:
-                item.add_marker(pytest.mark.project)
+                item.add_marker(pytest.mark.getml_engine)
+                if platform.system() != "Linux" and not getml.engine.is_monitor_alive():
+                    item.add_marker(
+                        pytest.mark.skip(
+                            reason="Engine is not running. Please start it manually."
+                        )
+                    )
         except:
             pass
 
@@ -32,11 +42,15 @@ def workdir(dir: str):
 
 @pytest.fixture(scope="module")
 def getml_engine():
+    if platform.system() != "Linux":
+        yield getml
+        return
+
     print("Starting Engine")
     with TemporaryDirectory() as tmpdir:
         getml.engine.launch(project_directory=tmpdir, log=True)
 
-        yield getml.engine
+        yield getml
 
         print("Shutting down Engine")
         getml.engine.shutdown()
@@ -51,7 +65,24 @@ def getml_project(request, getml_engine):
     yield getml.project
 
     print(f"Deleting project: {project_name}")
-    getml_engine.delete_project(project_name)
+    getml_engine.engine.delete_project(project_name)
+
+
+@pytest.fixture
+def csv_file_with_changing_type_in_row_2():
+    data = cleandoc(
+        """
+        time_stamp,join_key,targets,column_01
+        1970-01-01 00:00:00.202923,0,0,-0.9284
+        1970-01-01 00:00:00.134847,1,1.000001,-0.4343
+        """
+    )
+
+    with NamedTemporaryFile(mode="w", delete=False) as csv_file:
+        csv_file.write(data)
+        csv_file.flush()
+        yield csv_file.name
+        os.remove(csv_file.name)
 
 
 @pytest.fixture
@@ -145,3 +176,77 @@ def tmpdir():
     with TemporaryDirectory() as tmpdir:
         with workdir(tmpdir):
             yield tmpdir
+
+
+@pytest.fixture
+def timestamp_with_utc_tz_batch():
+    return pa.RecordBatch.from_arrays(
+        [
+            pa.array(
+                [datetime(2021, 1, 1, tzinfo=timezone.utc)],
+                type=pa.timestamp("ns", tz="UTC"),
+            )
+        ],
+        ["utc_time"],
+    )
+
+
+@pytest.fixture
+def timestamp_with_non_utc_tz_batch():
+    return pa.RecordBatch.from_arrays(
+        [
+            pa.array(
+                [datetime(2021, 1, 1).astimezone(timezone.utc)],
+                type=pa.timestamp("ns", tz="PST8PDT"),
+            )
+        ],
+        ["non_utc_time"],
+    )
+
+
+@pytest.fixture
+def timestamp_without_tz_batch():
+    return pa.RecordBatch.from_arrays(
+        [pa.array([datetime(2021, 1, 1)], type=pa.timestamp("ns"))],
+        ["no_tz_time"],
+    )
+
+
+@pytest.fixture
+def int_batch():
+    return pa.RecordBatch.from_arrays(
+        [
+            pa.array([1]),
+            pa.array([MAX_IEEE754_COMPATIBLE_INT]),
+            pa.array([MAX_IEEE754_COMPATIBLE_INT + 1]),
+        ],
+        schema=pa.schema(
+            [
+                pa.field("ints", pa.int64()),
+                pa.field("int64_hits_float64_upper_bound", pa.int64()),
+                pa.field("int64_exceeds_float64_upper_bound", pa.int64()),
+            ],
+        ),
+    )
+
+
+@pytest.fixture
+def decimal_batch():
+    return pa.RecordBatch.from_arrays(
+        [pa.array([decimal.Decimal(1.0)])],
+        ["decimals"],
+    )
+
+
+@pytest.fixture
+def timestamp_batch(
+    timestamp_with_utc_tz_batch,
+    timestamp_without_tz_batch,
+):
+    return pa.RecordBatch.from_arrays(
+        [
+            timestamp_with_utc_tz_batch[0],
+            timestamp_without_tz_batch[0],
+        ],
+        ["utc_time", "no_tz_time"],
+    )

@@ -15,12 +15,9 @@ from inspect import cleandoc
 from os import listdir, makedirs
 from os.path import isdir
 from pathlib import Path
-from platform import system
 from subprocess import Popen
 from time import sleep
 from typing import Dict, List, NamedTuple, Optional, Union
-
-from rich import print
 
 from getml.communication import tcp_port
 from getml.constants import COMPOSE_FILE_URL, DOCKER_DOCS_URL
@@ -109,7 +106,7 @@ def _extract_getml_exec_path(getml_directory: Path, directories: List[Path]) -> 
             + "."
         )
 
-    if system() == "Linux":
+    if platform.system() == System.LINUX:
         return getml_directory / directories[0] / "getML"
     return getml_directory / directories[0] / "getml-cli"
 

@@ -12,15 +12,19 @@ import pyarrow as pa
 from pyarrow.lib import ArrowInvalid
 
 
+def _nop_arrow_cast_exception_handler(exc: Exception, field: pa.Field) -> None:
+    raise exc
+
+
 class ArrowCastExceptionHandlerRegistry:
     """
     A registry for handlers of exceptions originating from the Arrow library.
 
     Instances of this class can be used as a decorator to register exception
-    handlers. Handlers are registered for specific target types.
+    handlers. Handlers are registered for specific target arrow types.
 
-    The handlers are called with the exception and the field that
-    caused the exception.
+    The handlers are called with the exception (exc) and the field (field) which
+    cast caused the exception.
 
     As there is only a single Exception type raised by Arrow (`ArrowInvalid`),
     the handlers have to parse the exception themselves.
@@ -59,7 +63,7 @@ class ArrowCastExceptionHandlerRegistry:
         cls, target_type: pa.DataType
     ) -> Callable[[pa.Array, pa.DataType], pa.Array]:
         if target_type not in cls.handlers:
-            raise ValueError(f"No handler registered for type: {target_type}")
+            return _nop_arrow_cast_exception_handler
         return cls.handlers[target_type]
 
 
@@ -72,6 +76,9 @@ class EngineExceptionHandlerRegistry:
     Instances of this class can be used as a decorator to register exception
     handlers. As all exceptions are sent as raw strings, the handlers have to
     parse the exceptions themselves.
+
+    The handlers are called with the raw exception string (msg) and an possibly
+    empty dictionary of extra information.
     """
 
     handlers = []
@@ -83,7 +90,11 @@ class EngineExceptionHandlerRegistry:
 
     @classmethod
     def register(cls, handler: Callable[[str, Dict[str, Any]], None]):
-        cls.handlers.append(handler)
+        @wraps(handler)
+        def wrapper(*args, **kwargs):
+            return handler(*args, **kwargs)
+
+        cls.handlers.append(wrapper)
         return handler
 
 

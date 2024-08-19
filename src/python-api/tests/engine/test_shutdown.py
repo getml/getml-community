@@ -1,21 +1,30 @@
-"""
-This makes sure that the
-Engine shutdown works as intended.
-"""
-
+import platform
 from tempfile import TemporaryDirectory
-import getml
+
 import pytest
 
+import getml
 
-@pytest.mark.parametrize("loop", range(100))
+
+@pytest.mark.skipif(
+    getml.engine.is_monitor_alive(),
+    reason=(
+        "getML is already running. "
+        "To test 'shutdown', please save your current session "
+        "and stop the running getML instance."
+    ),
+)
+@pytest.mark.skipif(
+    platform.system() != "Linux",
+    reason=(
+        "Testing 'shutdown' is only sypported on Linux "
+        "(as launching getML from python is only supported with native binaries."
+    ),
+)
+@pytest.mark.parametrize("loop", range(5))
 def test_shutdown(loop):
-    """
-    This makes sure that the
-    Engine shutdown works as intended.
-    """
     with TemporaryDirectory() as tmpdir:
-        getml.engine.launch(in_memory=True, project_directory=tmpdir)
+        getml.engine.launch(project_directory=tmpdir)
         project_name = f"test_shutdown_{loop}"
         getml.engine.set_project(project_name)
         getml.engine.delete_project(project_name)

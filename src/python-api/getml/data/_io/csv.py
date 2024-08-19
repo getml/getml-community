@@ -13,13 +13,15 @@ from __future__ import annotations
 
 import itertools as it
 import numbers
+from os import PathLike
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable, List, Optional, Union
+from typing import TYPE_CHECKING, Iterable, Iterator, List, Tuple, Union
 
+import pyarrow as pa
 import pyarrow.csv as pa_csv
 
 from getml.constants import DEFAULT_BATCH_SIZE
-from getml.data._io.arrow import sniff_schema
+from getml.data._io.arrow import preprocess_arrow_schema, sniff_schema
 from getml.data.roles.container import Roles
 from getml.database.helpers import _retrieve_urls
 
@@ -27,13 +29,15 @@ if TYPE_CHECKING:
     from getml.data.data_frame import DataFrame
     from getml.data.view import View
 
+DEFAULT_CSV_READ_BLOCK_SIZE = 1 << 20
+
 
 def sniff_csv(
     fnames: List[str],
     quotechar: str = '"',
     sep: str = ",",
     skip: int = 0,
-    colnames: Optional[Iterable[str]] = None,
+    colnames: Iterable[str] = (),
 ) -> Roles:
     """Sniffs a list of CSV files and returns the result as a dictionary of
     roles.
@@ -86,12 +90,10 @@ def sniff_csv(
     if deviating:
         raise ValueError("All CSV files must have the same schema!")
 
-    if colnames is None:
-        colnames_ = schema.names
-    else:
-        colnames_ = colnames
+    if not colnames:
+        colnames = schema.names
 
-    return sniff_schema(schema, colnames_)
+    return sniff_schema(schema, colnames)
 
 
 def to_csv(
@@ -132,3 +134,90 @@ def to_csv(
 
     for batch in it.chain([first_batch], batches):
         writer.write(batch)
+
+
+def _prepare_csv_options(
+    input_file: PathLike,
+    roles: Roles,
+    skip_rows: int,
+    column_names: Iterable[str],
+    delimiter: str,
+    quote_char: str,
+    block_size: int,
+) -> Tuple[pa_csv.ReadOptions, pa_csv.ParseOptions, pa_csv.ConvertOptions]:
+    read_options = pa_csv.ReadOptions(
+        block_size=block_size,
+        skip_rows=skip_rows,
+        column_names=column_names,
+        autogenerate_column_names=False,
+    )
+
+    parse_options = pa_csv.ParseOptions(
+        delimiter=delimiter,
+        quote_char=quote_char,
+    )
+
+    preprocessed_schema = preprocess_arrow_schema(
+        pa_csv.open_csv(input_file).schema, roles
+    )
+    convert_options = pa_csv.ConvertOptions(
+        column_types=preprocessed_schema,
+    )
+
+    return read_options, parse_options, convert_options
+
+
+def stream_csv(
+    input_file: PathLike,
+    roles: Roles,
+    skip_rows: int = 0,
+    column_names: Iterable[str] = (),
+    delimiter: str = ",",
+    quote_char: str = '"',
+    block_size: int = DEFAULT_CSV_READ_BLOCK_SIZE,
+) -> pa_csv.CSVStreamingReader:
+    read_options, parse_options, convert_options = _prepare_csv_options(
+        input_file,
+        roles,
+        skip_rows,
+        column_names,
+        delimiter,
+        quote_char,
+        block_size,
+    )
+
+    return pa_csv.open_csv(
+        input_file,
+        read_options=read_options,
+        parse_options=parse_options,
+        convert_options=convert_options,
+    )
+
+
+def read_csv(
+    input_file: PathLike,
+    roles: Roles,
+    skip_rows: int = 0,
+    column_names: Iterable[str] = (),
+    delimiter: str = ",",
+    quote_char: str = '"',
+    block_size: int = DEFAULT_CSV_READ_BLOCK_SIZE,
+) -> Iterator[pa.RecordBatch]:
+    read_options, parse_options, convert_options = _prepare_csv_options(
+        input_file,
+        roles,
+        skip_rows,
+        column_names,
+        delimiter,
+        quote_char,
+        block_size,
+    )
+
+    return iter(
+        pa_csv.read_csv(
+            input_file,
+            read_options=read_options,
+            parse_options=parse_options,
+            convert_options=convert_options,
+        ).to_batches()
+    )

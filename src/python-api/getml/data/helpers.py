@@ -18,6 +18,7 @@ import numbers
 import os
 import random
 import string
+from functools import lru_cache
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -29,7 +30,6 @@ from typing import (
     Tuple,
     Union,
 )
-from functools import lru_cache
 
 import numpy as np
 import pandas as pd
@@ -519,7 +519,7 @@ def _replace_non_alphanumeric_cols(df_or_view):
             df_or_view = df_or_view.with_column(
                 col=col,
                 name=new_name,
-                role=df_or_view.roles.infer(old_name),
+                role=df_or_view.roles.column(old_name),
                 subroles=col.subroles,
                 unit=col.unit,
                 time_formats=None,
@@ -989,7 +989,7 @@ def _with_subroles(
         view = view.with_column(
             col=col,
             name=name,
-            role=view.roles.infer(name),
+            role=view.roles.column(name),
             subroles=subroles,
             unit=col.unit,
             time_formats=None,
@@ -1033,7 +1033,7 @@ def _with_unit(
         view = view.with_column(
             col=col,
             name=name,
-            role=view.roles.infer(name),
+            role=view.roles.column(name),
             subroles=col.subroles,
             unit=unit,
             time_formats=None,

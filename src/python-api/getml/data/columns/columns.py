@@ -11,14 +11,20 @@
 from __future__ import annotations
 
 import numbers
+import warnings
 from abc import ABC
+from collections import deque
 from inspect import cleandoc
-from typing import Any, Dict, List, Optional, Union, get_args
+from typing import Any, Dict, Iterable, List, Optional, Union, get_args
 
 import numpy as np
+import pandas as pd
+import pyarrow as pa
 
 from getml.constants import TIME_FORMATS
 from getml.data import roles
+from getml.data._io.arrow import postprocess_arrow_schema
+from getml.data.roles.container import Roles
 
 from .aggregation import Aggregation
 from .collect_footer_data import _collect_footer_data
@@ -56,9 +62,48 @@ TYPE_MISSMATCH_ERROR_MSG_TEMPLATE = cleandoc(
 
 # -----------------------------------------------------------------------------
 
+TIME_STAMP_PARSING_LIKELY_FAILED_WARNING_TEMPLATE = cleandoc(
+    """
+    After parsing time stamps, column '{column}' likely contains only nan values.
+
+    Check the supplied 'time_formats' and the data.
+    """
+)
+
+# -----------------------------------------------------------------------------
+
 
 class _View(ABC):
     cmd: Dict[str, Any]
+
+
+# -----------------------------------------------------------------------------
+
+
+def _infer_column_name_recursive(cmd: Dict[str, Any]) -> str:
+    """
+    Infer the name from a ...Column(View) if the column is an (anonymous) view,
+    recursively consult the view's bases (operands) in breadth-first manner
+    until a name is found. If no name is found, return the view's type and
+    operator.
+
+    This function is used to construct informative error messages.
+    """
+    queue = deque([cmd])
+
+    while queue:
+        current = queue.popleft()
+
+        if "name_" in current:
+            return current["name_"]
+
+        for key, value in current.items():
+            if isinstance(value, dict):
+                queue.append(value)
+
+    type = cmd.get("type_")
+    operator = cmd.get("operator_")
+    return f"{type}.{operator}"
 
 
 # -----------------------------------------------------------------------------
@@ -940,6 +985,33 @@ StringColumnView.__radd__ = _rconcat  # type: ignore
 # -----------------------------------------------------------------------------
 
 
+def _check_inferred_time_stamps(self):
+    inferred_name = _infer_column_name_recursive(self.cmd)
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            # HACK: We need to create a dummy DataFrame to infer the schema with the right
+            # time format
+            inference_batch = pd.DataFrame(
+                {inferred_name: pd.to_datetime(self[:10].to_numpy())}
+            )
+    except (ValueError, pd._libs.tslibs.parsing.DateParseError):
+        pass
+    else:
+        schema = pa.Schema.from_pandas(inference_batch)
+        # just called for emmitting the timezone related warnings
+        postprocess_arrow_schema(
+            schema, roles=Roles.from_dict({roles.time_stamp: [self.name]})
+        )
+        return
+
+
+StringColumn._check_inferred_time_stamps = _check_inferred_time_stamps  # type: ignore
+StringColumnView._check_inferred_time_stamps = _check_inferred_time_stamps  # type: ignore
+
+# -----------------------------------------------------------------------------
+
+
 def _contains(self, other: StringOperandType):
     """
     Returns a boolean column indicating whether a
@@ -1755,9 +1827,18 @@ def _as_ts(self, time_formats: Optional[Union[str, Iterable[str]]] = None):
     Args:
         time_formats: Formats to be used to parse the time stamps.
     """
+    inferred_name = _infer_column_name_recursive(self.cmd)
+    self._check_inferred_time_stamps()
     time_formats = time_formats or TIME_FORMATS
     col = FloatColumnView(operator="as_ts", operand1=self, operand2=None)
     col.cmd["time_formats_"] = time_formats
+
+    if all(col[:10].is_nan().to_numpy()):
+        warnings.warn(
+            TIME_STAMP_PARSING_LIKELY_FAILED_WARNING_TEMPLATE.format(
+                column=inferred_name
+            )
+        )
     return col
 
 

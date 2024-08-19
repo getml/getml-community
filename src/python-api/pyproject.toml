@@ -124,5 +124,6 @@ keep-runtime-typing = true
 
 [tool.pytest.ini_options]
 markers = [
-    "engine: tests that use the engine",
+    "getml_engine: tests that rely on a running getML process (processes can automatically be launched and shutdown on linux)",
+    "slow: integration tests deemed time-intensive to execute."
 ]
