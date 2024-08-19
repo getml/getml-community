@@ -1319,11 +1319,11 @@ class Pipeline:
             if msg != "Found!":
                 comm.handle_engine_exception(msg)
 
-            begin = time.time()
+            begin = time.monotonic()
 
             msg = comm.log(sock)
 
-            end = time.time()
+            end = time.monotonic()
 
             if "Trained" in msg:
                 print()

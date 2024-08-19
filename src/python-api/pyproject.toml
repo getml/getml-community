@@ -55,6 +55,7 @@ dependencies = [
 [project.optional-dependencies]
 scipy = ["scipy"]
 pyspark = ["pyspark"]
+jupyter = ["jupyterlab", "ipywidgets"]
 
 [tool.hatch.version]
 source = "code"
