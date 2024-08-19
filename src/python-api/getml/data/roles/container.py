@@ -15,7 +15,7 @@ from __future__ import annotations
 import warnings
 from dataclasses import dataclass, field, fields
 from inspect import cleandoc
-from typing import Dict, Iterable, Iterator, List, Mapping, Tuple, cast
+from typing import Dict, Iterable, Iterator, List, Mapping, Tuple, cast, Union
 
 from getml.data.roles import sets as roles_sets
 from getml.data.roles.types import Role
@@ -103,7 +103,7 @@ class Roles:
             raise KeyError(key)
 
     def __iter__(self) -> Iterator[Role]:
-        yield from (cast(Role, field_.name) for field_ in fields(self))
+        return cast(Iterator[Role], (field_.name for field_ in fields(self)))
 
     def __len__(self) -> int:
         return len(fields(self))
@@ -152,12 +152,34 @@ class Roles:
         raise ValueError("Column named '" + colname + "' not found.")
 
     @classmethod
-    def from_mapping(cls, mapping: Mapping[str, Role]) -> Roles:
+    def from_dict(cls, roles_dict: Mapping[Union[str, Role], List[str]]) -> Roles:
+        """
+        Creates a roles object from a dictionary.
+
+        Args:
+            roles_dict:
+                A dictionary where keys are role names and values are lists of column names.
+
+        Returns:
+            A roles object.
+        """
+        roles: Dict[Role, List[str]] = {}
+        for role in roles_dict:
+            if role not in roles_sets.all_:
+                raise ValueError(
+                    INVALID_ROLE_ERROR_MESSAGE_TEMPLATE.format(candidate_role=role)
+                )
+            roles[role] = list(roles_dict[role])
+
+        return cls(**roles)
+
+    @classmethod
+    def from_mapping(cls, roles_mapping: Mapping[Union[str, Role], Role]) -> Roles:
         """
         Creates a roles object from a mapping of column names to roles.
 
         Args:
-            mapping:
+            roles_mapping:
                 A dictionary where keys are column names and values are role names.
 
         Returns:
@@ -166,31 +188,9 @@ class Roles:
         roles: Dict[Role, List[str]] = {
             cast(Role, field.name): [] for field in fields(cls)
         }
-        for column, role in mapping.items():
+        for column, role in roles_mapping.items():
             roles[role].append(column)
         return cls.from_dict(roles)
-
-    @classmethod
-    def from_dict(cls, mapping: Mapping[Role, Iterable[str]]) -> Roles:
-        """
-        Creates a roles object from a dictionary.
-
-        Args:
-            mapping:
-                A dictionary where keys are role names and values are lists of column names.
-
-        Returns:
-            A roles object.
-        """
-        roles: Dict[Role, List[str]] = {}
-        for role in mapping:
-            if role not in roles_sets.all_:
-                raise ValueError(
-                    INVALID_ROLE_ERROR_MESSAGE_TEMPLATE.format(candidate_role=role)
-                )
-            roles[role] = list(mapping[role])
-
-        return cls(**roles)
 
     def infer(self, colname: str) -> Role:
         """
@@ -239,14 +239,14 @@ class Roles:
         return {column: role for role in self for column in self[role]}
 
     @property
-    def unused(self) -> List[str]:
+    def unused(self) -> List[Role]:
         """
         Names of all unused columns (unused_float + unused_string).
 
         Returns:
             A list of column names that are categorized as unused, combining both float and string types.
         """
-        return list(self.unused_float) + list(self.unused_string)
+        return cast(List[Role], list(self.unused_float) + list(self.unused_string))
 
     def update(self, other: Roles) -> Roles:
         """

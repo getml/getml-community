@@ -44,7 +44,7 @@ class _ViewFormatter(_DataFrameFormatter):
             num_head = min(num_head, self.n_rows)
 
         cols = [view[colname].cmd for colname in view.colnames]
-        roles = [view.roles.infer(colname) for colname in view.colnames]
+        roles = [view.roles.column(colname) for colname in view.colnames]
         units = [view[colname].unit for colname in view.colnames]
 
         self.units = None

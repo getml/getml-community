@@ -8,9 +8,7 @@
 from typing import FrozenSet
 
 from getml.data.roles import roles
-from getml.data.roles.types import CategoricalLike, NumericalLike, Role, Target
-
-_target: FrozenSet[Target] = frozenset({roles.target})
+from getml.data.roles.types import CategoricalLike, NumericalLike, Role
 
 categorical: FrozenSet[CategoricalLike] = frozenset(
     {
@@ -27,6 +25,7 @@ Set of roles that are interpreted as categorical.
 numerical: FrozenSet[NumericalLike] = frozenset(
     {
         roles.numerical,
+        roles.target,
         roles.time_stamp,
         roles.unused_float,
     }
@@ -35,7 +34,7 @@ numerical: FrozenSet[NumericalLike] = frozenset(
 Set of roles that are interpreted as numerical.
 """
 
-all_: FrozenSet[Role] = categorical | numerical | _target
+all_: FrozenSet[Role] = categorical | numerical
 """
 Set of all possible roles.
 """

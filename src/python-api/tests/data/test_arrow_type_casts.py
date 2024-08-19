@@ -33,10 +33,12 @@ def test_from_arrow_utc_timestamp(getml_project, timestamp_with_utc_tz_batch):
     assert df.to_arrow()["utc_time"].type.tz is None
 
 
-def test_from_arrow_non_utc_timestamp(timestamp_with_non_utc_tz_batch):
+def test_from_arrow_non_utc_timestamp(getml_project, timestamp_with_non_utc_tz_batch):
     with pytest.raises(TypeError) as exc_info:
         getml.data.DataFrame.from_arrow(
-            timestamp_with_non_utc_tz_batch, name="tz_non_utc"
+            timestamp_with_non_utc_tz_batch,
+            name="tz_non_utc",
+            roles={"time_stamp": ["non_utc_time"]},
         )
     assert str(exc_info.value) == TIMEZONE_NON_UTC_ERROR_TEMPLATE.format(
         column_name=timestamp_with_non_utc_tz_batch.schema[0].name,

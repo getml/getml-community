@@ -16,12 +16,24 @@ import warnings
 from dataclasses import dataclass, field
 from functools import wraps
 from inspect import cleandoc
-from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, Iterator, List, Union
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Tuple,
+    Union,
+    cast,
+)
 
 import pyarrow as pa
 from pyarrow.lib import ArrowInvalid
 
 from getml import communication as comm
+from getml.constants import DEFAULT_BATCH_SIZE
+from getml.data.roles import roles
 from getml.data.roles import sets as roles_sets
 from getml.data.roles.container import Roles
 from getml.data.roles.types import Role
@@ -29,9 +41,10 @@ from getml.exceptions import arrow_cast_exception_handler
 
 if TYPE_CHECKING:
     from getml.data.data_frame import DataFrame
+    from getml.data.view import View
 
-MAX_IEEE754_COMPAT_INT = 2**53
-MIN_IEEE754_COMPAT_INT = -MAX_IEEE754_COMPAT_INT
+MAX_IEEE754_COMPATIBLE_INT = 2**53
+MIN_IEEE754_COMPATIBLE_INT = -MAX_IEEE754_COMPATIBLE_INT
 """
 IEEE 754 double-precision numbers have a 53-bit mantissa, allowing exact
 representation of integers up to 2**53. The minimum exact integer
@@ -40,18 +53,18 @@ representable is the negative of this maximum value.
 
 INT_ENCODING_HINTS_PARTIAL = cleandoc(
     """
-    If your column contains catergorical values, you can either cast the column to
-    string before sending the data to the getML Engine or explicitly set the
-    column's role to 'categorical' in `from_...` or `read_...` methods.
+    If the column contains catergorical values, you can either cast the column to
+    string before reading data into getML or explicitly set the column's role to
+    'categorical' in `from_...` or `read_...` methods.
 
-    If your column contains numerical values, rescale your integers to be within the
+    If the column contains numerical values, rescale your integers to be within the
     range of integers representable by IEEE754 double precision 64bit floating
     point (float64) numbers:
-    [{min_ieee754_compat_int}, {max_ieee754_compat_int}].
+    [{min_ieee754_compatible_int}, {max_ieee754_compatible_int}].
     """
 ).format(
-    min_ieee754_compat_int=MIN_IEEE754_COMPAT_INT,
-    max_ieee754_compat_int=MAX_IEEE754_COMPAT_INT,
+    min_ieee754_compatible_int=MIN_IEEE754_COMPATIBLE_INT,
+    max_ieee754_compatible_int=MAX_IEEE754_COMPATIBLE_INT,
 )
 
 
@@ -113,6 +126,7 @@ UNPARAMETERIZED_TYPE_CONVERSION_MAPPING = {
     pa.uint64(): pa.float64(),
     pa.float16(): pa.float64(),
     pa.float32(): pa.float64(),
+    pa.null(): pa.string(),
 }
 """
 Mapping from unsupported native unparameterized arrow types to supported types
@@ -120,13 +134,21 @@ that can be handled by the getML Engine.
 
 Arrow's parameterized types (e.g. decimals) are not included here, as they are
 parameterized and keeping track of all possible parameterizations would be cumbersome.
-As such parameterized types are handled in a separate processor that dynamically
+As such, parameterized types are handled in a separate processor that dynamically
 handles such types by checking against the pyarrows respective ABCs at runtime.
+
+As there is no dedicated null type in getML, nulls are cast to string.
 """
 
 
 @dataclass
 class Processors:
+    """
+    Container for arrow schema field processors. Each role is associated with a
+    list of processors that are applied to fields associated with columns that
+    are going to be treated as the respective role.
+    """
+
     categorical: List[Callable[[pa.Field], pa.Field]] = field(default_factory=list)
     numerical: List[Callable[[pa.Field], pa.Field]] = field(default_factory=list)
     target: List[Callable[[pa.Field], pa.Field]] = field(default_factory=list)
@@ -141,7 +163,18 @@ class Processors:
 
 
 class ArrowSchemaFieldProcessorRegistry:
-    processors: Processors = Processors()
+    """
+    Registry for arrow schema field processors.
+
+    Instances can be used as a decorator to register a function as a
+    processor for arrow schema fields. Processors are registered targeting
+    a set of roles on the engine. If a field is associated with a column that
+    is going to be treated as any of the registered roles, the processor
+    will be applied to the respective field.
+    """
+
+    def __init__(self):
+        self.processors: Processors = Processors()
 
     def __call__(
         self, roles: Iterable[Role]
@@ -151,9 +184,8 @@ class ArrowSchemaFieldProcessorRegistry:
     ]:
         return self.register(roles)
 
-    @classmethod
     def register(
-        cls, roles: Iterable[Role]
+        self, roles: Iterable[Role]
     ) -> Callable[
         [Callable[[pa.Field], None]],
         Callable[[pa.Field], pa.Field],
@@ -164,17 +196,55 @@ class ArrowSchemaFieldProcessorRegistry:
                 return func(*args, **kwargs)
 
             for role in roles:
-                cls.processors[role].append(wrapper)
+                self.processors[role].append(wrapper)
             return wrapper
 
         return decorator
 
-    @classmethod
-    def retrieve(cls, role: Role) -> List[Callable[[pa.Field], pa.Field]]:
-        return cls.processors[role]
+    def retrieve(self, role: Role) -> List[Callable[[pa.Field], pa.Field]]:
+        return self.processors[role]
 
 
-arrow_schema_field_processor = ArrowSchemaFieldProcessorRegistry()
+arrow_schema_field_preprocessor = ArrowSchemaFieldProcessorRegistry()
+"""
+Registry for arrow schema field preprocessors.
+
+Can be used as a decorator to register a function as a preprocessor for arrow
+schema fields.
+
+Preprocessors are applied _before_ any data has been read into arrow.
+
+Each preprocessor is registered targeting set of roles. Preprocessors
+are applied to fields that are associated with any of the registered roles
+in the target data frame.
+
+E.g. handling of unparameterized types (int to float conversion etc.) is
+registered targeting the set of roles that are considered 'numerical', i.e. if a
+field is associated with a column that is going to be treated as 'numerical' by
+the Engine, the data will be read as float to arrow right away. If the same
+field, however, is associated with a column that is treated as string like
+('unused_string') the field will be left untouched s.t. the original
+representation is preserved.
+"""
+
+arrow_schema_field_postprocessor = ArrowSchemaFieldProcessorRegistry()
+"""
+Registry for arrow schema field postprocessors.
+
+Can be used as a decorator to register a function as a postprocessor for arrow
+schema fields.
+
+Postprocessors are applied _after_ the data has been read into arrow but before
+the data is sent to the Engine.
+
+Each postprocessor is registered targeting set of roles. Postprocessors
+are applied to fields that are associated with any of the registered roles
+in the target data frame.
+
+E.g. `postprocess_time_stamp_drop_timezone` is registered targeting the set of
+roles that are considered as 'numerical' s.t. the timezone information is
+dropped only when the timestamp is going to be parsed.
+"""
 
 
 def _is_numerical_type_arrow(coltype: pa.DataType) -> bool:
@@ -200,8 +270,56 @@ def _is_unsupported_type_arrow(coltype: pa.DataType) -> bool:
     )
 
 
-@arrow_schema_field_processor(roles=roles_sets.all_)
-def process_time_stamp(field: pa.Field) -> pa.Field:
+@arrow_schema_field_preprocessor(roles={roles.unused_string})
+def preprocess_types_cast_to_string(field: pa.Field) -> pa.Field:
+    """
+    Eagerly read any type as string when the column is going to be treated as
+    string like.
+    """
+    return pa.field(field.name, pa.string())
+
+
+@arrow_schema_field_preprocessor(roles=roles_sets.numerical)
+def preprocess_unparameterized_type(field: pa.Field) -> pa.Field:
+    """
+    Read unparameterized types as float64 to ensure compatibility with the
+    getML engine. Only do so if the column is going to be treated as 'numerical'
+    like.
+    """
+    if field.type in UNPARAMETERIZED_TYPE_CONVERSION_MAPPING:
+        return pa.field(
+            field.name,
+            UNPARAMETERIZED_TYPE_CONVERSION_MAPPING[field.type],
+        )
+    return field
+
+
+@arrow_schema_field_preprocessor(roles=roles_sets.numerical)
+def preprocess_parameterized_type(field: pa.Field) -> pa.Field:
+    """
+    Read parameterized types as float64 to ensure compatibility with the
+    getML engine. Only do so if the column is going to be treated as 'numerical'
+    like.
+    """
+    if pa.types.is_decimal(field.type):
+        warnings.warn(
+            DECIMAL_CONVERSION_LOST_PRECISION_WARNING_TEMPLATE.format(
+                column_name=field.name
+            )
+        )
+        return pa.field(field.name, pa.float64())
+    return field
+
+
+@arrow_schema_field_postprocessor(roles=roles_sets.numerical)
+def postprocess_time_stamp_drop_timezone(field: pa.Field) -> pa.Field:
+    """
+    Drop the timezone information from timestamps if the column is going to be
+    parsed (parsing only happens when the target role is numerical).
+
+    Note that columns with the role 'time_stamp' are encoded as float64, s.t.
+    the resulting role can be consirederd as 'numerical' like.
+    """
     if pa.types.is_timestamp(field.type):
         if field.type.tz is None:
             return field.with_metadata({})
@@ -220,38 +338,27 @@ def process_time_stamp(field: pa.Field) -> pa.Field:
         return field.with_metadata({})
 
 
-@arrow_schema_field_processor(roles=roles_sets.numerical)
-def process_unparameterized_type(field: pa.Field) -> pa.Field:
-    if field.type in UNPARAMETERIZED_TYPE_CONVERSION_MAPPING:
-        return pa.field(
-            field.name,
-            UNPARAMETERIZED_TYPE_CONVERSION_MAPPING[field.type],
-        )
-    return field
-
-
-@arrow_schema_field_processor(roles=roles_sets.all_)
-def process_parameterized_type(field: pa.Field) -> pa.Field:
-    if pa.types.is_decimal(field.type):
-        warnings.warn(
-            DECIMAL_CONVERSION_LOST_PRECISION_WARNING_TEMPLATE.format(
-                column_name=field.name
-            )
-        )
-        return pa.field(field.name, pa.float64())
-    return field
-
-
-def process_arrow_schema(schema: pa.Schema, roles: Roles) -> pa.Schema:
+def _process_arrow_schema(
+    schema: pa.Schema, roles: Roles, processors: ArrowSchemaFieldProcessorRegistry
+) -> pa.Schema:
     processed_fields = []
-    for name in roles.columns:
-        role = roles.column(name)
-        field = schema.field(name)
+    for field in schema:
+        if field.name not in roles.columns:
+            continue
+        role = roles.column(field.name)
         field_processed = field.with_metadata({})
-        for processor in arrow_schema_field_processor.retrieve(role):
+        for processor in processors.retrieve(role):
             field_processed = processor(field_processed)
         processed_fields.append(field_processed)
     return pa.schema(processed_fields)
+
+
+def postprocess_arrow_schema(schema: pa.Schema, roles: Roles) -> pa.Schema:
+    return _process_arrow_schema(schema, roles, arrow_schema_field_postprocessor)
+
+
+def preprocess_arrow_schema(schema: pa.Schema, roles: Roles) -> pa.Schema:
+    return _process_arrow_schema(schema, roles, arrow_schema_field_preprocessor)
 
 
 def sniff_arrow(table) -> Roles:
@@ -287,12 +394,12 @@ def sniff_schema(schema: pa.Schema, colnames: Iterable[str] = ()) -> Roles:
 def to_arrow(df_or_view: Union[DataFrame, View]) -> pa.Table:
     df_or_view.refresh()
 
-    cmd: Dict[str, Any] = {}
-
     typename = type(df_or_view).__name__
 
-    cmd["type_"] = typename + ".to_arrow"
-    cmd["name_"] = df_or_view.name if typename == "DataFrame" else ""
+    cmd = {
+        "type_": f"{typename}.to_arrow",
+        "name_": df_or_view.name if typename == "DataFrame" else "",
+    }
 
     if typename == "View":
         cmd["view_"] = df_or_view._getml_deserialize()
@@ -308,18 +415,20 @@ def to_arrow(df_or_view: Union[DataFrame, View]) -> pa.Table:
 
 def to_arrow_batches(
     batch_or_batches: Union[pa.RecordBatch, pa.Table, Iterable[pa.RecordBatch]],
-) -> Iterator[pa.RecordBatch]:
+) -> Tuple[pa.Schema, Iterator[pa.RecordBatch]]:
     if isinstance(batch := batch_or_batches, pa.RecordBatch):
-        return iter([batch])
+        batch = cast(pa.RecordBatch, batch)
+        return batch.schema, iter([batch])
     elif isinstance(batches := batch_or_batches, Iterable):
         if all(isinstance(batch, pa.RecordBatch) for batch in batches):
-            return batches  # type: ignore
+            first_batch = cast(pa.RecordBatch, next(iter(batches)))
+            return first_batch.schema, iter(batches)
         else:
             raise TypeError(
                 "If 'data' is an iterable, all elements must be of type pa.RecordBatch."
             )
     elif isinstance(table := batch_or_batches, pa.Table):
-        return table.to_batches()  # type: ignore
+        return table.schema, iter(table.to_batches(max_chunksize=DEFAULT_BATCH_SIZE))  # type: ignore
     else:
         raise TypeError(
             "'data' must be a pa.RecordBatch, pa.Table, or an iterable of pa.RecordBatch instances."
@@ -361,23 +470,21 @@ def read_arrow_batches(
     df: DataFrame,
     append: bool = False,
 ) -> None:
-    cmd: Dict[str, Any] = {}
+    cmd = {
+        "type_": "DataFrame.from_arrow",
+        "name_": df.name,
+        "append_": append,
+        "categorical_": df._categorical_names,
+        "join_keys_": df._join_key_names,
+        "numerical_": df._numerical_names,
+        "targets_": df._target_names,
+        "text_": df._text_names,
+        "time_stamps_": df._time_stamp_names,
+        "unused_floats_": df._unused_float_names,
+        "unused_strings_": df._unused_string_names,
+    }
 
-    cmd["type_"] = "DataFrame.from_arrow"
-    cmd["name_"] = df.name
-
-    cmd["append_"] = append
-
-    cmd["categorical_"] = df._categorical_names
-    cmd["join_keys_"] = df._join_key_names
-    cmd["numerical_"] = df._numerical_names
-    cmd["targets_"] = df._target_names
-    cmd["text_"] = df._text_names
-    cmd["time_stamps_"] = df._time_stamp_names
-    cmd["unused_floats_"] = df._unused_float_names
-    cmd["unused_strings_"] = df._unused_string_names
-
-    processed_schema = process_arrow_schema(schema, df.roles)
+    processed_schema = postprocess_arrow_schema(schema, df.roles)
 
     with comm.send_and_get_socket(cmd) as sock:
         with sock.makefile(mode="wb") as sink:

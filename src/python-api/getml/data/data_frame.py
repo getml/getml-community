@@ -15,6 +15,7 @@ import os
 import shutil
 import warnings
 from collections import namedtuple
+from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -33,7 +34,6 @@ from typing import (
 import numpy as np
 import pandas as pd
 import pyarrow as pa
-import pyarrow.csv as pa_csv
 import pyarrow.parquet as pq
 
 import getml.communication as comm
@@ -41,12 +41,19 @@ from getml import constants, database
 from getml.constants import COMPARISON_ONLY, DEFAULT_BATCH_SIZE, TIME_STAMP
 from getml.data import roles as roles_
 from getml.data._io.arrow import (
+    preprocess_arrow_schema,
     read_arrow_batches,
     sniff_arrow,
     to_arrow,
     to_arrow_batches,
 )
-from getml.data._io.csv import sniff_csv, to_csv
+from getml.data._io.csv import (
+    DEFAULT_CSV_READ_BLOCK_SIZE,
+    read_csv,
+    sniff_csv,
+    stream_csv,
+    to_csv,
+)
 from getml.data._io.parquet import sniff_parquet, to_parquet
 from getml.data.columns import (
     BooleanColumnView,
@@ -54,7 +61,6 @@ from getml.data.columns import (
     FloatColumnView,
     StringColumn,
     StringColumnView,
-    arange,
     rowid,
 )
 from getml.data.columns.last_change import _last_change
@@ -66,7 +72,6 @@ from getml.data.helpers import (
     _handle_cols,
     _is_non_empty_typed_list,
     _is_numerical_type_numpy,
-    _is_typed_list,
     _iter_batches,
     _prepare_roles,
     _retrieve_urls,
@@ -89,13 +94,14 @@ from getml.data.subroles.types import Subrole
 from getml.data.view import View
 from getml.database import Connection
 from getml.database.helpers import _retrieve_temp_dir, _retrieve_urls
-from getml.helpers import _is_iterable_not_str
+from getml.helpers import _is_iterable_not_str, _is_iterable_not_str_of_type
 from getml.utilities.formatting import _DataFrameFormatter
 
 if TYPE_CHECKING:
     import pyspark.sql
 
     from getml.data.data_frame import DataFrame
+    from getml.data.view import View
 
 # --------------------------------------------------------------------
 
@@ -198,7 +204,9 @@ class DataFrame:
     _all_roles = roles_sets.all_
 
     def __init__(
-        self, name: str, roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None
+        self,
+        name: str,
+        roles: Optional[Union[Dict[Union[Role, str], Iterable[str]], Roles]] = None,
     ):
         # ------------------------------------------------------------
 
@@ -494,7 +502,7 @@ class DataFrame:
         if role is None:
             temp_df = pd.DataFrame()
             temp_df["column"] = numpy_array
-            if _is_numerical_type_numpy(temp_df.dtypes[0]):
+            if _is_numerical_type_numpy(temp_df.dtypes.iloc[0]):
                 role = roles_.unused_float
             else:
                 role = roles_.unused_string
@@ -889,7 +897,7 @@ class DataFrame:
         cls,
         table: pa.Table,
         name: str,
-        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        roles: Optional[Union[Dict[Union[Role, str], Iterable[str]], Roles]] = None,
         ignore: bool = False,
         dry: Literal[False] = False,
     ) -> DataFrame: ...
@@ -900,7 +908,7 @@ class DataFrame:
         cls,
         table: pa.Table,
         name: str,
-        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        roles: Optional[Union[Dict[Union[Role, str], Iterable[str]], Roles]] = None,
         ignore: bool = False,
         dry: Literal[True] = True,
     ) -> Roles: ...
@@ -910,7 +918,7 @@ class DataFrame:
         cls,
         table: pa.Table,
         name: str,
-        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        roles: Optional[Union[Dict[Union[Role, str], Iterable[str]], Roles]] = None,
         ignore: bool = False,
         dry: bool = False,
     ) -> Union[DataFrame, Roles]:
@@ -992,8 +1000,8 @@ class DataFrame:
         quotechar: str = '"',
         sep: str = ",",
         skip: int = 0,
-        colnames: Optional[Iterable[str]] = None,
-        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        colnames: Iterable[str] = (),
+        roles: Optional[Union[Dict[Union[Role, str], Iterable[str]], Roles]] = None,
         ignore: bool = False,
         dry: Literal[False] = False,
         verbose: bool = False,
@@ -1010,8 +1018,8 @@ class DataFrame:
         quotechar: str = '"',
         sep: str = ",",
         skip: int = 0,
-        colnames: Optional[Iterable[str]] = None,
-        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        colnames: Iterable[str] = (),
+        roles: Optional[Union[Dict[Union[Role, str], Iterable[str]], Roles]] = None,
         ignore: bool = False,
         dry: Literal[True] = True,
         verbose: bool = False,
@@ -1027,11 +1035,13 @@ class DataFrame:
         quotechar: str = '"',
         sep: str = ",",
         skip: int = 0,
-        colnames: Optional[Iterable[str]] = None,
-        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        colnames: Iterable[str] = (),
+        roles: Optional[Union[Dict[Union[Role, str], Iterable[str]], Roles]] = None,
         ignore: bool = False,
         dry: bool = False,
-        verbose: bool = False,
+        verbose: bool = True,
+        block_size: int = DEFAULT_CSV_READ_BLOCK_SIZE,
+        in_batches: bool = False,
     ) -> Union[DataFrame, Roles]:
         """Create a DataFrame from CSV files.
 
@@ -1091,6 +1101,18 @@ class DataFrame:
             verbose:
                 If True, when fnames are urls, the filenames are
                 printed to stdout during the download.
+
+            block_size:
+                The number of bytes read with each batch. Passed down to
+                pyarrow.
+
+            in_batches:
+                If True, read blocks streamwise manner and send those batches to
+                the engine. Blocks are read and sent to the engine sequentially.
+                While more memory efficient, streaming in batches is slower as
+                it is inherently single-threaded. If False (default) the data is
+                read with multiple threads into arrow first and sent to the engine
+                afterwards.
 
         Returns:
                 Handler of the underlying data.
@@ -1182,10 +1204,9 @@ class DataFrame:
         if not isinstance(ignore, bool):
             raise TypeError("'dry' must be bool.")
 
-        if colnames is not None and not _is_non_empty_typed_list(colnames, str):
-            raise TypeError(
-                "'colnames' must be either be None or a non-empty list of str."
-            )
+        if colnames:
+            if not _is_iterable_not_str_of_type(colnames, str):
+                raise TypeError("'colnames' must be an iterable of str")
 
         fnames = _retrieve_urls(fnames, verbose=verbose)
 
@@ -1212,6 +1233,8 @@ class DataFrame:
             num_lines_read=num_lines_read,
             skip=skip,
             colnames=colnames,
+            block_size=block_size,
+            in_batches=in_batches,
         )
 
     # ------------------------------------------------------------
@@ -1222,7 +1245,7 @@ class DataFrame:
         cls,
         table_name: str,
         name: str,
-        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        roles: Optional[Union[Dict[Union[Role, str], Iterable[str]], Roles]] = None,
         ignore: bool = False,
         dry: Literal[False] = False,
         conn: Optional[Connection] = None,
@@ -1234,7 +1257,7 @@ class DataFrame:
         cls,
         table_name: str,
         name: str,
-        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        roles: Optional[Union[Dict[Union[Role, str], Iterable[str]], Roles]] = None,
         ignore: bool = False,
         dry: Literal[True] = True,
         conn: Optional[Connection] = None,
@@ -1245,7 +1268,7 @@ class DataFrame:
         cls,
         table_name: str,
         name: Optional[str] = None,
-        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        roles: Optional[Union[Dict[Union[Role, str], Iterable[str]], Roles]] = None,
         ignore: bool = False,
         dry: bool = False,
         conn: Optional[Connection] = None,
@@ -1360,7 +1383,7 @@ class DataFrame:
         cls,
         data: Dict[Hashable, Iterable[Any]],
         name: str,
-        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        roles: Optional[Union[Dict[Union[Role, str], Iterable[str]], Roles]] = None,
         ignore: bool = False,
         dry: Literal[False] = False,
     ) -> DataFrame: ...
@@ -1371,7 +1394,7 @@ class DataFrame:
         cls,
         data: Dict[Hashable, Iterable[Any]],
         name: str,
-        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        roles: Optional[Union[Dict[Union[Role, str], Iterable[str]], Roles]] = None,
         ignore: bool = False,
         dry: Literal[True] = True,
     ) -> Roles: ...
@@ -1381,7 +1404,7 @@ class DataFrame:
         cls,
         data: Dict[Hashable, Iterable[Any]],
         name: str,
-        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        roles: Optional[Union[Dict[Union[Role, str], Iterable[str]], Roles]] = None,
         ignore: bool = False,
         dry: bool = False,
     ) -> Union[DataFrame, Roles]:
@@ -1440,7 +1463,7 @@ class DataFrame:
         cls,
         json_str: str,
         name: str,
-        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        roles: Optional[Union[Dict[Union[Role, str], Iterable[str]], Roles]] = None,
         ignore: bool = False,
         dry: Literal[False] = False,
     ) -> DataFrame: ...
@@ -1451,7 +1474,7 @@ class DataFrame:
         cls,
         json_str: str,
         name: str,
-        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        roles: Optional[Union[Dict[Union[Role, str], Iterable[str]], Roles]] = None,
         ignore: bool = False,
         dry: Literal[True] = True,
     ) -> Roles: ...
@@ -1461,7 +1484,7 @@ class DataFrame:
         cls,
         json_str: str,
         name: str,
-        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        roles: Optional[Union[Dict[Union[Role, str], Iterable[str]], Roles]] = None,
         ignore: bool = False,
         dry: bool = False,
     ) -> Union[DataFrame, Roles]:
@@ -1526,7 +1549,7 @@ class DataFrame:
         cls,
         pandas_df: pd.DataFrame,
         name: str,
-        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        roles: Optional[Union[Dict[Union[Role, str], Iterable[str]], Roles]] = None,
         ignore: bool = False,
         dry: Literal[False] = False,
     ) -> DataFrame: ...
@@ -1537,7 +1560,7 @@ class DataFrame:
         cls,
         pandas_df: pd.DataFrame,
         name: str,
-        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        roles: Optional[Union[Dict[Union[Role, str], Iterable[str]], Roles]] = None,
         ignore: bool = False,
         dry: Literal[True] = True,
     ) -> Roles: ...
@@ -1547,7 +1570,7 @@ class DataFrame:
         cls,
         pandas_df: pd.DataFrame,
         name: str,
-        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        roles: Optional[Union[Dict[Union[Role, str], Iterable[str]], Roles]] = None,
         ignore: bool = False,
         dry: bool = False,
     ) -> Union[DataFrame, Roles]:
@@ -1628,7 +1651,7 @@ class DataFrame:
         cls,
         fnames: Union[str, Iterable[str]],
         name: str,
-        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        roles: Optional[Union[Dict[Union[Role, str], Iterable[str]], Roles]] = None,
         ignore: bool = False,
         dry: Literal[False] = False,
         colnames: Iterable[str] = (),
@@ -1640,7 +1663,7 @@ class DataFrame:
         cls,
         fnames: Union[str, Iterable[str]],
         name: str,
-        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        roles: Optional[Union[Dict[Union[Role, str], Iterable[str]], Roles]] = None,
         ignore: bool = False,
         dry: Literal[True] = True,
         colnames: Iterable[str] = (),
@@ -1651,7 +1674,7 @@ class DataFrame:
         cls,
         fnames: Union[str, Iterable[str]],
         name: str,
-        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        roles: Optional[Union[Dict[Union[Role, str], Iterable[str]], Roles]] = None,
         ignore: bool = False,
         dry: bool = False,
         colnames: Iterable[str] = (),
@@ -1732,7 +1755,7 @@ class DataFrame:
         cls,
         spark_df: pyspark.sql.DataFrame,
         name: str,
-        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        roles: Optional[Union[Dict[Union[Role, str], Iterable[str]], Roles]] = None,
         ignore: bool = False,
         dry: Literal[False] = False,
     ) -> DataFrame: ...
@@ -1743,7 +1766,7 @@ class DataFrame:
         cls,
         spark_df: pyspark.sql.DataFrame,
         name: str,
-        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        roles: Optional[Union[Dict[Union[Role, str], Iterable[str]], Roles]] = None,
         ignore: bool = False,
         dry: Literal[True] = True,
     ) -> Roles: ...
@@ -1753,7 +1776,7 @@ class DataFrame:
         cls,
         spark_df: pyspark.sql.DataFrame,
         name: str,
-        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        roles: Optional[Union[Dict[Union[Role, str], Iterable[str]], Roles]] = None,
         ignore: bool = False,
         dry: bool = False,
     ) -> Union[DataFrame, Roles]:
@@ -1841,7 +1864,7 @@ class DataFrame:
         sep: str = ",",
         skip: int = 0,
         colnames: Optional[Iterable[str]] = None,
-        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        roles: Optional[Union[Dict[Union[Role, str], Iterable[str]], Roles]] = None,
         ignore: bool = False,
         dry: Literal[False] = False,
     ) -> DataFrame: ...
@@ -1859,7 +1882,7 @@ class DataFrame:
         sep: str = ",",
         skip: int = 0,
         colnames: Optional[Iterable[str]] = None,
-        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        roles: Optional[Union[Dict[Union[Role, str], Iterable[str]], Roles]] = None,
         ignore: bool = False,
         dry: Literal[True] = True,
     ) -> Roles: ...
@@ -1876,7 +1899,7 @@ class DataFrame:
         sep: str = ",",
         skip: int = 0,
         colnames: Optional[Iterable[str]] = None,
-        roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
+        roles: Optional[Union[Dict[Union[Role, str], Iterable[str]], Roles]] = None,
         ignore: bool = False,
         dry: bool = False,
     ) -> Union[DataFrame, Roles]:
@@ -2330,7 +2353,7 @@ class DataFrame:
 
         # ------------------------------------------------------------
 
-        batches = to_arrow_batches(table)
+        inferred_schema, batches = to_arrow_batches(table)
 
         if not isinstance(append, bool):
             raise TypeError("'append' must be bool.")
@@ -2347,7 +2370,9 @@ class DataFrame:
 
         # ------------------------------------------------------------
 
-        read_arrow_batches(batches, table.schema, self, append)
+        preprocessed_schema = preprocess_arrow_schema(inferred_schema, self.roles)
+
+        read_arrow_batches(batches, preprocessed_schema, self, append)
 
         return self.refresh()
 
@@ -2363,7 +2388,9 @@ class DataFrame:
         skip: int = 0,
         colnames: Optional[Iterable[str]] = None,
         time_formats: Optional[Iterable[str]] = None,
-        verbose: bool = False,
+        verbose: bool = True,
+        block_size: int = DEFAULT_CSV_READ_BLOCK_SIZE,
+        in_batches: bool = False,
     ) -> DataFrame:
         """Read CSV files.
 
@@ -2434,6 +2461,18 @@ class DataFrame:
                 If True, when `fnames` are urls, the filenames are printed to
                 stdout during the download.
 
+            block_size:
+                The number of bytes read with each batch. Passed down to
+                pyarrow.
+
+            in_batches:
+                If True, read blocks streamwise manner and send those batches to
+                the engine. Blocks are read and sent to the engine sequentially.
+                While more memory efficient, streaming in batches is slower as
+                it is inherently single-threaded. If False (default) the data is
+                read with multiple threads into arrow first and sent to the engine
+                afterwards.
+
         Returns:
                 Handler of the underlying data.
 
@@ -2465,10 +2504,9 @@ class DataFrame:
         if not _is_non_empty_typed_list(time_formats, str):
             raise TypeError("'time_formats' must be a non-empty list of str")
 
-        if colnames is not None and not _is_non_empty_typed_list(colnames, str):
-            raise TypeError(
-                "'colnames' must be either be None or a non-empty list of str."
-            )
+        if colnames:
+            if not _is_iterable_not_str_of_type(colnames, str):
+                raise TypeError("'colnames' must be an iterable of str")
 
         if self.ncols() == 0:
             raise Exception(
@@ -2486,25 +2524,28 @@ class DataFrame:
 
         fnames_ = _retrieve_urls(fnames, verbose)
 
+        if colnames is None:
+            colnames = ()
+
+        stream_read_csv = stream_csv if in_batches else read_csv
+
         readers = (
-            pa_csv.open_csv(
-                fname,
-                read_options=pa_csv.ReadOptions(
-                    skip_rows=skip,
-                    column_names=colnames,
-                    autogenerate_column_names=False,
-                ),
-                parse_options=pa_csv.ParseOptions(
-                    delimiter=sep,
-                    quote_char=quotechar,
-                    ignore_empty_lines=True,
-                ),
+            stream_read_csv(
+                Path(fname),
+                roles=self.roles,
+                skip_rows=skip,
+                column_names=colnames,
+                delimiter=sep,
+                quote_char=quotechar,
+                block_size=block_size,
             )
             for fname in fnames_
         )
 
         for batches in readers:
-            read_arrow_batches(batches, batches.schema, self, append)
+            first_batch = next(batches)
+            schema = first_batch.schema
+            read_arrow_batches(iter((first_batch, *batches)), schema, self, append)
             if not append:
                 append = True
 
@@ -2670,9 +2711,11 @@ class DataFrame:
         readers = (pq.ParquetFile(fname) for fname in fnames)
 
         for reader in readers:
+            inferred_schema = reader.schema_arrow
+            preprocessed_schema = preprocess_arrow_schema(inferred_schema, self.roles)
             read_arrow_batches(
                 reader.iter_batches(columns=colnames),
-                reader.schema_arrow,
+                preprocessed_schema,
                 self,
                 append,
             )
@@ -3001,7 +3044,11 @@ class DataFrame:
                 from_pandas(...)."""
             )
 
-        table = pa.Table.from_pandas(pandas_df)
+        inferred_schema = pa.Schema.from_pandas(pandas_df[self.columns])
+        preprocessed_schema = preprocess_arrow_schema(inferred_schema, self.roles)
+
+        table = pa.Table.from_pandas(pandas_df[self.columns], preserve_index=False)
+        table.cast(preprocessed_schema)
 
         return self.read_arrow(table, append=append)
 
@@ -3650,7 +3697,7 @@ class DataFrame:
                 with which it can be referred to
                 in Spark SQL (refer to
                 `pyspark.sql.DataFrame.createOrReplaceTempView`).
-                If none is passed, then the name of this
+                If None is passed, then the name of this
                 [`DataFrame`][getml.DataFrame] will be used.
 
         Returns:

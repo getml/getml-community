@@ -2,6 +2,8 @@ import pytest
 
 import getml
 
+from ..unit.data.test_arrow_schema_processors import _get_inferrence_blob_block_size
+
 
 def test_read_parquet(getml_project, parquet_file):
     df = getml.DataFrame.from_parquet(parquet_file, name="df")
@@ -36,3 +38,29 @@ def test_read_csv_custom_ts(getml_project, csv_file_custom_ts):
     assert df.roles.time_stamp == [
         "time_stamp",
     ]
+
+
+def test_read_csv_changing_type_in_row_2(
+    getml_project, csv_file_with_changing_type_in_row_2
+):
+    source = csv_file_with_changing_type_in_row_2
+    with open(source, "r") as f:
+        inferrence_blob_block_size = _get_inferrence_blob_block_size(
+            f.read(), n_lines_inferred=1
+        )
+    df_read = getml.DataFrame.from_csv(
+        csv_file_with_changing_type_in_row_2,
+        block_size=inferrence_blob_block_size,
+        name="df_read",
+    )
+
+    df_stream = getml.DataFrame.from_csv(
+        csv_file_with_changing_type_in_row_2,
+        block_size=inferrence_blob_block_size,
+        name="df_stream",
+        in_batches=True,
+    )
+
+    assert df_read.roles == df_stream.roles
+    assert df_read.columns == df_stream.columns
+    assert df_read.to_arrow().equals(df_stream.to_arrow())

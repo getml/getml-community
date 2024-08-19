@@ -23,7 +23,7 @@ UnusedFloat = Literal["unused_float"]
 UnusedString = Literal["unused_string"]
 
 CategoricalLike = Literal[Categorical, JoinKey, Text, UnusedString]
-NumericalLike = Literal[Numerical, TimeStamp, UnusedFloat]
+NumericalLike = Literal[Numerical, Target, TimeStamp, UnusedFloat]
 
 Role = Literal[
     Categorical,

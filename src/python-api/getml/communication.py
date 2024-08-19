@@ -633,7 +633,7 @@ def _delete_project_with_retry(name: str, retries: int, delay: float):
     """
     Attempt to delete the project, retrying `retries` times if necessary.
     """
-    if name in _list_projects_impl(running_only=False):
+    if name in _list_projects_impl(running_only=True):
         _suspend_project(name)
 
     for _ in range(retries):
