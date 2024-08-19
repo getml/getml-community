@@ -996,7 +996,7 @@ class DataFrame:
         roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
         ignore: bool = False,
         dry: Literal[False] = False,
-        verbose: bool = True,
+        verbose: bool = False,
     ) -> DataFrame: ...
 
     @overload
@@ -1014,7 +1014,7 @@ class DataFrame:
         roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
         ignore: bool = False,
         dry: Literal[True] = True,
-        verbose: bool = True,
+        verbose: bool = False,
     ) -> Roles: ...
 
     @classmethod
@@ -1031,7 +1031,7 @@ class DataFrame:
         roles: Optional[Union[Dict[Role, Iterable[str]], Roles]] = None,
         ignore: bool = False,
         dry: bool = False,
-        verbose: bool = True,
+        verbose: bool = False,
     ) -> Union[DataFrame, Roles]:
         """Create a DataFrame from CSV files.
 
@@ -2363,7 +2363,7 @@ class DataFrame:
         skip: int = 0,
         colnames: Optional[Iterable[str]] = None,
         time_formats: Optional[Iterable[str]] = None,
-        verbose: bool = True,
+        verbose: bool = False,
     ) -> DataFrame:
         """Read CSV files.
 
@@ -2625,7 +2625,7 @@ class DataFrame:
         self,
         fnames: Union[str, Iterable[str]],
         append: bool = False,
-        verbose: bool = True,
+        verbose: bool = False,
         colnames: Iterable[str] = (),
     ) -> DataFrame:
         """Read a parquet file.

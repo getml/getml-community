@@ -25,7 +25,7 @@ from rich import print
 
 from getml.exceptions import handle_engine_exception
 from getml.helpers import _is_iterable_not_str
-from getml.progress_bar import _Progress
+from getml.utilities.progress import Progress
 from getml.version import __version__
 
 # --------------------------------------------------------------------
@@ -590,21 +590,30 @@ def log(sock: socket.socket):
         sock: The socket to receive the logs from.
     """
 
-    with _Progress() as progress:
-        while True:
-            msg = recv_string(sock)
+    progress = Progress()
 
-            if msg[:5] != "log: ":
-                return msg
+    while True:
+        msg = recv_string(sock)
 
-            msg = msg[5:]
+        if msg[:5] != "log: ":
+            progress.stop()
+            return msg
 
-            if "Progress: " in msg:
-                msg = msg.split("Progress: ")[1].split("%")[0]
+        body = msg[5:]
 
-                progress.update_if_possible(completed=int(msg))
+        if "Progress: " in body:
+            *subdescription_parts, completed_raw = body.split("Progress: ")
+            completed = float(completed_raw.split("%")[0])
+
+            if subdescription := " ".join(subdescription_parts):
+                progress.update(
+                    task_id, completed=completed, description=subdescription
+                )
             else:
-                progress.new(msg)
+                progress.update(task_id, completed=completed)
+        elif description := body:
+            progress.start()
+            task_id = progress.new_task_and_reconstruct_renderable_maybe(description)
 
 
 # --------------------------------------------------------------------

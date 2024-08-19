@@ -22,7 +22,7 @@ from rich import print
 
 import getml.communication as comm
 from getml.database.connection import Connection
-from getml.progress_bar import _Progress
+from getml.utilities.progress import Progress, ProgressType
 
 FILE_SYSTEM_ERROR_MSG_TEMPLATE = cleandoc(
     """
@@ -51,29 +51,21 @@ class CSVCmdType(Enum):
 # -----------------------------------------------------------------------------
 
 
-def _load_to_file(url: str, file_path: Path, verbose: bool = True) -> None:
+def _load_to_file(url: str, file_path: Path) -> None:
     with request.urlopen(url) as response:
-        with _Progress(progress_type="Download") as progress:
-            length = response.getheader("content-length")
-            block_size = 8192
-
-            if length:
-                length = int(length)
-                block_size = max(4096, length // 100)
-
-            finished = 0
-
+        content_length = int(response.getheader("content-length", 0))
+        block_size = max(4096, content_length // 100)
+        with Progress(
+            progress_type=ProgressType.DOWNLOAD,
+        ) as progress:
+            task_id = progress.new_task("Downloading...", total=content_length)
             with file_path.open("wb") as file:
-                progress.new("", total=length)
-
                 while True:
                     block = response.read(block_size)
                     if not block:
-                        progress.update_if_possible(completed=length)
                         break
-                    finished += len(block)
                     file.write(block)
-                    progress.update_if_possible(completed=finished)
+                    progress.advance(task_id, steps=len(block))
 
 
 # --------------------------------------------------------------------
@@ -90,7 +82,7 @@ def _retrieve_temp_dir() -> Path:
 
 def _retrieve_url(
     url: str,
-    verbose: bool = True,
+    verbose: bool = False,
     target_path: Optional[Path] = None,
 ) -> str:
     parse_result = urlparse(url)
@@ -108,7 +100,7 @@ def _retrieve_url(
     if verbose:
         print(f"Downloading {url} to {target_path.as_posix()}...")
 
-    _load_to_file(url, target_path, verbose=verbose)
+    _load_to_file(url, target_path)
 
     return target_path.as_posix()
 
@@ -117,13 +109,13 @@ def _retrieve_url(
 
 
 def _retrieve_urls(
-    fnames: Iterable[str], verbose: bool = True, target_path: Optional[Path] = None
+    fnames: Iterable[str], verbose: bool = False, target_path: Optional[Path] = None
 ) -> List[str]:
     def is_url(fname):
         return urlparse(fname).scheme != ""
 
     return [
-        _retrieve_url(fname, verbose)
+        _retrieve_url(url=fname, verbose=verbose, target_path=target_path)
         if is_url(fname)
         else Path(fname).expanduser().absolute().as_posix()
         for fname in fnames

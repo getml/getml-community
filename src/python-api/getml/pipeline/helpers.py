@@ -12,9 +12,11 @@ Collection of helper functions not intended to be used by the end-user.
 
 from __future__ import annotations
 
+import builtins
 import random
 import string
 from copy import deepcopy
+from datetime import timedelta
 from typing import Any, Dict, List, Optional, Sequence, Union
 
 import numpy as np
@@ -412,17 +414,9 @@ def _print_time_taken(begin: float, end: float, msg: str) -> None:
 
     seconds = end - begin
 
-    hours = int(seconds / 3600)
-    seconds -= float(hours * 3600)
+    delta = timedelta(seconds=seconds)
 
-    minutes = int(seconds / 60)
-    seconds -= float(minutes * 60)
-
-    seconds = round(seconds, 6)
-
-    print(msg + str(hours) + "h:" + str(minutes) + "m:" + str(seconds))
-
-    print("")
+    builtins.print(f"Time taken: {delta}.\n")
 
 
 # --------------------------------------------------------------------

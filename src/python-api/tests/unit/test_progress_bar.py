@@ -1,37 +1,72 @@
 import pytest
-from getml.progress_bar import _Progress
+
+from getml.utilities.progress import Progress, ProgressTask
 
 
 def test_exception_in_progress_bar(capsys):
     with pytest.raises(ValueError):
-        with _Progress() as progress:
-            progress.new("Test", 100)
+        with Progress() as progress:
+            progress.add_task("Test")
             raise ValueError("Test")
 
     captured = capsys.readouterr()
-    assert "Test Failed" in captured.out
+    assert "Failed" in captured.out
 
 
 @pytest.mark.parametrize(
-    "set_finished_on_exit, expected",
+    "finish_all_tasks_on_stop, expected",
     [(True, "100%"), (False, "0%")],
 )
-def test_finished_on_clode(set_finished_on_exit: bool, expected: str, capsys):
-    with _Progress(set_finished_on_exit=set_finished_on_exit) as progress:
-        progress.new("Test", 100)
+def test_finished_on_stop(finish_all_tasks_on_stop: bool, expected: str, capsys):
+    with Progress(finish_all_tasks_on_stop=finish_all_tasks_on_stop) as progress:
+        progress.add_task("Test")
+        assert all(not task.finished for task in progress.tasks)
+
+    captured = capsys.readouterr()
+    assert expected in captured.out
+
+    with ProgressTask("Test") as progress_task:
+        assert progress_task.finished is False
 
     captured = capsys.readouterr()
     assert expected in captured.out
 
 
-def test_complete_previous_on_new():
-    with _Progress() as progress:
-        task_id_0 = progress.new(
-            "Test0",
-        )
-        task_id_1 = progress.new(
-            "Test1",
-        )
+def test_progress_task_single_task():
+    with ProgressTask("Test") as progress_task:
+        assert len(progress_task.progress.tasks) == 1
+        assert progress_task.id == 0
+        assert progress_task.total == 100
+        assert progress_task.completed == 0
+        assert progress_task.description == "Test"
+        assert progress_task.finished is False
 
-        assert progress._progress.tasks[task_id_0].finished
-        assert not progress._progress.tasks[task_id_1].finished
+
+def test_progress_task_reset_description(capsys):
+    with ProgressTask("Test") as progress_task:
+        progress_task.update(description="Toast")
+        assert progress_task.task.description == "Toast"
+        assert progress_task.description == "Test"
+        captured = capsys.readouterr()
+        assert "Toast" in captured.out
+    assert progress_task.task.description == "Test"
+    assert progress_task.description == "Test"
+    captured = capsys.readouterr()
+    assert "Test" in captured.out
+
+
+def test_progress_advance(capsys):
+    with Progress(finish_all_tasks_on_stop=False) as progress:
+        task_id = progress.add_task("Test")
+        progress.advance(task_id, steps=50)
+        assert progress.tasks[task_id].completed == 50
+
+    captured = capsys.readouterr()
+    assert "50%" in captured.out
+
+    with ProgressTask("Test", finish_on_stop=False) as progress_task:
+        progress_task.advance(steps=50)
+        assert progress_task.completed == 50
+
+    captured = capsys.readouterr()
+    assert "50%" in captured.out
