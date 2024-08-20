@@ -2195,7 +2195,7 @@ class DataFrame:
 
         Returns:
                 Updated handle the underlying data frame in the getML
-                Engine.
+                    Engine.
 
         Note:
             When invoking [`load`][getml.DataFrame.load] all
@@ -3177,7 +3177,7 @@ class DataFrame:
 
         Returns:
                 Updated handle the underlying data frame in the getML
-                Engine.
+                    Engine.
 
         """
 
@@ -3631,7 +3631,7 @@ class DataFrame:
 
         Returns:
                 Pandas equivalent of the current instance including
-                its underlying data.
+                    its underlying data.
 
         """
         return to_arrow(self).to_pandas()
@@ -3917,7 +3917,7 @@ class DataFrame:
                 Name of the new column.
 
             role:
-                Role of the new column. Must be from `getml.data.roles`.
+                Role of the new column. Must be from [`roles`][getml.data.roles].
 
             subroles:
                 Subroles of the new column. Must be from [`subroles`][getml.data.subroles].

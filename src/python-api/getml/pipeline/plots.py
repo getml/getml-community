@@ -61,7 +61,7 @@ class Plots:
 
         Returns:
             The first array is the proportion of samples, usually displayed on the x-axis.
-            The second array is the lift, usually displayed on the y-axis.
+                The second array is the lift, usually displayed on the y-axis.
         """
 
         cmd: Dict[str, Any] = {}
@@ -102,7 +102,7 @@ class Plots:
 
         Returns:
             The first array is the recall (a.k.a. true positive rate), usually displayed on the x-axis.
-            The second array is the precision, usually displayed on the y-axis.
+                The second array is the precision, usually displayed on the y-axis.
         """
 
         cmd: Dict[str, Any] = {}
@@ -140,7 +140,7 @@ class Plots:
 
         Returns:
             The first array is the false positive rate, usually displayed on the x-axis.
-            The second array is the true positive rate, usually displayed on the y-axis.
+                The second array is the true positive rate, usually displayed on the y-axis.
         """
 
         cmd: Dict[str, Any] = {}

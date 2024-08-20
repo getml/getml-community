@@ -22,7 +22,7 @@ def execute(query: str, conn: Optional[Connection] = None):
     Executes an SQL query on the database.
 
     Please note that this is not meant to return results. If you want to
-    get results, use database.get(...) instead.
+    get results, use `database.get()` instead.
 
     Args:
         query:

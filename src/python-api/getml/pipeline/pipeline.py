@@ -1157,8 +1157,8 @@ class Pipeline:
         """
         Deletes the pipeline from the Engine.
 
-        Note:
-            Caution: You can not undo this action!
+        Warning:
+            You can not undo this action!
         """
         self._check_whether_fitted()
 
