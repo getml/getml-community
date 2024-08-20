@@ -200,7 +200,7 @@ class DataFrames:
             descending:
                 Whether to sort in descending order.
 
-        Return:
+        Returns:
                 A container of sorted data frames.
 
         ??? example

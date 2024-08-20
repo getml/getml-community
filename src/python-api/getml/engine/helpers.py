@@ -91,7 +91,7 @@ def set_project(name: str):
 def shutdown():
     """Shuts down the getML Engine.
 
-    Note:
+    Warning:
         All changes applied to the [`DataFrame`][getml.DataFrame]
         after calling their [`save`][getml.DataFrame.save]
         method will be lost.

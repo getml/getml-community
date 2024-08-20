@@ -64,7 +64,7 @@ class Roles:
 
 
 
-    Example:
+    ??? example
         ```python
         roles = getml.data.Roles(
             categorical=["col1", "col2"], target=["col3"]

@@ -189,7 +189,7 @@ def load_data_frame(name: str) -> DataFrame:
     Returns:
             Handle the underlying data frame in the getML Engine.
 
-    Examples:
+    ??? example
         ```python
         d, _ = getml.datasets.make_numerical(population_name = 'test')
         d2 = getml.data.load_data_frame('test')

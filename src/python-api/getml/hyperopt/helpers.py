@@ -54,7 +54,7 @@ def exists(name: str) -> bool:
         name: The name of the hyperopt.
 
     Returns:
-        A boolean indicating whether a hyperopt named *name* exists.
+        A boolean indicating whether a hyperopt named 'name' exists.
     """
     if not isinstance(name, str):
         raise TypeError("'name' must be of type str")

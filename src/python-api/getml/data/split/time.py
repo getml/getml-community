@@ -11,7 +11,7 @@ Splits data at random.
 """
 
 import numbers
-from typing import Dict, NewType, Optional, Union
+from typing import Dict, Optional, Union
 
 import numpy as np
 
@@ -21,16 +21,13 @@ from getml.data.data_frame import DataFrame
 from getml.data.helpers import _is_typed_list
 from getml.data.view import View
 
-TimeStampType = NewType("TimeStampType", Union[float, int, np.datetime64])  # type: ignore # NewType to be python backward compatible
-"""Admissible types for time stamps"""
-
 
 def time(
     population: DataFrame,
     time_stamp: Union[str, FloatColumn, FloatColumnView],
-    validation: Optional[TimeStampType] = None,
-    test: Optional[TimeStampType] = None,
-    **kwargs: TimeStampType,
+    validation: Optional[Union[float, int, np.datetime64]] = None,
+    test: Optional[Union[float, int, np.datetime64]] = None,
+    **kwargs: Union[float, int, np.datetime64],
 ) -> StringColumnView:
     """
     Returns a [`StringColumnView`][getml.data.columns.StringColumnView] that can be used to divide
@@ -102,7 +99,7 @@ def time(
     if not test and not validation and not kwargs:
         raise ValueError("You have to supply at least one starting point.")
 
-    defaults: Dict[str, Optional[TimeStampType]] = {
+    defaults: Dict[str, Optional[Union[float, int, np.datetime64]]] = {
         "test": test,
         "validation": validation,
     }

@@ -490,7 +490,7 @@ class Features:
             descending:
                 Whether to sort in descending order.
 
-        Return:
+        Returns:
                 A container of sorted Features.
 
         ??? example
@@ -620,7 +620,7 @@ class Features:
         Returns:
                 Object representing the features.
 
-        Examples:
+        ??? example
             ```python
             my_pipeline.features.to_sql()
             ```
