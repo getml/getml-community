@@ -46,7 +46,7 @@ TEST(TestTo, TestIotaFilterTransformToSharedPtrVector) {
            });
   })
       .when([](auto&& view) {
-        return view | fct::ranges::to_shared_ptr_vector();
+        return view | fct::ranges::to<fct::shared_ptr::vector>();
       })
       .then([](auto const&& result) {
         auto const expected = std::vector{0u, 4u, 16u, 36u, 64u};
@@ -65,6 +65,22 @@ TEST(TestTo, TestToMap) {
         std::map<int, std::string>{{1, "one"}, {2, "two"}, {3, "three"}};
     EXPECT_EQ(expected, result);
   });
+}
+
+TEST(TestTo, TestToSharedPtrMap) {
+  GWT::given([vector =
+                  std::vector<std::pair<int, std::string>>{
+                      {1, "one"}, {2, "two"}, {3, "three"}}]() {
+    return vector | std::views::filter([](auto const&) { return true; });
+  })
+      .when([](auto&& vector) {
+        return vector | fct::ranges::to<fct::shared_ptr::map>();
+      })
+      .then([](auto const&& result) {
+        auto const expected =
+            std::map<int, std::string>{{1, "one"}, {2, "two"}, {3, "three"}};
+        EXPECT_EQ(expected, *result);
+      });
 }
 
 TEST(TestTo, TestToVectorJoinEqualsConcat) {

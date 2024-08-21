@@ -247,7 +247,7 @@ Maker::make_subcontainers(const helpers::TableHolder& _table_holder,
 
   return std::views::iota(0uz, placeholder.propositionalization().size()) |
          std::views::transform(make_subcontainer) |
-         fct::ranges::to_shared_ptr_vector();
+         fct::ranges::to<fct::shared_ptr::vector>();
 }
 
 // ----------------------------------------------------------------------------
@@ -300,7 +300,8 @@ Maker::transform_make_features(const MakerParams& _params) {
   };
 
   return std::views::iota(0uz, features.size()) |
-         std::views::transform(to_column) | fct::ranges::to_shared_ptr_vector();
+         std::views::transform(to_column) |
+         fct::ranges::to<fct::shared_ptr::vector>();
 }
 
 // ----------------------------------------------------------------------------
@@ -320,7 +321,7 @@ Maker::transform_make_subcontainers(const MakerParams& _params) {
 
   return std::views::iota(0uz, placeholder.joined_tables().size()) |
          std::views::transform(make_subcontainer) |
-         fct::ranges::to_shared_ptr_vector();
+         fct::ranges::to<fct::shared_ptr::vector>();
 }
 
 // ----------------------------------------------------------------------------

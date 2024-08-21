@@ -21,7 +21,7 @@ containers::DataFrame TextFieldSplitter::add_rowid(
     const containers::DataFrame& _df) const {
   // FIXME: _df.nrows() can be bigger than Int
   const auto ptr = std::views::iota(Int{0}, static_cast<Int>(_df.nrows())) |
-                   fct::ranges::to_shared_ptr_vector();
+                   fct::ranges::to<fct::shared_ptr::vector>();
 
   const auto rowid = containers::Column<Int>(ptr, helpers::Macros::rowid());
 
