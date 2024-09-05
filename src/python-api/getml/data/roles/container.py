@@ -15,7 +15,7 @@ from __future__ import annotations
 import warnings
 from dataclasses import dataclass, field, fields
 from inspect import cleandoc
-from typing import Dict, Iterable, Iterator, List, Mapping, Tuple, cast, Union
+from typing import Dict, Iterable, Iterator, List, Mapping, Tuple, Union, cast
 
 from getml.data.roles import sets as roles_sets
 from getml.data.roles.types import Role
@@ -152,7 +152,7 @@ class Roles:
         raise ValueError("Column named '" + colname + "' not found.")
 
     @classmethod
-    def from_dict(cls, roles_dict: Mapping[Union[str, Role], List[str]]) -> Roles:
+    def from_dict(cls, roles_dict: Mapping[Union[str, Role], Iterable[str]]) -> Roles:
         """
         Creates a roles object from a dictionary.
 

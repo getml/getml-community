@@ -41,6 +41,7 @@ from getml import constants, database
 from getml.constants import COMPARISON_ONLY, DEFAULT_BATCH_SIZE, TIME_STAMP
 from getml.data import roles as roles_
 from getml.data._io.arrow import (
+    cast_arrow_batch,
     preprocess_arrow_schema,
     read_arrow_batches,
     sniff_arrow,
@@ -2371,6 +2372,7 @@ class DataFrame:
         # ------------------------------------------------------------
 
         preprocessed_schema = preprocess_arrow_schema(inferred_schema, self.roles)
+        batches = (cast_arrow_batch(batch, preprocessed_schema) for batch in batches)
 
         read_arrow_batches(batches, preprocessed_schema, self, append)
 
@@ -3044,11 +3046,7 @@ class DataFrame:
                 from_pandas(...)."""
             )
 
-        inferred_schema = pa.Schema.from_pandas(pandas_df[self.columns])
-        preprocessed_schema = preprocess_arrow_schema(inferred_schema, self.roles)
-
-        table = pa.Table.from_pandas(pandas_df[self.columns], preserve_index=False)
-        table.cast(preprocessed_schema)
+        table = pa.Table.from_pandas(pandas_df[self.columns])
 
         return self.read_arrow(table, append=append)
 
