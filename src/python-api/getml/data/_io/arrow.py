@@ -29,6 +29,7 @@ from typing import (
 )
 
 import pyarrow as pa
+import pyarrow.compute as pa_compute
 from pyarrow.lib import ArrowInvalid
 
 from getml import communication as comm
@@ -42,6 +43,11 @@ from getml.exceptions import arrow_cast_exception_handler
 if TYPE_CHECKING:
     from getml.data.data_frame import DataFrame
     from getml.data.view import View
+
+MAX_SUPPORTED_TIMESTAMP_RESOLUTION = "us"
+"""
+Maximum timestamp resolution supported by getML.
+"""
 
 MAX_IEEE754_COMPATIBLE_INT = 2**53
 MIN_IEEE754_COMPATIBLE_INT = -MAX_IEEE754_COMPATIBLE_INT
@@ -241,7 +247,7 @@ Each postprocessor is registered targeting set of roles. Postprocessors
 are applied to fields that are associated with any of the registered roles
 in the target data frame.
 
-E.g. `postprocess_time_stamp_drop_timezone` is registered targeting the set of
+E.g. `postprocess_timestamp_drop_timezone` is registered targeting the set of
 roles that are considered as 'numerical' s.t. the timezone information is
 dropped only when the timestamp is going to be parsed.
 """
@@ -270,13 +276,17 @@ def _is_unsupported_type_arrow(coltype: pa.DataType) -> bool:
     )
 
 
-@arrow_schema_field_preprocessor(roles={roles.unused_string})
-def preprocess_types_cast_to_string(field: pa.Field) -> pa.Field:
+@arrow_schema_field_preprocessor(roles=roles_sets.all_)
+def preprocess_timestamp_cast_to_microseconds(field: pa.Field) -> pa.Field:
     """
-    Eagerly read any type as string when the column is going to be treated as
-    string like.
+    Cast timestamps to microseconds to ensure compatibility with the getML engine.
     """
-    return pa.field(field.name, pa.string())
+    if pa.types.is_timestamp(field.type):
+        return pa.field(
+            field.name,
+            pa.timestamp(MAX_SUPPORTED_TIMESTAMP_RESOLUTION, tz=field.type.tz),
+        )
+    return field
 
 
 @arrow_schema_field_preprocessor(roles=roles_sets.numerical)
@@ -312,7 +322,7 @@ def preprocess_parameterized_type(field: pa.Field) -> pa.Field:
 
 
 @arrow_schema_field_postprocessor(roles=roles_sets.numerical)
-def postprocess_time_stamp_drop_timezone(field: pa.Field) -> pa.Field:
+def postprocess_timestamp_drop_timezone(field: pa.Field) -> pa.Field:
     """
     Drop the timezone information from timestamps if the column is going to be
     parsed (parsing only happens when the target role is numerical).
@@ -336,6 +346,14 @@ def postprocess_time_stamp_drop_timezone(field: pa.Field) -> pa.Field:
             )
     else:
         return field.with_metadata({})
+
+
+@arrow_schema_field_postprocessor(roles={roles.unused_string})
+def postprocess_types_cast_to_string(field: pa.Field) -> pa.Field:
+    """
+    Cast all fields that are going to be treated as string like to string.
+    """
+    return pa.field(field.name, pa.string())
 
 
 def _process_arrow_schema(
@@ -454,8 +472,12 @@ def cast_arrow_batch(
     for target_field in target_schema:
         source_array = source_batch.column(target_field.name)  # type: ignore
         if source_array.type != target_field.type:
+            cast_options = pa_compute.CastOptions(
+                target_type=target_field.type,
+                allow_time_truncate=True,
+            )
             try:
-                target_arrays.append(source_array.cast(target_field.type))
+                target_arrays.append(source_array.cast(options=cast_options))
             except ArrowInvalid as e:
                 handler = arrow_cast_exception_handler.retrieve(target_field.type)
                 handler(e, target_field)
