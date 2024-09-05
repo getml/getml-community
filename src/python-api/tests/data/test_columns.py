@@ -12,6 +12,7 @@ import pytest
 
 import getml.data as data
 import getml.data.roles as roles
+from getml.data.columns.columns import TIME_STAMP_PARSING_LIKELY_FAILED_WARNING_TEMPLATE
 
 
 @pytest.mark.parametrize("df_or_view", ["df", "view"], indirect=True)
@@ -30,9 +31,6 @@ def test_column_eq_missmatch(getml_project, df_or_view):
 
 
 def test_column_operators(getml_project):
-    # ----------------
-    # Create a data frame from a JSON string
-
     json_str = """{
         "names": ["patrick", "alex", "phil", "ulrike"],
         "column_01": [2.4, 3.0, 1.2, 1.4],
@@ -48,9 +46,6 @@ def test_column_operators(getml_project):
         },
     ).read_json(json_str)
 
-    # ----------------
-    # Create another data frame from a JSON string
-
     json_str = """{
         "column_01": [3.4, 2.1, 1.6, 0.8],
         "join_key": ["0", "1", "2", "3"],
@@ -65,10 +60,6 @@ def test_column_operators(getml_project):
         },
     ).read_json(json_str)
 
-    # ----------------
-    # By the way, if you are more comfortable with numpy,
-    # that works, too.
-
     np_arr = np.ones(4)
 
     my_df3 = data.DataFrame("MY DF3")
@@ -82,9 +73,6 @@ def test_column_operators(getml_project):
     getting_it_back = my_df3["np_arr"].to_numpy()
     getting_it_back = my_df3["str_arr"].to_numpy()
 
-    # ----------------
-    # This is how you assign a new role to the column.
-
     my_df.set_role("join_key", roles.join_key)
 
     # ----------------
@@ -97,7 +85,6 @@ def test_column_operators(getml_project):
 
     my_df.add(col2, "name", roles.numerical)
 
-    # ----------------
     # If you do not explicitly set a role,
     # the assigned role will either be
     # roles.unused_float or roles.unused_string.
@@ -112,13 +99,9 @@ def test_column_operators(getml_project):
     my_df6 = data.DataFrame("MY DF6")
     my_df6["column_06"] = col3.as_str()
 
-    # ----------------
-
     col4 = col1**-col3
 
     my_df.add(col4, "column_04", roles.numerical)
-
-    # ----------------
 
     col5 = col1**2.0
 
@@ -206,7 +189,12 @@ def test_column_operators(getml_project):
     my_df.add(col23, "ts", roles.time_stamp)
 
     # If you get things wrong, you will get a warning
-    my_df.add(col21, "ts_null", roles.time_stamp)
+    with pytest.warns(UserWarning) as warnings:
+        my_df.add(col21, "ts_null", roles.time_stamp)
+
+    assert str(
+        warnings[0].message
+    ) == TIME_STAMP_PARSING_LIKELY_FAILED_WARNING_TEMPLATE.format(column="names")
 
     col24 = col19.contains("rick").as_str()
 
@@ -239,3 +227,19 @@ def test_column_operators(getml_project):
     my_other_view = my_df.where(data.random(seed=100) > 0.5)  # type: ignore
 
     deep_copy = my_df.copy("DEEPCOPY")
+
+
+def test_as_ts(getml_project, df):
+    # StringColumnView.as_ts
+    df["ts_parsed"] = df.time_stamp.as_str().as_ts()
+
+    df["ts_str"] = df.time_stamp.as_str()
+    # StringColumn.as_ts
+    df["ts_str_parsed"] = df.ts_str.as_ts()
+
+    df.set_role(["ts_parsed", "ts_str_parsed"], roles.time_stamp)
+
+    assert "ts_parsed" in df.roles.time_stamp
+    assert "ts_str_parsed" in df.roles.time_stamp
+    assert df.ts_parsed == df.time_stamp
+    assert df.ts_str_parsed == df.time_stamp

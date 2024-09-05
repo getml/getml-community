@@ -1001,7 +1001,7 @@ def _check_inferred_time_stamps(self):
         schema = pa.Schema.from_pandas(inference_batch)
         # just called for emmitting the timezone related warnings
         postprocess_arrow_schema(
-            schema, roles=Roles.from_dict({roles.time_stamp: [self.name]})
+            schema, roles=Roles.from_dict({roles.time_stamp: [inferred_name]})
         )
         return
 
