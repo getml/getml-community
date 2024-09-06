@@ -96,8 +96,10 @@ install(
       ".*librt\.so.*"
       ".*libc\.so.*"
       ".*ld-linux-.*\.so.*"
-      ".*libgcc_s\.so.*"
-      ".*libstdc.*\.so.*"
+    POST_EXCLUDE_FILES
+      ${CPACK_EXCLUDE_RUNTIME_DEPENDENCIES}
+    DIRECTORIES
+      ${CONAN_RUNTIME_LIB_DIRS}
   RUNTIME
     COMPONENT Runtime
   LIBRARY
