@@ -80,29 +80,12 @@
       }
     },
     {
-      "name": "release-vcpkg-x86_64-linux",
-      "displayName": "Release (x86_64-linux) (vcpkg)",
-      "description": "Release configuration using vcpkg for x86_64-linux",
-      "inherits": "release-vcpkg",
-      "cacheVariables": {
-        "VCPKG_TARGET_TRIPLET": "x64-linux-release"
-      }
-    },
-    {
-      "name": "release-vcpkg-aarch64-linux",
-      "displayName": "Release (aarch64-linux) (vcpkg)",
-      "description": "Release configuration using vcpkg for aarch64-linux",
-      "inherits": "release-vcpkg",
-      "cacheVariables": {
-        "VCPKG_TARGET_TRIPLET": "aarch64-linux-release"
-      }
-    },
-    {
       "name": "release-vcpkg-aarch64-linux-crosscompile",
       "displayName": "Release (aarch64-linux) (vcpkg) (crosscompile)",
       "description": "Release configuration using vcpkg for aarch64-linux using crosscompiling",
-      "inherits": "release-vcpkg-aarch64-linux",
+      "inherits": "release-vcpkg",
       "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "aarch64-linux-release",
         "CMAKE_CXX_COMPILER": "aarch64-linux-gnu-g++",
         "CMAKE_LINKER_TYPE": "GOLD"
       }
@@ -159,16 +142,6 @@
       }
     },
     {
-      "name": "debug-vcpkg-aarch64-linux",
-      "displayName": "Debug (aarch64-linux) (vcpkg)",
-      "description": "Debug configuration using vcpkg for aarch64-linux",
-      "inherits": "debug-vcpkg",
-      "cacheVariables": {
-        "VCPKG_TARGET_TRIPLET": "aarch64-linux",
-        "VCPKG_HOST_TRIPLET": "aarch64-linux"
-      }
-    },
-    {
       "name": "debug-conan",
       "displayName": "Debug (conan)",
       "description": "Debug configuration using conan",
@@ -219,24 +192,10 @@
       "configurePreset": "release-original-vcpkg"
     },
     {
-      "name": "release-vcpkg-x86_64-linux",
-      "displayName": "Release (x86_64-linux) (vcpkg)",
-      "description": "Release build for x86_64-linux using vcpkg",
-      "inherits": "release-vcpkg",
-      "configurePreset": "release-vcpkg-x86_64-linux"
-    },
-    {
-      "name": "release-vcpkg-aarch64-linux",
-      "displayName": "Release (aarch64-linux) (vcpkg)",
-      "description": "Release build for aarch64-linux using vcpkg",
-      "inherits": "release-vcpkg",
-      "configurePreset": "release-vcpkg-aarch64-linux"
-    },
-    {
       "name": "release-vcpkg-aarch64-linux-crosscompile",
       "displayName": "Release (aarch64-linux) (vcpkg) (crosscompile)",
       "description": "Release build for aarch64-linux using vcpkg using crosscompiling",
-      "inherits": "release-vcpkg-aarch64-linux",
+      "inherits": "release-vcpkg",
       "configurePreset": "release-vcpkg-aarch64-linux-crosscompile"
     },
     {
@@ -271,13 +230,6 @@
       "description": "Debug build with full debug information using vcpkg",
       "inherits": "debug-full",
       "configurePreset": "debug-full-vcpkg"
-    },
-    {
-      "name": "debug-vcpkg-aarch64-linux",
-      "displayName": "Debug (aarch64-linux) (vcpkg)",
-      "description": "Debug build using vcpkg for aarch64-linux",
-      "inherits": "debug-vcpkg",
-      "configurePreset": "debug-vcpkg-aarch64-linux"
     },
     {
       "name": "debug-conan",
@@ -323,73 +275,59 @@
       "name": "release",
       "displayName": "Release",
       "description": "Release package",
-      "configurePreset": "release"
+      "configurePreset": "release",
+      "generators": [
+        "TGZ"
+      ]
     },
     {
       "name": "release-native",
       "displayName": "Release native",
       "description": "Release native package",
-      "configurePreset": "release-native"
+      "configurePreset": "release-native",
+      "inherits": "release"
     },
     {
       "name": "release-original",
       "displayName": "Release original",
       "description": "Release original package",
-      "configurePreset": "release-original"
+      "configurePreset": "release-original",
+      "inherits": "release"
     },
     {
       "name": "release-vcpkg",
       "displayName": "Release (vcpkg)",
       "description": "Release package using vcpkg",
-      "configurePreset": "release-vcpkg"
+      "configurePreset": "release-vcpkg",
+      "inherits": "release"
     },
     {
       "name": "release-native-vcpkg",
       "displayName": "Release native (vcpkg)",
       "description": "Release native package using vcpkg",
-      "configurePreset": "release-native-vcpkg"
+      "configurePreset": "release-native-vcpkg",
+      "inherits": "release"
     },
     {
       "name": "release-original-vcpkg",
       "displayName": "Release original (vcpkg)",
       "description": "Release original package using vcpkg",
-      "configurePreset": "release-original-vcpkg"
-    },
-    {
-      "name": "release-vcpkg-x86_64-linux",
-      "displayName": "Release (x86_64-linux) (vcpkg)",
-      "description": "Release package for x86_64-linux using vcpkg",
-      "configurePreset": "release-vcpkg-x86_64-linux",
-      "generators": [
-        "TGZ",
-        "TZST"
-      ]
-    },
-    {
-      "name": "release-vcpkg-aarch64-linux",
-      "displayName": "Release (aarch64-linux) (vcpkg)",
-      "description": "Release package for aarch64-linux using vcpkg",
-      "configurePreset": "release-vcpkg-aarch64-linux",
-      "generators": [
-        "TGZ",
-        "TZST"
-      ]
+      "configurePreset": "release-original-vcpkg",
+      "inherits": "release"
     },
     {
       "name": "release-vcpkg-aarch64-linux-crosscompile",
       "displayName": "Release (aarch64-linux) (vcpkg) (crosscompile)",
       "description": "Release package for aarch64-linux using vcpkg using crosscompiling",
       "configurePreset": "release-vcpkg-aarch64-linux-crosscompile",
-      "generators": [
-        "TGZ",
-        "TZST"
-      ]
+      "inherits": "release"
     },
     {
       "name": "release-conan",
       "displayName": "Release (conan)",
       "description": "Release package using conan",
-      "configurePreset": "release-conan"
+      "configurePreset": "release-conan",
+      "inherits": "release"
     }
   ],
   "workflowPresets": [
@@ -508,44 +446,6 @@
       ]
     },
     {
-      "name": "release-vcpkg-x86_64-linux",
-      "displayName": "Release (x86_64-linux) (vcpkg)",
-      "description": "Release workflow for x86_64-linux using vcpkg",
-      "steps": [
-        {
-          "type": "configure",
-          "name": "release-vcpkg-x86_64-linux"
-        },
-        {
-          "type": "build",
-          "name": "release-vcpkg-x86_64-linux"
-        },
-        {
-          "type": "package",
-          "name": "release-vcpkg-x86_64-linux"
-        }
-      ]
-    },
-    {
-      "name": "release-vcpkg-aarch64-linux",
-      "displayName": "Release (aarch64-linux) (vcpkg)",
-      "description": "Release workflow for aarch64-linux using vcpkg",
-      "steps": [
-        {
-          "type": "configure",
-          "name": "release-vcpkg-aarch64-linux"
-        },
-        {
-          "type": "build",
-          "name": "release-vcpkg-aarch64-linux"
-        },
-        {
-          "type": "package",
-          "name": "release-vcpkg-aarch64-linux"
-        }
-      ]
-    },
-    {
       "name": "release-conan",
       "displayName": "Release (conan)",
       "description": "Release workflow using conan",
@@ -621,21 +521,6 @@
         {
           "type": "build",
           "name": "debug-full-vcpkg"
-        }
-      ]
-    },
-    {
-      "name": "debug-vcpkg-aarch64-linux",
-      "displayName": "Debug (aarch64-linux) (vcpkg)",
-      "description": "Debug workflow using vcpkg for aarch64-linux",
-      "steps": [
-        {
-          "type": "configure",
-          "name": "debug-vcpkg-aarch64-linux"
-        },
-        {
-          "type": "build",
-          "name": "debug-vcpkg-aarch64-linux"
         }
       ]
     },
