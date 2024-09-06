@@ -314,7 +314,8 @@ std::shared_ptr<tsindex::Index> DataFrame::make_ts_index(
   };
 
   const auto rownums = unique_join_keys | std::views::transform(find_rownums) |
-                       std::views::join | fct::ranges::to_shared_ptr_vector();
+                       std::views::join |
+                       fct::ranges::to<fct::shared_ptr::vector>();
 
   const auto params = tsindex::IndexParams{.join_keys_ = join_keys,
                                            .lower_ts_ = lower_ts,

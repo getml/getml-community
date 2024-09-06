@@ -49,9 +49,9 @@ class Vocabulary {
     auto vocab = [&range, &_max_size]() {
       if (_max_size > 0) {
         return range | std::views::take(_max_size) |
-               fct::ranges::to_shared_ptr_vector();
+               fct::ranges::to<fct::shared_ptr::vector>();
       }
-      return range | fct::ranges::to_shared_ptr_vector();
+      return range | fct::ranges::to<fct::shared_ptr::vector>();
     }();
 
     std::ranges::sort(*vocab);
