@@ -125,6 +125,26 @@ else()
   message(FATAL_ERROR "No package manager specified. Please set either USE_VCPKG or USE_CONAN, or none to use system packages.")
 endif()
 
+if(DEFINED ENV{CMAKE_BUILD_RPATH})
+  set(
+    CMAKE_BUILD_RPATH
+      "$ENV{CMAKE_BUILD_RPATH}"
+    CACHE
+    STRING
+    "Semicolon-separated list specifying runtime path (RPATH) entries to add to binaries linked in the build tree (for platforms that support it)."
+    FORCE)
+endif()
+
+if(DEFINED ENV{CPACK_EXCLUDE_RUNTIME_DEPENDENCIES})
+  set(
+    CPACK_EXCLUDE_RUNTIME_DEPENDENCIES
+      "$ENV{CPACK_EXCLUDE_RUNTIME_DEPENDENCIES}"
+    CACHE
+    STRING
+    "List of runtime dependencies to exclude from the package."
+    FORCE)
+endif()
+
 add_subdirectory(src)
 
 include(InstallRequiredSystemLibraries)

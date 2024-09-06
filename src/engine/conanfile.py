@@ -22,7 +22,7 @@ class Engine(ConanFile):
             override=True,
         )
         self.requires(
-            "arrow/16.1.0",
+            "arrow/17.0.0",
             options={
                 "parquet": True,
                 "with_boost": True,
@@ -81,8 +81,9 @@ class Engine(ConanFile):
                 "boost/*:with_stacktrace_backtrace": False,
             },
         )
-        self.requires("poco/1.13.3")
-        self.requires("mariadb-connector-c/3.3.3", options={"shared": True})
+        # TODO Downgrade Poco to 1.12.5 because of slow DateTimeFormat::isValid https://github.com/pocoproject/poco/issues/4592
+        self.requires("poco/1.12.5p2")
+        self.requires("mariadb-connector-c/3.3.8", options={"shared": True})
         self.requires("libpq/15.4")
         self.requires("eigen/3.4.0")
         self.requires("sqlite3/3.45.0")
@@ -90,7 +91,8 @@ class Engine(ConanFile):
             self.requires("gperftools/2.15")
             self.requires("libunwind/1.8.1")
         self.requires("reflect-cpp/0.13.0")
-        self.requires("xgboost/2.0.3")
+        # TODO Downgrade xgboost to 1.7.6 because of changes in 2.0.0
+        self.requires("xgboost/1.7.6")
         self.requires("range-v3/0.12.0")
         self.requires("gtest/1.15.0")
 
