@@ -2,7 +2,7 @@ vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO dmlc/xgboost
     REF "v${VERSION}"
-    SHA512 0fef4dd49750c829a69e42fe75872dd88f6e9bbdd6b6912fd5ef77c4f850451de2b09b61da75ce1a789a98f38e2e847919ccf8a477ded7380024d9846be18b80
+    SHA512 4465f383df70ee415faaeb745459bfc413f71bff0d02e59e67173975188bed911044dbea1a456550496f8c5a7c0b50002275b6be72c87386a6118485e1e41829
     HEAD_REF master
 )
 
@@ -12,8 +12,8 @@ vcpkg_from_github(
 vcpkg_from_github(
     OUT_SOURCE_PATH DMLC_CORE_SOURCE_PATH
     REPO dmlc/dmlc-core
-    REF ea21135fbb141ae103fb5fc960289b5601b468f2
-    SHA512 01b0c0ddddbaeecbe1759225f27da143b87f79cae805bf0227634f382b6cb6e92bcee376f999161c15b3b6a9da227f8c3f022d84bdbbe6589282965cb285a27c
+    REF 81db539486ce6525b31b971545edffee2754aced
+    SHA512 9b288fd1ceeef0015e80b0296b0d4015238d4cc1b7c36ba840d3eabce87508e62ed5b4fe61504f569dadcc414882903211fadf54aa0e162a896b03d7ca05e975
     HEAD_REF master
 )
 
@@ -33,6 +33,20 @@ vcpkg_from_github(
 
 file(REMOVE_RECURSE "${SOURCE_PATH}/gputreeshap")
 file(RENAME "${GPUTREESHAP_SOURCE_PATH}" "${SOURCE_PATH}/gputreeshap")
+
+################################################################################
+# Load submodule: NVlabs/cub
+
+vcpkg_from_github(
+    OUT_SOURCE_PATH CUB_SOURCE_PATH
+    REPO NVlabs/cub
+    REF af39ee264f4627608072bf54730bf3a862e56875
+    SHA512 bba9099e38833cd59900567cf5c401ba4337b96ccfd67f1b02f606ea9f4ff9512a8941b9ef7d8629acf7f32567969ed60ee6ebbe72b9d30ddacad36347d03f1e
+    HEAD_REF master
+)
+
+file(REMOVE_RECURSE "${SOURCE_PATH}/cub")
+file(RENAME "${CUB_SOURCE_PATH}" "${SOURCE_PATH}/cub")
 
 ################################################################################
 # Configure and Install: xgboost
