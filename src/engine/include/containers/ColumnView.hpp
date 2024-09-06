@@ -608,7 +608,7 @@ auto ColumnView<T>::to_column(const size_t _begin,
       return strings::String::parse_null(_str);
     };
     auto const new_data_ptr = *data_ptr | std::views::transform(to_str) |
-                              fct::ranges::to_shared_ptr_vector();
+                              fct::ranges::to<fct::shared_ptr::vector>();
     auto col = Column<strings::String>(new_data_ptr);
     col.set_unit(unit());
     return col;

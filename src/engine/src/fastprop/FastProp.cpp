@@ -1471,7 +1471,7 @@ std::shared_ptr<std::vector<size_t>> FastProp::sample_from_population(
   };
 
   return std::views::iota(0uz, _nrows) | std::views::filter(include) |
-         fct::ranges::to_shared_ptr_vector();
+         fct::ranges::to<fct::shared_ptr::vector>();
 }
 
 // ----------------------------------------------------------------------------
@@ -1505,7 +1505,7 @@ FastProp::select_features(
   return std::views::iota(0uz, r_squared.size()) |
          std::views::filter(r_greater_threshold) |
          std::views::transform(get_feature) |
-         fct::ranges::to_shared_ptr_vector();
+         fct::ranges::to<fct::shared_ptr::vector>();
 }
 
 // ----------------------------------------------------------------------------
