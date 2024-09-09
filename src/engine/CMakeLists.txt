@@ -1,8 +1,5 @@
 cmake_minimum_required(VERSION 3.25)
 
-include(cmake/vcpkg.cmake)
-prepare_vcpkg()
-
 include(cmake/conan.cmake)
 prepare_conan()
 
@@ -49,7 +46,7 @@ find_package(xgboost REQUIRED)
 find_package(range-v3 REQUIRED)
 
 
-if(NOT ${USE_VCPKG} AND NOT ${USE_CONAN})
+if(NOT ${USE_CONAN})
 
   message(STATUS "Using system packages")
 
@@ -77,35 +74,7 @@ if(NOT ${USE_VCPKG} AND NOT ${USE_CONAN})
   message(STATUS "-> reflect-cpp")
   find_package(reflectcpp REQUIRED)
 
-elseif(${USE_VCPKG})
-
-  message(STATUS "Using vcpkg packages")
-
-  message(STATUS "-> unofficial mariadb")
-  find_package(unofficial-libmariadb REQUIRED)
-  add_library(libmariadb::libmariadb ALIAS unofficial::libmariadb)
-
-  message(STATUS "-> Arrow")
-  if(${ARROW_BUILD_STATIC})
-    add_library(arrow::arrow ALIAS Arrow::arrow_static)
-  else()
-    add_library(arrow::arrow ALIAS Arrow::arrow_shared)
-  endif()
-
-  message(STATUS "-> Parquet")
-  find_package(Parquet REQUIRED)
-  if(${ARROW_BUILD_STATIC})
-    add_library(parquet::parquet ALIAS Parquet::parquet_static)
-  else()
-    add_library(parquet::parquet ALIAS Parquet::parquet_shared)
-  endif()
-
-  message(STATUS "-> reflect-cpp")
-  find_package(ctre REQUIRED)
-  find_package(yyjson REQUIRED)
-  find_package(reflectcpp REQUIRED)
-
-elseif(${USE_CONAN})
+else()
 
   message(STATUS "Using Conan packages")
 
@@ -121,8 +90,6 @@ elseif(${USE_CONAN})
   add_library(reflectcpp::reflectcpp ALIAS reflect-cpp::reflect-cpp)
   find_package(yyjson REQUIRED)
 
-else()
-  message(FATAL_ERROR "No package manager specified. Please set either USE_VCPKG or USE_CONAN, or none to use system packages.")
 endif()
 
 if(DEFINED ENV{CMAKE_BUILD_RPATH})
