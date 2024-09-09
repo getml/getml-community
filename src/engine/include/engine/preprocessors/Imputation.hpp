@@ -21,7 +21,6 @@
 #include "engine/Float.hpp"
 #include "engine/preprocessors/Params.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
-#include "fct/to.hpp"
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/Macros.hpp"
 #include "helpers/StringIterator.hpp"
@@ -157,7 +156,7 @@ class Imputation : public Preprocessor {
 
   /// Retrieves the column description from the map.
   std::vector<helpers::ColumnDescription> column_descriptions() const {
-    return *cols_ | std::views::keys | fct::ranges::to<std::vector>();
+    return *cols_ | std::views::keys | std::ranges::to<std::vector>();
   }
 
   /// Retrieve the column description of all columns in cols_.
@@ -186,13 +185,13 @@ class Imputation : public Preprocessor {
   /// Retrieves the means from the map.
   std::vector<Float> means() const {
     return *cols_ | std::views::values | std::views::keys |
-           fct::ranges::to<std::vector>();
+           std::ranges::to<std::vector>();
   }
 
   /// Retrieves the means from the map.
   std::vector<bool> needs_dummies() const {
     return *cols_ | std::views::values | std::views::values |
-           fct::ranges::to<std::vector>();
+           std::ranges::to<std::vector>();
   }
 
  private:

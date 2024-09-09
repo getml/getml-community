@@ -97,12 +97,12 @@ std::vector<std::string> feature_learners_to_sql(
     const auto features = autofeatures | std::views::transform(get_feature);
 
     return ranges::views::concat(subfeatures, features) |
-           fct::ranges::to<std::vector>();
+           std::ranges::to<std::vector>();
   };
 
   return std::views::iota(0uz, _params.fitted().feature_learners_.size()) |
          std::views::transform(to_sql) | std::views::join |
-         fct::ranges::to<std::vector>();
+         std::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------------------------------
@@ -118,12 +118,12 @@ std::vector<std::string> make_autofeature_names(const FittedPipeline& _fitted) {
     assert_true(_i < _fitted.predictors_.impl_->autofeatures().size());
 
     return _fitted.predictors_.impl_->autofeatures().at(_i) |
-           std::views::transform(make_name) | fct::ranges::to<std::vector>();
+           std::views::transform(make_name) | std::ranges::to<std::vector>();
   };
 
   return std::views::iota(0uz, _fitted.feature_learners_.size()) |
          std::views::transform(to_names) | std::views::join |
-         fct::ranges::to<std::vector>();
+         std::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------------------------------
@@ -148,10 +148,10 @@ make_staging_schemata(const FittedPipeline& _fitted) {
     const auto text_fields = _schema.unused_strings() |
                              std::views::filter(has_text_field_marker) |
                              std::views::transform(remove_text_field_marker) |
-                             fct::ranges::to<std::vector>();
+                             std::ranges::to<std::vector>();
 
     const auto text = ranges::views::concat(_schema.text(), text_fields) |
-                      fct::ranges::to<std::vector>();
+                      std::ranges::to<std::vector>();
 
     return containers::Schema(
         rfl::replace(_schema.reflection(), rfl::make_field<"text_">(text)));
@@ -168,7 +168,7 @@ make_staging_schemata(const FittedPipeline& _fitted) {
   const auto staging_schema_peripheral =
       *_fitted.modified_peripheral_schema_ |
       std::views::filter(is_not_text_field) |
-      std::views::transform(add_text_fields) | fct::ranges::to<std::vector>();
+      std::views::transform(add_text_fields) | std::ranges::to<std::vector>();
 
   return std::make_pair(staging_schema_population, staging_schema_peripheral);
 }
@@ -248,7 +248,7 @@ std::vector<std::string> overwrite_oversized_features(
   };
 
   return std::views::iota(0uz, _features.size()) |
-         std::views::transform(make_feature) | fct::ranges::to<std::vector>();
+         std::views::transform(make_feature) | std::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------------------------------
@@ -261,7 +261,7 @@ std::vector<std::string> preprocessors_to_sql(
     return _p->to_sql(_params.categories(), _sql_dialect_generator.ptr());
   };
   return _params.fitted().preprocessors_ | std::views::transform(to_sql) |
-         std::views::join | fct::ranges::to<std::vector>();
+         std::views::join | std::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------------------------------
@@ -320,7 +320,7 @@ std::string to_sql(const ToSQLParams& _params) {
       _params.size_threshold());
 
   const auto sql = ranges::views::concat(staging, preprocessing, features) |
-                   fct::ranges::to<std::vector>();
+                   std::ranges::to<std::vector>();
 
   const auto target_names = _params.targets() ? _params.fitted().targets()
                                               : std::vector<std::string>();

@@ -11,7 +11,6 @@
 #include <sstream>
 
 #include "debug/throw_unless.hpp"
-#include "fct/to.hpp"
 #include "helpers/Macros.hpp"
 #include "helpers/StringReplacer.hpp"
 #include "helpers/StringSplitter.hpp"
@@ -348,7 +347,7 @@ std::string SQLGenerator::replace_non_alphanumeric(const std::string _old) {
   };
 
   const auto replaced =
-      _old | std::views::transform(replace) | fct::ranges::to<std::string>();
+      _old | std::views::transform(replace) | std::ranges::to<std::string>();
 
   return shorten(trim(replaced));
 };

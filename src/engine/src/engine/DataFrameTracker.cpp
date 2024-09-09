@@ -86,7 +86,7 @@ commands::Fingerprint DataFrameTracker::make_build_history(
     const std::vector<containers::DataFrame>& _peripheral_dfs) const {
   const auto populations = std::vector{_population_df};
   const auto data_frames = ranges::views::concat(populations, _peripheral_dfs) |
-                           fct::ranges::to<std::vector>();
+                           std::ranges::to<std::vector>();
 
   const auto get_fingerprint =
       [](const containers::DataFrame& _df) -> commands::Fingerprint {
@@ -95,7 +95,7 @@ commands::Fingerprint DataFrameTracker::make_build_history(
 
   const auto df_fingerprints = data_frames |
                                std::views::transform(get_fingerprint) |
-                               fct::ranges::to<std::vector>();
+                               std::ranges::to<std::vector>();
 
   using PipelineBuildHistory =
       typename commands::Fingerprint::PipelineBuildHistory;

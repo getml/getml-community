@@ -13,7 +13,6 @@
 #include <rfl/NamedTuple.hpp>
 #include <vector>
 
-#include "fct/to.hpp"
 #include "helpers/DataFrame.hpp"
 #include "helpers/StringIterator.hpp"
 
@@ -56,7 +55,7 @@ class VocabularyContainer {
   /// Represents the peripheral vocabulary as a vector of iterators.
   const std::vector<std::vector<StringIterator>> peripheral_iterators() const {
     return peripheral() | std::views::transform(to_iterators) |
-           fct::ranges::to<std::vector>();
+           std::ranges::to<std::vector>();
   }
 
   /// Trivial (const) accessor
@@ -86,7 +85,7 @@ class VocabularyContainer {
                             _vec->size());
     };
     return _vocab | std::views::transform(make_iterator) |
-           fct::ranges::to<std::vector>();
+           std::ranges::to<std::vector>();
   }
 
  private:

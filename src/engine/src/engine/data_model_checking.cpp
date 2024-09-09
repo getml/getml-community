@@ -287,7 +287,7 @@ communication::Warner check(
   };
 
   const auto peripheral = _peripheral | std::views::filter(is_not_text_field) |
-                          fct::ranges::to<std::vector>();
+                          std::ranges::to<std::vector>();
 
   check_peripheral_size(_peripheral_names, peripheral);
 

@@ -10,7 +10,6 @@
 #include <cstddef>
 #include <ranges>
 
-#include "fct/to.hpp"
 #include "helpers/Endianness.hpp"
 #include "predictors/FloatFeature.hpp"
 
@@ -96,11 +95,11 @@ XGBoostIteratorSparse::make_proxy_csr() const {
 
   const auto ranges_categorical = X_categorical_ |
                                   std::views::transform(get_subrange) |
-                                  fct::ranges::to<std::vector>();
+                                  std::ranges::to<std::vector>();
 
   const auto ranges_numerical = X_numerical_ |
                                 std::views::transform(get_subrange) |
-                                fct::ranges::to<std::vector>();
+                                std::ranges::to<std::vector>();
 
   using DataType = CSRMatrixType::DataType;
   using IndicesType = CSRMatrixType::IndicesType;

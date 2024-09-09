@@ -40,7 +40,7 @@ typename RowIndexContainer::RowIndices RowIndexContainer::make_row_indices(
       };
 
   return _word_indices | std::views::transform(make_row_index) |
-         fct::ranges::to<std::vector>();
+         std::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------------------------------

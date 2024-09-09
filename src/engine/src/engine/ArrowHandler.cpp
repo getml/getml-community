@@ -95,7 +95,7 @@ std::vector<std::shared_ptr<arrow::ChunkedArray>> ArrowHandler::extract_arrays(
   return ranges::views::concat(categoricals, join_keys, numericals, targets,
                                text, time_stamps, unused_floats,
                                unused_strings) |
-         fct::ranges::to<std::vector>();
+         std::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------------------------------
@@ -142,7 +142,7 @@ std::shared_ptr<arrow::Schema> ArrowHandler::df_to_schema(
   const auto all_fields =
       ranges::views::concat(categoricals, join_keys, numericals, targets, text,
                             time_stamps, unused_floats, unused_strings) |
-      fct::ranges::to<std::vector>();
+      std::ranges::to<std::vector>();
 
   return arrow::schema(all_fields);
 }

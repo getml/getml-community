@@ -19,7 +19,6 @@
 #include <vector>
 
 #include "fct/Range.hpp"
-#include "fct/to.hpp"
 #include "strings/String.hpp"
 #include "textmining/Int.hpp"
 
@@ -48,10 +47,12 @@ class Vocabulary {
 
     auto vocab = [&range, &_max_size]() {
       if (_max_size > 0) {
-        return range | std::views::take(_max_size) |
-               fct::ranges::to<fct::shared_ptr::vector>();
+        return std::make_shared<std::vector<strings::String>>(
+            range | std::views::take(_max_size) |
+            std::ranges::to<std::vector>());
       }
-      return range | fct::ranges::to<fct::shared_ptr::vector>();
+      return std::make_shared<std::vector<strings::String>>(
+          range | std::ranges::to<std::vector>());
     }();
 
     std::ranges::sort(*vocab);

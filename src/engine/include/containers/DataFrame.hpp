@@ -29,7 +29,6 @@
 #include "containers/MonitorSummary.hpp"
 #include "containers/Schema.hpp"
 #include "database/Connector.hpp"
-#include "fct/to.hpp"
 #include "helpers/DataFrameParams.hpp"
 #include "helpers/Macros.hpp"
 #include "transpilation/HumanReadableSQLGenerator.hpp"
@@ -975,7 +974,7 @@ DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
 
   const auto categoricals = schema.categoricals() |
                             std::views::transform(get_categorical) |
-                            fct::ranges::to<std::vector>();
+                            std::ranges::to<std::vector>();
 
   const auto get_join_key = [this, parse](const std::string &_name) {
     const auto &col = join_key(_name);
@@ -985,14 +984,14 @@ DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
 
   const auto join_keys = schema.join_keys() |
                          std::views::transform(get_join_key) |
-                         fct::ranges::to<std::vector>();
+                         std::ranges::to<std::vector>();
 
   const auto get_index = [this](const std::string &_name) {
     return index(_name).map();
   };
 
   const auto indices = schema.join_keys() | std::views::transform(get_index) |
-                       fct::ranges::to<std::vector>();
+                       std::ranges::to<std::vector>();
 
   const auto get_numerical = [this, parse](const std::string &_name) {
     const auto &col = numerical(_name);
@@ -1002,11 +1001,11 @@ DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
 
   const auto discretes = schema.discretes() |
                          std::views::transform(get_numerical) |
-                         fct::ranges::to<std::vector>();
+                         std::ranges::to<std::vector>();
 
   const auto numericals = schema.numericals() |
                           std::views::transform(get_numerical) |
-                          fct::ranges::to<std::vector>();
+                          std::ranges::to<std::vector>();
 
   const auto get_target = [this, parse](const std::string &_name) {
     const auto &col = target(_name);
@@ -1016,7 +1015,7 @@ DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
 
   const auto targets = _targets ? schema.targets() |
                                       std::views::transform(get_target) |
-                                      fct::ranges::to<std::vector>()
+                                      std::ranges::to<std::vector>()
                                 : std::vector<FloatColumnType>();
 
   const auto get_text = [this, parse](const std::string &_name) {
@@ -1026,7 +1025,7 @@ DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
   };
 
   const auto text = schema.text() | std::views::transform(get_text) |
-                    fct::ranges::to<std::vector>();
+                    std::ranges::to<std::vector>();
 
   const auto get_time_stamp = [this, parse](const std::string &_name) {
     const auto &col = time_stamp(_name);
@@ -1036,7 +1035,7 @@ DataFrameType DataFrame::to_immutable(const std::optional<Schema> &_schema,
 
   const auto time_stamps = schema.time_stamps() |
                            std::views::transform(get_time_stamp) |
-                           fct::ranges::to<std::vector>();
+                           std::ranges::to<std::vector>();
 
   const auto params = helpers::DataFrameParams{.categoricals_ = categoricals,
                                                .discretes_ = discretes,

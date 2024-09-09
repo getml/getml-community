@@ -14,7 +14,6 @@
 #include <rfl/json/write.hpp>
 #include <rfl/make_named_tuple.hpp>
 
-#include "fct/to.hpp"
 #include "helpers/StringSplitter.hpp"
 #include "transpilation/SQLGenerator.hpp"
 
@@ -33,7 +32,7 @@ SQLDependencyTracker::find_dependencies(const Tuples& _tuples,
 
   const auto dependencies = std::views::iota(0uz, _i) |
                             std::views::filter(is_dependency) |
-                            fct::ranges::to<std::vector>();
+                            std::ranges::to<std::vector>();
 
   return rfl::make_field<"table_name_">(std::get<0>(_tuples.at(_i))) *
          rfl::make_field<"file_name_">(std::get<1>(_tuples.at(_i))) *
@@ -75,7 +74,7 @@ void SQLDependencyTracker::save_dependencies(const std::string& _sql) const {
 
   const auto dependencies = std::views::iota(0uz, tuples.size()) |
                             std::views::transform(to_obj) |
-                            fct::ranges::to<std::vector>();
+                            std::ranges::to<std::vector>();
 
   const auto obj =
       rfl::make_named_tuple(rfl::make_field<"dependencies_">(dependencies));
@@ -96,7 +95,7 @@ typename SQLDependencyTracker::Tuples SQLDependencyTracker::save_sql(
   };
 
   const auto table_names = sql | std::views::transform(get_table_name) |
-                           fct::ranges::to<std::vector>();
+                           std::ranges::to<std::vector>();
 
   const auto to_file_name = [](const size_t _i) -> std::string {
     return std::to_string(_i) + ".sql";
@@ -105,7 +104,7 @@ typename SQLDependencyTracker::Tuples SQLDependencyTracker::save_sql(
   const auto iota = std::views::iota(0uz, table_names.size());
 
   const auto file_names = iota | std::views::transform(to_file_name) |
-                          fct::ranges::to<std::vector>();
+                          std::ranges::to<std::vector>();
 
   for (size_t i = 0; i < file_names.size(); ++i) {
     write_to_file(file_names.at(i), sql.at(i));
@@ -117,7 +116,7 @@ typename SQLDependencyTracker::Tuples SQLDependencyTracker::save_sql(
   };
 
   return iota | std::views::transform(make_tuple) |
-         fct::ranges::to<std::vector>();
+         std::ranges::to<std::vector>();
 }
 
 // ------------------------------------------------------------------------

@@ -530,7 +530,7 @@ typename PipelineManager::RefreshPipelineType PipelineManager::refresh_pipeline(
 
   const auto peripheral_metadata = *_pipeline.fitted()->peripheral_schema_ |
                                    std::views::transform(extract_roles) |
-                                   fct::ranges::to<std::vector>();
+                                   std::ranges::to<std::vector>();
 
   const auto population_metadata =
       extract_roles(*_pipeline.fitted()->population_schema_);

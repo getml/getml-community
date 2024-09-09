@@ -15,7 +15,6 @@
 
 #include "containers/DataFramePrinter.hpp"
 #include "database/Getter.hpp"
-#include "fct/to.hpp"
 
 namespace containers {
 
@@ -1717,12 +1716,12 @@ containers::MonitorSummary DataFrame::to_monitor() const {
 
   const auto get_colnames = [get_colname](const auto &_cols) {
     return _cols | std::views::transform(get_colname) |
-           fct::ranges::to<std::vector>();
+           std::ranges::to<std::vector>();
   };
 
   const auto get_units = [get_unit](const auto &_cols) {
     return _cols | std::views::transform(get_unit) |
-           fct::ranges::to<std::vector>();
+           std::ranges::to<std::vector>();
   };
 
   return rfl::make_field<"categorical_">(get_colnames(categoricals_)) *
@@ -1773,38 +1772,35 @@ Schema DataFrame::to_schema(const bool _separate_discrete) const {
     return _col.name();
   };
 
-  const auto categoricals = categoricals_ |
-                            std::views::transform(get_name) |
-                            fct::ranges::to<std::vector>();
+  const auto categoricals = categoricals_ | std::views::transform(get_name) |
+                            std::ranges::to<std::vector>();
 
   const auto discretes = numericals_ | std::views::filter(is_discrete) |
                          std::views::transform(get_name) |
-                         fct::ranges::to<std::vector>();
+                         std::ranges::to<std::vector>();
 
   const auto join_keys = join_keys_ | std::views::transform(get_name) |
-                         fct::ranges::to<std::vector>();
+                         std::ranges::to<std::vector>();
 
-  const auto numericals =
-      numericals_ | std::views::filter(is_not_discrete) |
-      std::views::transform(get_name) | fct::ranges::to<std::vector>();
+  const auto numericals = numericals_ | std::views::filter(is_not_discrete) |
+                          std::views::transform(get_name) |
+                          std::ranges::to<std::vector>();
 
   const auto targets = targets_ | std::views::transform(get_name) |
-                       fct::ranges::to<std::vector>();
+                       std::ranges::to<std::vector>();
 
-  const auto text = text_ | std::views::transform(get_name) |
-                    fct::ranges::to<std::vector>();
+  const auto text =
+      text_ | std::views::transform(get_name) | std::ranges::to<std::vector>();
 
-  const auto time_stamps = time_stamps_ |
-                           std::views::transform(get_name) |
-                           fct::ranges::to<std::vector>();
+  const auto time_stamps = time_stamps_ | std::views::transform(get_name) |
+                           std::ranges::to<std::vector>();
 
-  const auto unused_floats = unused_floats_ |
-                             std::views::transform(get_name) |
-                             fct::ranges::to<std::vector>();
+  const auto unused_floats = unused_floats_ | std::views::transform(get_name) |
+                             std::ranges::to<std::vector>();
 
   const auto unused_strings = unused_strings_ |
                               std::views::transform(get_name) |
-                              fct::ranges::to<std::vector>();
+                              std::ranges::to<std::vector>();
 
   const auto impl = helpers::SchemaImpl{.categoricals = categoricals,
                                         .discretes = discretes,

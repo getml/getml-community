@@ -79,7 +79,7 @@ void check(const Pipeline& _pipeline, const CheckParams& _params) {
   const auto to_ptr = [](const auto& _fl) { return _fl.ptr(); };
 
   const auto fl_shared_ptr = feature_learners | std::views::transform(to_ptr) |
-                             fct::ranges::to<std::vector>();
+                             std::ranges::to<std::vector>();
 
   const auto warner = preprocessors::data_model_checking::check(
       placeholder.ptr(), peripheral_names.ptr(), preprocessed.population_df_,

@@ -7,8 +7,6 @@
 
 #include "helpers/VocabularyContainer.hpp"
 
-#include "fct/to.hpp"
-
 namespace helpers {
 
 // ----------------------------------------------------------------------------
@@ -49,7 +47,7 @@ VocabularyContainer VocabularyContainer::make_container(
 
   const auto peripheral_dfs = _peripheral |
                               std::views::transform(extract_from_df) |
-                              fct::ranges::to<std::vector>();
+                              std::ranges::to<std::vector>();
 
   const auto population_dfs = extract_from_df(_population);
 

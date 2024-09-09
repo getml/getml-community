@@ -11,6 +11,7 @@
 #include <arrow/api.h>
 
 #include <format>
+#include <memory>
 #include <optional>
 #include <range/v3/algorithm/move.hpp>
 #include <range/v3/view/cache1.hpp>
@@ -18,6 +19,7 @@
 #include <range/v3/view/take_while.hpp>
 #include <range/v3/view/transform.hpp>
 #include <ranges>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -27,9 +29,9 @@
 #include "containers/ArrayMaker.hpp"
 #include "containers/Column.hpp"
 #include "containers/ColumnViewIterator.hpp"
-#include "fct/to.hpp"
 #include "helpers/NullChecker.hpp"
 #include "helpers/SubroleParser.hpp"
+#include "strings/String.hpp"
 
 namespace containers {
 
@@ -607,8 +609,9 @@ auto ColumnView<T>::to_column(const size_t _begin,
     const auto to_str = [](const std::string& _str) -> strings::String {
       return strings::String::parse_null(_str);
     };
-    auto const new_data_ptr = *data_ptr | std::views::transform(to_str) |
-                              fct::ranges::to<fct::shared_ptr::vector>();
+    auto const new_data_ptr = std::make_shared<std::vector<strings::String>>(
+        *data_ptr | std::views::transform(to_str) |
+        std::ranges::to<std::vector>());
     auto col = Column<strings::String>(new_data_ptr);
     col.set_unit(unit());
     return col;

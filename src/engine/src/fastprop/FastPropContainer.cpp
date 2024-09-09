@@ -7,7 +7,6 @@
 
 #include "fastprop/subfeatures/FastPropContainer.hpp"
 
-#include "fct/to.hpp"
 #include "transpilation/SQLGenerator.hpp"
 
 namespace fastprop {
@@ -50,7 +49,7 @@ void FastPropContainer::to_sql(
       const auto autofeatures =
           std::views::iota(0uz, fast_prop().num_features()) |
           std::views::transform(to_feature_name) |
-          fct::ranges::to<std::vector>();
+          std::ranges::to<std::vector>();
 
       const auto main_table =
           transpilation::SQLGenerator::make_staging_table_name(

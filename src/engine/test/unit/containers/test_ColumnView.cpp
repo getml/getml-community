@@ -2,21 +2,21 @@
 #include <gtest/gtest.h>
 
 #include <cstddef>
+#include <memory>
 #include <optional>
 
 #include "containers/Column.hpp"
 #include "containers/ColumnView.hpp"
 #include "containers/Float.hpp"
 #include "containers/Int.hpp"
-#include "fct/to.hpp"
 #include "gwt.h"
 
 using namespace std::literals::string_literals;
 
 TEST(TestColumnView, TestToVectorExpectedLength) {
   GWT::given([]() {
-    auto const ptr_to_vector = std::vector{1.0, 2.0, 3.0, 4.0} |
-                               fct::ranges::to<fct::shared_ptr::vector>();
+    auto const ptr_to_vector = std::make_shared<std::vector<containers::Float>>(
+        std::vector{1.0, 2.0, 3.0, 4.0});
     auto const column = containers::Column<containers::Float>{ptr_to_vector};
     return containers::ColumnView<containers::Float>::from_column(column);
   })
@@ -32,8 +32,8 @@ TEST(TestColumnView, TestToVectorExpectedLength) {
 
 TEST(TestColumnView, TestToVectorExpectedLengthUnknown) {
   GWT::given([]() {
-    auto const ptr_to_vector = std::vector{1.0, 2.0, 3.0, 4.0} |
-                               fct::ranges::to<fct::shared_ptr::vector>();
+    auto const ptr_to_vector = std::make_shared<std::vector<containers::Float>>(
+        std::vector{1.0, 2.0, 3.0, 4.0});
     auto const column = containers::Column<containers::Float>{ptr_to_vector};
     return containers::ColumnView<containers::Float>::from_column(column);
   })
@@ -49,7 +49,7 @@ TEST(TestColumnView, TestToVectorExpectedLengthUnknown) {
 TEST(TestColumnView, TestFromUnOpToVector) {
   GWT::given([]() {
     auto const ptr_to_vector =
-        std::vector{0, 0, 0, 0} | fct::ranges::to<fct::shared_ptr::vector>();
+        std::make_shared<std::vector<containers::Int>>(std::vector{0, 0, 0, 0});
     auto const column = containers::Column<containers::Int>{ptr_to_vector};
     auto const operand =
         containers::ColumnView<containers::Int>::from_column(column);

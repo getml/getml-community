@@ -11,7 +11,6 @@
 #include <ranges>
 
 #include "debug/assert_msg.hpp"
-#include "fct/to.hpp"
 #include "helpers/Macros.hpp"
 
 namespace helpers {
@@ -87,8 +86,7 @@ VocabularyTree::find_text_fields(
 
   return std::views::iota(0uz, _peripheral_schema.size()) |
          std::views::filter(is_relevant_text_field) |
-         std::views::transform(get_vocab) |
-         fct::ranges::to<std::vector>();
+         std::views::transform(get_vocab) | std::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------------------------------
@@ -104,13 +102,13 @@ VocabularyTree::parse_peripheral(
 
   const auto peripheral = _placeholder.joined_tables() |
                           std::views::transform(extract_peripheral) |
-                          fct::ranges::to<std::vector>();
+                          std::ranges::to<std::vector>();
 
   const auto text_fields =
       find_text_fields(_peripheral, _placeholder, _peripheral_schema);
 
   return ranges::views::concat(peripheral, text_fields) |
-         fct::ranges::to<std::vector>();
+         std::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------------------------------
@@ -146,7 +144,7 @@ std::vector<std::optional<VocabularyTree>> VocabularyTree::parse_subtrees(
 
   auto subtrees_for_placeholder = _placeholder.joined_tables() |
                                   std::views::transform(make_subtree) |
-                                  fct::ranges::to<std::vector>();
+                                  std::ranges::to<std::vector>();
 
   // Text fields never have subtrees.
   for (size_t i = 0; i < vocab_for_text_fields.size(); ++i) {

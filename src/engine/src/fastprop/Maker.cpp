@@ -7,7 +7,6 @@
 
 #include "fastprop/subfeatures/Maker.hpp"
 
-#include "fct/to.hpp"
 #include "transpilation/HumanReadableSQLGenerator.hpp"
 
 namespace fastprop {
@@ -245,9 +244,10 @@ Maker::make_subcontainers(const helpers::TableHolder& _table_holder,
   assert_true(_table_holder.subtables().size() >=
               placeholder.propositionalization().size());
 
-  return std::views::iota(0uz, placeholder.propositionalization().size()) |
-         std::views::transform(make_subcontainer) |
-         fct::ranges::to<fct::shared_ptr::vector>();
+  return std::make_shared<typename FastPropContainer::Subcontainers>(
+      std::views::iota(0uz, placeholder.propositionalization().size()) |
+      std::views::transform(make_subcontainer) |
+      std::ranges::to<std::vector>());
 }
 
 // ----------------------------------------------------------------------------
@@ -278,7 +278,7 @@ Maker::transform_make_features(const MakerParams& _params) {
   const auto& fast_prop = _params.fast_prop_container_->fast_prop();
 
   const auto index = std::views::iota(0uz, fast_prop.num_features()) |
-                     fct::ranges::to<std::vector>();
+                     std::ranges::to<std::vector>();
 
   const auto params = algorithm::TransformParams{
       .feature_container_ = std::nullopt,
@@ -299,9 +299,9 @@ Maker::transform_make_features(const MakerParams& _params) {
                                   {}, "");
   };
 
-  return std::views::iota(0uz, features.size()) |
-         std::views::transform(to_column) |
-         fct::ranges::to<fct::shared_ptr::vector>();
+  return std::make_shared<std::vector<helpers::Column<Float>>>(
+      std::views::iota(0uz, features.size()) |
+      std::views::transform(to_column) | std::ranges::to<std::vector>());
 }
 
 // ----------------------------------------------------------------------------
@@ -319,9 +319,11 @@ Maker::transform_make_subcontainers(const MakerParams& _params) {
     return transform(params);
   };
 
-  return std::views::iota(0uz, placeholder.joined_tables().size()) |
-         std::views::transform(make_subcontainer) |
-         fct::ranges::to<fct::shared_ptr::vector>();
+  return std::make_shared<
+      std::vector<std::optional<helpers::FeatureContainer>>>(
+      std::views::iota(0uz, placeholder.joined_tables().size()) |
+      std::views::transform(make_subcontainer) |
+      std::ranges::to<std::vector>());
 }
 
 // ----------------------------------------------------------------------------

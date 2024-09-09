@@ -13,7 +13,6 @@
 
 #include "debug/assert_msg.hpp"
 #include "debug/throw_unless.hpp"
-#include "fct/to.hpp"
 #include "helpers/Macros.hpp"
 #include "helpers/StringReplacer.hpp"
 #include "helpers/enums/Aggregation.hpp"
@@ -64,10 +63,10 @@ std::string HumanReadableSQLGenerator::create_indices(
 
   auto const filtered_join_keys =
       _schema.join_keys() | std::views::filter(SQLGenerator::include_column) |
-      fct::ranges::to<std::vector>();
+      std::ranges::to<std::vector>();
   return ranges::views::concat(filtered_join_keys, _schema.time_stamps()) |
          std::views::transform(create_index) | std::views::join |
-         fct::ranges::to<std::string>();
+         std::ranges::to<std::string>();
 }
 
 // ----------------------------------------------------------------------------
@@ -353,14 +352,14 @@ std::vector<std::string> HumanReadableSQLGenerator::make_staging_columns(
     const auto cast = std::bind(cast_column, std::placeholders::_1, "REAL");
 
     return _colnames | std::views::filter(SQLGenerator::include_column) |
-           std::views::transform(cast) | fct::ranges::to<std::vector>();
+           std::views::transform(cast) | std::ranges::to<std::vector>();
   };
 
   const auto cast_as_time_stamp =
       [to_ts](const std::vector<std::string>& _colnames)
       -> std::vector<std::string> {
     return _colnames | std::views::filter(SQLGenerator::include_column) |
-           std::views::transform(to_ts) | fct::ranges::to<std::vector>();
+           std::views::transform(to_ts) | std::ranges::to<std::vector>();
   };
 
   const auto cast_as_text =
@@ -369,7 +368,7 @@ std::vector<std::string> HumanReadableSQLGenerator::make_staging_columns(
     const auto cast = std::bind(cast_column, std::placeholders::_1, "TEXT");
 
     return _colnames | std::views::filter(SQLGenerator::include_column) |
-           std::views::transform(cast) | fct::ranges::to<std::vector>();
+           std::views::transform(cast) | std::ranges::to<std::vector>();
   };
 
   const auto categoricals = cast_as_text(_schema.categoricals());
@@ -389,7 +388,7 @@ std::vector<std::string> HumanReadableSQLGenerator::make_staging_columns(
 
   return ranges::views::concat(targets, categoricals, discretes, join_keys,
                                numericals, text, time_stamps) |
-         fct::ranges::to<std::vector>();
+         std::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------------------------------
@@ -440,7 +439,7 @@ std::string HumanReadableSQLGenerator::make_select(
   const auto manual = ranges::views::concat(_params.get<f_targets>(),
                                             _params.get<f_numerical>(),
                                             _params.get<f_categorical>()) |
-                      fct::ranges::to<std::vector>();
+                      std::ranges::to<std::vector>();
 
   const auto make_staging_table_colname_lambda =
       [this](const std::string& _colname) -> std::string {
@@ -477,7 +476,7 @@ std::string HumanReadableSQLGenerator::make_sql(
 
   sql.push_back(make_postprocessing(_params.get<f_sql>()));
 
-  return sql | std::views::join | fct::ranges::to<std::string>();
+  return sql | std::views::join | std::ranges::to<std::string>();
 }
 
 // ----------------------------------------------------------------------------
