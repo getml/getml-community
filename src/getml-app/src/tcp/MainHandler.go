@@ -1,4 +1,4 @@
-// Copyright 2022 The SQLNet Company GmbH
+// Copyright 2024 Code17 GmbH
 //
 // This file is licensed under the Elastic License 2.0 (ELv2).
 // Refer to the LICENSE.txt file in the root of the repository
@@ -646,11 +646,7 @@ func (m *MainHandler) setProject(
 
 	args := append(m.args, "-project="+name, "-engine-port="+enginePortStr)
 
-	cmd, err := startProcess("engine", m.projects.Config.Monitor.Log, args)
-
-	if err != nil {
-		return "", err
-	}
+	cmd, err := startProcess("./engine", "./bin", m.projects.Config.Monitor.Log, args)
 
 	if err != nil {
 		return "", err
