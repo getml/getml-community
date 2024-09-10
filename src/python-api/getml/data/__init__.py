@@ -26,7 +26,7 @@ three different steps.
 * [Importing the data][importing-data] into the getML Engine .
 * [Annotating the data][annotating-data] by assigning
   [`roles`][getml.data.roles] to the individual [`columns`][getml.data.columns]
-* [Constructing the data model][data-model] by deriving
+* [Constructing the data model][data-model-concepts] by deriving
   [`Placeholder`][getml.data.Placeholder] from the data and joining them to
   represent the data schema.
 

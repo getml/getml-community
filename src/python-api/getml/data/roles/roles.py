@@ -58,7 +58,7 @@ Role required to establish a relation between two
 [`Placeholder`][getml.data.Placeholder], the abstract representation of the
 [`DataFrame`][getml.DataFrame], by using the
 [`join`][getml.data.Placeholder.join] method. Please refer to the
-chapter [Data Model][data-model] for details.
+chapter [Data Model][data-model-concepts] for details.
 
 The content of this column is allowed to contain NULL values. But
 beware, columns with NULL in their join keys won't be matched to
