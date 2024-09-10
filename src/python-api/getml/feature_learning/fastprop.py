@@ -19,7 +19,7 @@ from .aggregations.sets import (
 )
 from .aggregations.types import FastPropAggregations
 from .feature_learner import _FeatureLearner
-from .validation import _validate_dfs_model_parameters
+from .validation import _validate_fastprop_parameters
 from .loss_functions import CrossEntropyLossType, SquareLossType
 
 
@@ -171,4 +171,4 @@ class FastProp(_FeatureLearner):
                     f"Instance variable '{kkey}' is not supported in {self.type}."
                 )
 
-        _validate_dfs_model_parameters(**params)
+        _validate_fastprop_parameters(**params)
