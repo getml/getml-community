@@ -149,7 +149,7 @@ RUN --mount=type=cache,target=$CCACHE_PATH,id="$CCACHE_PATH-b088bb31-d9ff-442c-a
 FROM engine-build AS engine-package
 
 ARG TARGETARCH
-ARG PACKAGE_NAME="getml-$GETML_VERSION-$TARGETARCH-linux"
+ARG PACKAGE_NAME="getml-community-$GETML_VERSION-$TARGETARCH-linux"
 ARG ENGINE_PACKAGE_TGZ="engine-$GETML_VERSION-Linux-$TARGET_SYSTEM_PROCESSOR.tar.gz"
 
 RUN --mount=type=cache,target=$ENGINE_BUILD_PATH,id="$ENGINE_BUILD_PATH-b088bb31-d9ff-442c-a877-89dfc6a34642",sharing=locked \
