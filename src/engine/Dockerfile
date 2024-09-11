@@ -116,7 +116,7 @@ RUN --mount=type=cache,target=$CCACHE_PATH,from=engine-dependencies,id="$CCACHE-
 FROM engine-build AS engine-package
 
 ARG TARGETARCH
-ARG PACKAGE_NAME="getml-$GETML_VERSION-$TARGETARCH-linux"
+ARG PACKAGE_NAME="getml-community-$GETML_VERSION-$TARGETARCH-linux"
 ARG ENGINE_PACKAGE_TGZ="engine-$GETML_VERSION-Linux-$TARGET_SYSTEM_PROCESSOR.tar.gz"
 
 RUN --mount=type=cache,target=$ENGINE_BUILD_PATH,sharing=locked,from=engine-dependencies \
