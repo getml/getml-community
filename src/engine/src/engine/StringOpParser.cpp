@@ -18,6 +18,8 @@
 namespace engine {
 namespace handlers {
 
+const std::string TZ_LESS_RFC3339_FORMAT = "%Y-%m-%d %H:%M:%S.%F";
+
 containers::ColumnView<strings::String> StringOpParser::binary_operation(
     const StringBinaryOp& _cmd) const {
   const auto concat = [](const strings::String& _val1,
@@ -150,8 +152,8 @@ containers::ColumnView<strings::String> StringOpParser::numerical_as_string(
 
     const auto time_stamp = Poco::Timestamp(microseconds_since_epoch);
 
-    return strings::String(Poco::DateTimeFormatter::format(
-        time_stamp, Poco::DateTimeFormat::ISO8601_FRAC_FORMAT));
+    return strings::String(
+        Poco::DateTimeFormatter::format(time_stamp, TZ_LESS_RFC3339_FORMAT));
   };
 
   const auto float_as_str = [](const Float val) {
