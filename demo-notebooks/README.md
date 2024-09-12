@@ -22,9 +22,9 @@ There are a `docker-compose.yml` and a `Dockerfile` for easy usage provided.
 Simply clone this repository and command to start the `notebooks` service. The image, it depends on, will be build if it is not already available.
 
 ```
-$ git clone https://github.com/getml/getml-community.git  
+$ git clone https://github.com/getml/getml-community.git
 $ cd getml-community/demo-notebooks
-$ docker compose up notebooks  
+$ docker compose up notebooks
 ```
 
 To open Jupyter Lab in the browser, look for the following lines in the output and copy-paste it in your browser:
@@ -50,7 +50,7 @@ Alternatively, getML and the notebooks can be run natively on the local Linux ma
 The following commands will set up a Python environment with necessary Python libraries and Jupyter-Lab
 
 ```
-$ git clone https://github.com/getml/getml-community.git  
+$ git clone https://github.com/getml/getml-community.git
 $ cd getml-community/demo-notebooks
 $ pipx install hatch
 $ hatch env create
