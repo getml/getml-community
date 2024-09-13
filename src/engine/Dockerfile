@@ -11,10 +11,12 @@ ARG ENGINE_DIR="/src/engine"
 # - https://quay.io/repository/pypa/manylinux_2_28_aarch64?tab=tags
 FROM quay.io/pypa/manylinux_2_28_x86_64:2024-06-03-e195670 as base-amd64
 ENV TARGET_SYSTEM_PROCESSOR=x86_64
+ENV TARGET_SYSTEM_PROCESSOR_CONAN=x86_64
 ENV TARGET_TRIPLET=x64-linux-release
 
 FROM quay.io/pypa/manylinux_2_28_aarch64:2024-06-03-e195670 as base-arm64
 ENV TARGET_SYSTEM_PROCESSOR=aarch64
+ENV TARGET_SYSTEM_PROCESSOR_CONAN=armv8
 ENV TARGET_TRIPLET=aarch64-linux-release
 
 FROM base-${TARGETARCH} as base
@@ -74,7 +76,7 @@ ENV CONAN_BINARY=/usr/local/bin/conan
 RUN mkdir -p /root/.conan2/profiles
 COPY <<EOF /root/.conan2/profiles/default
 [settings]
-arch=x86_64
+arch=${TARGET_SYSTEM_PROCESSOR_CONAN}
 build_type=Release
 compiler=gcc
 compiler.cppstd=23
