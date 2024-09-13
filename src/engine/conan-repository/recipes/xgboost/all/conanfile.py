@@ -1,5 +1,5 @@
 from conan import ConanFile
-from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout, CMakeDeps
+from conan.tools.cmake import CMake, CMakeDeps, CMakeToolchain, cmake_layout
 from conan.tools.files import apply_conandata_patches, export_conandata_patches, get
 from conan.tools.scm import Git
 
@@ -13,7 +13,14 @@ class xgboostRecipe(ConanFile):
     author = "https://xgboost.ai/"
     url = "https://github.com/dmlc/xgboost"
     description = "Scalable, Portable and Distributed Gradient Boosting (GBDT, GBRT or GBM) Library, for Python, R, Java, Scala, C++ and more. Runs on single machine, Hadoop, Spark, Dask, Flink and DataFlow "
-    topics = ("machine-learning", "gradient-boosting", "distributed-computing", "gbdt", "gbm", "xgboost")
+    topics = (
+        "machine-learning",
+        "gradient-boosting",
+        "distributed-computing",
+        "gbdt",
+        "gbm",
+        "xgboost",
+    )
 
     # Binary configuration
     settings = "os", "compiler", "build_type", "arch"
@@ -28,14 +35,12 @@ class xgboostRecipe(ConanFile):
         if self.options.shared:
             self.options.rm_safe("fPIC")
 
-    def export_sources(self):
-        export_conandata_patches(self)
-
     def source(self):
         Git(self).clone(
             url=self.url,
             target=self.source_folder,
-            args=[f"--branch=v{self.version}", "--recurse-submodules"])
+            args=[f"--branch=v{self.version}", "--recurse-submodules"],
+        )
         apply_conandata_patches(self)
 
     def layout(self):
