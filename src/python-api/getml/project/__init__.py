@@ -32,6 +32,9 @@ def __dir__():
     return _all
 
 
+# Fix mkdocs (griffe) warning about non-string item in _all
+_all = [str(item) for item in _all]
+
 __all__ = _all + ["DataFrames", "Hyperopts", "Pipelines"] + ["__getattr__"]  # noqa: PLE0605
 
 
