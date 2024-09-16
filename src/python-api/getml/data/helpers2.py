@@ -9,7 +9,7 @@
 """Helper functions that depend on the DataFrame class."""
 
 import numbers
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Tuple, Union
 
 from getml.constants import MULTIPLE_JOIN_KEYS_BEGIN, NO_JOIN_KEY
 from getml.data.columns import (
@@ -158,14 +158,17 @@ def _make_subsets_from_split(population, split):
     unique = split[:nrows].unique()
 
     subsets = {
-        name: population.drop(population._unused_names)[split == name]
+        name: (
+            population.nrows(),
+            population.drop(population.roles.unused)[split == name],
+        )
         for name in unique
     }
 
     if isinstance(population.nrows(), numbers.Real):
         for name in subsets:
             len_set = int((split[: population.nrows()] == name).as_num().sum())
-            subsets[name] = subsets[name][:len_set]
+            subsets[name] = (len_set, subsets[name][1])
 
     return subsets
 

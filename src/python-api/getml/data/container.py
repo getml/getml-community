@@ -303,11 +303,21 @@ class Container:
         self._split = split
         self._deep_copy = deep_copy
 
-        self._subsets = (
-            _make_subsets_from_split(population, split)
-            if split is not None
-            else _make_subsets_from_kwargs(train, validation, test, **kwargs)
-        )
+        # HACK: Do some explicit bookeeping on the subets' length until we have
+        # proper endpoint for slice-based subsetting
+        if split is not None:
+            self._subsets = {}
+            self._lengths = {}
+            for name, (length, subset) in _make_subsets_from_split(
+                population, split
+            ).items():
+                self._subsets[name] = subset
+                self._lengths[name] = length
+        else:
+            self._subsets = _make_subsets_from_kwargs(train, validation, test, **kwargs)
+            self._lengths = {
+                name: subset.nrows() for name, subset in self._subsets.items()
+            }
 
         if split is None and not _is_typed_dict(self._subsets, str, [DataFrame, View]):
             raise TypeError(
@@ -425,9 +435,10 @@ class Container:
 
     def _format(self):
         headers_pop = [["subset", "name", "rows", "type"]]
+
         rows_pop = [
-            [key, subset.name, subset.nrows(), type(subset).__name__]
-            for key, subset in self.subsets.items()  # pytype: disable=attribute-error
+            [name, subset.name, self._lengths[name], type(subset).__name__]
+            for name, subset in self.subsets.items()  # pytype: disable=attribute-error
         ]
 
         headers_perph = [["name", "rows", "type"]]
@@ -564,7 +575,7 @@ class Container:
     def to_pandas(self) -> Dict[str, pd.DataFrame]:
         """
         Returns a `Container`'s contents as a dictionary of `pandas.DataFrame`s.
-        `key` holds the data frame's `name`, value the data converted to a `pandas.DataFrame`.
+        `name` holds the data frame's `name`, value the data converted to a `pandas.DataFrame`.
         """
         subsets = (
             {name: df.to_pandas() for name, df in self._subsets.items()}
