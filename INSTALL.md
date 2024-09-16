@@ -148,10 +148,10 @@ rm -r $HOME/.getML
 
 ## Compiling from Source <a name="compiling-from-source"></a>
 
-Because getML is complex software, we use Docker for our build environment. If you want to compile it from source, we provide a set of [wrappers to ease local development](bin):
+Because getML is complex software, we use Docker for our build environment. If you want to compile it from source, we provide a set of [wrappers to ease local development](scripts):
 
 ```bash
-./bin/getml
+./scripts/getml
 ```
 
 ``` bash
@@ -169,7 +169,11 @@ Options:
 The `build` subcommand is the entry point for building getML from source. For details about the build process, see [Directly Interacting with Bake](#directly-interacting-with-bake) below.
 
 ``` bash
-getml build wrapper
+./scripts/getml build
+```
+
+``` bash
+Build utilities
 
 Usage:
   build <subcommand> [options]
@@ -180,18 +184,22 @@ Subcommands:
   [e]ngine    Build Engine
   [p]ackage   Export runnable [e]ngine + [c]li package
   [py]thon    Package Python API
+  [r]untime   Build Docker runtime image
   [ar]chive   Create tar.gz archive of [p]ackage
 
 Options:
-  -b <args>   Specify build args (-b KEY=VALUE); passed to docker build
-  -h          Show help (this message)
-  -o <path>   Set output path (default: build); passed to docker build
+  -b <args>       Specify build args (-b KEY=VALUE); passed to Docker build
+  -h              Show help (this message)
+  -o <path>       Set output path (default: build); passed to Docker build
+  -p <platform>   Set the target platform for the build (default is your current platform).
+                  Valid options: linux/amd64, linux/arm64
+
 ```
 
 Most of the time you probably want to build the (C++) Engine:
 
 ```bash
-./bin/getml build engine
+./scripts/getml build engine
 ```
 
 If you are calling `getml build package`, all build artifacts will be packaged inside the specified output folder. With `archive`, a compressed tarball (`getml-<version>-<arch>-linux.tar.gz`) will be created inside the folder.

@@ -6,14 +6,14 @@ do
 done
 
 if [ -z "$1" ]; then
-    /home/getml/getML \
+    /usr/local/bin/getML \
         -launch-browser=${GETML_LAUNCH_BROWSER:-false} \
         -home-directory=${GETML_HOME_DIRECTORY:-/home/getml} \
-        -http-port=${GETML_HTTP_PORT:-1709} \
+        -http-port=${GETML_HTTP_PORT:-1707} \
         -in-memory=${GETML_IN_MEMORY:-false} \
         -install=${GETML_INSTALL:-false} \
         -log=${GETML_LOG:-false} \
-        -project-directory=${GETML_PROJECT_DIRECTORY:-/home/getml/.getML/projects} \
+        -project-directory=${GETML_PROJECT_DIRECTORY:-/home/getml/projects} \
         -proxy-url=${GETML_PROXY_URL:-} \
         -token=${GETML_TOKEN:-}
 else

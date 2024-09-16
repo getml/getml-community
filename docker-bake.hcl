@@ -1,73 +1,92 @@
-variable "VERSION" {
-  default = "unknown"
+variable "GETML_VERSION" {
+  default = "0.0.0"
 }
 
+variable "GETML_BUILD_OUTPUT_DIR" {
+  default = "build"
+}
+
+
 target "cli" {
-  target = "cli"
-  output = ["build"]
   args = {
-    VERSION="${VERSION}"
+    VERSION="${GETML_VERSION}"
   }
+  output = ["type=local,dest=${GETML_BUILD_OUTPUT_DIR},platform-split=false"]
+  target = "cli"
 }
 
 target "engine" {
-  dockerfile = "src/engine/Dockerfile"
-  target = "package"
-  output = ["build"]
   args = {
     ENGINE_REPO_SOURCE="src/engine",
-    VERSION="${VERSION}"
+    OUTPUT_DIR="${GETML_BUILD_OUTPUT_DIR}"
+    VERSION="${GETML_VERSION}"
   }
+  dockerfile = "src/engine/Dockerfile"
+  output = ["type=local,dest=${GETML_BUILD_OUTPUT_DIR},platform-split=false"]
+  target = "package"
 }
 
 target "package" {
-  contexts = {
-    engine-build = "target:engine"
-  }
-  target = "export"
-  output = ["build"]
   args = {
-    VERSION="${VERSION}"
+    OUTPUT_DIR="${GETML_BUILD_OUTPUT_DIR}"
+    VERSION="${GETML_VERSION}"
   }
+  # for naming build contexts, we use the following convention:
+  # <bake-target-stage>-<default-foreign-target-stage>
+  # i.e. the context engine-package by default points to the 'package' target
+  # inside the bake target 'engine'
+  contexts = {
+    engine-package = "target:engine"
+  }
+  output = ["type=local,dest=${GETML_BUILD_OUTPUT_DIR},platform-split=false"]
+  target = "export"
 }
 
 target "runtime" {
-  dockerfile = "runtime/Dockerfile"
   args = {
-    VERSION="${VERSION}"
+    OUTPUT_DIR="${GETML_BUILD_OUTPUT_DIR}"
+    VERSION="${GETML_VERSION}"
   }
-  tags = ["getml/getml:${VERSION}", "getml/getml:latest"]
+  contexts = {
+    engine-package = "target:engine"
+  }
+  dockerfile = "runtime/Dockerfile"
+  output = ["type=docker"]
+  tags = ["getml/getml:${GETML_VERSION}", "getml/getml:latest"]
 }
 
 target "python" {
-  contexts = {
-    engine-build = "target:engine"
-  }
-  target = "python"
-  output = ["build"]
   args = {
-    VERSION="${VERSION}"
+    OUTPUT_DIR="${GETML_BUILD_OUTPUT_DIR}"
+    VERSION="${GETML_VERSION}"
   }
+  contexts = {
+    engine-package = "target:engine"
+  }
+  output = ["type=local,dest=${GETML_BUILD_OUTPUT_DIR},platform-split=false"]
+  target = "python"
 }
 
 target "archive" {
-  contexts = {
-    engine-build = "target:engine"
-  }
-  target = "archive"
-  output = ["build"]
   args = {
-    VERSION="${VERSION}"
+    OUTPUT_DIR="${GETML_BUILD_OUTPUT_DIR}"
+    VERSION="${GETML_VERSION}"
   }
+  contexts = {
+    engine-package = "target:engine"
+  }
+  output = ["type=local,dest=${GETML_BUILD_OUTPUT_DIR},platform-split=false"]
+  target = "archive"
 }
 
 target "all" {
-  contexts = {
-    engine-build = "target:engine"
-  }
-  target = "all"
-  output = ["build"]
   args = {
-    VERSION="${VERSION}"
+    OUTPUT_DIR="${GETML_BUILD_OUTPUT_DIR}"
+    VERSION="${GETML_VERSION}"
   }
+  contexts = {
+    engine-package = "target:engine"
+  }
+  output = ["type=local,dest=${GETML_BUILD_OUTPUT_DIR},platform-split=false"]
+  target = "all"
 }
