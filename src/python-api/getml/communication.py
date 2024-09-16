@@ -23,6 +23,7 @@ from typing import Any, Dict, List, NamedTuple, Optional, Union
 import numpy as np
 from rich import print
 
+import getml
 from getml.exceptions import handle_engine_exception
 from getml.helpers import _is_iterable_not_str
 from getml.utilities.progress import Progress
@@ -56,6 +57,15 @@ ENGINE_CANNOT_CONNECT_ERROR_MSG_TEMPLATE = cleandoc(
     """
 )
 
+ENGINE_API_VERSION_MISMATCH_ERROR_MSG_TEMPLATE = cleandoc(
+    """
+    The version of the getML API does not match the version of the getML Engine.
+
+    API version: {api_version}
+    Engine version: {engine_version}
+    """
+)
+
 MONITOR_CANNOT_CONNECT_ERROR_MSG = cleandoc(
     """
     Cannot reach the getML Monitor. Please make sure the getML app is running.
@@ -70,48 +80,52 @@ SEP_SIZE = np.uint64(10)
 
 
 def is_monitor_alive() -> bool:
-    """Checks if the getML Monitor is running.
+    """
+    Checks if the getML Monitor is running.
 
     Returns:
-        `True` if the getML Monitor is running and ready to accept commands and `False` otherwise.
+        `True` if the getML Monitor is running and ready to accept commands and
+        `False` otherwise.
     """
 
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    cmd = {
+        "type_": "isalive",
+        "body_": "",
+    }
 
-    try:
-        sock.connect(("localhost", tcp_port))
-    except ConnectionRefusedError:
-        return False
-    finally:
-        sock.close()
-
-    return True
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        try:
+            sock.connect(("localhost", tcp_port))
+        except ConnectionRefusedError:
+            return False
+        else:
+            send_string(sock, json.dumps(cmd))
+            return recv_string(sock) == "yes"
 
 
 # --------------------------------------------------------------------
 
 
 def is_engine_alive() -> bool:
-    """Checks if the getML Engine is running.
+    """
+    Checks if an instance of the getML Engine is running.
 
     Returns:
-            True if the getML Engine is running and ready to accept
-                commands and False otherwise.
+        `True` if the getML Engine is running and ready to accept commands and
+        `False` otherwise.
 
     """
 
     if not _list_projects_impl(running_only=True):
         return False
 
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
-        sock.connect(("localhost", port))
-    except ConnectionRefusedError:
-        return False
-    finally:
-        sock.close()
-
-    return True
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        try:
+            sock.connect(("localhost", port))
+        except ConnectionRefusedError:
+            return False
+        else:
+            return True
 
 
 # -----------------------------------------------------------------------------
@@ -769,25 +783,20 @@ def _check_version():
     cmd["type_"] = "getversion"
     cmd["body_"] = ""
 
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        try:
+            sock.connect(("localhost", tcp_port))
+        except ConnectionRefusedError:
+            raise ConnectionRefusedError(_make_error_msg())
+        else:
+            send_string(sock, json.dumps(cmd, cls=_GetmlEncoder))
+            engine_version = recv_string(sock)
 
-    try:
-        sock.connect(("localhost", tcp_port))
-    except ConnectionRefusedError:
-        raise ConnectionRefusedError(_make_error_msg())
-
-    msg = json.dumps(cmd, cls=_GetmlEncoder)
-
-    send_string(sock, msg)
-
-    engine_version = recv_string(sock)
-
-    if __version__ not in engine_version:
+    if engine_version != __version__:
         raise ValueError(
-            "Version of the API does not match the version of the engine: "
-            + __version__
-            + " vs. "
-            + engine_version
+            ENGINE_API_VERSION_MISMATCH_ERROR_MSG_TEMPLATE.format(
+                api_version=__version__, engine_version=engine_version
+            )
         )
 
 
@@ -861,6 +870,9 @@ def _set_project(name: str, restart: bool = False):
     if not isinstance(name, str):
         raise TypeError("'name' must be of type str")
 
+    if not is_monitor_alive():
+        getml.engine.launch(quiet=True)
+
     _check_version()
 
     cmd: Dict[str, Any] = {}
@@ -914,6 +926,8 @@ def _shutdown():
 
     msg = json.dumps(cmd, cls=_GetmlEncoder)
 
+    print("Shutting down the getML Engine...", end=" ")
+
     send_string(sock, msg)
 
     sock.close()
@@ -923,6 +937,7 @@ def _shutdown():
             with socket.create_connection(("localhost", tcp_port), timeout=5.0):
                 pass
         except:  # noqa: E722
+            print("Done.")
             return
 
 

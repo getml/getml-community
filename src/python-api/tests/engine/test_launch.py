@@ -11,7 +11,7 @@ from getml.engine._launch import (
 )
 
 
-@patch("getml.engine._launch._is_monitor_alive")
+@patch("getml.communication.is_monitor_alive")
 @patch("platform.system")
 @pytest.mark.parametrize("system", ["Windows", "Darwin"])
 def test_launch_non_native(mock_platform_system, mock_getml_is_monitor_alive, system):
@@ -45,6 +45,30 @@ def test_launch_non_native(mock_platform_system, mock_getml_is_monitor_alive, sy
 )
 def test_launch():
     getml.engine.launch()
+    assert getml.engine.is_monitor_alive()
+    getml.engine.shutdown()
+    assert not getml.engine.is_monitor_alive()
+
+
+@pytest.mark.skipif(
+    platform.system() != "Linux",
+    reason=(
+        "Testing 'launch' is only sypported on Linux "
+        "(as launching getML from python is only supported with native binaries."
+    ),
+)
+@pytest.mark.skipif(
+    getml.engine.is_monitor_alive(),
+    reason=(
+        "getML is already running. "
+        "To test 'launch', please save your current session "
+        "and stop the running getML instance."
+    ),
+)
+def test_launch_quiet(capsys):
+    getml.engine.launch(quiet=True)
+    captured = capsys.readouterr()
+    assert captured.out == ""
     assert getml.engine.is_monitor_alive()
     getml.engine.shutdown()
     assert not getml.engine.is_monitor_alive()

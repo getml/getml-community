@@ -6,21 +6,22 @@
 #
 
 
+import json
+import os
 import platform
-import socket
+import re
+import subprocess
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import Enum
-from functools import partial, reduce
 from inspect import cleandoc
-from os import listdir, makedirs
-from os.path import isdir
+from os import PathLike
 from pathlib import Path
-from subprocess import Popen
 from time import sleep
-from typing import Dict, List, NamedTuple, Optional, Union
+from typing import Dict, List, Optional, Union
 
-from getml.communication import tcp_port
-from getml.constants import COMPOSE_FILE_URL, DOCKER_DOCS_URL
+import getml.communication as comm
+from getml.constants import COMPOSE_FILE_URL, DOCKER_DOCS_URL, INSTALL_DOCS_URL
 from getml.version import __version__
 
 PLATFORM_NOT_SUPPORTED_NATIVELY_ERROR_MSG_TEMPLATE = cleandoc(
@@ -38,157 +39,127 @@ PLATFORM_NOT_SUPPORTED_NATIVELY_ERROR_MSG_TEMPLATE = cleandoc(
 )
 
 
+EXECUTABLE_NAME = "getML"
+
+PACKAGE_NAME_REGEX = re.compile(
+    r"getml-(?P<edition>community|enterprise)"
+    r"-(?P<version>\d+\.\d+\.\d+(-\w+(\.\d+)*)?)"
+    r"-(?P<arch>amd64|arm64)"
+    r"-(?P<os>linux)"
+)
+
+INSTALL_LOCATIONS = (
+    Path.home() / ".getML",
+    Path("/usr/local") / "getML",
+    Path(__file__).parent.parent / ".getML",
+)
+
+COULD_NOT_FIND_EXECUTABLE_ERROR_MSG_TEMPLATE = cleandoc(
+    """
+    Could not find getML executable in any of the following locations:
+    {install_locations}
+
+    Refer to the installation documentation for more information:
+    {install_docs_url}
+    """
+)
+
+MAX_LAUNCH_WAIT_TIME = 10
+"""
+Maximum time to wait for the getML subprocess to start (in seconds).
+"""
+
+HEALTH_CHECK_INTERVAL = 0.1
+"""
+Interval between health checks during launch (in seconds).
+"""
+
+ENGINE_DID_NOT_RESPOND_IN_TIME_ERROR_MSG_TEMPLATE = cleandoc(
+    """
+    getML Engine did not respond within {max_launch_wait_time} seconds.
+
+    For furher information, check the log file at {{log_file}}.
+    """
+).format(max_launch_wait_time=MAX_LAUNCH_WAIT_TIME)
+
+
+class Edition(str, Enum):
+    ENTERPRISE = "enterprise"
+    COMMUNITY = "community"
+
+
 class System(str, Enum):
     LINUX = "Linux"
     MACOS = "Darwin"
     WINDOWS = "Windows"
 
 
-class _Options(NamedTuple):
+@dataclass
+class _Options:
     allow_push_notifications: bool
     allow_remote_ips: bool
-    home_directory: Optional[str]
+    home_directory: PathLike
     http_port: Optional[int]
     in_memory: bool
     install: bool
     launch_browser: bool
     log: bool
-    project_directory: Optional[str]
+    project_directory: Optional[PathLike]
     proxy_url: Optional[str]
     token: Optional[str]
 
-    def to_cmd(self, binary_path: Path) -> List[str]:
+    def to_cmd(self) -> List[str]:
         """
-        Generates the command to be passed to Popen.
+        Generates the cmd (args) passed to subprocess.Popen.
         """
-        return ["./getML"] + [
-            "--" + key.replace("_", "-") + "=" + _handle_value(value)
-            for (key, value) in self._asdict().items()  # pylint: disable=E1101
+        options = [
+            f"--{name.replace('_', '-')}={json.dumps(value, default=str)}"
+            for (name, value) in asdict(self).items()
             if value is not None
         ]
+        return ["./getML", *options]
 
 
-def _make_home_path(home_directory: Optional[str]) -> Path:
-    if home_directory is not None:
-        return Path(home_directory)
-    paths = [Path.home(), Path("/usr/local"), Path(__file__).parent.parent]
-    home_paths = [p for p in paths if _try_find_binary(p) is not None]
-    if home_paths:
-        return home_paths[0]
-    raise OSError(
-        "Could not find an installation of the getML binary in "
-        + f"any of the following locations: {[str(p) for p in paths]}"
-    )
+def create_log_dir(getml_home_directory: Path) -> Path:
+    log_path = getml_home_directory / "logs"
+    log_path.mkdir(parents=True, exist_ok=True)
+    return log_path
 
 
-def _map_version_directories(
-    acc: Dict[str, List[Path]],
-    directory: Path,
-    getml_directory: Path,
-) -> Dict[str, List[Path]]:
-    if not isdir(getml_directory / directory) or f"getml-{__version__}" not in str(
-        directory
-    ):
-        return acc
-
-    key = "community-edition" in str(directory) and "community" or "enterprise"
-    acc.setdefault(key, []).append(directory)
-    return acc
-
-
-def _extract_getml_exec_path(getml_directory: Path, directories: List[Path]) -> Path:
-    if len(directories) > 1:
-        raise OSError(
-            "More than one installation found for getml-"
-            + __version__
-            + " in "
-            + str(getml_directory)
-            + "."
-        )
-
-    if platform.system() == System.LINUX:
-        return getml_directory / directories[0] / "getML"
-    return getml_directory / directories[0] / "getml-cli"
+def locate_installed_packages_by_edition() -> Dict[Edition, List[Path]]:
+    """
+    Locate all installed getML packages that match the python api's version
+    grouped by edition.
+    """
+    installed_packages = {edition: [] for edition in Edition}
+    for location in INSTALL_LOCATIONS:
+        for package in location.glob("getml-*"):
+            if package.is_dir():
+                match = PACKAGE_NAME_REGEX.match(package.name)
+                if match and match.group("version") == __version__:
+                    installed_packages[Edition(match.group("edition"))].append(package)
+    return installed_packages
 
 
-def _try_find_binary(home_directory: Path) -> Optional[Path]:
-    try:
-        _find_binary(home_directory)
-        return home_directory
-    except OSError:
-        return None
+def locate_executable() -> Optional[Path]:
+    """
+    Locates the getML executable respecting the prioitized order of:
+    1. editions (enterprise > community)
+    2. instalation locations (home > /usr/local > getml package directory)
 
-
-def _find_binary(home_directory: Path) -> Path:
-    getml_directory = (
-        home_directory / ".getML"
-        if home_directory != Path("/usr/local")
-        else home_directory / "getML"
-    )
-
-    if not getml_directory.exists():
-        raise OSError(f"{getml_directory} does not exist.")
-
-    _reduce = partial(
-        _map_version_directories,
-        getml_directory=getml_directory,
-    )
-
-    version_directories: Dict[str, List[Path]] = reduce(
-        _reduce, listdir(getml_directory), {}
-    )
-
-    if not version_directories:
-        raise OSError(
-            "getml-"
-            + __version__
-            + " is not installed in "
-            + str(getml_directory)
-            + "."
-        )
-
-    enterprise_directories = version_directories.get("enterprise", [])
-    community_directories = version_directories.get("community", [])
-
-    if enterprise_directories:
-        return _extract_getml_exec_path(
-            getml_directory,
-            enterprise_directories,
-        )
-
-    return _extract_getml_exec_path(getml_directory, community_directories)
-
-
-def _handle_bool(value: bool) -> str:
-    if value:
-        return "true"
-    return "false"
-
-
-def _handle_value(value: Union[str, int, bool]) -> str:
-    if isinstance(value, bool):
-        return _handle_bool(value)
-    return str(value)
-
-
-def _make_log_path(home_directory: Path) -> Path:
-    getml_directory = (
-        home_directory / ".getML"
-        if home_directory != Path("/usr/local")
-        and home_directory != Path(__file__).parent.parent
-        else Path.home() / ".getML"
-    )
-    makedirs(getml_directory / "logs", exist_ok=True)
-    return getml_directory / "logs" / datetime.now().strftime("%Y%m%d%H%M%S.log")
-
-
-def _is_monitor_alive() -> bool:
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
-        sock.connect(("localhost", tcp_port))
-    except ConnectionRefusedError:
-        return False
-    return True
+    Returns the first found executable or None if none is found.
+    """
+    installed_packages = locate_installed_packages_by_edition()
+    for edition in Edition:
+        packages = installed_packages[edition]
+        for package in packages:
+            for executable in package.glob(EXECUTABLE_NAME):
+                if (
+                    executable.name == EXECUTABLE_NAME
+                    and executable.is_file()
+                    and os.access(executable, os.X_OK)
+                ):
+                    return executable
 
 
 def launch(
@@ -200,9 +171,10 @@ def launch(
     install: bool = False,
     launch_browser: bool = True,
     log: bool = False,
-    project_directory: Optional[str] = None,
+    project_directory: Optional[Union[PathLike, str]] = None,
     proxy_url: Optional[str] = None,
     token: Optional[str] = None,
+    quiet: bool = False,
 ):
     """
     Launches the getML Engine.
@@ -247,9 +219,13 @@ def launch(
         The token used for authentication.
         Authentication is required when remote IPs are allowed to access the Monitor.
         If authentication is required and no token is passed,
-        a random hexcode will be generated as the token."""
+        a random hexcode will be generated as the token.
 
-    if _is_monitor_alive():
+      quiet:
+        Whether to suppress output.
+    """
+
+    if comm.is_monitor_alive():
         print("getML Engine is already running.")
         return
     if platform.system() != System.LINUX:
@@ -260,26 +236,54 @@ def launch(
                 compose_file_url=COMPOSE_FILE_URL,
             )
         )
-    home_path = _make_home_path(home_directory)
-    binary_path = _find_binary(home_path)
-    log_path = _make_log_path(home_path)
-    logfile = open(str(log_path), "w", encoding="utf-8")
+    executable_path = locate_executable()
+    if not executable_path:
+        raise OSError(
+            COULD_NOT_FIND_EXECUTABLE_ERROR_MSG_TEMPLATE.format(
+                install_locations=[str(p) for p in INSTALL_LOCATIONS],
+                install_docs_url=INSTALL_DOCS_URL,
+            )
+        )
+    getml_dir = (
+        Path(home_directory) if home_directory is not None else Path.home() / ".getML"
+    )
+    project_dir = (
+        Path(project_directory)
+        if project_directory is not None
+        else getml_dir / "projects"
+    )
+    log_dir = create_log_dir(getml_dir)
+    log_file = log_dir / f"getml_{datetime.now():%Y%m%d%H%M%S}.log"
     cmd = _Options(
         allow_push_notifications=allow_push_notifications,
         allow_remote_ips=allow_remote_ips,
-        home_directory=str(home_path),
+        home_directory=getml_dir,
         http_port=http_port,
         in_memory=in_memory,
         install=install,
         launch_browser=launch_browser,
         log=log,
-        project_directory=project_directory,
+        project_directory=project_dir,
         proxy_url=proxy_url,
         token=token,
-    ).to_cmd(binary_path)
-    cwd = str(binary_path.parent)
-    print(f"Launching {' '.join(cmd)} in {cwd}...")
-    Popen(cmd, cwd=cwd, shell=False, stdout=logfile, stdin=logfile, stderr=logfile)
-    while not _is_monitor_alive():
-        sleep(0.1)
-    print(f"Launched the getML Engine. The log output will be stored in {log_path}.")
+    ).to_cmd()
+    if not quiet:
+        print(f"Launching {' '.join(cmd)} in {executable_path.parent}...")
+    subprocess.Popen(
+        cmd,
+        cwd=executable_path.parent,
+        shell=False,
+        stdout=log_file.open("w"),
+        stderr=subprocess.STDOUT,
+    )
+    for _ in range(int(MAX_LAUNCH_WAIT_TIME / HEALTH_CHECK_INTERVAL)):
+        if comm.is_monitor_alive():
+            if not quiet:
+                print(
+                    f"Launched the getML Engine. The log output will be stored in {log_file}"
+                )
+            return
+        sleep(HEALTH_CHECK_INTERVAL)
+    raise TimeoutError(
+        ENGINE_DID_NOT_RESPOND_IN_TIME_ERROR_MSG_TEMPLATE.format(log_file=log_file)
+    )

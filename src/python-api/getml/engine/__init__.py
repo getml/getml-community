@@ -68,6 +68,7 @@ Note:
 
 from getml.communication import is_engine_alive, is_monitor_alive
 
+from ._launch import EXECUTABLE_NAME, Edition, launch
 from .helpers import (
     delete_project,
     is_alive,
@@ -77,10 +78,11 @@ from .helpers import (
     shutdown,
     suspend_project,
 )
-from ._launch import launch
 
 __all__ = (
     "delete_project",
+    "EXECUTABLE_NAME",
+    "Edition",
     "is_alive",
     "is_engine_alive",
     "is_monitor_alive",
