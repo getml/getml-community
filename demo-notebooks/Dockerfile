@@ -1,4 +1,4 @@
-FROM python:3.11.8
+FROM python:3.11.9
 
 RUN apt-get update \
     && apt-get install -y \

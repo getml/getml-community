@@ -5,11 +5,36 @@
 # for details.
 #
 
+import re
 from functools import wraps
+from inspect import cleandoc
 from typing import Any, Callable, Dict, Optional
 
 import pyarrow as pa
 from pyarrow.lib import ArrowInvalid
+
+ENTERPRISE_FEATURE_NOT_AVAILABLE_REGEX = re.compile(
+    r"The (.*) (.*) is not supported in the community edition. Please upgrade "
+    r"to getML enterprise to use this. An overview of what is supported in the "
+    r"community edition can be found in the official getML documentation."
+)
+
+
+ENTERPRISE_FEATURE_NOT_AVAILABLE_ERROR_MSG_TEMPLATE = cleandoc(
+    """
+    The {missing_feature_name} {missing_feature_type}
+    is unique to getML Enterprise and is not available
+    in the getML Community edition you are currently using.
+
+    Please visit https://dev.getml.com/enterprise to learn about our advanced
+    algorithms, extended feature set, commercial plans, and available trial
+    options.
+    """
+)
+
+
+def _nop_arrow_cast_exception_handler(exc: Exception, field: pa.Field) -> None:
+    raise exc
 
 
 def _nop_arrow_cast_exception_handler(exc: Exception, field: pa.Field) -> None:
@@ -122,3 +147,20 @@ def handle_engine_exception(msg: str, extra: Optional[Dict[str, Any]] = None) ->
         handler(msg, extra=extra)
 
     raise OSError(msg)
+
+
+@engine_exception_handler
+def handle_enterprise_feature_not_available_error(msg: str, extra: Dict[str, Any]):
+    """
+    Handler for the "Enterprise feature not available" error message.
+    """
+    match = ENTERPRISE_FEATURE_NOT_AVAILABLE_REGEX.match(msg)
+    if match:
+        missing_feature_name = match.group(1)
+        missing_feature_type = match.group(2)
+        raise OSError(
+            ENTERPRISE_FEATURE_NOT_AVAILABLE_ERROR_MSG_TEMPLATE.format(
+                missing_feature_name=missing_feature_name,
+                missing_feature_type=missing_feature_type,
+            )
+        )

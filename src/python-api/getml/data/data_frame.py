@@ -3167,15 +3167,19 @@ class DataFrame:
 
     def refresh(self) -> DataFrame:
         """Aligns meta-information of the current instance with the
-        corresponding data frame in the getML Engine.
+                corresponding data frame in the getML Engine.
 
-        This method can be used to avoid encoding conflicts. Note that
-        [`load`][getml.DataFrame.load] as well as several other
-        methods automatically call [`refresh`][getml.DataFrame.refresh].
+                This method can be used to avoid encoding conflicts. Note that
+                [`load`][getml.DataFrame.load] as well as several other
+                methods automatically call [`refresh`][getml.DataFrame.refresh].
 
-        Returns:
-                Updated handle the underlying data frame in the getML
-                    Engine.
+                Returns:
+                        Updated handle the underlying data frame in the getML
+        <<<<<<< HEAD
+                            Engine.
+        =======
+                        Engine.
+        >>>>>>> 525-add-enterprise-download-link-to-the-error-message-when-executing-api-calls-which-are-enterprise
 
         """
 

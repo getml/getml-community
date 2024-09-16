@@ -41,7 +41,7 @@ class Validator:
 # --------------------------------------------------------------------
 
 
-def _validate_dfs_model_parameters(**kwargs: Any) -> None:
+def _validate_fastprop_parameters(**kwargs: Any) -> None:
     aggregation = kwargs["aggregation"]
     delta_t = kwargs["delta_t"]
     loss_function = kwargs["loss_function"]
@@ -232,11 +232,11 @@ def _validate_multirel_parameters(**kwargs: Any) -> None:
 
     # ----------------------------------------------------------------
 
-    if not _is_non_empty_typed_list(aggregation, str):
+    if not _is_iterable_not_str_of_type(aggregation, str):
         raise TypeError(
             """
             'aggregation' must be a non-empty
-            list of str found in getml.feature_learning.aggregations
+            non-string iterable of str found in getml.feature_learning.aggregations
             """
         )
     if not isinstance(allow_sets, bool):
