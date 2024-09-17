@@ -56,10 +56,10 @@ WORKDIR /src/gcc
 RUN ./contrib/download_prerequisites
 
 WORKDIR /src/gcc-build
-RUN /src/gcc/configure --prefix=$GCC_HOME --enable-languages=c,c++,fortran --disable-multilib
-RUN make -j$(nproc)
-RUN make install
-RUN rm -r /src/gcc /src/gcc-build
+RUN /src/gcc/configure --prefix=$GCC_HOME --enable-languages=c,c++,fortran --disable-multilib \
+    && make -j$(nproc) \
+    && make install-strip \
+    && rm -r /src/gcc /src/gcc-build
 
 ENV CC=$GCC_HOME/bin/gcc
 ENV CXX=$GCC_HOME/bin/g++
