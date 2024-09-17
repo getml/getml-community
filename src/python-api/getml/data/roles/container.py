@@ -239,14 +239,14 @@ class Roles:
         return {column: role for role in self for column in self[role]}
 
     @property
-    def unused(self) -> List[Role]:
+    def unused(self) -> List[str]:
         """
         Names of all unused columns (unused_float + unused_string).
 
         Returns:
             A list of column names that are categorized as unused, combining both float and string types.
         """
-        return cast(List[Role], list(self.unused_float) + list(self.unused_string))
+        return [*self.unused_float, *self.unused_string]
 
     def update(self, other: Roles) -> Roles:
         """
