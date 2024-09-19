@@ -11,11 +11,11 @@ get_version()
 
 project(
   engine
-  VERSION ${GETML_VERSION}
   DESCRIPTION "Engine for GetML"
   HOMEPAGE_URL "https://www.getml.com/"
   LANGUAGES CXX
 )
+set(PROJECT_VERSION ${GETML_VERSION})
 
 include(cmake/ccache.cmake)
 prepare_ccache()
