@@ -1,0 +1,139 @@
+#!/usr/bin/env bash
+
+SCRIPTS_DIR=$(dirname -- "$(realpath -- "$0")")
+PLATFORM=${GETML_BUILD_PLATFORM}
+
+parse_opt_multiple_args() {
+  while [[ ${OPTIND} -le $# && ${!OPTIND:0:1} != "-" ]]; do
+    OPTARG[i]=${!OPTIND}
+    ((OPTIND++))
+    ((i++))
+  done
+}
+
+process_build_args() {
+  processed=""
+  for arg in "$@"; do
+    processed+=" --set $target.args.${arg}"
+  done
+  build_args=$processed
+}
+
+show_help() {
+  cat <<-EOF
+		Build utilities
+
+		Usage:
+		  build <subcommand> [options]
+
+		Subcommands:
+		  [a]ll       Build all (whole package, [p]ackage + [py]thon API + tar+gz [ar]chive)
+		  [ar]chive   Create tar.gz archive of [p]ackage
+		  [c]li       Build cli
+		  [d]docker   Build Docker runtime
+		  [e]ngine    Build Engine
+		  [p]ackage   Export runable [e]ngine + [c]li package
+		  [py]thon    Package Python API
+
+		Options:
+		  -b <args>   Specify build args (-b KEY=VALUE); passed to docker build
+		  -h          Show help (this message)
+		  -o <path>   Set output path (default: build); passed to docker build
+	EOF
+}
+
+process_opts() {
+  while getopts ":b:ho:p:" opt; do
+    case ${opt} in
+    b)
+      parse_opt_multiple_args "$@"
+      process_build_args "${OPTARG[@]}"
+      ;;
+    h)
+      show_help
+      exit 0
+      ;;
+    o)
+      output="$OPTARG"
+      ;;
+    p)
+      PLATFORM="$OPTARG"
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+    esac
+  done
+}
+
+if [[ -z $1 || $1 = "-h" ]]; then
+  show_help
+  exit 0
+fi
+
+while [[ "$#" -gt 0 ]]; do
+  case "$1" in
+  a | all)
+    target="all"
+    shift
+    ;;
+  ar | archive)
+    target="archive"
+    shift
+    ;;
+  c | cli)
+    target="cli"
+    shift
+    ;;
+  d | docker)
+    target="docker"
+    shift
+    ;;
+  docker-copy-artifacts)
+    target="docker-copy-artifacts"
+    shift
+    ;;
+  e | engine)
+    target="engine"
+    shift
+    ;;
+  p | package)
+    target="package"
+    shift
+    ;;
+  py | python)
+    target="python"
+    shift
+    ;;
+  python-copy-artifacts)
+    target="python-copy-artifacts"
+    shift
+    ;;
+  -*)
+    process_opts "$@"
+    if [[ $? -eq 0 ]]; then
+      shift $((OPTIND - 1))
+      break
+    else
+      exit 1
+    fi
+    ;;
+  *)
+    echo "Unrecognized subcommmand: $1" >&2
+    exit 1
+    ;;
+  esac
+done
+
+(
+  export GETML_VERSION=${GETML_VERSION:-$(<"$SCRIPTS_DIR/../VERSION")}
+  if [[ -n $PLATFORM ]]; then
+    build_args+=" --set $target.platform=$PLATFORM"
+  fi
+
+  cd "${SCRIPTS_DIR}/.."
+  docker buildx bake $target \
+    $build_args \
+    "${@}"
+)

@@ -45,7 +45,6 @@ def _make_final_pipeline(
     validation,
 ) -> Pipeline:
     print("Building final pipeline...")
-    print()
 
     final_pipeline = copy.deepcopy(pipeline)
 
@@ -132,7 +131,6 @@ def _tune(
         end = time.monotonic()
         if msg != "Success!":
             comm.handle_engine_exception(msg)
-        print()
         _print_time_taken(begin, end, "Time taken: ")
         pipeline_name = comm.recv_string(sock)
 

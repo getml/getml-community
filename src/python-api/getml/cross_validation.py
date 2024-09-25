@@ -72,7 +72,6 @@ def cross_validation(
 
     for fold in list(kwargs.keys()):
         print(fold + ":")
-        print()
         train_set = population[split != fold].with_name(
             "cross validation: train - " + fold
         )
@@ -83,7 +82,6 @@ def cross_validation(
         pipe.tags += ["cross validation", fold]
         pipe.fit(train_set, peripheral)
         scores_objects.append(pipe.score(validation_set, peripheral))
-        print()
 
     scores_data = [d for obj in scores_objects for d in obj.data]
 

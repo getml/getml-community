@@ -1007,8 +1007,6 @@ class Pipeline:
         else:
             comm.handle_engine_exception(msg)
 
-        print()
-
         return yhat
 
     # ----------------------------------------------------------------
@@ -1106,7 +1104,6 @@ class Pipeline:
             msg = comm.log(sock)
             if msg != "Success!":
                 comm.handle_engine_exception(msg)
-            print()
             issues = Issues(comm.recv_issues(sock))
             if len(issues) == 0:
                 print("OK.")
@@ -1298,7 +1295,6 @@ class Pipeline:
             warnings = self.check(population_table, peripheral_tables)
             if warnings:
                 print("To see the issues in full, run .check() on the pipeline.")
-                print()
 
         self._send(additional_tags)
 
@@ -1326,7 +1322,6 @@ class Pipeline:
             end = time.monotonic()
 
             if "Trained" in msg:
-                print()
                 print(msg)
                 _print_time_taken(begin, end, "Time taken: ")
             else:

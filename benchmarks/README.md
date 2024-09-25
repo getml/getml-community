@@ -46,9 +46,9 @@ Data-Sets:
 
 Libraries:
 
-* [getML fastprop](https://docs.getml.com/latest/user_guide/feature_engineering/feature_engineering.html#fastprop)
+* [getML fastprop](https://getml.com/latest/user_guide/concepts/feature_engineering/#feature-engineering-algorithms-fastprop)
 * [tsflex](https://github.com/predict-idlab/tsflex)
-* [featuretools](https://www.featuretools.com/)
+* [featuretools](https://www.featuretools.com)
 * [tsfel](https://github.com/fraunhoferportugal/tsfel)
 * [tsfresh](https://github.com/blue-yonder/tsfresh)
 * [kats](https://github.com/facebookresearch/Kats)

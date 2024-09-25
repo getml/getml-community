@@ -11,6 +11,7 @@ Executes SQL scripts on SQLite3
 """
 
 from __future__ import annotations
+
 import os
 import sqlite3
 from typing import List

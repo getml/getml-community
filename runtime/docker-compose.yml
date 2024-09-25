@@ -2,21 +2,21 @@ services:
   getml:
     image: getml/getml
     environment:
-      GETML_ALLOW_PUSH_NOTIFICATIONS: true
+      GETML_ALLOW_PUSH_NOTIFICATIONS: false
       GETML_ALLOW_REMOTE_IPS: false
       GETML_HOME_DIRECTORY: /home/getml
       GETML_HTTP_PORT: 1711
       GETML_IN_MEMORY: true
       GETML_INSTALL: false
-      GETML_LAUNCH_BROWSER: true
+      GETML_LAUNCH_BROWSER: false
       GETML_LOG: false
-      GETML_PROJECT_DIRECTORY: /home/getml/.getML/projects
+      GETML_PROJECT_DIRECTORY: /home/getml/projects
       GETML_PROXY_URL: ""
       GETML_TOKEN: ""
     ports:
       - "1708-1733:11708-11733"
     volumes:
-      - getml:/home/getml/.getML
+      - getml:/home/getml/
 volumes:
   getml:
-    external: true
+    external: false

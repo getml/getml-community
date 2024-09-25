@@ -139,7 +139,7 @@ from .concat import concat
 from .container import Container
 from .data_frame import DataFrame
 from .data_model import DataModel
-from .helpers import list_data_frames, OnType
+from .helpers import OnType, list_data_frames
 from .helpers2 import (
     _decode_data_model,
     _decode_placeholder,

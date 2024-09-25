@@ -11,6 +11,7 @@ Contains a wrapper around connect.
 """
 
 from __future__ import annotations
+
 import sqlite3
 
 from .contains import _contains

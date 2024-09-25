@@ -5,45 +5,37 @@
 # for details.
 #
 
-from typing import FrozenSet
 from dataclasses import dataclass
-from getml.feature_learning.aggregations.types import (
-    MultirelAggregations,
-    FastPropAggregations,
-    MappingAggregations,
-    Aggregations,
-)
+from typing import FrozenSet
+
 from getml.feature_learning.aggregations.aggregations import (
     AVG,
     COUNT,
     COUNT_DISTINCT,
-    COUNT_MINUS_COUNT_DISTINCT,
-    FIRST,
-    LAST,
-    MAX,
-    MEDIAN,
-    MIN,
-    STDDEV,
-    SUM,
-    VAR,
     COUNT_DISTINCT_OVER_COUNT,
-    EWMA_1S,
-    EWMA_1M,
-    EWMA_1H,
+    COUNT_MINUS_COUNT_DISTINCT,
     EWMA_1D,
+    EWMA_1H,
+    EWMA_1M,
+    EWMA_1S,
     EWMA_7D,
     EWMA_30D,
     EWMA_90D,
     EWMA_365D,
-    EWMA_TREND_1S,
-    EWMA_TREND_1M,
-    EWMA_TREND_1H,
     EWMA_TREND_1D,
+    EWMA_TREND_1H,
+    EWMA_TREND_1M,
+    EWMA_TREND_1S,
     EWMA_TREND_7D,
     EWMA_TREND_30D,
     EWMA_TREND_90D,
     EWMA_TREND_365D,
+    FIRST,
     KURTOSIS,
+    LAST,
+    MAX,
+    MEDIAN,
+    MIN,
     MODE,
     NUM_MAX,
     NUM_MIN,
@@ -56,12 +48,21 @@ from getml.feature_learning.aggregations.aggregations import (
     Q_95,
     Q_99,
     SKEW,
+    STDDEV,
+    SUM,
     TIME_SINCE_FIRST_MAXIMUM,
     TIME_SINCE_FIRST_MINIMUM,
     TIME_SINCE_LAST_MAXIMUM,
     TIME_SINCE_LAST_MINIMUM,
     TREND,
+    VAR,
     VARIATION_COEFFICIENT,
+)
+from getml.feature_learning.aggregations.types import (
+    Aggregations,
+    FastPropAggregations,
+    MappingAggregations,
+    MultirelAggregations,
 )
 
 MULTIREL_AGGREGATIONS: FrozenSet[MultirelAggregations] = frozenset(

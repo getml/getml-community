@@ -14,8 +14,8 @@ from dataclasses import dataclass
 from typing import Any, Dict, Optional, Union
 
 from .feature_learner import _FeatureLearner
-from .validation import _validate_fastboost_parameters
 from .loss_functions import CrossEntropyLossType, SquareLossType
+from .validation import _validate_fastboost_parameters
 
 
 @dataclass(repr=False)

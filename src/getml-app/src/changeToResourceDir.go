@@ -15,7 +15,7 @@ import (
 
 // Changes to the path containing the resources,
 // such as config.json
-func changeToResourceDir(version string) {
+func changeToResourceDir(packageName string) {
 
 	execPath, err := os.Executable()
 
@@ -26,7 +26,7 @@ func changeToResourceDir(version string) {
 	execDir := path.Dir(execPath)
 
 	if execDir == install.UsrLocalBin {
-		os.Chdir(install.GetMainDir(install.UsrLocal, version))
+		os.Chdir(install.GetMainDir(install.UsrLocal, packageName))
 		return
 	}
 

@@ -56,14 +56,17 @@ DEFAULT_BATCH_SIZE = 100000
 The default batch size used whenver batched IO operations are performed.
 """
 
-DOCKER_DOCS_URL = "https://dev.getml.com/home/docker"
+DOCKER_DOCS_URL = "https://getml.com/latest/install/packages/docker/"
 """
 URL that points to the docker sections of the getML documentation.
 """
 
-COMPOSE_FILE_URL = (
-    "https://storage.googleapis.com/static.getml.com/runtime/docker-compose.yml"
-)
+INSTALL_DOCS_URL = "https://getml.com/latest/install/"
+"""
+URL that points to the installation sections of the getML documentation.
+"""
+
+COMPOSE_FILE_URL = "https://raw.githubusercontent.com/getml/getml-community/1.5.0/runtime/docker-compose.yml"
 """
 URL that points to the docker-compose runtime file.
 """

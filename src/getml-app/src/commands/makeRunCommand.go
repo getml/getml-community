@@ -1,9 +1,9 @@
 // Copyright 2024 Code17 GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 package commands
 
@@ -51,14 +51,6 @@ func makeRunCommand(
 		"The local port of the getML Monitor."+
 			" This port can only be accessed from your local computer,"+
 			" unless you set allow-remote-ips=True.")
-
-	// TODO: Uncomment once we have proper login.
-	/*cmd.IntVar(
-	&conf.Monitor.HTTPSPort,
-	"https-port",
-	conf.Monitor.HTTPSPort,
-	"The remote and encrypted port of the getML Monitor."+
-	" This port can be accessed remotely, but it is encrypted.")*/
 
 	cmd.BoolVar(
 		&conf.Monitor.Log,

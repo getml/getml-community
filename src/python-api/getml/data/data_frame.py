@@ -75,7 +75,6 @@ from getml.data.helpers import (
     _is_numerical_type_numpy,
     _iter_batches,
     _prepare_roles,
-    _retrieve_urls,
     _send_numpy_array,
     _sniff_db,
     _sniff_pandas,
@@ -3167,11 +3166,11 @@ class DataFrame:
 
     def refresh(self) -> DataFrame:
         """Aligns meta-information of the current instance with the
-        corresponding data frame in the getML Engine.
+                corresponding data frame in the getML Engine.
 
-        This method can be used to avoid encoding conflicts. Note that
-        [`load`][getml.DataFrame.load] as well as several other
-        methods automatically call [`refresh`][getml.DataFrame.refresh].
+                This method can be used to avoid encoding conflicts. Note that
+                [`load`][getml.DataFrame.load] as well as several other
+                methods automatically call [`refresh`][getml.DataFrame.refresh].
 
         Returns:
                 Updated handle the underlying data frame in the getML

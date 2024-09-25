@@ -33,6 +33,8 @@ The baseline (minimum) number of significant digits when formatting floats.
 """
 MAX_CELL_WIDTH = 32
 
+MIN_CELL_WIDTH = 16
+
 # --------------------------------------------------------------------
 
 
@@ -129,7 +131,7 @@ def _split_lines(lines, margin, max_width):
 
     for line in lines:
         truncated = list(_truncate_line(line, margin, max_width))
-        remaining = list(line[len(truncated) :])
+        remaining = line[len(truncated) :]
 
         lines_split.append(truncated)
 
@@ -148,13 +150,18 @@ def _split_lines(lines, margin, max_width):
 
 
 def _truncate_line(line, margin, max_width, template="{}"):
-    widths = (len(template.format(cell)) + margin for cell in line)
+    used_width = 0
 
-    cum_widths = it.accumulate(widths)
-
-    for cell, cum_width in zip(line, cum_widths):
-        if cum_width < max_width:
+    for cell in line:
+        cell_width = len(template.format(cell)) + margin
+        available_width = max_width - used_width
+        if cell_width + used_width <= max_width:
             yield cell
+        elif cell_width > max_width and available_width >= MIN_CELL_WIDTH:
+            clipped_cell = _clip_cell(cell, available_width)
+            cell_width = len(template.format(clipped_cell)) + margin
+            yield clipped_cell
+        used_width += cell_width
 
 
 # --------------------------------------------------------------------

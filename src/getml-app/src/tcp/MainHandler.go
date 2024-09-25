@@ -646,15 +646,12 @@ func (m *MainHandler) setProject(
 
 	args := append(m.args, "-project="+name, "-engine-port="+enginePortStr)
 
-	cmd, err := startProcess("engine", m.projects.Config.Monitor.Log, args)
+	cmd, err := startProcess("./engine", "./bin", m.projects.Config.Monitor.Log, args)
 
 	if err != nil {
 		return "", err
 	}
 
-	if err != nil {
-		return "", err
-	}
 
 	m.projects.Add(name, cmd, enginePort)
 

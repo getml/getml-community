@@ -11,6 +11,7 @@ Returns a table as a pandas.DataFrame.
 """
 
 from __future__ import annotations
+
 import sqlite3
 
 import pandas as pd

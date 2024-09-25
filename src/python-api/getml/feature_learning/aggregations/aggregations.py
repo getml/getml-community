@@ -17,24 +17,34 @@ Refer to the [feature learning section][feature-engineering-design-principles] i
 these aggregations are used in the context of feature learning.
 """
 
+from typing import Final
+
 from getml.feature_learning.aggregations.types import (
+    Q1,
+    Q5,
+    Q10,
+    Q25,
+    Q75,
+    Q90,
+    Q95,
+    Q99,
     Avg,
     Count,
     CountDistinct,
     CountDistinctOverCount,
     CountMinusCountDistinct,
-    EWMA_1s,
-    EWMA_1m,
-    EWMA_1h,
     EWMA_1d,
+    EWMA_1h,
+    EWMA_1m,
+    EWMA_1s,
     EWMA_7d,
     EWMA_30d,
     EWMA_90d,
     EWMA_365d,
-    EWMA_TREND_1s,
-    EWMA_TREND_1m,
-    EWMA_TREND_1h,
     EWMA_TREND_1d,
+    EWMA_TREND_1h,
+    EWMA_TREND_1m,
+    EWMA_TREND_1s,
     EWMA_TREND_7d,
     EWMA_TREND_30d,
     EWMA_TREND_90d,
@@ -48,14 +58,6 @@ from getml.feature_learning.aggregations.types import (
     Mode,
     NumMax,
     NumMin,
-    Q1,
-    Q5,
-    Q10,
-    Q25,
-    Q75,
-    Q90,
-    Q95,
-    Q99,
     Skew,
     Stddev,
     Sum,
@@ -67,8 +69,6 @@ from getml.feature_learning.aggregations.types import (
     Var,
     VariationCoefficient,
 )
-from typing import Final
-
 
 # ------------------------------------------------------------------------------
 AVG: Final[Avg] = "AVG"

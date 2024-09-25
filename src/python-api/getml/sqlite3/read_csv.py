@@ -12,6 +12,7 @@ into sqlite3.
 """
 
 from __future__ import annotations
+
 import csv
 import sqlite3
 from typing import List, Optional, Union

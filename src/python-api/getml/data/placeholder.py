@@ -10,14 +10,20 @@
 
 # ------------------------------------------------------------------------------
 
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, field, fields
 from inspect import cleandoc
 from textwrap import indent
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union, cast
 
 from getml.utilities.formatting import _SignatureFormatter
 
-from .helpers import OnType, _check_join_key, _handle_on, _handle_ts
+from .helpers import (
+    OnType,
+    _check_join_key,
+    _handle_on,
+    _handle_ts,
+    _serialize_join_keys,
+)
 from .relationship import many_to_many
 from .roles.container import Roles
 
@@ -211,33 +217,45 @@ class Placeholder:
             )
 
     def _getml_deserialize(self):
-        cmd = {"name_": self.name, "roles_": self.roles.to_dict()}
+        allow_lagged_targets = []
+        horizon = []
+        join_keys_used = []
+        joined_tables = []
+        memory = []
+        other_join_keys_used = []
+        other_time_stamps_used = []
+        relationship = []
+        time_stamps_used = []
+        upper_time_stamps_used = []
 
-        cmd["allow_lagged_targets_"] = [join.lagged_targets for join in self.joins]
+        for join in self.joins:
+            allow_lagged_targets.append(join.lagged_targets)
+            horizon.append(join.horizon or 0.0)
+            left_keys, right_keys = _serialize_join_keys(join.on)
+            join_keys_used.append(left_keys)
+            other_join_keys_used.append(right_keys)
+            joined_tables.append(join.right._getml_deserialize())
+            memory.append(join.memory or 0.0)
+            left_ts, right_ts = _handle_ts(join.time_stamps)
+            time_stamps_used.append(left_ts)
+            other_time_stamps_used.append(right_ts)
+            relationship.append(join.relationship)
+            upper_time_stamps_used.append(join.upper_time_stamp or "")
 
-        cmd["horizon_"] = [join.horizon or 0.0 for join in self.joins]
-
-        cmd["join_keys_used_"] = [_handle_on(join.on)[0] for join in self.joins]
-
-        cmd["joined_tables_"] = [join.right._getml_deserialize() for join in self.joins]
-
-        cmd["memory_"] = [join.memory or 0.0 for join in self.joins]
-
-        cmd["other_join_keys_used_"] = [_handle_on(join.on)[1] for join in self.joins]
-
-        cmd["other_time_stamps_used_"] = [
-            _handle_ts(join.time_stamps)[1] for join in self.joins
-        ]
-
-        cmd["relationship_"] = [join.relationship for join in self.joins]
-
-        cmd["time_stamps_used_"] = [
-            _handle_ts(join.time_stamps)[0] for join in self.joins
-        ]
-
-        cmd["upper_time_stamps_used_"] = [
-            join.upper_time_stamp or "" for join in self.joins
-        ]
+        cmd = {
+            "name_": self.name,
+            "roles_": self.roles.to_dict(),
+            "allow_lagged_targets_": allow_lagged_targets,
+            "horizon_": horizon,
+            "join_keys_used_": join_keys_used,
+            "joined_tables_": joined_tables,
+            "memory_": memory,
+            "other_join_keys_used_": other_join_keys_used,
+            "other_time_stamps_used_": other_time_stamps_used,
+            "relationship_": relationship,
+            "time_stamps_used_": time_stamps_used,
+            "upper_time_stamps_used_": upper_time_stamps_used,
+        }
 
         return cmd
 
@@ -371,23 +389,17 @@ class Placeholder:
                 "Cicular references to other placeholders are not allowed."
             )
 
-        if isinstance(on, str):
-            on = (on, on)
+        sanitized_on = _handle_on(on)
 
         if isinstance(time_stamps, str):
             time_stamps = (time_stamps, time_stamps)
 
-        keys = (
-            list(zip(*on))
-            if isinstance(on, list) and all(isinstance(key, tuple) for key in on)
-            else on
-        )
+        keys_by_ph = list(zip(*sanitized_on))
 
         for i, ph in enumerate([self, right]):
-            if ph.roles.join_key and keys:
-                not_a_join_key = _check_join_key(keys[i], ph.roles.join_key)  # type: ignore
-                if not_a_join_key:
-                    raise ValueError(f"Not a join key: {not_a_join_key}.")
+            if ph.roles.join_key:
+                if ph_keys := keys_by_ph[i]:
+                    _check_join_key(ph_keys, ph.roles, ph.name)
 
             if ph.roles.time_stamp and time_stamps:
                 if time_stamps[i] not in ph.roles.time_stamp:
@@ -395,25 +407,22 @@ class Placeholder:
 
         if lagged_targets and horizon in (0.0, None):
             raise ValueError(
-                "If you allow lagged targets, then you must also set a "
-                + "horizon > 0.0. This is to avoid 'easter eggs'."
+                "Setting 'lagged_targets' to True requires a positive, non-zero "
+                "'horizon'  to avoid data leakage."
             )
 
         if horizon not in (0.0, None) and time_stamps is None:
             raise ValueError(
-                "Setting 'horizon' (i.e. a relative look-back window) "
-                + "requires a 'time_stamp'."
+                "Setting 'horizon' (i.e. a relative look-back window) requires "
+                "setting 'time_stamps'."
             )
 
         if memory not in (0.0, None) and time_stamps is None:
-            raise ValueError(
-                "Setting 'memory' (i.e. a relative look-back window) "
-                + "requires a 'time_stamp'."
-            )
+            raise ValueError("Setting 'horizon' requires setting 'time_stamps'.")
 
         join = Join(
             right=right,
-            on=on,
+            on=sanitized_on,
             time_stamps=time_stamps,
             relationship=relationship,
             memory=memory,
@@ -440,7 +449,7 @@ class Placeholder:
         return self.parent.population
 
     @property
-    def roles(self):
+    def roles(self) -> Roles:
         return self._roles
 
     @roles.setter
@@ -484,7 +493,9 @@ class Placeholder:
 @dataclass
 class Join:
     right: Placeholder
-    on: OnType = None
+    on: Union[List[Tuple[str, str]], List[Tuple[None, None]]] = field(
+        default_factory=lambda: [(None, None)]
+    )
     time_stamps: TimeStampsType = None
     upper_time_stamp: Optional[str] = ""
     relationship: Optional[str] = many_to_many

@@ -17,20 +17,23 @@ import (
 	"strconv"
 )
 
+// overwritten at compile time through ldflags
+var version = "0.0.0"
+
 func main() {
 
-	version := makeVersion()
+	packageName := makePackageName()
 
-	changeToResourceDir(version)
+	changeToResourceDir(packageName)
 
-	commandLine, conf := commands.Parse(version)
+	commandLine, conf := commands.Parse(packageName)
 
 	if commandLine == nil {
 		os.Exit(2)
 	}
 
 	if commandLine.ShowVersionOnly {
-		println(version)
+		println(packageName)
 		os.Exit(0)
 	}
 
@@ -46,35 +49,28 @@ func main() {
 	}
 
 	if commandLine.Uninstall {
-		uninstall(commandLine.HomeDir, version)
+		uninstall(commandLine.HomeDir, packageName)
 		os.Exit(0)
 	}
 
 	if commandLine.ForceInstall {
-		install.All(commandLine.HomeDir, version)
+		install.All(commandLine.HomeDir, packageName)
 	}
 
 	if commandLine.InstallOnly {
 		os.Exit(0)
 	}
 
-	err := changeToBinDir(commandLine.HomeDir, version)
-
-	if err != nil {
-		log.Println("Could not start getML!")
-		return
-	}
-
-	err = os.MkdirAll(conf.ProjectDirectory, 0750)
+	err := os.MkdirAll(conf.ProjectDirectory, 0750)
 
 	if err != nil {
 		log.Println(err.Error())
 		return
 	}
 
-	printStartMessage(version)
+	printStartMessage(packageName)
 
-	projects := data.NewProjects(&conf, version)
+	projects := data.NewProjects(&conf, packageName)
 
 	mainHandler := tcp.NewMainHandler(version, conf.ToFlags(), projects)
 

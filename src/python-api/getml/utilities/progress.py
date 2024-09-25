@@ -40,7 +40,7 @@ def _is_emacs_kernel() -> bool:
     if ip is None:
         return False
     if ip_kernel_app := ip.config.get("IPKernelApp"):
-        connection_file = Path(ip_kernel_app.get("connection_file"), "")
+        connection_file = Path(ip_kernel_app.get("connection_file", ""))
         return connection_file.name.startswith("emacs")
     return False
 
@@ -49,21 +49,28 @@ def _is_jupyter() -> bool:
     return Console().is_jupyter
 
 
+def _is_vscode() -> bool:
+    return os.getenv("VSCODE_PID") is not None
+
+
 def _is_jupyter_without_ipywidgets() -> bool:
     if not _is_jupyter():
         return False
     try:
         import ipywidgets  # type: ignore[name-defined]
     except ImportError:
-        return True
+        return not _is_emacs_kernel() and not _is_vscode()
     return False
 
+
+_ENV_VAR_TRUTHY_VALUES = ("1", "t", "true", "True")
 
 SPEED_ESTIMATE_PERIOD = 300
 TASK_FAILED_DESCRIPTION = "[danger]Failed[/danger]"
 FORCE_TEXTUAL_OUTPUT = (
-    os.getenv("GETML_PROGRESS_FORCE_TEXTUAL_OUTPUT") in ("1", "t", "true", "True")
+    os.getenv("GETML_PROGRESS_FORCE_TEXTUAL_OUTPUT") in _ENV_VAR_TRUTHY_VALUES
     or _is_emacs_kernel()
+    or _is_vscode()
     or _is_jupyter_without_ipywidgets()
 )
 """
@@ -72,11 +79,16 @@ Neccessary because terminal-based environments communicating with jupyter
 kernels over zmq are falsely detected as jupyter environments with ipywidget
 support by rich.
 """
-SHOW_IPYWIDGETS_WARNING = os.getenv("GETML_SHOW_IPYWIDGETS_WARNING", "True") in (
-    "1",
-    "t",
-    "true",
-    "True",
+FORCE_MONOCHROME_OUTPUT = (
+    os.getenv("GETML_PROGRESS_FORCE_MONOCHROME_OUTPUT") in _ENV_VAR_TRUTHY_VALUES
+    or FORCE_TEXTUAL_OUTPUT
+    and not _is_emacs_kernel()
+)
+"""
+If set to True, forces the progress bar to be displayed in monochrome form.
+"""
+SHOW_IPYWIDGETS_WARNING = (
+    os.getenv("GETML_SHOW_IPYWIDGETS_WARNING", "True") in _ENV_VAR_TRUTHY_VALUES
 )
 """
 If set to True, shows a warning when ipywidgets are not available in a jupyter
@@ -166,7 +178,8 @@ class Progress:
         Handles multiple progress bars and updates them.
 
         Args:
-            progress_type: Type of progress bar to display. Defaults to ProgressType.DEFAULT.
+            progress_type: Type of progress bar to display. Defaults to
+              ProgressType.DEFAULT.
             finish_all_tasks_on_exit: If True, all tasks are finished when
               __exit__ is called. Defaults to True.
         """
@@ -178,6 +191,7 @@ class Progress:
             force_jupyter=False if FORCE_TEXTUAL_OUTPUT else None,
             force_terminal=FORCE_TEXTUAL_OUTPUT or None,
             force_interactive=FORCE_TEXTUAL_OUTPUT or None,
+            no_color=FORCE_MONOCHROME_OUTPUT,
         )
 
         self._progress = RichProgress(
@@ -245,7 +259,8 @@ class Progress:
         visible: bool = True,
     ) -> TaskID:
         """
-        Adds a new task and finishes all other tasks. Reconstructs the renderable if FORCE_TEXTUAL_OUTPUT is True.
+        Adds a new task and finishes all other tasks. Reconstructs the
+        renderable if FORCE_TEXTUAL_OUTPUT is True.
         """
         if FORCE_TEXTUAL_OUTPUT and self.tasks:
             self.stop()
@@ -267,6 +282,7 @@ class Progress:
         if (
             task_id in self.task_ids
             and self.tasks[task_id].description != self.descriptions[task_id]
+            and self.tasks[task_id].description != TASK_FAILED_DESCRIPTION
         ):
             self.update(task_id, description=self.descriptions[task_id])
 

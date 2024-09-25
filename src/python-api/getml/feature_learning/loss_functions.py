@@ -19,7 +19,7 @@ learning algorithms and not by the [`predictors`][getml.predictors].
 
 """
 
-from typing import Literal, Final
+from typing import Final, Literal
 
 CrossEntropyLossType = Literal["CrossEntropyLoss"]
 """Type of the cross entropy loss function."""

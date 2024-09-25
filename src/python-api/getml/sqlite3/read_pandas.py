@@ -12,6 +12,7 @@ into sqlite3.
 """
 
 from __future__ import annotations
+
 import numbers
 import sqlite3
 from typing import Literal

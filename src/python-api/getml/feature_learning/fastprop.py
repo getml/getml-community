@@ -11,7 +11,7 @@ Feature learning based on propositionalization.
 """
 
 from dataclasses import dataclass
-from typing import Any, ClassVar, Dict, Optional, Union, Iterable
+from typing import Any, ClassVar, Dict, Iterable, Optional, Union
 
 from .aggregations.sets import (
     FASTPROP,
@@ -19,8 +19,8 @@ from .aggregations.sets import (
 )
 from .aggregations.types import FastPropAggregations
 from .feature_learner import _FeatureLearner
-from .validation import _validate_fastprop_parameters
 from .loss_functions import CrossEntropyLossType, SquareLossType
+from .validation import _validate_fastprop_parameters
 
 
 @dataclass(repr=False)

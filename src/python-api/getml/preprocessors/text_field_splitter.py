@@ -11,7 +11,7 @@ Contains routines for preprocessing data frames.
 """
 
 from dataclasses import dataclass
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
 from .preprocessor import _Preprocessor
 from .validate import _validate

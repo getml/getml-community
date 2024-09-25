@@ -13,7 +13,7 @@ class signatures.
 
 from copy import deepcopy
 
-from .formatter import _truncate_line
+from .formatter import _clip_cell, _truncate_line
 
 # --------------------------------------------------------------------
 
@@ -22,16 +22,23 @@ STYLE = "pep8"
 # --------------------------------------------------------------------
 
 
-def _split_value(value, start, max_width):
+def _split_value(value, indent, max_width, initial_indent=None):
     split = []
 
     if isinstance(value, list):
-        truncated = list(_truncate_line(value, 2, max_width - start, template="{!r}"))
+        truncated = list(
+            _truncate_line(
+                value,
+                2,
+                max_width - (initial_indent or indent),
+                template="{!r}",
+            )
+        )
         remaining = value[len(truncated) :]
         split.append(truncated)
 
         if remaining:
-            split.extend(_split_value(remaining, start, max_width))
+            split.extend(_split_value(remaining, indent, max_width))
 
         return split
 
@@ -104,7 +111,8 @@ class _SignatureFormatter:
             ):
                 list_split = _split_value(
                     value,
-                    start=self.indent + self.value_indent,
+                    initial_indent=self.indent + len(f"{name}="),
+                    indent=self.indent + self.value_indent,
                     max_width=self.max_width,
                 )
 
@@ -116,7 +124,10 @@ class _SignatureFormatter:
                     len(name) + 2,
                     list_template,
                 )
-
+            elif isinstance(value, str):
+                value_formatted = (
+                    f"{_clip_cell(value, self.max_width - self.indent - 2)!r}"
+                )
             else:
                 value_formatted = f"{value!r}"
 

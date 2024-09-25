@@ -11,8 +11,7 @@ Contains routines for preprocessing data frames.
 """
 
 from dataclasses import dataclass
-
-from typing import ClassVar, Iterable, Optional, Dict, Any
+from typing import Any, ClassVar, Dict, Iterable, Optional
 
 from ..feature_learning.aggregations.sets import (
     MAPPING,

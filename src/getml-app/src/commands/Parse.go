@@ -1,9 +1,9 @@
 // Copyright 2024 Code17 GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 package commands
 
@@ -15,22 +15,22 @@ import (
 )
 
 // Parse parses the command line arguments
-func Parse(version string) (*config.CommandLine, config.Config) {
+func Parse(packageName string) (*config.CommandLine, config.Config) {
 
 	// TODO: ParseHomeDir in DefaultCommandLine
 	commandLine := config.DefaultCommandLine()
 
 	commandLine.ForceInstall = !install.FileExists(
-		install.GetConfigPath(commandLine.HomeDir, version))
+		install.GetConfigPath(commandLine.HomeDir, packageName))
 
-	conf := loadConfig(commandLine.ForceInstall, commandLine.HomeDir, version)
+	conf := loadConfig(commandLine.ForceInstall, commandLine.HomeDir, packageName)
 
 	if !filepath.IsAbs(conf.ProjectDirectory) {
 		conf.ProjectDirectory = filepath.Join(
-			install.GetBinDir(commandLine.HomeDir, version), "..", conf.ProjectDirectory)
+			install.GetBinDir(commandLine.HomeDir, packageName), "..", conf.ProjectDirectory)
 	}
 
-	runCmd := makeRunCommand(version, &conf, commandLine)
+	runCmd := makeRunCommand(packageName, &conf, commandLine)
 
 	installCmd := makeInstallCommand(commandLine)
 
@@ -65,7 +65,7 @@ func Parse(version string) (*config.CommandLine, config.Config) {
 		commandLine.ShowVersionOnly = true
 
 	default:
-		isFlag := printHelpMenu(version, runCmd)
+		isFlag := printHelpMenu(packageName, runCmd)
 
 		if isFlag {
 			return commandLine, conf
