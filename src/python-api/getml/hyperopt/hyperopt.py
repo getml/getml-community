@@ -330,7 +330,6 @@ class _Hyperopt:
         if msg != "Success!":
             comm.handle_engine_exception(msg)
 
-        print()
         _print_time_taken(begin, end, "Time taken: ")
 
         self._save()

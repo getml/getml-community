@@ -17,7 +17,7 @@ from urllib.request import urlopen
 import pandas as pd
 
 from getml.data import DataFrame
-from rich import print
+from getml.database.helpers import _retrieve_url
 
 DataFrameT = Union[DataFrame, pd.DataFrame]
 """
@@ -120,14 +120,13 @@ def _load_dataset(
 
     dfs = {}
     for asset in assets:
-        filename = base + "/" + ds_name + "_" + asset + ".csv"
+        asset_url = base + "/" + ds_name + "_" + asset + ".csv"
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            print()
-            print(f"Loading {asset}...")
+            csv_file = _retrieve_url(asset_url, description=asset)
             dfs[asset] = DataFrame.from_csv(
                 name=asset,
-                fnames=filename,
+                fnames=csv_file,
                 roles=roles_.get(asset),
                 verbose=False,
             )

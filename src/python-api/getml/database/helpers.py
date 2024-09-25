@@ -51,14 +51,16 @@ class CSVCmdType(Enum):
 # -----------------------------------------------------------------------------
 
 
-def _load_to_file(url: str, file_path: Path) -> None:
+def _load_to_file(url: str, file_path: Path, description: Optional[str] = None):
     with request.urlopen(url) as response:
         content_length = int(response.getheader("content-length", 0))
         block_size = max(4096, content_length // 100)
         with Progress(
             progress_type=ProgressType.DOWNLOAD,
         ) as progress:
-            task_id = progress.new_task("Downloading...", total=content_length)
+            task_id = progress.new_task(
+                f"Downloading {description or file_path.name}...", total=content_length
+            )
             with file_path.open("wb") as file:
                 while True:
                     block = response.read(block_size)
@@ -84,6 +86,7 @@ def _retrieve_url(
     url: str,
     verbose: bool = False,
     target_path: Optional[Path] = None,
+    description: Optional[str] = None,
 ) -> str:
     parse_result = urlparse(url)
 
@@ -100,7 +103,7 @@ def _retrieve_url(
     if verbose:
         print(f"Downloading {url} to {target_path.as_posix()}...")
 
-    _load_to_file(url, target_path)
+    _load_to_file(url, target_path, description)
 
     return target_path.as_posix()
 
@@ -109,13 +112,18 @@ def _retrieve_url(
 
 
 def _retrieve_urls(
-    fnames: Iterable[str], verbose: bool = False, target_path: Optional[Path] = None
+    fnames: Iterable[str],
+    verbose: bool = False,
+    target_path: Optional[Path] = None,
+    description: Optional[str] = None,
 ) -> List[str]:
     def is_url(fname):
         return urlparse(fname).scheme != ""
 
     return [
-        _retrieve_url(url=fname, verbose=verbose, target_path=target_path)
+        _retrieve_url(
+            url=fname, verbose=verbose, target_path=target_path, description=description
+        )
         if is_url(fname)
         else Path(fname).expanduser().absolute().as_posix()
         for fname in fnames

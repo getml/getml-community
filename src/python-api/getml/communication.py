@@ -84,8 +84,8 @@ def is_monitor_alive() -> bool:
     Checks if the getML Monitor is running.
 
     Returns:
-        `True` if the getML Monitor is running and ready to accept commands and
-        `False` otherwise.
+            True if the getML Monitor is running and ready to accept commands and
+            False otherwise.
     """
 
     cmd = {
@@ -724,8 +724,7 @@ def _load_project(bundle: Union[PathLike, str], name: Optional[str] = None):
 
     proj_name = _get_project_name()
 
-    print()
-    print(f"Loaded {bundle} as {proj_name}. Connected to {proj_name}.")
+    print(f"Loaded {bundle!r} as {proj_name!r}. Connected to project {proj_name!r}.")
 
 
 # --------------------------------------------------------------------
@@ -851,7 +850,6 @@ def _save_project(
     with open(target_path, "wb") as f:
         f.write(bundle)
 
-    print()
     print(f"Saved project {name} to '{target_path}'")
 
 
@@ -902,8 +900,7 @@ def _set_project(name: str, restart: bool = False):
 
     port = int(recv_string(sock))
 
-    print()
-    print("Connected to project '" + name + "'")
+    print(f"Connected to project {name!r}.")
 
     if _project_url():
         print(_project_url())
