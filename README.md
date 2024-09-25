@@ -5,7 +5,7 @@
 </p>
 
 <p align="center" style="text-align: center;">
-        <a href="https://getml.com/contact" target="_blank">
+        <a href="https://getml.com/latest/contact" target="_blank">
         <img src="https://img.shields.io/badge/schedule-a_meeting-blueviolet.svg" /></a>
         <a href="mailto:hello@getml.com" target="_blank">
         <img src="https://img.shields.io/badge/contact-us_by_mail-orange.svg" /></a>
@@ -19,7 +19,7 @@
 
 getML is a tool for automating feature engineering on relational data and time series. It includes a specifically customized database Engine for this very purpose.
 
-This results in a speedup between _60_ to _1000_ times (see [Benchmarks](#benchmarks)) over other open-source tools like [featuretools](https://www.featuretools.com/) and [tsfresh](https://tsfresh.com/) for automated feature engineering. Also check out our [demonstrational notebooks](https://github.com/getml/getml-demo) to see more comparisons.
+This results in a speedup between _60_ to _1000_ times (see [Benchmarks](#benchmarks)) over other open-source tools like [featuretools](https://www.featuretools.com) and [tsfresh](https://tsfresh.com) for automated feature engineering. Also check out our [demonstrational notebooks](https://getml.com/latest/examples) to see more comparisons.
 
 ## Table of Contents
 
@@ -35,54 +35,54 @@ This results in a speedup between _60_ to _1000_ times (see [Benchmarks](#benchm
 
 ## Quick Start
 
-As getML is available on [PyPI](https://pypi.org/project/getml/), you can install it simply via
+As getML is available on [PyPI](https://pypi.org/project/getml), you can install it simply via
 
 ```bash
-$ pip install getml
+pip install getml
 ```
 
-Check out [the Example](#example) and the [demonstrational notebooks](https://github.com/getml/getml-demo) to get started with getML. A [detailed getting started guide](https://docs.getml.com/latest/home/getting_started/getting_started.html) and [the documentation](https://docs.getml.com/latest/) will also help you on your way with getML.
+Check out [the Example](#example) and the [demonstrational notebooks](https://getml.com/latest/examples) to get started with getML. A [detailed walkthrough guide](https://getml.com/latest/user_guide/walkthrough) and [the documentation](https://getml.com/latest) will also help you on your way with getML.
 
 To learn, how to build and contribute to getML, check out [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Key benefits for using getML
 
-One big key feature over other tools like [featuretools](https://www.featuretools.com/), [tsfresh](https://tsfresh.com/) and [prophet](https://facebook.github.io/prophet/) is the runtime performance. Our own implementation of propositionalization, FastProp (short for fast propositionalization), reaches improvements of about _60_ to _1000_ times faster run times (see specifically [FastProp Benchmarks](https://github.com/getml/getml-demo/README.md#fastprop-benchmarks) within our notebooks). This leads to faster iterations for data scientists, giving them more time to tweak variables to achieve even better results.
+One big key feature over other tools like [featuretools](https://www.featuretools.com), [tsfresh](https://tsfresh.com) and [prophet](https://facebook.github.io/prophet) is the runtime performance. Our own implementation of propositionalization, FastProp (short for fast propositionalization), reaches improvements of about _60_ to _1000_ times faster run times (see specifically [FastProp Benchmarks](https://getml.com/latest/examples/enterprise-notebooks/fastprop_benchmark) within our notebooks). This leads to faster iterations for data scientists, giving them more time to tweak variables to achieve even better results.
 
 FastProp is not only faster, but can also provide an increased accuracy.
 
-For even better accuracy, getML provides advanced algorithms in its [professional and Enterprise feature-sets](https://www.getml.com/pricing), namely [Multirel](https://docs.getml.com/latest/user_guide/feature_engineering/feature_engineering.html#multirel), [Relboost](https://docs.getml.com/latest/user_guide/feature_engineering/feature_engineering.html#relboost) and [RelMT](https://docs.getml.com/latest/user_guide/feature_engineering/feature_engineering.html#relmt). 
+For even better accuracy, getML provides advanced algorithms in its [professional and Enterprise feature-sets](https://getml.com/latest/enterprise/benefits), namely [Multirel](https://getml.com/latest/user_guide/concepts/feature_engineering/#feature-engineering-algorithms-multirel), [Relboost](https://getml.com/latest/user_guide/concepts/feature_engineering/#feature-engineering-algorithms-relboost), [Fastboost](https://getml.com/latest/user_guide/concepts/feature_engineering/#feature-engineering-algorithms-fastboost) and [RelMT](https://getml.com/latest/user_guide/concepts/feature_engineering/#feature-engineering-algorithms-relmt).
 
-The standard version includes [preprocessors](https://docs.getml.com/latest/user_guide/preprocessing/preprocessing.html) (like CategoryTrimmer, EmailDomain, Imputation, Mapping, Seasonal, Substring, TextFieldSplitter), [predictors](https://docs.getml.com/latest/user_guide/predicting/predicting.html#using-getml) (like LinearRegression, LogisticRegression, XGBoostClassifier, XGBoostRegressor) and [hyperparameter optimizer](https://docs.getml.com/latest/user_guide/hyperopt/hyperopt.html#hyperparameter-optimization) (like RandomSearch, LatinHypercubeSearch, GaussianHyperparameterSearch).
+The standard version includes [preprocessors](https://getml.com/latest/user_guide/concepts/preprocessing) (like CategoryTrimmer, EmailDomain, Imputation, Mapping, Seasonal, Substring, TextFieldSplitter), [predictors](https://getml.com/latest/user_guide/concepts/predicting) (like LinearRegression, LogisticRegression, XGBoostClassifier, XGBoostRegressor) and [hyperparameter optimizer](https://getml.com/latest/user_guide/concepts/hyperopt) (like RandomSearch, LatinHypercubeSearch, GaussianHyperparameterSearch).
 
-It also gives access to [the getML Monitor](https://docs.getml.com/latest/user_guide/getml_suite/monitor.html), which provides valuable information about projects, pipelines, features, important columns, accuracies, performances, and more. Those information give insights and help understand and improve the results.
+It also gives access to [the getML Monitor](https://getml.com/latest/user_guide/concepts/getml_suite/#monitor-concepts), which provides valuable information about projects, pipelines, features, important columns, accuracies, performances, and more. Those information give insights and help understand and improve the results.
 
-getML can [import data from various sources](https://docs.getml.com/latest/user_guide/importing_data/importing_data.html) like CSV, Pandas, JSON, SQLite, MySQL, MariaDB, PostgreSQL, Greenplum, ODBC. 
+getML can [import data from various sources](https://getml.com/latest/user_guide/concepts/importing_data) like CSV, Pandas, JSON, SQLite, MySQL, MariaDB, PostgreSQL, Greenplum, ODBC.
 
-While the standard version is open source, can be run on your local machine, and gets basic support via EMail and via this repository, it must not be used for productive purposes. The [professional and Enterprise versions](https://www.getml.com/pricing) in contrast allows productive uses, gets also support via phone and chat, offers training sessions, as well as on-premise and cloud hosting, and export and deployment features. Get in [contact via email](mailto:hello@getml.com) or directly [schedule a meeting](https://getml.com/contact).
+While the standard version is open source, can be run on your local machine, and gets basic support via EMail and via this repository, it must not be used for productive purposes. The [professional and Enterprise versions](https://getml.com/latest/enterprise/benefits) in contrast allows productive uses, gets also support via phone and chat, offers training sessions, as well as on-premise and cloud hosting, and export and deployment features. Get in [contact via email](mailto:hello@getml.com) or directly [schedule a meeting](https://getml.com/latest/contact).
 
 ### Features generate by getML
 
 getML generates features for relational data and time series. These include, but are not limited to:
 
-- **Various aggregations**, i.e. average, sum, minimum, maximum, quantiles, exponentially weighted moving average, trend, exponentially weighted trends, ...
-- **Aggregations within a certain time frame**, i.e. maximum in the last 30 days, minimum in the last 7 days
-- **Seasonal factors from time stamps**, such as month, day of the week, hour, ...
-- **Seasonal aggregations**, i.e. maximum for the same weekday as the prediction point, minimum for the same hour as the prediction point, ...
+* **Various aggregations**, i.e. average, sum, minimum, maximum, quantiles, exponentially weighted moving average, trend, exponentially weighted trends, ...
+* **Aggregations within a certain time frame**, i.e. maximum in the last 30 days, minimum in the last 7 days
+* **Seasonal factors from time stamps**, such as month, day of the week, hour, ...
+* **Seasonal aggregations**, i.e. maximum for the same weekday as the prediction point, minimum for the same hour as the prediction point, ...
 
 In other words, it generates the kind of features you would normally build manually. But it automatically generates thousands of features and then automatically picks the best, saving you a lot of manual work.
 
 ### Documentation
 
-Check out the full documentation on https://docs.getml.com/latest/.
+Check out the full documentation on <https://getml.com/latest>
 
 ## Benchmarks
 
-We evaluated the performance of [getML's FastProp algorithm](https://docs.getml.com/latest/user_guide/feature_engineering/feature_engineering.html#fastprop) against five other open-source tools for automated feature engineering on relational data and time series: [_tsflex_](https://github.com/predict-idlab/tsflex), [_featuretools_](https://www.featuretools.com/), [_tsfel_](https://github.com/fraunhoferportugal/tsfel), [_tsfresh_](https://github.com/blue-yonder/tsfresh) and [_kats_](https://github.com/facebookresearch/Kats). The datasets used include:
+We evaluated the performance of [getML's FastProp algorithm](https://getml.com/latest/user_guide/concepts/feature_engineering/#feature-engineering-algorithms-fastprop) against five other open-source tools for automated feature engineering on relational data and time series: [_tsflex_](https://github.com/predict-idlab/tsflex), [_featuretools_](https://www.featuretools.com), [_tsfel_](https://github.com/fraunhoferportugal/tsfel), [_tsfresh_](https://github.com/blue-yonder/tsfresh) and [_kats_](https://github.com/facebookresearch/Kats). The datasets used include:
 
-1. Air Pollution 
+1. Air Pollution
     * Hourly data on air pollution and weather in Beijing, China.
-2. Interstate94 
+2. Interstate94
     * Hourly data on traffic volume on the Interstate 94 from Minneapolis to St. Paul.
 3. Dodgers
     * Five-minute measurements of traffic near Los Angeles, affected by games hosted by the LA Dodgers.
@@ -91,9 +91,9 @@ We evaluated the performance of [getML's FastProp algorithm](https://docs.getml.
 5. Tetouan
     * Ten-minute electricity consumption of three different zones in Tetouan City, north Morocco
 
-The plots shown below contain the *runtime per feature* calculated relative to the runtime per feature of the fastest approach. The fastest approach turns out to be the getML's FastProp, so it gets a value 1.
+The plots shown below contain the _runtime per feature_ calculated relative to the runtime per feature of the fastest approach. The fastest approach turns out to be the getML's FastProp, so it gets a value 1.
 
-We observe, that for all datasets, the features produced by the different tools are quite similar, but __getML is 60-1000 times faster__ than other open-source tools. 
+We observe, that for all datasets, the features produced by the different tools are quite similar, but **getML is 60-1000 times faster** than other open-source tools.
 
 <p align="center">
     <img style="width: 80%" src="assets/benchmarks_plot_linear.png" />
@@ -120,9 +120,9 @@ To experience getML in action, the following example notebooks are provided in t
 | [robot.ipynb](demo-notebooks/robot.ipynb)                     | Regression       | 15,001          | Time Series | Force   | Robotics         | Medium     |                                                 |
 | [seznam.ipynb](demo-notebooks/seznam.ipynb)                   | Regression       | 1,462,078       | Relational  | Volume  | E-commerce       | Medium     |                                                 |
 
-For an extensive list of demonstrational and benchmarking notebooks, have a look at the [their own repository](https://github.com/getml/getml-demo).
+For an extensive list of demonstrational and benchmarking notebooks, have a look at [our docs examples section](https://getml.com/latest/examples) or [the notebook source repository](https://github.com/getml/getml-demo).
 
-## Example 
+## Example
 
 Here is how you can build a complete Data Science pipeline for a time series problem with seasonalities with just a few lines of code:
 
@@ -186,4 +186,4 @@ pipe.score(time_series.test)
 predictions = pipe.predict(time_series.test)
 ```
 
-To see the full example, check out the Interstate94 notebook ([interstate94.ipynb](demo-notebooks/interstate94.ipynb)).
+To see the full example, check out the Interstate94 notebook ([interstate94.ipynb](https://getml.com/latest/examples/community-notebooks/interstate94)).

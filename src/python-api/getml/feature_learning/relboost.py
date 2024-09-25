@@ -15,8 +15,8 @@ from typing import Any, Dict, Optional, Union
 
 from .fastprop import FastProp
 from .feature_learner import _FeatureLearner
-from .validation import _validate_relboost_parameters
 from .loss_functions import CrossEntropyLossType, SquareLossType
+from .validation import _validate_relboost_parameters
 
 # --------------------------------------------------------------------
 

@@ -26,15 +26,11 @@ ENTERPRISE_FEATURE_NOT_AVAILABLE_ERROR_MSG_TEMPLATE = cleandoc(
     is unique to getML Enterprise and is not available
     in the getML Community edition you are currently using.
 
-    Please visit https://dev.getml.com/enterprise to learn about our advanced
-    algorithms, extended feature set, commercial plans, and available trial
-    options.
+    Please visit https://dev.getml.com/enterprise to learn about getML's
+    advanced algorithms, extended feature set, commercial plans, and available
+    trial options.
     """
 )
-
-
-def _nop_arrow_cast_exception_handler(exc: Exception, field: pa.Field) -> None:
-    raise exc
 
 
 def _nop_arrow_cast_exception_handler(exc: Exception, field: pa.Field) -> None:

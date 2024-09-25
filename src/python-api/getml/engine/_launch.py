@@ -24,11 +24,11 @@ import getml.communication as comm
 from getml.constants import COMPOSE_FILE_URL, DOCKER_DOCS_URL, INSTALL_DOCS_URL
 from getml.version import __version__
 
-PLATFORM_NOT_SUPPORTED_NATIVELY_ERROR_MSG_TEMPLATE = cleandoc(
+OS_NOT_SUPPORTED_NATIVELY_ERROR_MSG_TEMPLATE = cleandoc(
     """
-    The platform '{platform}' is not supported natively by getML.
+    The operating system '{os}' is not supported natively by getML.
 
-    You can use the dockerized version of getML to run it on your platform.
+    You can use the dockerized version of getML to run it on your OS.
 
     Refer to the documentation for more information:
     {docker_docs_url}
@@ -39,20 +39,64 @@ PLATFORM_NOT_SUPPORTED_NATIVELY_ERROR_MSG_TEMPLATE = cleandoc(
 )
 
 
+class Edition(str, Enum):
+    ENTERPRISE = "enterprise"
+    COMMUNITY = "community"
+
+
+class Arch(str, Enum):
+    AMD64 = "amd64"
+    ARM64 = "arm64"
+
+
+class Os(str, Enum):
+    LINUX = "linux"
+    MACOS = "darwin"
+    WINDOWS = "windows"
+
+
+NATIVELY_SUPPORTED_OSES = (Os.LINUX,)
+
 EXECUTABLE_NAME = "getML"
 
-PACKAGE_NAME_REGEX = re.compile(
-    r"getml-(?P<edition>community|enterprise)"
-    r"-(?P<version>\d+\.\d+\.\d+(-\w+(\.\d+)*)?)"
-    r"-(?P<arch>amd64|arm64)"
-    r"-(?P<os>linux)"
+SEMVER_REGEX = re.compile(
+    r"""
+    (?P<version_major>0|[1-9]\d*)
+    \.(?P<version_minor>0|[1-9]\d*)
+    \.(?P<version_patch>0|[1-9]\d*)
+    (?:-(?P<version_prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)
+    (?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?
+    (?:\+(?P<version_buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?
+    """,
+    re.VERBOSE,
 )
+"""
+Regex to match semantic version strings. Adapted from:
+https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
+"""
+
+PACKAGE_NAME_REGEX = re.compile(
+    rf"""
+    getml-(?P<edition>{'|'.join(Edition)})
+    -(?P<version>{SEMVER_REGEX.pattern})
+    -(?P<arch>{'|'.join(Arch)})
+    -(?P<os>{'|'.join(NATIVELY_SUPPORTED_OSES)})
+    """,
+    re.VERBOSE,
+)
+"""
+Regex to match getML package names. The package name is expected to have the following format:
+getml-{edition}-{version}-{arch}-{os}
+"""
 
 INSTALL_LOCATIONS = (
     Path.home() / ".getML",
     Path("/usr/local") / "getML",
     Path(__file__).parent.parent / ".getML",
 )
+"""
+Locations where getML is expected to be installed.
+"""
 
 COULD_NOT_FIND_EXECUTABLE_ERROR_MSG_TEMPLATE = cleandoc(
     """
@@ -81,17 +125,6 @@ ENGINE_DID_NOT_RESPOND_IN_TIME_ERROR_MSG_TEMPLATE = cleandoc(
     For furher information, check the log file at {{log_file}}.
     """
 ).format(max_launch_wait_time=MAX_LAUNCH_WAIT_TIME)
-
-
-class Edition(str, Enum):
-    ENTERPRISE = "enterprise"
-    COMMUNITY = "community"
-
-
-class System(str, Enum):
-    LINUX = "Linux"
-    MACOS = "Darwin"
-    WINDOWS = "Windows"
 
 
 @dataclass
@@ -228,10 +261,10 @@ def launch(
     if comm.is_monitor_alive():
         print("getML Engine is already running.")
         return
-    if platform.system() != System.LINUX:
+    if (os_ := platform.system().lower()) not in NATIVELY_SUPPORTED_OSES:
         raise OSError(
-            PLATFORM_NOT_SUPPORTED_NATIVELY_ERROR_MSG_TEMPLATE.format(
-                platform=platform.system(),
+            OS_NOT_SUPPORTED_NATIVELY_ERROR_MSG_TEMPLATE.format(
+                os=os_,
                 docker_docs_url=DOCKER_DOCS_URL,
                 compose_file_url=COMPOSE_FILE_URL,
             )

@@ -11,6 +11,7 @@ Container which holds all of a project's pipelines.
 """
 
 from __future__ import annotations
+
 from typing import Any, Callable, List
 
 from getml.pipeline.helpers2 import _refresh_all, list_pipelines

@@ -15,7 +15,7 @@ could be accomplished by using simple brute force approaches.
 
 This is the official python client for the getML Engine.
 
-Documentation and more details at https://docs.getml.com
+Documentation and more details at https://getml.com/latest/reference
 """
 
 from . import (

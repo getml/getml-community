@@ -75,7 +75,6 @@ from getml.data.helpers import (
     _is_numerical_type_numpy,
     _iter_batches,
     _prepare_roles,
-    _retrieve_urls,
     _send_numpy_array,
     _sniff_db,
     _sniff_pandas,
@@ -2196,7 +2195,7 @@ class DataFrame:
 
         Returns:
                 Updated handle the underlying data frame in the getML
-                    Engine.
+                Engine.
 
         Note:
             When invoking [`load`][getml.DataFrame.load] all
@@ -3173,13 +3172,9 @@ class DataFrame:
                 [`load`][getml.DataFrame.load] as well as several other
                 methods automatically call [`refresh`][getml.DataFrame.refresh].
 
-                Returns:
-                        Updated handle the underlying data frame in the getML
-        <<<<<<< HEAD
-                            Engine.
-        =======
-                        Engine.
-        >>>>>>> 525-add-enterprise-download-link-to-the-error-message-when-executing-api-calls-which-are-enterprise
+        Returns:
+                Updated handle the underlying data frame in the getML
+                Engine.
 
         """
 
@@ -3633,7 +3628,7 @@ class DataFrame:
 
         Returns:
                 Pandas equivalent of the current instance including
-                    its underlying data.
+                its underlying data.
 
         """
         return to_arrow(self).to_pandas()

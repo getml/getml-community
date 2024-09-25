@@ -84,8 +84,8 @@ def is_monitor_alive() -> bool:
     Checks if the getML Monitor is running.
 
     Returns:
-            True if the getML Monitor is running and ready to accept commands and
-            False otherwise.
+        `True` if the getML Monitor is running and ready to accept commands and
+        `False` otherwise.
     """
 
     cmd = {

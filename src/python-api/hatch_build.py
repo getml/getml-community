@@ -7,8 +7,9 @@
 
 
 import os
-from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 from pathlib import Path
+
+from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 from wheel.bdist_wheel import get_platform
 
 getml_bin_path = Path(__file__).parent / "getml" / ".getML"

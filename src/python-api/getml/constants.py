@@ -66,9 +66,7 @@ INSTALL_DOCS_URL = "https://getml.com/latest/install/"
 URL that points to the installation sections of the getML documentation.
 """
 
-COMPOSE_FILE_URL = (
-    "https://storage.googleapis.com/static.getml.com/runtime/docker-compose.yml"
-)
+COMPOSE_FILE_URL = "https://raw.githubusercontent.com/getml/getml-community/1.5.0/runtime/docker-compose.yml"
 """
 URL that points to the docker-compose runtime file.
 """

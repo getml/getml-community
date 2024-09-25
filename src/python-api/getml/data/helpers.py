@@ -38,7 +38,6 @@ import pyarrow as pa
 import getml.communication as comm
 from getml import communication as comm
 from getml import constants, data
-from getml.constants import COMPARISON_ONLY, TIME_STAMP
 from getml.data.columns import (
     BooleanColumnView,
     FloatColumn,
@@ -58,9 +57,9 @@ from getml.data.roles.container import Roles
 from getml.data.roles.types import Role
 from getml.data.subroles import sets as subroles_sets
 from getml.data.subroles.types import Subrole
-from getml.database import Connection, _retrieve_urls
+from getml.database import Connection
 from getml.database.helpers import _retrieve_temp_dir
-from getml.helpers import _is_iterable_not_str, _is_iterable_not_str_of_type
+from getml.helpers import _is_iterable_not_str_of_type
 
 if TYPE_CHECKING:
     from getml.data.data_frame import DataFrame
@@ -129,11 +128,32 @@ def _check_if_exists(colnames: List[str], all_colnames: List[str]):
 # --------------------------------------------------------------------
 
 
-def _check_join_key(candidate: Any, join_keys: List[str]) -> List[str]:
-    if isinstance(candidate, str):
-        candidate = [candidate]
+def _check_join_key(candidates: Any, roles: Roles, name: str):
+    if isinstance(candidates, str):
+        candidates = [candidates]
 
-    return [can for can in candidate if can not in join_keys]
+    not_existing = [
+        candidate
+        for candidate in candidates
+        if candidate is not None and candidate not in roles.columns
+    ]
+
+    if not_existing:
+        raise ValueError(
+            f"Columns {not_existing!r} not found in schema of Placeholder {name!r}."
+        )
+
+    invalid = [
+        candidate
+        for candidate in candidates
+        if candidate is not None and candidate not in roles.join_key
+    ]
+
+    if invalid:
+        raise ValueError(
+            f"Columns {invalid!r} don't have the role 'join_key' "
+            "In the schema of Placeholder {name!r}."
+        )
 
 
 # --------------------------------------------------------------------
@@ -221,28 +241,25 @@ def _handle_cols(
 
 def _handle_multiple_join_keys(
     join_keys: List[Union[str, Tuple[str, str]]],
-) -> Tuple[str, str]:
-    on = [(jk, jk) if isinstance(jk, str) else jk for jk in join_keys]
-    left_join_keys = [o[0] for o in on]
-    right_join_keys = [o[1] for o in on]
-    ljk, rjk = _merge_join_keys(left_join_keys, right_join_keys)
-    return (ljk, rjk)
+) -> List[Tuple[str, str]]:
+    return [(jk, jk) if isinstance(jk, str) else jk for jk in join_keys]
 
 
 # --------------------------------------------------------------------
 
 
-def _handle_on(on: OnType) -> Tuple[str, str]:
-    if on is None:
-        return (constants.NO_JOIN_KEY, constants.NO_JOIN_KEY)
-
+def _handle_on(on: OnType) -> Union[List[Tuple[str, str]], List[Tuple[None, None]]]:
     if isinstance(on, str):
-        return (on, on)
+        return [(on, on)]
 
     if isinstance(on, list):
         return _handle_multiple_join_keys(on)
 
-    return on
+    if isinstance(on, tuple):
+        return [on]
+
+    if on is None:
+        return [(None, None)]
 
 
 # --------------------------------------------------------------------
@@ -399,7 +416,11 @@ def _infer_arange_args_from_slice(
 # --------------------------------------------------------------------
 
 
-def _merge_join_keys(join_key: List[str], other_join_key: List[str]) -> Tuple[str, str]:
+def _serialize_join_keys(on: OnType) -> Tuple[str, str]:
+    if on == [(None, None)]:
+        return constants.NO_JOIN_KEY, constants.NO_JOIN_KEY
+
+    join_key, other_join_key = zip(*on)
     begin = constants.MULTIPLE_JOIN_KEYS_BEGIN
     end = constants.MULTIPLE_JOIN_KEYS_END
     sep = constants.JOIN_KEY_SEP

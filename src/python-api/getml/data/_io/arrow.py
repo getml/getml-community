@@ -289,6 +289,17 @@ def preprocess_timestamp_cast_to_microseconds(field: pa.Field) -> pa.Field:
     return field
 
 
+@arrow_schema_field_preprocessor(roles={roles.unused_string})
+def preprocess_types_cast_to_string(field: pa.Field) -> pa.Field:
+    """
+    Eagerly cast all fields (except timestamps) that are going to be treated as
+    string like to string.
+    """
+    if pa.types.is_timestamp(field.type):
+        return field
+    return pa.field(field.name, pa.string())
+
+
 @arrow_schema_field_preprocessor(roles=roles_sets.numerical)
 def preprocess_unparameterized_type(field: pa.Field) -> pa.Field:
     """
@@ -349,11 +360,13 @@ def postprocess_timestamp_drop_timezone(field: pa.Field) -> pa.Field:
 
 
 @arrow_schema_field_postprocessor(roles={roles.unused_string})
-def postprocess_types_cast_to_string(field: pa.Field) -> pa.Field:
+def postprocess_timestamp_cast_to_string(field: pa.Field) -> pa.Field:
     """
-    Cast all fields that are going to be treated as string like to string.
+    Cast timestamps that are going to be treated as string like to string.
     """
-    return pa.field(field.name, pa.string())
+    if pa.types.is_timestamp(field.type):
+        return pa.field(field.name, pa.string())
+    return field
 
 
 def _process_arrow_schema(

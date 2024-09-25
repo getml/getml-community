@@ -7,12 +7,12 @@
 
 package main
 
-func printStartMessage(version string) {
+func printStartMessage(packageName string) {
 
 	println(
 		"getML - Automated Feature",
 		"Learning for Relational Data and Time Series.")
 
-	println("version: ", version)
+	println("edition: ", packageName)
 
 }

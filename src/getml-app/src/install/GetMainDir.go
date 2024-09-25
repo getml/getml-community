@@ -14,16 +14,16 @@ import (
 
 // GetMainDir returns the main directory
 // to which we are copying our files.
-func GetMainDir(targetDir string, version string) string {
+func GetMainDir(targetDir string, packageName string) string {
 
 	if runtime.GOOS == "windows" {
 		return "."
 	}
 
 	if targetDir == UsrLocal {
-		return filepath.Join(GetHomeDir(targetDir), "getML/"+version)
+		return filepath.Join(GetHomeDir(targetDir), "getML/"+packageName)
 	}
 
-	return filepath.Join(GetHomeDir(targetDir), ".getML/"+version)
+	return filepath.Join(GetHomeDir(targetDir), ".getML/"+packageName)
 
 }

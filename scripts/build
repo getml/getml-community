@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 
 SCRIPTS_DIR=$(dirname -- "$(realpath -- "$0")")
-OUTPUT_DIR=${GETML_BUILD_OUTPUT_DIR:-build}
-VERSION=${GETML_VERSION:-$(<"$SCRIPTS_DIR/../VERSION")}
 PLATFORM=${GETML_BUILD_PLATFORM}
 
 parse_opt_multiple_args() {
@@ -19,7 +17,6 @@ process_build_args() {
     processed+=" --set $target.args.${arg}"
   done
   build_args=$processed
-
 }
 
 show_help() {
@@ -31,25 +28,22 @@ show_help() {
 
 		Subcommands:
 		  [a]ll       Build all (whole package, [p]ackage + [py]thon API + tar+gz [ar]chive)
-		  [c]li       Build CLI
-		  [e]ngine    Build Engine
-		  [p]ackage   Export runnable [e]ngine + [c]li package
-		  [py]thon    Package Python API
-		  [r]untime   Build Docker runtime image
 		  [ar]chive   Create tar.gz archive of [p]ackage
+		  [c]li       Build cli
+		  [d]docker   Build Docker runtime
+		  [e]ngine    Build Engine
+		  [p]ackage   Export runable [e]ngine + [c]li package
+		  [py]thon    Package Python API
 
 		Options:
-		  -b <args>       Specify build args (-b KEY=VALUE); passed to Docker build
-		  -h              Show help (this message)
-		  -o <path>       Set output path (default: build); passed to Docker build
-		  -p <platform>   Set the target platform for the build (default is your current platform).
-		                  Valid options: linux/amd64, linux/arm64
+		  -b <args>   Specify build args (-b KEY=VALUE); passed to docker build
+		  -h          Show help (this message)
+		  -o <path>   Set output path (default: build); passed to docker build
 	EOF
 }
 
-
 process_opts() {
-  while getopts ":b:hop:" opt; do
+  while getopts ":b:ho:p:" opt; do
     case ${opt} in
     b)
       parse_opt_multiple_args "$@"
@@ -84,8 +78,20 @@ while [[ "$#" -gt 0 ]]; do
     target="all"
     shift
     ;;
+  ar | archive)
+    target="archive"
+    shift
+    ;;
   c | cli)
     target="cli"
+    shift
+    ;;
+  d | docker)
+    target="docker"
+    shift
+    ;;
+  docker-copy-artifacts)
+    target="docker-copy-artifacts"
     shift
     ;;
   e | engine)
@@ -100,21 +106,18 @@ while [[ "$#" -gt 0 ]]; do
     target="python"
     shift
     ;;
-  r | runtime)
-    target="runtime"
+  python-copy-artifacts)
+    target="python-copy-artifacts"
     shift
-    ;;
-  ar | archive)
-    target="archive"
-    shift
-    ;;
-  --)
-    shift
-    break
     ;;
   -*)
     process_opts "$@"
-    shift $((OPTIND - 1))
+    if [[ $? -eq 0 ]]; then
+      shift $((OPTIND - 1))
+      break
+    else
+      exit 1
+    fi
     ;;
   *)
     echo "Unrecognized subcommmand: $1" >&2
@@ -124,9 +127,7 @@ while [[ "$#" -gt 0 ]]; do
 done
 
 (
-  export GETML_VERSION=${VERSION}
-  export GETML_BUILD_OUTPUT_DIR=${OUTPUT_DIR}
-
+  export GETML_VERSION=${GETML_VERSION:-$(<"$SCRIPTS_DIR/../VERSION")}
   if [[ -n $PLATFORM ]]; then
     build_args+=" --set $target.platform=$PLATFORM"
   fi

@@ -47,9 +47,9 @@ dependencies = [
 
 [project.urls]
 "Hompage" = "https://getml.com"
-"Documentation" = "https://docs.getml.com/latest"
+"Documentation" = "https://getml.com/latest"
 "Bug Tracker" = "https://github.com/getml/getml-community/issues"
-"Download" = "https://getml.com/product/download/"
+"Download" = "https://getml.com/latest/install"
 "Source Code" = "https://github.com/getml/getml-community"
 
 [project.optional-dependencies]
@@ -116,6 +116,7 @@ ignore = [
   "C901", "PLR0911", "PLR0912", "PLR0913", "PLR0915", "PLR2004", "PLR0124"
 ]
 exclude = ["tests/**/*",]
+extend-select = ["I"]
 
 [tool.ruff.lint.pyupgrade]
 # Preserve types, even if a file imports `from __future__ import annotations`.

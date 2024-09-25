@@ -1,43 +1,26 @@
 # getML docker runtime
 ## Multiplatform builds
 > [!IMPORTANT]
-> Multiplatform runtime (and wheel) builds require the build artifacts/packages to present in `$GETML_BUILD_OUTPUT_DIR` (default `build`) for all supported architectures (amd64, arm64). However, currently, multiplatform builds are only supported for the go-related parts of getML (app/cli). To build real multiplatform docker runtimes (and wheels), you need to place a getml package built for the non-native architecture alongside the native one inside `$GETML_BUILD_OUTPUT_DIR`. 
->
-> Before running a multiplatform build, the artifacts folder should have roughly the following shape:
-> ```
+> Until we have native cross compilation for the engine, it is too costly to  build for the foreign platform through emulation. Therefore, we have introduced `...copy-artifacts` variations for `python` and `docker` targets which effectively just look for [build artifacts](https://www.notion.so/5cfaed1347af454d83261e4ea772b303?pvs=21) inside `GETML_BUILD_OUTPUT_DIR` (default `build`) and copy them over. So you have to ensure that an up-to-date version of all build artifacts is present inside `build` . Kindly ask someone on the team to provide artifacts for the foreign platform.
+> 
+> If everything is present, `build`  should have roughly the following structure:
+> 
+> ```bash
 > build/
-> └── getml-community-<version-amd64-linux/
+> ├── getml-community-<version>-amd64-linux/
+> │   ├── bin/
+> │   ├── lib/
+> │   └── config.json
+> └── getml-community-<version>-arm64-linux/
 >     ├── bin/
->     │  └── engine*
 >     ├── lib/
->     │  ├── libgomp.so.1.0.0*
->     │  ├── libgomp.so.1*
->     │  └── libmariadb.so.3*
->     ├── getML*
->     ├── config.json
->     ├── environment.json
->     ├── jwks.pub.json
->     ├── INSTALL.md
->     ├── shape-main.png
->     └── LICENSE.txt
->     getml-community-<version>-arm64-linux/
->     ├── bin/
->     │  └── engine*
->     ├── lib/
->     │  ├── libgomp.so.1.0.0*
->     │  ├── libgomp.so.1*
->     │  └── libmariadb.so.3*
->     ├── getML*
->     ├── config.json
->     ├── environment.json
->     ├── jwks.pub.json
->     ├── INSTALL.md
->     ├── shape-main.png
->     └── LICENSE.txt
+>     └── config.json
 > ```
+> 
+> You can call `ls -lah build` to check the timestamps of artifacts.
 > If you want to build for a single platform, you can override the target's `platform` setting: `./scripts/getml build runtime -p=<linux/arm64 linux/amd64>`
 
-As the docker runtime is multiplatform. You need [a docker engine with multiplafom build support enabled](https://docs.docker.com/build/building/multi-platform/).
+As the docker runtime is multiplatform. You need [a docker engine with multiplatform build support enabled](https://docs.docker.com/build/building/multi-platform/).
 
 The recommended way is [to use the `containerd` image store](https://docs.docker.com/build/building/multi-platform/#enable-the-containerd-image-store), which supports multiplatform images out of the box.
 
@@ -60,7 +43,7 @@ If you are using the Docker Engine (not Docker Desktop), also make sure that you
 
 ## Building image
 ```bash
-../scripts/getml build runtime
+../scripts/getml build docker-copy-artifacts -p linux/arm64,linux/amd64
 ```
 
 ## Running image
@@ -70,5 +53,5 @@ docker run -it getml/getml -p 1708-1733:11708-11733
 
 ## Publishing (pushing) the image
 ```bash
-../scripts/getml publish runtime
+../scripts/getml publish docker
 ```

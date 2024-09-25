@@ -11,7 +11,7 @@ Feature learning based on Multi-Relational Decision Tree Learning.
 """
 
 from dataclasses import dataclass, field
-from typing import Any, ClassVar, Dict, Optional, Union, Iterable
+from typing import Any, ClassVar, Dict, Iterable, Optional, Union
 
 from .aggregations.sets import (
     MULTIREL,

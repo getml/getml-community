@@ -36,16 +36,16 @@ http://localhost:8888/lab?token=<generated_token>
 ```
 
 > [!NOTE]  
-> Using alternatives to [Docker Desktop](https://www.docker.com/products/docker-desktop/) like  
-> * [Podman](https://podman.io/),  
-> * [Podman Desktop](https://podman-desktop.io/) or  
-> * [Rancher Desktop](https://rancherdesktop.io/) with a container engine like dockerd(moby) or containerd(nerdctl)
+> Using alternatives to [Docker Desktop](https://www.docker.com/products/docker-desktop) like  
+> * [Podman](https://podman.io),  
+> * [Podman Desktop](https://podman-desktop.io) or  
+> * [Rancher Desktop](https://rancherdesktop.io) with a container engine like dockerd(moby) or containerd(nerdctl)
 > 
 > allows bind-mounting the notebooks in a user-writeable way (this might need to include `userns_mode: keep-id`) instead of having to `COPY` them in. In combination with volume-binding `/home/getml/.getML/logs` and `/home/getml/.getML/projects`, runs and changes can be persisted across containers.
 
 ### On the Machine (Linux/x64 & arm64)
 
-Alternatively, getML and the notebooks can be run natively on the local Linux machine by having certain software installed, like Python and some Python libraries, Jupyter-Lab and the getML Engine. The [getML Python library](https://github.com/getml/getml-community/) provides an Engine version without [Enterprise features](https://www.getml.com/pricing).
+Alternatively, getML and the notebooks can be run natively on the local Linux machine by having certain software installed, like Python and some Python libraries, Jupyter-Lab and the getML Engine. The [getML Python library](https://github.com/getml/getml-community) provides an Engine version without [Enterprise features](https://getml.com/latest/enterprise/benefits).
 
 The following commands will set up a Python environment with necessary Python libraries and Jupyter-Lab
 

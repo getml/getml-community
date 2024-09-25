@@ -5,36 +5,24 @@
 # for details.
 #
 
-from .sets import (
-    FASTPROP,
-    MULTIREL,
-    MAPPING,
-    MULTIREL_AGGREGATIONS,
-    FASTPROP_AGGREGATIONS,
-    MAPPING_AGGREGATIONS,
-    AGGREGATIONS,
-    _all_aggregations,
-    _multirel_subset,
-)
-
 from .aggregations import (
     AVG,
     COUNT,
     COUNT_DISTINCT,
     COUNT_DISTINCT_OVER_COUNT,
     COUNT_MINUS_COUNT_DISTINCT,
-    EWMA_1S,
-    EWMA_1M,
-    EWMA_1H,
     EWMA_1D,
+    EWMA_1H,
+    EWMA_1M,
+    EWMA_1S,
     EWMA_7D,
     EWMA_30D,
     EWMA_90D,
     EWMA_365D,
-    EWMA_TREND_1S,
-    EWMA_TREND_1M,
-    EWMA_TREND_1H,
     EWMA_TREND_1D,
+    EWMA_TREND_1H,
+    EWMA_TREND_1M,
+    EWMA_TREND_1S,
     EWMA_TREND_7D,
     EWMA_TREND_30D,
     EWMA_TREND_90D,
@@ -67,7 +55,17 @@ from .aggregations import (
     VAR,
     VARIATION_COEFFICIENT,
 )
-
+from .sets import (
+    AGGREGATIONS,
+    FASTPROP,
+    FASTPROP_AGGREGATIONS,
+    MAPPING,
+    MAPPING_AGGREGATIONS,
+    MULTIREL,
+    MULTIREL_AGGREGATIONS,
+    _all_aggregations,
+    _multirel_subset,
+)
 
 __all__ = (
     "FASTPROP",

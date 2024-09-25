@@ -13,13 +13,13 @@ Note:
     All feature learners need to be passed to [`Pipeline`][getml.Pipeline].
 """
 
+from . import aggregations
 from .fastboost import Fastboost
 from .fastprop import FastProp
 from .feature_learner import _FeatureLearner
 from .multirel import Multirel
 from .relboost import Relboost
 from .relmt import RelMT
-from . import aggregations
 
 __all__ = (
     "_FeatureLearner",

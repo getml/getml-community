@@ -4,7 +4,7 @@ services:
     environment:
       GETML_ALLOW_PUSH_NOTIFICATIONS: false
       GETML_ALLOW_REMOTE_IPS: false
-      GETML_HOME_DIRECTORY: /usr/local/getML
+      GETML_HOME_DIRECTORY: /home/getml
       GETML_HTTP_PORT: 1711
       GETML_IN_MEMORY: true
       GETML_INSTALL: false

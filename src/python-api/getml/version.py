@@ -14,4 +14,4 @@ VERSION_FILE = Path(__file__).parent / "VERSION"
 try:
     __version__ = VERSION_FILE.read_text().strip()
 except FileNotFoundError:
-    __version__ = os.getenv("VERSION", DEFAULT_VERSION)
+    __version__ = os.getenv("GETML_VERSION", DEFAULT_VERSION)

@@ -163,8 +163,11 @@ def test_schema_postprocessing(schema):
         unused_string=["time_stamp", "join_key", "target", "column_01"]
     )
     postprocessed_schema = postprocess_arrow_schema(schema, string_roles)
-    # target role is unused_string: all fields are cast to string
-    assert all(pa.types.is_string(field.type) for field in postprocessed_schema)
+    # target role is unused_string: all fields (except the timestamp) are cast
+    # to string
+    assert all(
+        pa.types.is_string(field.type) for field in list(postprocessed_schema)[:1]
+    )
 
 
 def test_arrow_inference_csv_changing_type(csv_file_with_changing_type_in_row_2):

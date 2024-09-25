@@ -6,8 +6,9 @@
 #
 
 import pytest
+
 from getml.exceptions import (
-    ENTERPRISE_FEATURE_NOT_AVAILABLE_TEMPLATE,
+    ENTERPRISE_FEATURE_NOT_AVAILABLE_ERROR_MSG_TEMPLATE,
     handle_engine_exception,
 )
 
@@ -27,6 +28,8 @@ def test_handle_enterprise_feature_not_available_error():
     with pytest.raises(OSError) as excinfo:
         handle_engine_exception(engine_error_message)
 
-    assert str(excinfo.value) == ENTERPRISE_FEATURE_NOT_AVAILABLE_TEMPLATE.format(
+    assert str(
+        excinfo.value
+    ) == ENTERPRISE_FEATURE_NOT_AVAILABLE_ERROR_MSG_TEMPLATE.format(
         missing_feature_name="__name__", missing_feature_type="__type__"
     )

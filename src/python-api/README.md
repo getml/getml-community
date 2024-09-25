@@ -7,19 +7,18 @@ Because of this customized database Engine, it is very fast. In fact, it is
 between 60x to 1000x faster than other open-source tools for automated
 feature engineering.
 
-This is the official python client for the getML Engine.
+This is the official Python API for the getML Engine.
 
-Documentation and more details at [https://docs.getml.com/1.4.0](https://docs.getml.com/1.4.0)
-
+For more information, visit the [getML documentation](https://getml.com) or explore the [Python API documentation](https://getml.com/latest/reference).
 
 ### Build
 
-To build the package install
+To build the package install `hatch`
 ```bash
-pip install build
+pip install hatch
 ```
 
 and run
 ```bash
-python3 -m build .
+hatch build -t wheel
 ```

@@ -11,6 +11,7 @@ Reads data into an sqlite3 table.
 """
 
 from __future__ import annotations
+
 import sqlite3
 from typing import Any, List
 

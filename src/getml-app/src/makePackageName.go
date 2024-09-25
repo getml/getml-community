@@ -14,7 +14,7 @@ import (
 
 func makePackageName() string {
 
-	packageName := fmt.Sprintf("getml-community-%s-%s-%s", version, getArch(), runtime.GOOS)
+	packageName := fmt.Sprintf("getml-community-%s-%s-%s", version, runtime.GOARCH, runtime.GOOS)
 
 	return packageName
 }
