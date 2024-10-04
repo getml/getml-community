@@ -32,6 +32,7 @@ This results in a speedup between _60_ to _1000_ times (see [Benchmarks](#benchm
 * [Benchmarks](#benchmarks)
 * [Demo notebooks](#demo-notebooks)
 * [Example](#example)
+* [Release Notes](#release-notes)
 
 ## Quick Start
 
@@ -43,7 +44,7 @@ pip install getml
 
 Check out [the Example](#example) and the [demonstrational notebooks](https://getml.com/latest/examples) to get started with getML. A [detailed walkthrough guide](https://getml.com/latest/user_guide/walkthrough) and [the documentation](https://getml.com/latest) will also help you on your way with getML.
 
-To learn, how to build and contribute to getML, check out [CONTRIBUTING.md](CONTRIBUTING.md)
+To learn, how to build and contribute to getML, check out [BUILD.md](BUILD.md) for instructions on how to build getML from source.
 
 ## Key benefits for using getML
 
@@ -187,3 +188,6 @@ predictions = pipe.predict(time_series.test)
 ```
 
 To see the full example, check out the Interstate94 notebook ([interstate94.ipynb](https://getml.com/latest/examples/community-notebooks/interstate94)).
+
+## Release Notes
+See [CHANGELOG.md](CHANGELOG.md) for release notes.
