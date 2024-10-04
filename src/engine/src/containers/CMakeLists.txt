@@ -1,0 +1,19 @@
+add_library(
+  containers
+  OBJECT
+  DataFrame.cpp
+  DataFramePrinter.cpp
+  DataFrameReader.cpp
+  InMemoryEncoding.cpp
+  MemoryMappedEncoding.cpp
+)
+
+target_link_libraries(
+  containers
+  PUBLIC
+  Poco::Foundation
+  reflectcpp::reflectcpp
+  xgboost::xgboost
+  SQLite::SQLite3
+  range-v3::range-v3
+)

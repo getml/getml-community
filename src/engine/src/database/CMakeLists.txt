@@ -1,0 +1,26 @@
+add_library(
+  database
+  OBJECT
+  ContentGetter.cpp
+  CSVBuffer.cpp
+  DatabaseParser.cpp
+  MySQL.cpp
+  MySQLIterator.cpp
+  Postgres.cpp
+  PostgresIterator.cpp
+  QuerySplitter.cpp
+  Sqlite3.cpp
+  Sqlite3Iterator.cpp
+  sniff.cpp
+)
+
+target_link_libraries(
+  database
+  PUBLIC
+  reflectcpp::reflectcpp
+  libmariadb::libmariadb
+  Poco::Foundation
+  PostgreSQL::PostgreSQL
+  SQLite::SQLite3
+  range-v3::range-v3
+)

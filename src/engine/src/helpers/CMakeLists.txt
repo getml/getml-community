@@ -1,0 +1,24 @@
+add_library(
+  helpers
+  OBJECT
+  DataFrame.cpp
+  ImportanceMaker.cpp
+  Macros.cpp
+  Placeholder.cpp
+  RowIndexContainer.cpp
+  Schema.cpp
+  StringReplacer.cpp
+  StringSplitter.cpp
+  SubroleParser.cpp
+  TableHolder.cpp
+  VocabularyContainer.cpp
+  VocabularyTree.cpp
+  WordIndexContainer.cpp
+)
+
+target_link_libraries(
+  helpers
+  PUBLIC
+  reflectcpp::reflectcpp
+  range-v3::range-v3
+)

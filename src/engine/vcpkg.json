@@ -1,0 +1,87 @@
+{
+  "dependencies": [
+    {
+      "name": "arrow",
+      "features": [
+        "csv",
+        "parquet"
+      ]
+    },
+    "thrift",
+    {
+      "name": "poco",
+      "features": [
+        "crypto"
+      ]
+    },
+    {
+      "name": "libmariadb",
+      "features": [
+        "openssl"
+      ]
+    },
+    "libpq",
+    "eigen3",
+    "sqlite3",
+    "reflectcpp",
+    "xgboost",
+    "gperftools",
+    "libunwind",
+    "range-v3",
+    "gtest"
+  ],
+  "overrides": [
+    {
+      "name": "arrow",
+      "version": "17.0.0#0"
+    },
+    {
+      "name": "thrift",
+      "version": "0.20.0#1"
+    },
+    {
+      "name": "poco",
+      "version": "1.12.5.1#0"
+    },
+    {
+      "name": "libmariadb",
+      "version": "3.3.1#4"
+    },
+    {
+      "name": "libpq",
+      "version": "16.4#0"
+    },
+    {
+      "name": "eigen3",
+      "version": "3.4.0#4"
+    },
+    {
+      "name": "sqlite3",
+      "version": "3.46.1#0"
+    },
+    {
+      "name": "reflectcpp",
+      "version": "0.13.0"
+    },
+    {
+      "name": "xgboost",
+      "version": "1.7.6"
+    },
+    {
+      "name": "gperftools",
+      "version": "2.10#1"
+    },
+    {
+      "name": "libunwind",
+      "version": "1.8.1#0"
+    },
+    {
+      "name": "range-v3",
+      "version": "0.12.0#3"
+    },
+    {
+      "name": "gtest",
+      "version": "1.15.2#0"
+    }
+  ]
+}

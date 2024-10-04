@@ -1,0 +1,22 @@
+add_library(
+  predictors
+  OBJECT
+  Encoding.cpp
+  LinearRegression.cpp
+  LogisticRegression.cpp
+  PredictorImpl.cpp
+  PredictorParser.cpp
+  StandardScaler.cpp
+  XGBoostIteratorDense.cpp
+  XGBoostIteratorSparse.cpp
+  XGBoostPredictor.cpp
+)
+
+target_link_libraries(
+  predictors
+  PUBLIC
+  reflectcpp::reflectcpp
+  xgboost::xgboost
+  Eigen3::Eigen
+  range-v3::range-v3
+)

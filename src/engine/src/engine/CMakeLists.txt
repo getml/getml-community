@@ -1,0 +1,66 @@
+add_library(
+  engine-core
+  OBJECT
+  AggOpParser.cpp
+  ArrowHandler.cpp
+  BoolOpParser.cpp
+  CategoryTrimmer.cpp
+  check.cpp
+  ColumnManager.cpp
+  ColumnManager_execute_command.cpp
+  DatabaseManager.cpp
+  DataFrameManager.cpp
+  DataFrameManager_execute_command.cpp
+  DataFrameManager_from_json.cpp
+  DataFrameManager_get_data_frame.cpp
+  DataFrameManager_receive_data.cpp
+  DataFrameTracker.cpp
+  data_model_checking.cpp
+  EMailDomain.cpp
+  FeatureLearnerParser.cpp
+  FileHandler.cpp
+  fit.cpp
+  FittedPipeline.cpp
+  FloatOpParser.cpp
+  Imputation.cpp
+  load.cpp
+  load_fitted.cpp
+  make_placeholder.cpp
+  modify_data_frames.cpp
+  Options.cpp
+  Pipeline.cpp
+  PipelineManager.cpp
+  PipelineManager_execute_command.cpp
+  PipelineManager_receive_data.cpp
+  Predictors.cpp
+  PreprocessorImpl.cpp
+  PreprocessorParser.cpp
+  ProjectManager.cpp
+  ProjectManager_execute_command.cpp
+  RequestHandler.cpp
+  save.cpp
+  Seasonal.cpp
+  score.cpp
+  SQLDependencyTracker.cpp
+  staging.cpp
+  StringOpParser.cpp
+  Substring.cpp
+  to_sql.cpp
+  transform.cpp
+  TextFieldSplitter.cpp
+  ViewManager.cpp
+  ViewParser.cpp
+)
+
+target_link_libraries(
+  engine-core
+  PUBLIC
+  reflectcpp::reflectcpp
+  xgboost::xgboost
+  Poco::Net
+  Poco::Foundation
+  arrow::arrow
+  parquet::parquet
+  SQLite::SQLite3
+  range-v3::range-v3
+)
