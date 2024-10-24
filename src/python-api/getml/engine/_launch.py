@@ -127,6 +127,14 @@ ENGINE_DID_NOT_RESPOND_IN_TIME_ERROR_MSG_TEMPLATE = cleandoc(
 ).format(max_launch_wait_time=MAX_LAUNCH_WAIT_TIME)
 
 
+def _handle_option_name(name: str) -> str:
+    return name.replace("_", "-")
+
+
+def _handle_option_value(value: Union[bool, int, str, PathLike, None]) -> str:
+    return json.dumps(value, default=str).strip('"')
+
+
 @dataclass
 class _Options:
     allow_push_notifications: bool
@@ -146,7 +154,7 @@ class _Options:
         Generates the cmd (args) passed to subprocess.Popen.
         """
         options = [
-            f"--{name.replace('_', '-')}={json.dumps(value, default=str)}"
+            f"--{_handle_option_name(name)}={_handle_option_value(value)}"
             for (name, value) in asdict(self).items()
             if value is not None
         ]
