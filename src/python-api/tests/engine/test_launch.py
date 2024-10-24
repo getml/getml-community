@@ -7,7 +7,7 @@ import getml
 from getml.engine._launch import (
     COMPOSE_FILE_URL,
     DOCKER_DOCS_URL,
-    PLATFORM_NOT_SUPPORTED_NATIVELY_ERROR_MSG_TEMPLATE,
+    OS_NOT_SUPPORTED_NATIVELY_ERROR_MSG_TEMPLATE,
 )
 
 
@@ -19,10 +19,8 @@ def test_launch_non_native(mock_platform_system, mock_getml_is_monitor_alive, sy
     mock_getml_is_monitor_alive.return_value = False
     with pytest.raises(OSError) as exc_info:
         getml.engine.launch()
-    assert str(
-        exc_info.value
-    ) == PLATFORM_NOT_SUPPORTED_NATIVELY_ERROR_MSG_TEMPLATE.format(
-        platform=system,
+    assert str(exc_info.value) == OS_NOT_SUPPORTED_NATIVELY_ERROR_MSG_TEMPLATE.format(
+        os=system.lower(),
         docker_docs_url=DOCKER_DOCS_URL,
         compose_file_url=COMPOSE_FILE_URL,
     )
