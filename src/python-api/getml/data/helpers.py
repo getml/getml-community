@@ -646,6 +646,40 @@ def _sniff_pandas(pandas_df: pd.DataFrame) -> Roles:
 # --------------------------------------------------------------------
 
 
+def _sniff_query(query: str, name: str, conn: Optional[Connection] = None) -> Roles:
+    """
+    Sniffs a table in the database and returns a dictionary of roles.
+
+    Args:
+        name: Name of the resulting DataFrame.
+
+        conn: The database connection to be used. If you don't explicitly pass a
+            connection, the engine will use the default connection.
+    """
+
+    conn = conn or Connection()
+
+    cmd: Dict[str, str] = {}
+
+    cmd["name_"] = name
+    cmd["type_"] = "Database.sniff_query"
+
+    cmd["conn_id_"] = conn.conn_id
+
+    with comm.send_and_get_socket(cmd) as sock:
+        msg = comm.send_string(sock, query)
+        msg = comm.recv_string(sock)
+        if msg != "Success!":
+            sock.close()
+            raise Exception(msg)
+        roles = comm.recv_string(sock)
+
+    return Roles.from_dict(json.loads(roles))
+
+
+# --------------------------------------------------------------------
+
+
 def _sniff_s3(
     bucket: str,
     keys: Iterable[str],

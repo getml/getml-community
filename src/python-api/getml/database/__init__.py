@@ -30,6 +30,7 @@ the analysis and interaction with the database are provided.
 
 import getml.database.exceptions
 from getml.database.connect_bigquery import connect_bigquery
+from getml.database.connect_duckdb import connect_duckdb
 from getml.database.connect_greenplum import connect_greenplum
 from getml.database.connect_hana import connect_hana
 from getml.database.connect_mariadb import connect_mariadb
@@ -54,6 +55,7 @@ from getml.database.sniff_s3 import sniff_s3
 __all__ = (
     "Connection",
     "connect_bigquery",
+    "connect_duckdb",
     "connect_greenplum",
     "connect_hana",
     "connect_mariadb",

@@ -78,6 +78,7 @@ from getml.data.helpers import (
     _send_numpy_array,
     _sniff_db,
     _sniff_pandas,
+    _sniff_query,
     _sniff_s3,
     _to_pyspark,
     _where,
@@ -953,7 +954,7 @@ class DataFrame:
 
             dry:
                 If set to True, the data will not be read. Instead, the method
-                will return the inffered roles.
+                will return the inferred roles.
 
         Returns:
                 Handler of the underlying data.
@@ -1096,7 +1097,7 @@ class DataFrame:
 
             dry:
                 If set to True, the data will not be read. Instead, the method
-                will return the inffered roles.
+                will return the inferred roles.
 
             verbose:
                 If True, when fnames are urls, the filenames are
@@ -1307,7 +1308,7 @@ class DataFrame:
 
             dry:
                 If set to True, the data will not be read. Instead, the method
-                will return the inffered roles.
+                will return the inferred roles.
 
             conn:
                 The database connection to be used.
@@ -1439,7 +1440,7 @@ class DataFrame:
 
             dry:
                 If set to True, the data will not be read. Instead, the method
-                will return the inffered roles.
+                will return the inferred roles.
         Returns:
                 Handler of the underlying data.
         """
@@ -1523,7 +1524,7 @@ class DataFrame:
 
             dry:
                 If set to True, the data will not be read. Instead, the method
-                will return the inffered roles.
+                will return the inferred roles.
 
         Returns:
             Handler of the underlying data.
@@ -1606,7 +1607,7 @@ class DataFrame:
 
             dry:
                 If set to True, the data will not be read. Instead, the method
-                will return the inffered roles.
+                will return the inferred roles.
 
         Returns:
             Handler of the underlying data.
@@ -1710,7 +1711,7 @@ class DataFrame:
 
             dry:
                 If set to True, the data will not be read. Instead, the method
-                will return the inffered roles.
+                will return the inferred roles.
 
         Returns:
             Handler of the underlying data.
@@ -1813,7 +1814,7 @@ class DataFrame:
 
             dry:
                 If set to True, the data will not be read. Instead, the method
-                will return the inffered roles.
+                will return the inferred roles.
 
         Returns:
                 Handler of the underlying data.
@@ -1848,6 +1849,137 @@ class DataFrame:
         data_frame = cls(name, roles)
 
         return data_frame.read_pyspark(spark_df=spark_df, append=False)
+
+    # ------------------------------------------------------------
+
+    @overload
+    @classmethod
+    def from_query(
+        cls,
+        query: str,
+        name: str,
+        roles: Optional[Union[Dict[Union[Role, str], Iterable[str]], Roles]] = None,
+        ignore: bool = False,
+        dry: Literal[False] = False,
+        conn: Optional[Connection] = None,
+    ) -> DataFrame: ...
+
+    @overload
+    @classmethod
+    def from_query(
+        cls,
+        query: str,
+        name: str,
+        roles: Optional[Union[Dict[Union[Role, str], Iterable[str]], Roles]] = None,
+        ignore: bool = False,
+        dry: Literal[True] = True,
+        conn: Optional[Connection] = None,
+    ) -> Roles: ...
+
+    @classmethod
+    def from_query(
+        cls,
+        query: str,
+        name: str,
+        roles: Optional[Union[Dict[Union[Role, str], Iterable[str]], Roles]] = None,
+        ignore: bool = False,
+        dry: bool = False,
+        conn: Optional[Connection] = None,
+    ) -> Union[DataFrame, Roles]:
+        """Create a DataFrame from a query run on a database.
+
+        It will construct a data frame object in the engine, fill it
+        with the data read from the query executed on the connected
+        database (see [`database`][getml.database]), and return a
+        corresponding [`DataFrame`][getml.DataFrame] handle.
+
+        Args:
+            query:
+                The SQL query to be read.
+
+            name:
+                Name of the data frame to be created.
+
+                Maps the [`roles`][getml.data.roles] to the
+                column names (see [`colnames`][getml.DataFrame.colnames]).
+
+                The `roles` dictionary is expected to have the following format:
+                ```python
+                roles = {getml.data.role.numeric: ["colname1", "colname2"],
+                         getml.data.role.target: ["colname3"]}
+                ```
+
+                Otherwise, you can use the [`Roles`][getml.data.Roles] class.
+
+            ignore:
+                Only relevant when roles is not None.
+                Determines what you want to do with any colnames not
+                mentioned in roles. Do you want to ignore them (True)
+                or read them in as unused columns (False)?
+
+            dry:
+                If set to True, the data will not be read. Instead, the method
+                will return the inferred roles.
+
+            conn:
+                The [`database.Connection`][getml.database.Connection] to be used.
+                If you don't explicitly pass a connection, the engine
+                will use the default connection.
+
+        Returns:
+                Handler of the underlying data.
+
+        ??? example
+            ```python
+            getml.database.connect_mysql(
+                host="db.relational-data.org",
+                port=3306,
+                dbname="financial",
+                user="guest",
+                password="relational"
+            )
+
+            loan = getml.DataFrame.from_query(
+                query='SELECT * FROM "loan";', name='loan')
+            ```
+        """
+
+        # -------------------------------------------
+
+        if not isinstance(query, str):
+            raise TypeError("'query' must be str.")
+
+        if not isinstance(name, str):
+            raise TypeError("'name' must be str.")
+
+        # The content of roles is checked in the class constructor called below.
+        if roles is not None and not isinstance(roles, (dict, Roles)):
+            raise TypeError(
+                "'roles' must be a getml.data.Roles object, a dict or None."
+            )
+
+        if not isinstance(ignore, bool):
+            raise TypeError("'ignore' must be bool.")
+
+        if not isinstance(dry, bool):
+            raise TypeError("'dry' must be bool.")
+
+        # -------------------------------------------
+
+        conn = conn or database.Connection()
+
+        # ------------------------------------------------------------
+
+        sniffed_roles = _sniff_query(query, name, conn)
+
+        roles = _prepare_roles(roles, sniffed_roles, ignore_sniffed_roles=ignore)
+
+        if dry:
+            return roles
+
+        data_frame = cls(name, roles)
+
+        return data_frame.read_query(query=query, append=False, conn=conn)
 
     # ------------------------------------------------------------
 
@@ -1968,7 +2100,7 @@ class DataFrame:
 
             dry:
                 If set to True, the data will not be read. Instead, the method
-                will return the inffered roles.
+                will return the inferred roles.
 
         Returns:
                 Handler of the underlying data.
