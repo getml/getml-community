@@ -141,3 +141,102 @@ def df3():
         },
     ).read_json(json_str)
     return my_df3
+
+
+@pytest.fixture
+def duckdb_conn():
+    conn = getml.database.connect_duckdb()
+    yield conn
+
+
+@pytest.fixture
+def prepopulated_duckdb_conn(duckdb_conn):
+    conn = duckdb_conn
+    queries = (
+        cleandoc(
+            """
+            CREATE TABLE Product (
+                ProductID integer,
+                MakeFlag integer,
+                FinishedGoodsFlag integer,
+                Name text,
+                ProductNumber text
+            );
+
+            INSERT INTO Product
+                VALUES (1, 0, 1, 'Adjust Headset', 'AD-100');
+
+            INSERT INTO Product
+                VALUES (2, 1, 0, 'Bearing Ball', 'BA-832');
+
+            INSERT INTO Product
+                VALUES (3, 0, 1, 'BB Ball Bearing', 'BE-234');
+
+            INSERT INTO Product
+                VALUES (4, 1, 0, 'Headset Ball Bearings', 'BE-290');
+
+            INSERT INTO Product
+                VALUES (5, 0, 1, 'Blade', 'BL-2036');
+            """
+        ),
+        cleandoc(
+            """
+            CREATE TABLE SalesOrderDetail (
+                SalesOrderID integer,
+                SalesOrderDetailID integer,
+                OrderQty integer,
+                ProductID integer,
+                UnitPrice text,
+                UnitPriceDiscount text
+            );
+
+            INSERT INTO SalesOrderDetail
+                VALUES (43659, 1, 1, 776, '2024.9940', '0.0000');
+
+            INSERT INTO SalesOrderDetail
+                VALUES (43659, 2, 3, 777, '2024.9940', '0.0000');
+
+            INSERT INTO SalesOrderDetail
+                VALUES (43659, 3, 1, 778, '2024.9940', '0.0000');
+
+            INSERT INTO SalesOrderDetail
+                VALUES (43659, 4, 1, 771, '2039.9940', '0.0000');
+
+            INSERT INTO SalesOrderDetail
+                VALUES (43660, 1, 1, 776, '2024.9940', '0.0000');
+            """
+        ),
+        cleandoc(
+            """
+            CREATE TABLE Store (
+                BusinessEntityID integer,
+                Name text,
+                Demographics text,
+                rowguid text,
+                ModifiedDate text
+            );
+
+            INSERT INTO Store
+                VALUES (292, 'Store 292', 'demographics', 'guid', '2014-09-12 11:15:07.263');
+
+            INSERT INTO Store
+                VALUES (293, 'Store 293', 'demographics', 'guid', '2014-09-12 11:15:07.263');
+
+            INSERT INTO Store
+                VALUES (294, 'Store 294', 'demographics', 'guid', '2014-09-12 11:15:07.263');
+
+            INSERT INTO Store
+                VALUES (295, 'Store 295', 'demographics', 'guid', '2014-09-12 11:15:07.263');
+
+            INSERT INTO Store
+                VALUES (296, 'Store 296', 'demographics', 'guid', '2014-09-12 11:15:07.263');
+            """
+        ),
+    )
+
+    getml.database.execute("\n".join(queries), conn=conn)
+
+    yield conn
+
+    for table in getml.database.get("SHOW TABLES;", conn=conn).name:
+        getml.database.execute(f"DROP TABLE {table};", conn=conn)

@@ -30,9 +30,6 @@ def connect_greenplum(
 ) -> Connection:
     """Creates a new Greenplum database connection.
 
-    But first, make sure your database is running, and you can reach it
-    from your command line.
-
     enterprise-adm: Enterprise edition
         This feature is exclusive to the Enterprise edition and is not available in the Community edition. Discover the [benefits of the Enterprise edition][enterprise-benefits] and [compare their features][enterprise-feature-list].
 

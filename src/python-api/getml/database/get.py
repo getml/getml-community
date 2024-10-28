@@ -11,6 +11,7 @@ Executes an SQL query on the database and returns the result as
 a pandas dataframe.
 """
 
+import io
 from typing import Any, Dict, Optional
 
 import pandas as pd
@@ -52,4 +53,4 @@ def get(query: str, conn: Optional[Connection] = None) -> pd.DataFrame:
             comm.handle_engine_exception(msg)
         json_str = comm.recv_string(sock)
 
-    return pd.read_json(json_str)
+    return pd.read_json(io.StringIO(json_str))

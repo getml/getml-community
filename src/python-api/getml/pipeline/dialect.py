@@ -32,6 +32,7 @@ from typing import Pattern
 
 _all_dialects = [
     "bigquery",
+    "duckdb",
     "human-readable sql",
     "mysql",
     "postgres",
@@ -43,7 +44,8 @@ _all_dialects = [
 # --------------------------------------------------------------
 
 bigquery = _all_dialects[0]
-"""BigQuery is a proprietary database system used by the Google Cloud.
+"""
+BigQuery is a proprietary database system used by the Google Cloud.
 
 enterprise-adm: Enterprise edition
     This feature is exclusive to the Enterprise edition and is not available in the Community edition. Discover the [benefits of the Enterprise edition][enterprise-benefits] and [compare their features][enterprise-feature-list].
@@ -51,12 +53,25 @@ enterprise-adm: Enterprise edition
     For licensing information and technical support, please [contact us][contact-page].
 """
 
-human_readable_sql = _all_dialects[1]
-"""SQL that is not meant to be executed, but for interpretation by humans.
+duckdb = _all_dialects[1]
+"""
+DuckDB is an columnar database system that is designed for OLAP workloads.
+
+enterprise-adm: Enterprise edition
+    This feature is exclusive to the Enterprise edition and is not available in the Community edition. Discover the [benefits of the Enterprise edition][enterprise-benefits] and [compare their features][enterprise-feature-list].
+
+    For licensing information and technical support, please [contact us][contact-page].
 """
 
-mysql = _all_dialects[2]
-"""MySQL and its fork MariaDB are among the most popular open-source
+
+human_readable_sql = _all_dialects[2]
+"""
+SQL that is not meant to be executed, but for interpretation by humans.
+"""
+
+mysql = _all_dialects[3]
+"""
+MySQL and its fork MariaDB are among the most popular open-source
 database systems.
 
 enterprise-adm: Enterprise edition
@@ -65,8 +80,9 @@ enterprise-adm: Enterprise edition
     For licensing information and technical support, please [contact us][contact-page].
 """
 
-postgres = _all_dialects[3]
-"""The PostgreSQL or postgres dialect is a popular SQL dialect
+postgres = _all_dialects[4]
+"""
+The PostgreSQL or postgres dialect is a popular SQL dialect
 used by PostgreSQL and its many derivatives like Redshift
 or Greenplum.
 
@@ -76,8 +92,9 @@ enterprise-adm: Enterprise edition
     For licensing information and technical support, please [contact us][contact-page].
 """
 
-spark_sql = _all_dialects[4]
-"""Spark SQL is the SQL dialect used by Apache Spark.
+spark_sql = _all_dialects[5]
+"""
+Spark SQL is the SQL dialect used by Apache Spark.
 
 Apache Spark is an open-source, distributed, in-memory
 engine for large-scale data processing and a popular
@@ -89,8 +106,9 @@ enterprise-adm: Enterprise edition
     For licensing information and technical support, please [contact us][contact-page].
 """
 
-sqlite3 = _all_dialects[5]
-"""SQLite3 is a light-weight and widely used database system.
+sqlite3 = _all_dialects[6]
+"""
+SQLite3 is a light-weight and widely used database system.
 
 It is recommended for live prediction systems or when the amount
 of data handled is unlikely to be too large.
@@ -101,8 +119,9 @@ enterprise-adm: Enterprise edition
     For licensing information and technical support, please [contact us][contact-page].
 """
 
-tsql = _all_dialects[6]
-"""TSQL or Transact-SQL is the dialect used by most Microsoft
+tsql = _all_dialects[7]
+"""
+TSQL or Transact-SQL is the dialect used by most Microsoft
 databases.
 
 enterprise-adm: Enterprise edition
@@ -119,8 +138,8 @@ def _drop_table(dialect: str, key: str) -> str:
     if dialect in (bigquery, mysql, spark_sql):
         return f"DROP TABLE IF EXISTS `{key.upper()}`"
 
-    if dialect in (human_readable_sql, postgres, sqlite3):
-        return f'DROP TABLE IF EXISTS "{key.upper()}"'
+    if dialect in (duckdb, human_readable_sql, postgres, sqlite3):
+        return 'DROP TABLE IF EXISTS "' + key.upper() + '"'
 
     if dialect == tsql:
         return f"DROP TABLE IF EXISTS [{key.upper()}]"
@@ -140,7 +159,7 @@ def _table_pattern(dialect: str) -> Pattern:
     if dialect in (bigquery, mysql, spark_sql):
         return re.compile("CREATE TABLE `(.+)`")
 
-    if dialect in (human_readable_sql, postgres, sqlite3):
+    if dialect in (duckdb, human_readable_sql, postgres, sqlite3):
         return re.compile('CREATE TABLE "(.+)"')
 
     if dialect == tsql:

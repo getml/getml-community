@@ -7,12 +7,11 @@
 
 
 """
-Creates a new BigQuery database connection.
+Creates a new DuckDB database connection.
 """
 
 import os
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import getml.communication as comm
 from getml import constants
@@ -20,31 +19,27 @@ from getml import constants
 from .connection import Connection
 
 
-def connect_bigquery(
-    database_id: str,
-    project_id: str,
-    google_application_credentials: Union[str, Path],
+def connect_duckdb(
+    name: Optional[str] = None,
     time_formats: Optional[List[str]] = None,
     conn_id: str = "default",
-) -> Connection:
-    """
-    Creates a new BigQuery database connection.
+):
+    """Creates a new DuckDB database connection.
 
     enterprise-adm: Enterprise edition
-        This feature is exclusive to the Enterprise edition and is not available in the Community edition. Discover the [benefits of the Enterprise edition][enterprise-benefits] and [compare their features][enterprise-feature-list].
+        This feature is exclusive to the Enterprise edition and is not available
+        in the Community edition. Discover the [benefits of the Enterprise
+        edition][enterprise-benefits] and [compare their
+        features][enterprise-feature-list].
 
-        For licensing information and technical support, please [contact us][contact-page].
+        For licensing information and technical support, please
+        [contact us][contact-page].
 
     Args:
-        database_id:
-            The ID of the database to connect to.
-
-        project_id:
-            The ID of the project to connect to.
-
-        google_application_credentials:
-            The path of the Google application credentials.
-            (Must be located on the machine hosting the getML Engine).
+        name:
+            Name of the DuckDB file.  If the file does not exist, it
+            will be created. Set to None for a purely in-memory DuckDB
+            database.
 
         time_formats:
             The list of formats tried when parsing time stamps.
@@ -82,31 +77,47 @@ def connect_bigquery(
             The name to be used to reference the connection.
             If you do not pass anything, this will create a new default connection.
 
-    Returns:
-        The connection object.
+    Note:
+        By selecting an existing table of your database in
+        [`from_db`][getml.DataFrame.from_db] function, you can create a new
+        [`DataFrame`][getml.DataFrame] containing all its data. Alternatively
+        you can use the [`read_db`][getml.DataFrame.read_db] and
+        [`read_query`][getml.DataFrame.read_query] methods to replace the
+        content of the current [`DataFrame`][getml.DataFrame] instance or append
+        further rows based on either a table or a specific query.
+
+        You can also write your results back into the database. By passing
+        the name for the destination table to
+        [`transform`][getml.Pipeline.transform], the features generated from
+        your raw data will be written back. Passing them into
+        [`predict`][getml.Pipeline.predict], instead, makes predictions of the
+        target variables to new, unseen data and stores the result into the
+        corresponding table.
+
     """
 
     time_formats = time_formats or constants.TIME_FORMATS
 
     cmd: Dict[str, Any] = {}
 
-    cmd["database_id_"] = database_id
-    cmd["project_id_"] = project_id
-    cmd["google_application_credentials_"] = os.path.abspath(
-        str(google_application_credentials)
-    )
-    cmd["name_"] = ""
-    cmd["type_"] = "Database.new"
-    cmd["db_"] = "bigquery"
+    if name is not None:
+        cmd["name_"] = os.path.abspath(name)
 
+    cmd["type_"] = "Database.new"
+
+    cmd["db_"] = "duckdb"
     cmd["time_formats_"] = time_formats
     cmd["conn_id_"] = conn_id
 
     with comm.send_and_get_socket(cmd) as sock:
-        # The API expects a password, but in this case there is none
-        comm.send_string(sock, "")
+        # The password is usually sent separately,
+        # so it doesn't
+        # end up in the logs. However, DuckDB does not
+        # need a password, so we just send a dummy.
+        comm.send_string(sock, "none")
         msg = comm.recv_string(sock)
-        if msg != "Success!":
-            comm.handle_engine_exception(msg)
+
+    if msg != "Success!":
+        comm.handle_engine_exception(msg)
 
     return Connection(conn_id=conn_id)
