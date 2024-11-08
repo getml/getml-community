@@ -22,6 +22,7 @@ from typing import Any, Dict, List, NamedTuple, Optional, Union
 
 import numpy as np
 from rich import print
+from rich.progress import TaskID
 
 import getml
 from getml.exceptions import handle_engine_exception
@@ -605,6 +606,7 @@ def log(sock: socket.socket):
     """
 
     progress = Progress()
+    task_id = TaskID(0)
 
     while True:
         msg = recv_string(sock)

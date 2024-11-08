@@ -45,11 +45,11 @@ from getml.data.columns import (
     FloatColumnView,
     StringColumn,
     StringColumnView,
-    arange,
     rowid,
 )
 from getml.data.helpers import (
     _is_typed_list,
+    _iter_batches,
     _to_pyspark,
     _where,
     _with_column,
@@ -800,6 +800,7 @@ class View:
         self,
         fname: str,
         compression: Literal["brotli", "gzip", "lz4", "snappy", "zstd"] = "snappy",
+        coerce_timestamps: Optional[bool] = None,
     ):
         """
         Writes the underlying data into a newly created parquet file.
@@ -812,8 +813,11 @@ class View:
             compression:
                 The compression format to use.
                 Supported values are "brotli", "gzip", "lz4", "snappy", "zstd"
+            coerce_timestamps:
+                Cast time stamps to a particular resolution.
+                For detailes, refer to [pyarrow.parquet.ParquetWriter][pyarrow.parquet.ParquetWriter].
         """
-        to_parquet(self, fname, compression)
+        to_parquet(self, fname, compression, coerce_timestamps=coerce_timestamps)
 
     # ----------------------------------------------------------------
 
