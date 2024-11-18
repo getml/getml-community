@@ -41,6 +41,7 @@ from .ewma_trend import (
 )
 from .first import _First
 from .get_word import _get_word
+from .helpers import _try_import_scipy
 from .kurtosis import _Kurtosis
 from .last import _Last
 from .median import _Median
@@ -98,6 +99,9 @@ def connect(database: str) -> sqlite3.Connection:
             + sqlite3.sqlite_version
             + ". Please upgrade Python and/or the Python sqlite3 package."
         )
+
+    # Lazily check if scipy is installed
+    _try_import_scipy()
 
     conn = sqlite3.connect(database)
 
