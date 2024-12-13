@@ -13,7 +13,7 @@ Note:
     All feature learners need to be passed to [`Pipeline`][getml.Pipeline].
 """
 
-from . import aggregations
+from . import aggregations, loss_functions
 from .fastboost import Fastboost
 from .fastprop import FastProp
 from .feature_learner import _FeatureLearner
