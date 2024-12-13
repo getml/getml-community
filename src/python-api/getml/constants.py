@@ -61,6 +61,11 @@ DOCKER_DOCS_URL = "https://getml.com/latest/install/packages/docker/"
 URL that points to the docker sections of the getML documentation.
 """
 
+ENTERPRISE_DOCS_URL = "https://getml.com/latest/enterprise/"
+"""
+URL that points to the enterprise sections of the getML documentation.
+"""
+
 INSTALL_DOCS_URL = "https://getml.com/latest/install/"
 """
 URL that points to the installation sections of the getML documentation.
