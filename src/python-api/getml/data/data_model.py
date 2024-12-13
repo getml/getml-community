@@ -193,13 +193,13 @@ class DataModel:
         attrs.extend(self.names)
         return attrs
 
-    def __getattr__(self, key):
+    def __getattr__(self, key) -> Placeholder:
         try:
             return self[key]
         except KeyError:
             super().__getattribute__(key)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key) -> Placeholder:
         population = vars(self)["population"]
         peripheral = vars(self)["peripheral"]
 
@@ -255,7 +255,7 @@ class DataModel:
 
         return output
 
-    def add(self, *placeholders: Placeholder):
+    def add(self, *placeholders: Union[Placeholder, List[Placeholder]]):
         """
         Adds peripheral placeholders to the data model.
 

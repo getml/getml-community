@@ -1,5 +1,3 @@
-# syntax=docker/dockerfile:1.4
-
 ARG OUTPUT_DIR
 ARG VERSION
 ARG PACKAGE_NAME="getml-community-$VERSION-$TARGETARCH-$TARGETOS"
@@ -13,7 +11,7 @@ WORKDIR /cli/src
 COPY src/getml-app/src .
 
 RUN --mount=type=cache,target=/go/pkg/mod/ \
-    GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -o /cli/build/getml-cli -ldflags "-X main.version=$VERSION" . \
+    CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -o /cli/build/getml-cli -ldflags "-X main.version=$VERSION" . \
     && mkdir /cli/release \
     && cp /cli/build/getml-cli /cli/release/getml-cli
 

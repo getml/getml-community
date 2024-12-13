@@ -345,13 +345,13 @@ class Container:
         attrs = [x for x in attrs if x.isidentifier()]
         return attrs
 
-    def __getattr__(self, key):
+    def __getattr__(self, key) -> Subset:
         try:
             return self[key]
         except KeyError:
             super().__getattribute__(key)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key) -> Subset:
         if "_" + key in self.__dict__:
             return self.__dict__["_" + key]
 

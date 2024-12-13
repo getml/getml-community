@@ -13,6 +13,8 @@ from typing import Any, Callable, Dict, Optional
 import pyarrow as pa
 from pyarrow.lib import ArrowInvalid
 
+from getml.constants import ENTERPRISE_DOCS_URL
+
 ENTERPRISE_FEATURE_NOT_AVAILABLE_REGEX = re.compile(
     r"The (.*) (.*) is not supported in the community edition. Please upgrade "
     r"to getML enterprise to use this. An overview of what is supported in the "
@@ -21,15 +23,12 @@ ENTERPRISE_FEATURE_NOT_AVAILABLE_REGEX = re.compile(
 
 
 ENTERPRISE_FEATURE_NOT_AVAILABLE_ERROR_MSG_TEMPLATE = cleandoc(
-    """
-    The {missing_feature_name} {missing_feature_type}
-    is unique to getML Enterprise and is not available
-    in the getML Community edition you are currently using.
-
-    Please visit https://dev.getml.com/enterprise to learn about getML's
-    advanced algorithms, extended feature set, commercial plans, and available
-    trial options.
-    """
+    "The {missing_feature_name} {missing_feature_type} "
+    "is unique to getML Enterprise and is not available "
+    "in the getML Community edition you are currently using.\n\n"
+    "Please visit {enterprise_docs_url} to learn about getML's "
+    "advanced algorithms, extended feature set, commercial plans, and available "
+    "trial options. "
 )
 
 
@@ -156,6 +155,7 @@ def handle_enterprise_feature_not_available_error(msg: str, extra: Dict[str, Any
         missing_feature_type = match.group(2)
         raise OSError(
             ENTERPRISE_FEATURE_NOT_AVAILABLE_ERROR_MSG_TEMPLATE.format(
+                enterprise_docs_url=ENTERPRISE_DOCS_URL,
                 missing_feature_name=missing_feature_name,
                 missing_feature_type=missing_feature_type,
             )
