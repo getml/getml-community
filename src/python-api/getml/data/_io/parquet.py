@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import itertools as it
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable, Union
+from typing import TYPE_CHECKING, Iterable, Optional, Union
 
 import pyarrow.parquet as pq
 
@@ -40,6 +40,7 @@ def to_parquet(
     fname: str,
     compression: str,
     batch_size: int = DEFAULT_BATCH_SIZE,
+    coerce_timestamps: Optional[bool] = None,
 ):
     df_or_view.refresh()
 
@@ -60,6 +61,7 @@ def to_parquet(
         sink,
         schema,
         compression=compression,
+        coerce_timestamps=coerce_timestamps,
     )
 
     for batch in it.chain([first_batch], batches):

@@ -14,20 +14,40 @@ import getml
 from getml.data._io.arrow import MAX_IEEE754_COMPATIBLE_INT
 
 
-def pytest_collection_modifyitems(items):
+def pytest_addoption(parser):
+    parser.addoption(
+        "--workdir",
+        action="store",
+        default=None,
+        help="Specify a working directory for tests",
+    )
+
+
+def pytest_collection_modifyitems(config, items):
     for item in items:
         try:
-            fixtures = item.fixturenames
-            if "getml_engine" in fixtures:
+            if "getml_engine" in item.fixturenames:
                 item.add_marker(pytest.mark.getml_engine)
                 if platform.system() != "Linux" and not getml.engine.is_monitor_alive():
-                    item.add_marker(
-                        pytest.mark.skip(
-                            reason="Engine is not running. Please start it manually."
-                        )
+                    engine_skip_mark = pytest.mark.skip(
+                        reason="Engine is not running. Please start it manually."
                     )
+                    item.add_marker(engine_skip_mark)
         except:
             pass
+
+
+@pytest.fixture(autouse=True)
+def change_workdir(request, monkeypatch):
+    workdir = request.config.getoption("--workdir")
+
+    if workdir:
+        workdir_path = Path(workdir)
+
+        if not workdir_path.is_dir():
+            raise ValueError(f"{workdir} does not exist.")
+
+        monkeypatch.chdir(workdir_path)
 
 
 @contextmanager

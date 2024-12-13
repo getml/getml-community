@@ -755,9 +755,9 @@ def _to_pyspark(df_or_view: Any, name: str, spark: Any):
             + "' to pyspark.DataFrame, because it contains no columns."
         )
     temp_dir = _retrieve_temp_dir()
-    path = temp_dir / (name + ".parquet")
+    path = (temp_dir / (name + ".parquet")).as_posix()
 
-    _replace_non_alphanumeric_cols(df_or_view).to_parquet(path)
+    _replace_non_alphanumeric_cols(df_or_view).to_parquet(path, coerce_timestamps="ms")
     spark_df = spark.read.parquet(path)
     spark_df.createOrReplaceTempView(name)
     spark.sql("CACHE TABLE `" + name + "`;")

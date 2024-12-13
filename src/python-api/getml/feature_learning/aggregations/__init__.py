@@ -67,6 +67,32 @@ from .sets import (
     _multirel_subset,
 )
 
+# Compatibility aliases
+Avg = AVG
+Count = COUNT
+CountDistinct = COUNT_DISTINCT
+CountDistinctOverCount = COUNT_DISTINCT_OVER_COUNT
+CountMinusCountDistinct = COUNT_MINUS_COUNT_DISTINCT
+First = FIRST
+Kurtosis = KURTOSIS
+Last = LAST
+Max = MAX
+Median = MEDIAN
+Min = MIN
+Mode = MODE
+NumMax = NUM_MAX
+NumMin = NUM_MIN
+Skew = SKEW
+Stddev = STDDEV
+Sum = SUM
+TimeSinceFirstMaximum = TIME_SINCE_FIRST_MAXIMUM
+TimeSinceFirstMinimum = TIME_SINCE_FIRST_MINIMUM
+TimeSinceLastMaximum = TIME_SINCE_LAST_MAXIMUM
+TimeSinceLastMinimum = TIME_SINCE_LAST_MINIMUM
+Trend = TREND
+Var = VAR
+VariationCoefficient = VARIATION_COEFFICIENT
+
 __all__ = (
     "FASTPROP",
     "MULTIREL",
@@ -123,6 +149,30 @@ __all__ = (
     "TREND",
     "VAR",
     "VARIATION_COEFFICIENT",
+    "Avg",
+    "Count",
+    "CountDistinct",
+    "CountDistinctOverCount",
+    "CountMinusCountDistinct",
+    "First",
+    "Kurtosis",
+    "Last",
+    "Max",
+    "Median",
+    "Min",
+    "Mode",
+    "NumMax",
+    "NumMin",
+    "Skew",
+    "Stddev",
+    "Sum",
+    "TimeSinceFirstMaximum",
+    "TimeSinceFirstMinimum",
+    "TimeSinceLastMaximum",
+    "TimeSinceLastMinimum",
+    "Trend",
+    "Var",
+    "VariationCoefficient",
     "_all_aggregations",
     "_multirel_subset",
 )
