@@ -1,5 +1,3 @@
-# syntax=docker/dockerfile:1.4
-
 ARG OUTPUT_DIR
 ARG VERSION
 ARG PACKAGE_NAME="getml-community-$VERSION-$TARGETARCH-$TARGETOS"
