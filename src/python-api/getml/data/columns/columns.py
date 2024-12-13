@@ -1107,13 +1107,11 @@ FloatColumnView.day = _day  # type: ignore
 
 
 def _eq_num(self, other: FloatOperandType):
-    if not isinstance(other, FloatOperandType):
+    if not isinstance(other, op_types := get_args(FloatOperandType)):
         raise TypeError(
             TYPE_MISSMATCH_ERROR_MSG_TEMPLATE.format(
                 col_type=f"{type(self)!r}",
-                operand_types=", ".join(
-                    f"{op_type!r}" for op_type in get_args(FloatOperandType)
-                ),
+                operand_types=", ".join(f"{op_type!r}" for op_type in op_types),
             )
         )
     return BooleanColumnView(
@@ -1124,12 +1122,10 @@ def _eq_num(self, other: FloatOperandType):
 
 
 def _eq_str(self, other: StringOperandType):
-    if not isinstance(other, StringOperandType):
+    if not isinstance(other, op_types := get_args(StringOperandType)):
         msg = TYPE_MISSMATCH_ERROR_MSG_TEMPLATE.format(
             col_type=f"{type(self)!r}",
-            operand_types=", ".join(
-                f"{op_type!r}" for op_type in get_args(StringOperandType)
-            ),
+            operand_types=", ".join(f"{op_type!r}" for op_type in op_types),
         )
         if getattr(self, "role", None) == roles.join_key:
             msg += "\n\nHint: join_keys are always StringColumn(View)s."

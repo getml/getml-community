@@ -3771,6 +3771,7 @@ class DataFrame:
         self,
         fname: str,
         compression: Literal["brotli", "gzip", "lz4", "snappy", "zstd"] = "snappy",
+        coerce_timestamps: Optional[bool] = None,
     ):
         """
         Writes the underlying data into a newly created parquet file.
@@ -3783,8 +3784,11 @@ class DataFrame:
             compression:
                 The compression format to use.
                 Supported values are "brotli", "gzip", "lz4", "snappy", "zstd"
+            coerce_timestamps:
+                Cast time stamps to a particular resolution.
+                For detailes, refer to [pyarrow.parquet.ParquetWriter][pyarrow.parquet.ParquetWriter].
         """
-        to_parquet(self, fname, compression)
+        to_parquet(self, fname, compression, coerce_timestamps=coerce_timestamps)
 
     # ----------------------------------------------------------------
 

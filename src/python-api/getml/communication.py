@@ -22,6 +22,7 @@ from typing import Any, Dict, List, NamedTuple, Optional, Union
 
 import numpy as np
 from rich import print
+from rich.progress import TaskID
 
 import getml
 from getml.exceptions import handle_engine_exception
@@ -116,16 +117,18 @@ def is_engine_alive() -> bool:
 
     """
 
+    # no engine without monitor/cli
+    if not is_monitor_alive():
+        return False
+
     if not _list_projects_impl(running_only=True):
         return False
 
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        try:
-            sock.connect(("localhost", port))
-        except ConnectionRefusedError:
-            return False
-        else:
+    try:
+        with send_and_get_socket({"type_": "is_alive"}):
             return True
+    except ConnectionRefusedError:
+        return False
 
 
 # -----------------------------------------------------------------------------
@@ -605,6 +608,7 @@ def log(sock: socket.socket):
     """
 
     progress = Progress()
+    task_id = TaskID(0)
 
     while True:
         msg = recv_string(sock)

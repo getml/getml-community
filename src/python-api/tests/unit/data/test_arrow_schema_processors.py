@@ -1,7 +1,6 @@
 import pyarrow as pa
 import pyarrow.csv as pa_csv
 import pytest
-
 from getml.data._io.arrow import (
     DECIMAL_CONVERSION_LOST_PRECISION_WARNING_TEMPLATE,
     MAX_SUPPORTED_TIMESTAMP_RESOLUTION,
@@ -73,8 +72,12 @@ def test_process_timestamp(timestamp_batch):
         for field in preprocessed_schema
     )
 
-    postprocessed_schema_target_timestamp = postprocess_arrow_schema(
-        preprocessed_schema, ts_roles
+    with pytest.warns(UserWarning) as warnings:
+        postprocessed_schema_target_timestamp = postprocess_arrow_schema(
+            preprocessed_schema, ts_roles
+        )
+    assert str(warnings[0].message) == TIMEZONE_UTC_DROPPED_WARNING_TEMPLATE.format(
+        column_name="utc_time",
     )
     assert all(
         pa.types.is_timestamp(field.type)

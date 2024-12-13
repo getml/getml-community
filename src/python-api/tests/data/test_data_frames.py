@@ -5,7 +5,6 @@
 # for details.
 #
 
-
 """
 Tests the data frames container.
 """

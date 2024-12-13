@@ -10,9 +10,10 @@ This is an integration test based on
 the Adventure Works dataset.
 """
 
-import getml
 import numpy as np
 import pandas as pd
+
+import getml
 
 
 def test_adventure_works(getml_project):

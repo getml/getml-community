@@ -69,16 +69,19 @@ dependencies = [
   "keyring",
   "keyrings.google-artifactregistry-auth",
   "pyright",
-  "pyspark",
-  "pytest",
   "ruff==0.4.5",
   "uv",
 ]
 
 [tool.hatch.envs.test]
+installer = "uv"
+dependencies = [
+  "pytest",
+  "pytest-xdist",
+]
 
 [[tool.hatch.envs.test.matrix]]
-python = ["3.8", "3.12"]
+python = ["3.8", "3.9", "3.10", "3.11", "3.12"]
 
 [tool.hatch.build]
 include = [

@@ -152,7 +152,7 @@ class Roles:
         raise ValueError("Column named '" + colname + "' not found.")
 
     @classmethod
-    def from_dict(cls, roles_dict: Mapping[Union[str, Role], Iterable[str]]) -> Roles:
+    def from_dict(cls, roles_dict: Mapping[Union[Role, str], Iterable[str]]) -> Roles:
         """
         Creates a roles object from a dictionary.
 
@@ -174,7 +174,7 @@ class Roles:
         return cls(**roles)
 
     @classmethod
-    def from_mapping(cls, roles_mapping: Mapping[Union[str, Role], Role]) -> Roles:
+    def from_mapping(cls, roles_mapping: Mapping[str, Role]) -> Roles:
         """
         Creates a roles object from a mapping of column names to roles.
 
