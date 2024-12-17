@@ -471,9 +471,7 @@ class Container:
             cmd["population_"] = self._population._getml_deserialize()
 
         if self._split is not None:
-            cmd["split_"] = (
-                self._split._getml_deserialize()
-            )  # pytype: disable=attribute-error
+            cmd["split_"] = self._split.cmd
 
         cmd["peripheral_"] = {
             k: v._getml_deserialize() for (k, v) in self._peripheral.items()

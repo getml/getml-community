@@ -69,7 +69,8 @@ dependencies = [
   "keyring",
   "keyrings.google-artifactregistry-auth",
   "pyright",
-  "ruff==0.4.5",
+  "pytest",
+  "ruff",
   "uv",
 ]
 

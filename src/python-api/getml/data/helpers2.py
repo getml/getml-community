@@ -8,10 +8,11 @@
 
 """Helper functions that depend on the DataFrame class."""
 
-import numbers
+import warnings
+from inspect import cleandoc
 from typing import Any, Dict, List, Tuple, Union
 
-from getml.constants import MULTIPLE_JOIN_KEYS_BEGIN, NO_JOIN_KEY
+from getml.constants import ANNOTATIONS_DOCS_URL, MULTIPLE_JOIN_KEYS_BEGIN, NO_JOIN_KEY
 from getml.data.columns import (
     FloatColumn,
     FloatColumnView,
@@ -19,15 +20,14 @@ from getml.data.columns import (
     StringColumnView,
     _parse,
 )
+from getml.data.data_frame import DataFrame
+from getml.data.data_model import DataModel
+from getml.data.diagram import _split_multiple_join_keys
+from getml.data.helpers import _make_id, list_data_frames
+from getml.data.placeholder import Placeholder
+from getml.data.roles import target
+from getml.data.view import View
 from getml.log import logger
-
-from .data_frame import DataFrame
-from .data_model import DataModel
-from .diagram import _split_multiple_join_keys
-from .helpers import _make_id, list_data_frames
-from .placeholder import Placeholder
-from .roles import target
-from .view import View
 
 # --------------------------------------------------------------------
 
@@ -149,26 +149,34 @@ def _make_subsets_from_kwargs(train, validation, test, **kwargs):
 # -----------------------------------------------------------------
 
 
-def _make_subsets_from_split(population, split):
-    nrows = (
-        population.nrows(force=True)
-        if isinstance(population, View)
-        else population.nrows()
-    )
-    unique = split[:nrows].unique()
+def _make_subsets_from_split(
+    population: Union[DataFrame, View], split: Union[StringColumn, StringColumnView]
+) -> Dict[str, Tuple[int, Union[DataFrame, View]]]:
+    nrows = len(population)
+    unique = set(split[:nrows].unique())  # type: ignore
 
-    subsets = {
-        name: (
-            population.nrows(),
-            population.drop(population.roles.unused)[split == name],
-        )
-        for name in unique
-    }
+    subsets = {}
 
-    if isinstance(population.nrows(), numbers.Real):
-        for name in subsets:
-            len_set = int((split[: population.nrows()] == name).as_num().sum())
-            subsets[name] = (len_set, subsets[name][1])
+    for name in unique:
+        len_set = int((split[:nrows] == name).as_num().sum())
+        subset_data = population.drop(population.roles.unused)[split == name]
+        if not subset_data:
+            msg = f"\nSubset '{name}' is empty."
+            if not subset_data.columns:
+                msg = cleandoc(
+                    """
+                    {msg} Have you forgotten to set the roles? Refer to
+                    {annotations_docs_url} for more information on
+                    annotating data for getML.
+                    """
+                ).format(msg=msg, annotations_docs_url=ANNOTATIONS_DOCS_URL)
+
+            warnings.warn(msg, UserWarning)
+        else:
+            subsets[name] = (len_set, subset_data)
+
+    if not subsets:
+        raise ValueError("All subsets are empty.")
 
     return subsets
 
