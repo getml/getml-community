@@ -17,6 +17,11 @@ func startProcess(fname string, workDir string, log bool, args []string) (*exec.
 	cmd := exec.Command(fname, args...)
 	cmd.Dir = workDir
 
+	// unsetting LD_LIBRARY_PATH for engine subprocesses because we ship our own
+	// libstdc++ et al. with the engine, setting LD_LIBRARY_PATH like e.g. in
+	// VertexAI breaks dynamic linking of our libraries
+	cmd.Env = append(cmd.Environ(), "LD_LIBRARY_PATH=")
+
 	if log {
 		cmd.Stdout = os.Stdout
 	}

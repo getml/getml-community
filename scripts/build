@@ -82,6 +82,10 @@ while [[ "$#" -gt 0 ]]; do
     target="archive"
     shift
     ;;
+  archive-copy-artifacts)
+    target="archive-copy-artifacts"
+    shift
+    ;;
   c | cli)
     target="cli"
     shift

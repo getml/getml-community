@@ -61,16 +61,23 @@ RUN hatch build -t wheel
 FROM scratch AS python
 COPY --from=python-build python-api/src/dist python-api
 
-FROM alpine AS archive-build
+FROM alpine AS archive-build-artifacts
 ARG PACKAGE_NAME
 COPY --from=export / /
+
+FROM alpine AS archive-copy-artifacts
+ARG PACKAGE_NAME
+ARG OUTPUT_DIR
+COPY $OUTPUT_DIR/$PACKAGE_NAME $PACKAGE_NAME
+
+FROM archive-${BUILD_OR_COPY_ARTIFACTS}-artifacts AS archive-export
 RUN mkdir /out
 RUN tar czf /out/$PACKAGE_NAME.tar.gz $PACKAGE_NAME
 WORKDIR /out
 RUN sha256sum $PACKAGE_NAME.tar.gz > $PACKAGE_NAME.tar.gz.sha256
 
 FROM scratch AS archive
-COPY --from=archive-build /out/ .
+COPY --from=archive-export /out/ .
 
 FROM scratch AS all
 COPY --from=export / .

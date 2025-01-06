@@ -12,10 +12,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"getML/data"
 	"io"
 	"net"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"strconv"
@@ -24,6 +26,10 @@ import (
 )
 
 // -------------------------------------------------------------------------------------------
+
+func handleEngineExit(exitCode int) error {
+	return fmt.Errorf("The engine terminated with exit code %d. Please refer to the logs for more information.", exitCode)
+}
 
 func handleName(nameByte []byte) (string, error) {
 	if len(nameByte) == 0 {
@@ -406,6 +412,7 @@ func (m *MainHandler) LoadProject(
 
 	if err != nil {
 		sendString(c, err.Error())
+
 		return
 	}
 
@@ -652,12 +659,27 @@ func (m *MainHandler) setProject(
 		return "", err
 	}
 
-
 	m.projects.Add(name, cmd, enginePort)
 
-	for isRunning, _ := isAlive(enginePort); !isRunning; {
-		time.Sleep(time.Millisecond * 100)
-		isRunning, _ = isAlive(enginePort)
+	const maxRetries = 15
+	const backoff = 1 * time.Second
+
+	failed := make(chan error, 1)
+	go func() {
+		failed <- cmd.Wait()
+	}()
+
+	for i := 0; i < maxRetries; i++ {
+		if isRunning, _ := isAlive(enginePort); !isRunning {
+			select {
+			case err := <-failed:
+				return "", handleEngineExit(err.(*exec.ExitError).ExitCode())
+			case <-time.After(backoff):
+				if i == maxRetries-1 {
+					return "", fmt.Errorf("Engine did not respond within %d seconds.", maxRetries)
+				}
+			}
+		}
 	}
 
 	err = m.loadAllPipelines(name, enginePort, c, logger)

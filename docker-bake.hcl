@@ -90,6 +90,16 @@ target "python-copy-artifacts" {
   target = "python"
 }
 
+target "archive-copy-artifacts" {
+  args = {
+    BUILD_OR_COPY_ARTIFACTS="copy"
+    OUTPUT_DIR="${GETML_BUILD_OUTPUT_DIR}"
+    VERSION="${GETML_VERSION}"
+  }
+  output = ["type=local,dest=${GETML_BUILD_OUTPUT_DIR},platform-split=false"]
+  target = "archive"
+}
+
 target "archive" {
   args = {
     OUTPUT_DIR="${GETML_BUILD_OUTPUT_DIR}"
