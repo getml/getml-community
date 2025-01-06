@@ -7,8 +7,10 @@
 
 
 """
-Handles the communication for the getML library
+Handles the communication for between engine, monitor and python API.
 """
+
+from __future__ import annotations
 
 import json
 import numbers
@@ -18,17 +20,83 @@ import sys
 from inspect import cleandoc
 from os import PathLike
 from time import sleep
-from typing import Any, Dict, List, NamedTuple, Optional, Union
+from types import TracebackType
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    NamedTuple,
+    Optional,
+    Type,
+    Union,
+)
 
 import numpy as np
 from rich import print
 from rich.progress import TaskID
 
 import getml
+from getml.events import (
+    DispatcherEventEmitter,
+    LogMessageEventParser,
+    PoolEventDispatcher,
+)
+from getml.events.types import (
+    EventContext,
+    EventEmitter,
+    EventParser,
+    EventSource,
+)
 from getml.exceptions import handle_engine_exception
 from getml.helpers import _is_iterable_not_str
-from getml.utilities.progress import Progress
 from getml.version import __version__
+
+
+class LogStreamListener:
+    """
+    Listens to raw log streams and emits structured events to a queue.
+    """
+
+    def __init__(
+        self,
+        parser: EventParser,
+        emitter: EventEmitter,
+    ):
+        self.parser = parser
+        self.emitter = emitter
+
+    def __enter__(self) -> LogStreamListener:
+        self.emitter.__enter__()
+        return self
+
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_value: Optional[BaseException],
+        traceback: Optional[TracebackType],
+    ):
+        if exc_value:
+            self.emitter.__exit__(exc_type, exc_value, traceback)
+            raise exc_value
+
+        self.emitter.__exit__(exc_type, exc_value, traceback)
+
+    def listen(self, socket: socket.socket, exit_on: Callable[[str], bool]) -> str:
+        """
+        Listen to a log stream on socket and emit events.
+        """
+
+        while True:
+            message = recv_string(socket)
+
+            events = self.parser.parse(message)
+            if events:
+                self.emitter.emit(events)
+
+            if exit_on(exit_status := message):
+                return exit_status
+
 
 # --------------------------------------------------------------------
 
@@ -209,12 +277,6 @@ def recv_data(sock: socket.socket, size: Union[numbers.Real, int]) -> bytes:
         The received data.
     """
 
-    if not isinstance(sock, socket.socket):
-        raise TypeError("'sock' must be a socket.")
-
-    if not isinstance(size, (numbers.Real, int)):
-        raise TypeError("'size' must be a real number.")
-
     _, peer_port = sock.getpeername()
 
     if peer_port != tcp_port and not is_engine_alive():
@@ -329,9 +391,6 @@ def recv_string(sock: socket.socket) -> str:
     Returns:
         The received string.
     """
-
-    if not isinstance(sock, socket.socket):
-        raise TypeError("'sock' must be a socket.")
 
     # By default, numeric data sent over the socket is big endian,
     # also referred to as network-byte-order!
@@ -599,39 +658,33 @@ def send_string(sock: socket.socket, string: str):
 # --------------------------------------------------------------------
 
 
-def log(sock: socket.socket):
+def log(sock: socket.socket, extra: Optional[Dict[str, Any]] = None) -> str:
     """
-    Prints all the logs received by the socket.
+    Handles logs sent by engine or monitor.
 
     Args:
         sock: The socket to receive the logs from.
     """
 
-    progress = Progress()
-    task_id = TaskID(0)
+    if extra is None:
+        extra = {}
 
-    while True:
-        msg = recv_string(sock)
+    peer_port = sock.getpeername()[1]
 
-        if msg[:5] != "log: ":
-            progress.stop()
-            return msg
+    event_source = EventSource.ENGINE if peer_port == port else EventSource.MONITOR
 
-        body = msg[5:]
+    parser = LogMessageEventParser(
+        context=EventContext(cmd=extra.get("cmd", {}), source=event_source)
+    )
+    dispatcher = PoolEventDispatcher()
+    emitter = DispatcherEventEmitter(dispatcher)
 
-        if "Progress: " in body:
-            *subdescription_parts, completed_raw = body.split("Progress: ")
-            completed = float(completed_raw.split("%")[0])
+    def is_status_message(message: str) -> bool:
+        return not message.startswith("log: ")
 
-            if subdescription := " ".join(subdescription_parts):
-                progress.update(
-                    task_id, completed=completed, description=subdescription
-                )
-            else:
-                progress.update(task_id, completed=completed)
-        elif description := body:
-            progress.start()
-            task_id = progress.new_task_and_reconstruct_renderable_maybe(description)
+    with LogStreamListener(parser, emitter) as listener:
+        status_message = listener.listen(socket=sock, exit_on=is_status_message)
+        return status_message
 
 
 # --------------------------------------------------------------------
@@ -718,7 +771,7 @@ def _load_project(bundle: Union[PathLike, str], name: Optional[str] = None):
 
     send_bytes(sock, data)
 
-    msg = log(sock)
+    msg = log(sock, extra={"cmd": cmd})
 
     if msg != "Success!":
         handle_engine_exception(msg)
@@ -895,7 +948,7 @@ def _set_project(name: str, restart: bool = False):
 
     send_string(sock, msg)
 
-    msg = log(sock)
+    msg = log(sock, extra={"cmd": cmd})
 
     if msg != "Success!":
         handle_engine_exception(msg)

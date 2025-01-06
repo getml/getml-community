@@ -997,7 +997,7 @@ class Pipeline:
 
         comm.send_string(sock, json.dumps(cmd))
 
-        msg = comm.log(sock)
+        msg = comm.log(sock, extra={"cmd": cmd})
 
         if msg == "Success!":
             if table_name == "" and df_name == "" and not score:
@@ -1101,7 +1101,7 @@ class Pipeline:
             if msg != "Found!":
                 comm.handle_engine_exception(msg)
             print("Checking data model...")
-            msg = comm.log(sock)
+            msg = comm.log(sock, extra={"cmd": cmd})
             if msg != "Success!":
                 comm.handle_engine_exception(msg)
             issues = Issues(comm.recv_issues(sock))
@@ -1317,7 +1317,7 @@ class Pipeline:
 
             begin = time.monotonic()
 
-            msg = comm.log(sock)
+            msg = comm.log(sock, extra={"cmd": cmd})
 
             end = time.monotonic()
 

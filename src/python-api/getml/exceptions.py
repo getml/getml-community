@@ -6,7 +6,6 @@
 #
 
 import re
-from functools import wraps
 from inspect import cleandoc
 from typing import Any, Callable, Dict, Optional
 
@@ -68,13 +67,9 @@ class ArrowCastExceptionHandlerRegistry:
         [Callable[[ArrowInvalid, pa.Field], None]],
         Callable[[pa.Array, pa.DataType], pa.Array],
     ]:
-        def decorator(func: Callable[[ArrowInvalid, pa.Field], None]):
-            @wraps(func)
-            def wrapper(*args, **kwargs):
-                return func(*args, **kwargs)
-
-            cls.handlers[target_type] = wrapper
-            return wrapper
+        def decorator(handler: Callable[[ArrowInvalid, pa.Field], None]):
+            cls.handlers[target_type] = handler
+            return handler
 
         return decorator
 
@@ -110,11 +105,7 @@ class EngineExceptionHandlerRegistry:
 
     @classmethod
     def register(cls, handler: Callable[[str, Dict[str, Any]], None]):
-        @wraps(handler)
-        def wrapper(*args, **kwargs):
-            return handler(*args, **kwargs)
-
-        cls.handlers.append(wrapper)
+        cls.handlers.append(handler)
         return handler
 
 

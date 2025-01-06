@@ -324,7 +324,7 @@ class _Hyperopt:
 
         with comm.send_and_get_socket(cmd) as sock:
             begin = time.monotonic()
-            msg = comm.log(sock)
+            msg = comm.log(sock, extra={"cmd": cmd})
             end = time.monotonic()
 
         if msg != "Success!":

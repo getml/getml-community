@@ -12,12 +12,14 @@ from __future__ import annotations
 
 import os
 import warnings
+from contextlib import contextmanager
 from enum import Enum
 from pathlib import Path
 from types import TracebackType
-from typing import Optional, Type
+from typing import Iterator, Optional, Type
 
 from rich.console import Console
+from rich.live import Live
 from rich.progress import (
     BarColumn,
     DownloadColumn,
@@ -28,6 +30,9 @@ from rich.progress import (
 )
 from rich.progress import Progress as RichProgress
 from rich.style import Style
+
+from getml.events.handlers import engine_event_handler, monitor_event_handler
+from getml.events.types import Event, EventTypeState
 
 
 def _is_emacs_kernel() -> bool:
@@ -209,6 +214,8 @@ class Progress:
         completed: int = 0,
         visible: bool = True,
     ) -> TaskID:
+        if not self.live.is_started:
+            self.start()
         task_id = self._progress.add_task(
             description, total=total, completed=completed, visible=visible
         )
@@ -232,6 +239,10 @@ class Progress:
     def finish_all(self):
         for task in self.tasks:
             self.finish(task.id)
+
+    @property
+    def live(self):
+        return self._progress.live
 
     def new_task(
         self,
@@ -331,7 +342,9 @@ class Progress:
                 self._reset_description(task_id)
 
     def __enter__(self) -> Progress:
-        self.start()
+        # Nop because we start the live renderable lazily upon adding the first
+        # task to avoid the display of control chars when forcefully outputting
+        # text inside jupyter
         return self
 
     def __exit__(
@@ -344,3 +357,41 @@ class Progress:
             self.set_all_failed()
 
         self.stop()
+
+
+class ProgressEventHandler:
+    def __init__(self, progress: Progress):
+        self.progress = progress
+
+    @contextmanager
+    def live_renderable(self, event: Event) -> Iterator[Live]:
+        yield self.progress.live
+        if event.type.state is EventTypeState.END:
+            self.progress.stop()
+
+    def create_or_update_progress(self, event: Event):
+        """
+        Create a new progress task or update an existing one.
+        """
+
+        with self.live_renderable(event):
+            if event.type.state is EventTypeState.START:
+                task_id = self.progress.new_task_and_reconstruct_renderable_maybe(
+                    event.attributes["description"]
+                )
+            elif event.type.state is EventTypeState.PROGRESS and self.progress.tasks:
+                *_, task_id = self.progress.task_ids
+                self.progress.update(
+                    task_id,
+                    description=event.attributes["description"],
+                    completed=event.attributes["progress"],
+                )
+
+
+progress_event_handler = ProgressEventHandler(progress=Progress())
+
+
+@monitor_event_handler
+@engine_event_handler
+def show_progress(event: Event):
+    progress_event_handler.create_or_update_progress(event)
