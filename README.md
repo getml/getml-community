@@ -46,7 +46,7 @@ Check out [the Example](#example) and the [demonstrational notebooks](https://ge
 
 To learn, how to build and contribute to getML, check out [BUILD.md](BUILD.md) for instructions on how to build getML from source.
 
-## Key benefits for using getML
+## Key benefits of using getML
 
 One big key feature over other tools like [featuretools](https://www.featuretools.com), [tsfresh](https://tsfresh.com) and [prophet](https://facebook.github.io/prophet) is the runtime performance. Our own implementation of propositionalization, FastProp (short for fast propositionalization), reaches improvements of about _60_ to _1000_ times faster run times (see specifically [FastProp Benchmarks](https://getml.com/latest/examples/enterprise-notebooks/fastprop_benchmark) within our notebooks). This leads to faster iterations for data scientists, giving them more time to tweak variables to achieve even better results.
 
