@@ -1320,11 +1320,11 @@ class DataFrame:
         ??? example
             ```python
             getml.database.connect_mysql(
-                host="db.relational-data.org",
+                host="relational.fel.cvut.cz",
                 port=3306,
                 dbname="financial",
                 user="guest",
-                password="relational"
+                password="ctu-relational"
             )
 
             loan = getml.DataFrame.from_db(
