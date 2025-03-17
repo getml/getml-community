@@ -90,7 +90,7 @@ class Engine(ConanFile):
         if self.settings.os == "Linux":
             self.requires("gperftools/2.15")
             self.requires("libunwind/1.8.1")
-        self.requires("reflect-cpp/0.13.0")
+        self.requires("reflect-cpp/0.15.0.1")
         # TODO Downgrade xgboost to 1.7.6 because of changes in 2.0.0
         self.requires("xgboost/1.7.6")
         self.requires("range-v3/0.12.0")

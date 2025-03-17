@@ -28,10 +28,10 @@ struct XGBoostHyperparams {
     using ReflectionType = rfl::named_tuple_t<XGBoostHyperparams>;
     using Fields = typename ReflectionType::Fields;
 
-    if constexpr (_i == std::tuple_size_v<Fields>) {
+    if constexpr (_i == rfl::tuple_size_v<Fields>) {
       return;
     } else {
-      using FieldType = typename std::tuple_element<_i, Fields>::type;
+      using FieldType = typename rfl::tuple_element<_i, Fields>::type;
 
       const auto name_with_underscore = FieldType::name_.str();
 

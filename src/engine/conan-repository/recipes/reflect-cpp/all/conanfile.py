@@ -28,7 +28,7 @@ class ReflectCppConan(ConanFile):
     generators = "CMakeDeps", "CMakeToolchain"
 
     def requirements(self):
-        self.requires("yyjson/0.9.0", transitive_headers=True, transitive_libs=True)
+        self.requires("yyjson/0.10.0", transitive_headers=True, transitive_libs=True)
         self.requires("ctre/3.9.0", transitive_headers=True)
 
     def layout(self):
