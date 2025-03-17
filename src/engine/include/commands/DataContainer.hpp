@@ -30,7 +30,7 @@ using DataContainerBase =
     rfl::NamedTuple<rfl::Field<"id_", std::string>,
                     rfl::Field<"deep_copy_", bool>,
                     rfl::Field<"last_change_", std::string>,
-                    rfl::Field<"frozen_time_", std::string>>;
+                    rfl::Field<"frozen_time_", std::optional<std::string>>>;
 
 using DataContainerWithSplit = rfl::define_named_tuple_t<
     rfl::Field<"population_", DataFrameOrView>,
