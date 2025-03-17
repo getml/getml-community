@@ -392,10 +392,6 @@ def preprocess_arrow_schema(schema: pa.Schema, roles: Roles) -> pa.Schema:
     return _process_arrow_schema(schema, roles, arrow_schema_field_preprocessor)
 
 
-def sniff_arrow(table) -> Roles:
-    return sniff_schema(table.schema)
-
-
 def sniff_schema(schema: pa.Schema, colnames: Iterable[str] = ()) -> Roles:
     roles: Dict[Role, List[str]] = {}
     roles["unused_float"] = []

@@ -616,36 +616,6 @@ def _sniff_db(table_name: str, conn: Optional[Connection] = None) -> Roles:
 # --------------------------------------------------------------------
 
 
-def _sniff_pandas(pandas_df: pd.DataFrame) -> Roles:
-    """Sniffs a pandas.DataFrame and returns the result as a dictionary of
-    roles.
-
-    Args:
-        pandas_df: The pandas.DataFrame to be sniffed.
-
-    Returns:
-        Roles that can be used to construct a DataFrame.
-    """
-    roles: Dict[Role, List[str]] = {
-        "unused_float": [],
-        "unused_string": [],
-    }
-
-    colnames = [str(cname) for cname in pandas_df.columns]
-    coltypes = pandas_df.dtypes
-
-    for cname, ctype in zip(colnames, coltypes):
-        if _is_numerical_type_numpy(ctype):
-            roles["unused_float"].append(cname)
-        else:
-            roles["unused_string"].append(cname)
-
-    return Roles.from_dict(roles)
-
-
-# --------------------------------------------------------------------
-
-
 def _sniff_query(query: str, name: str, conn: Optional[Connection] = None) -> Roles:
     """
     Sniffs a table in the database and returns a dictionary of roles.

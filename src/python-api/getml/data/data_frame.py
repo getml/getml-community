@@ -44,7 +44,7 @@ from getml.data._io.arrow import (
     cast_arrow_batch,
     preprocess_arrow_schema,
     read_arrow_batches,
-    sniff_arrow,
+    sniff_schema,
     to_arrow,
     to_arrow_batches,
 )
@@ -77,7 +77,6 @@ from getml.data.helpers import (
     _prepare_roles,
     _send_numpy_array,
     _sniff_db,
-    _sniff_pandas,
     _sniff_query,
     _sniff_s3,
     _to_pyspark,
@@ -977,7 +976,7 @@ class DataFrame:
 
         # ------------------------------------------------------------
 
-        sniffed_roles = sniff_arrow(table)
+        sniffed_roles = sniff_schema(table.schema)
 
         roles = _prepare_roles(roles, sniffed_roles, ignore_sniffed_roles=ignore)
 
@@ -1633,7 +1632,7 @@ class DataFrame:
 
         # ------------------------------------------------------------
 
-        sniffed_roles = _sniff_pandas(pandas_df)
+        sniffed_roles = sniff_schema(pa.Schema.from_pandas(pandas_df))
 
         roles = _prepare_roles(roles, sniffed_roles, ignore_sniffed_roles=ignore)
 
@@ -1839,7 +1838,7 @@ class DataFrame:
 
         head = spark_df.limit(2).toPandas()
 
-        sniffed_roles = _sniff_pandas(head)
+        sniffed_roles = sniff_schema(pa.Schema.from_pandas(head))
 
         roles = _prepare_roles(roles, sniffed_roles, ignore_sniffed_roles=ignore)
 
