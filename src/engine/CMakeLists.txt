@@ -44,6 +44,8 @@ find_package(Eigen3 REQUIRED)
 find_package(OpenMP REQUIRED)
 find_package(xgboost REQUIRED)
 find_package(range-v3 REQUIRED)
+find_package(reflectcpp REQUIRED)
+find_package(yyjson REQUIRED)
 
 
 if(NOT ${USE_CONAN})
@@ -71,9 +73,6 @@ if(NOT ${USE_CONAN})
     add_library(parquet::parquet ALIAS Parquet::parquet_shared)
   endif()
 
-  message(STATUS "-> reflect-cpp")
-  find_package(reflectcpp REQUIRED)
-
 else()
 
   message(STATUS "Using Conan packages")
@@ -84,11 +83,6 @@ else()
 
   message(STATUS "-> Parquet")
   add_library(parquet::parquet ALIAS Parquet::parquet_static)
-
-  message(STATUS "-> reflect-cpp")
-  find_package(reflect-cpp REQUIRED)
-  add_library(reflectcpp::reflectcpp ALIAS reflect-cpp::reflect-cpp)
-  find_package(yyjson REQUIRED)
 
 endif()
 

@@ -82,7 +82,38 @@ class Engine(ConanFile):
             },
         )
         # TODO Downgrade Poco to 1.12.5 because of slow DateTimeFormat::isValid https://github.com/pocoproject/poco/issues/4592
-        self.requires("poco/1.12.5p2")
+        self.requires(
+            "poco/1.12.5p2",
+            options={
+                "enable_activerecord": False,
+                "enable_activerecord_compiler": False,
+                "enable_apacheconnector": False,
+                "enable_cppparser": False,
+                "enable_crypto": False,
+                "enable_data": False,
+                "enable_data_mysql": False,
+                "enable_data_odbc": False,
+                "enable_data_postgresql": False,
+                "enable_data_sqlite": False,
+                "enable_encodings": False,
+                "enable_fork": False,
+                "enable_json": True,
+                "enable_jwt": False,
+                "enable_mongodb": False,
+                "enable_net": True,
+                "enable_netssl": False,
+                "enable_pagecompiler": False,
+                "enable_pagecompiler_file2page": False,
+                "enable_pdf": False,
+                "enable_pocodoc": False,
+                "enable_prometheus": False,
+                "enable_redis": False,
+                "enable_sevenzip": False,
+                "enable_util": False,
+                "enable_xml": False,
+                "enable_zip": False,
+            },
+        )
         self.requires("mariadb-connector-c/3.3.8", options={"shared": True})
         self.requires("libpq/15.4")
         self.requires("eigen/3.4.0")
@@ -90,7 +121,7 @@ class Engine(ConanFile):
         if self.settings.os == "Linux":
             self.requires("gperftools/2.15")
             self.requires("libunwind/1.8.1")
-        self.requires("reflect-cpp/0.15.0.1")
+        self.requires("reflect-cpp/0.16.0")
         # TODO Downgrade xgboost to 1.7.6 because of changes in 2.0.0
         self.requires("xgboost/1.7.6")
         self.requires("range-v3/0.12.0")
