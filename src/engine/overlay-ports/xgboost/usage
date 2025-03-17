@@ -1,4 +1,0 @@
-xgboost provides CMake targets:
-
-    find_package(xgboost CONFIG REQUIRED)
-    target_link_libraries(main PRIVATE xgboost::xgboost)
