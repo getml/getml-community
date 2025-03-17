@@ -1,6 +1,6 @@
-add_library(
-  metrics
-  OBJECT
+target_sources(
+  engine
+  PRIVATE
   Accuracy.cpp
   AUC.cpp
   CrossEntropy.cpp
@@ -10,11 +10,4 @@ add_library(
   Scorer.cpp
   Scores.cpp
   Summarizer.cpp
-)
-
-target_link_libraries(
-  metrics
-  PUBLIC
-  reflectcpp::reflectcpp
-  Poco::Foundation
 )

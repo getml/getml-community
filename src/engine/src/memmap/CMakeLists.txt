@@ -1,12 +1,6 @@
-add_library(
-  memmap
-  OBJECT
+target_sources(
+  engine
+  PRIVATE
   FreeBlocksTracker.cpp
   Pool.cpp
-)
-
-target_link_libraries(
-  memmap
-  PUBLIC
-  Poco::Foundation
 )

@@ -1,6 +1,6 @@
-add_library(
-  commands
-  OBJECT
+target_sources(
+  engine
+  PRIVATE
   BooleanColumnView.cpp
   ColumnCommand.cpp
   Command.cpp
@@ -13,12 +13,4 @@ add_library(
   ProjectCommand.cpp
   StringColumnOrStringColumnView.cpp
   ViewCommand.cpp
-)
-
-target_link_libraries(
-  commands
-  PUBLIC
-  reflectcpp::reflectcpp
-  xgboost::xgboost
-  range-v3::range-v3
 )

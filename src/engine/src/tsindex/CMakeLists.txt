@@ -1,11 +1,5 @@
-add_library(
-  tsindex
-  OBJECT
+target_sources(
+  engine
+  PRIVATE
   InMemoryIndex.cpp
-)
-
-target_link_libraries(
-  tsindex
-  PUBLIC
-  reflectcpp::reflectcpp
 )

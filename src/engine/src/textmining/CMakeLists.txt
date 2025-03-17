@@ -1,13 +1,7 @@
-add_library(
-  textmining
-  OBJECT
+target_sources(
+  engine
+  PRIVATE
   RowIndex.cpp
   StringSplitter.cpp
   Vocabulary.cpp
-)
-
-target_link_libraries(
-  textmining
-  PUBLIC
-  reflectcpp::reflectcpp
 )

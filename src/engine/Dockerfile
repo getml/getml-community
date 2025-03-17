@@ -142,7 +142,8 @@ RUN --mount=type=cache,target=$CCACHE_PATH,id="$CCACHE_PATH-b088bb31-d9ff-442c-a
     --mount=type=cache,target=$ENGINE_BUILD_PATH,id="$ENGINE_BUILD_PATH-b088bb31-d9ff-442c-a877-89dfc6a34642",sharing=locked \
     if [ -n "$NJOBS" ]; then export CMAKE_BUILD_PARALLEL_LEVEL="$NJOBS"; fi \
     && ccache --zero-stats \
-    && cmake --workflow --preset ${ENGINE_PRESET} \
+    && cmake --preset ${ENGINE_PRESET} -D CMAKE_UNITY_BUILD=ON -D CMAKE_UNITY_BUILD_BATCH_SIZE=0 \
+    && cmake --build --preset ${ENGINE_PRESET} \
     && ccache --show-stats -v -v
 
 
@@ -152,11 +153,11 @@ FROM engine-build AS engine-package
 
 ARG TARGETARCH
 ARG PACKAGE_NAME="getml-community-$GETML_VERSION-$TARGETARCH-linux"
-ARG ENGINE_PACKAGE_TGZ="engine-$GETML_VERSION-Linux-$TARGET_SYSTEM_PROCESSOR.tar.gz"
 
-RUN --mount=type=cache,target=$ENGINE_BUILD_PATH,id="$ENGINE_BUILD_PATH-b088bb31-d9ff-442c-a877-89dfc6a34642",sharing=locked \
+RUN --mount=type=cache,target=$CONAN_P,id="$CONAN_P-b088bb31-d9ff-442c-a877-89dfc6a34642",sharing=locked \
+    --mount=type=cache,target=$ENGINE_BUILD_PATH,id="$ENGINE_BUILD_PATH-b088bb31-d9ff-442c-a877-89dfc6a34642",sharing=locked \
     mkdir -p /engine-package/$PACKAGE_NAME/ \
-    && tar -xzf $ENGINE_BUILD_PATH/package/$ENGINE_PACKAGE_TGZ -C /engine-package/$PACKAGE_NAME/ --strip-components=1
+    && cmake --install $ENGINE_BUILD_PATH --prefix /engine-package/$PACKAGE_NAME/ --strip
 
 
 # ------------------------------------------------------------------------------

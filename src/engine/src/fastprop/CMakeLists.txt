@@ -1,6 +1,6 @@
-add_library(
-  fastprop
-  OBJECT
+target_sources(
+  engine
+  PRIVATE
   AbstractFeature.cpp
   Aggregator.cpp
   Condition.cpp
@@ -10,10 +10,4 @@ add_library(
   Maker.cpp
   RSquared.cpp
   SQLMaker.cpp
-)
-
-target_link_libraries(
-  fastprop
-  PUBLIC
-  reflectcpp::reflectcpp
 )

@@ -1,6 +1,6 @@
-add_library(
-  helpers
-  OBJECT
+target_sources(
+  engine
+  PRIVATE
   DataFrame.cpp
   ImportanceMaker.cpp
   Macros.cpp
@@ -14,11 +14,4 @@ add_library(
   VocabularyContainer.cpp
   VocabularyTree.cpp
   WordIndexContainer.cpp
-)
-
-target_link_libraries(
-  helpers
-  PUBLIC
-  reflectcpp::reflectcpp
-  range-v3::range-v3
 )

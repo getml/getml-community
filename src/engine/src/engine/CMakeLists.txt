@@ -1,6 +1,6 @@
-add_library(
-  engine-core
-  OBJECT
+target_sources(
+  engine
+  PRIVATE
   AggOpParser.cpp
   ArrowHandler.cpp
   BoolOpParser.cpp
@@ -50,17 +50,4 @@ add_library(
   TextFieldSplitter.cpp
   ViewManager.cpp
   ViewParser.cpp
-)
-
-target_link_libraries(
-  engine-core
-  PUBLIC
-  reflectcpp::reflectcpp
-  xgboost::xgboost
-  Poco::Net
-  Poco::Foundation
-  arrow::arrow
-  parquet::parquet
-  SQLite::SQLite3
-  range-v3::range-v3
 )

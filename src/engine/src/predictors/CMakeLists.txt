@@ -1,6 +1,6 @@
-add_library(
-  predictors
-  OBJECT
+target_sources(
+  engine
+  PRIVATE
   Encoding.cpp
   LinearRegression.cpp
   LogisticRegression.cpp
@@ -10,13 +10,4 @@ add_library(
   XGBoostIteratorDense.cpp
   XGBoostIteratorSparse.cpp
   XGBoostPredictor.cpp
-)
-
-target_link_libraries(
-  predictors
-  PUBLIC
-  reflectcpp::reflectcpp
-  xgboost::xgboost
-  Eigen3::Eigen
-  range-v3::range-v3
 )

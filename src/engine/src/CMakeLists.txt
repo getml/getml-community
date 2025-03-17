@@ -1,53 +1,3 @@
-add_subdirectory(commands)
-add_subdirectory(communication)
-add_subdirectory(containers)
-add_subdirectory(database)
-add_subdirectory(engine)
-add_subdirectory(fastprop)
-add_subdirectory(helpers)
-add_subdirectory(io)
-add_subdirectory(metrics)
-add_subdirectory(memmap)
-add_subdirectory(predictors)
-add_subdirectory(textmining)
-add_subdirectory(transpilation)
-add_subdirectory(tsindex)
-
-set(
-  OBJECT_TARGETS
-    commands
-    communication
-    containers
-    database
-    engine-core
-    fastprop
-    helpers
-    io
-    metrics
-    memmap
-    predictors
-    textmining
-    transpilation
-    tsindex
-)
-
-foreach(
-    target
-    IN ITEMS
-    ${OBJECT_TARGETS}
-  )
-  target_include_directories(${target} PRIVATE ${CMAKE_SOURCE_DIR}/include)
-  target_compile_features(${target} PRIVATE cxx_std_23)
-  set_target_properties(${target} PROPERTIES CXX_EXTENSIONS OFF)
-
-  target_compile_definitions(
-    ${target}
-    PRIVATE
-    $<$<BOOL:${HIDE_DEBUG_INFO}>:NDEBUG=1>
-    $<$<BOOL:${USE_PROFILING}>:GETML_PROFILING=1>
-  )
-endforeach()
-
 add_executable(
   engine
   engine/main.cpp
@@ -67,8 +17,18 @@ target_link_libraries(
   $<$<BOOL:${USE_PROFILING}>:PkgConfig::libprofiler>
   $<$<BOOL:${USE_PROFILING}>:PkgConfig::libunwind>
   $<$<BOOL:${OpenMP_CXX_FOUND}>:OpenMP::OpenMP_CXX>
-
-  ${OBJECT_TARGETS}
+  reflectcpp::reflectcpp
+  $<$<BOOL:${USE_CONAN}>:yyjson::yyjson>
+  Eigen3::Eigen
+  range-v3::range-v3
+  xgboost::xgboost
+  Poco::Foundation
+  Poco::Net
+  SQLite::SQLite3
+  PostgreSQL::PostgreSQL
+  libmariadb::libmariadb
+  arrow::arrow
+  parquet::parquet
 )
 
 target_compile_definitions(
@@ -105,3 +65,18 @@ install(
   LIBRARY
     COMPONENT Runtime
 )
+
+add_subdirectory(commands)
+add_subdirectory(communication)
+add_subdirectory(containers)
+add_subdirectory(database)
+add_subdirectory(engine)
+add_subdirectory(fastprop)
+add_subdirectory(helpers)
+add_subdirectory(io)
+add_subdirectory(metrics)
+add_subdirectory(memmap)
+add_subdirectory(predictors)
+add_subdirectory(textmining)
+add_subdirectory(transpilation)
+add_subdirectory(tsindex)
