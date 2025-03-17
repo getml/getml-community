@@ -8,15 +8,14 @@
 #ifndef CONTAINERS_ENCODING_HPP_
 #define CONTAINERS_ENCODING_HPP_
 
+#include "containers/InMemoryEncoding.hpp"
+#include "containers/MemoryMappedEncoding.hpp"
+#include "helpers/StringIterator.hpp"
+
 #include <memory>
 #include <optional>
 #include <string>
 #include <variant>
-
-#include "containers/InMemoryEncoding.hpp"
-#include "containers/MemoryMappedEncoding.hpp"
-#include "debug/debug.hpp"
-#include "helpers/StringIterator.hpp"
 
 namespace containers {
 

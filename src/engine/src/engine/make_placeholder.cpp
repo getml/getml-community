@@ -7,10 +7,10 @@
 
 #include "engine/pipelines/make_placeholder.hpp"
 
-#include <set>
-
 #include "helpers/Macros.hpp"
 #include "transpilation/SQLGenerator.hpp"
+
+#include <set>
 
 namespace engine {
 namespace pipelines {

@@ -8,20 +8,11 @@
 #ifndef CONTAINERS_TSINDEX_KEY_HPP_
 #define CONTAINERS_TSINDEX_KEY_HPP_
 
-// ----------------------------------------------------------------------
-
-#include <cmath>
-
-// ----------------------------------------------------------------------
-
-#include "debug/debug.hpp"
-
-// ----------------------------------------------------------------------
-
+#include "debug/assert_true.hpp"
 #include "tsindex/Float.hpp"
 #include "tsindex/Int.hpp"
 
-// ----------------------------------------------------------------------
+#include <cmath>
 
 namespace tsindex {
 struct Key {

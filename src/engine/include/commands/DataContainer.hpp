@@ -8,16 +8,17 @@
 #ifndef COMMANDS_DATACONTAINER_HPP_
 #define COMMANDS_DATACONTAINER_HPP_
 
-#include <map>
+#include "commands/DataFrameOrView.hpp"
+#include "commands/StringColumnOrStringColumnView.hpp"
+
 #include <rfl/Field.hpp>
 #include <rfl/NamedTuple.hpp>
 #include <rfl/define_named_tuple.hpp>
+
+#include <map>
 #include <string>
 #include <variant>
 #include <vector>
-
-#include "commands/DataFrameOrView.hpp"
-#include "commands/StringColumnOrStringColumnView.hpp"
 
 namespace commands {
 

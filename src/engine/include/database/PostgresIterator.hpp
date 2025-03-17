@@ -8,17 +8,16 @@
 #ifndef DATABASE_POSTGRESITERATOR_HPP_
 #define DATABASE_POSTGRESITERATOR_HPP_
 
+#include "database/Float.hpp"
+#include "database/Int.hpp"
+#include "database/Iterator.hpp"
+#include "debug/assert_true.hpp"
+
 #include <libpq-fe.h>
 
 #include <memory>
 #include <string>
 #include <vector>
-
-#include "database/Float.hpp"
-#include "database/Getter.hpp"
-#include "database/Int.hpp"
-#include "database/Iterator.hpp"
-#include "debug/debug.hpp"
 
 namespace database {
 

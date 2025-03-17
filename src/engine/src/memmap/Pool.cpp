@@ -7,6 +7,10 @@
 
 #include "memmap/Pool.hpp"
 
+#include "debug/assert_msg.hpp"
+
+#include <Poco/File.h>
+#include <Poco/TemporaryFile.h>
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <unistd.h>
@@ -16,13 +20,6 @@
 #include <filesystem>
 #include <string>
 #include <tuple>
-
-// ----------------------------------------------------------------------------
-
-#include <Poco/File.h>
-#include <Poco/TemporaryFile.h>
-
-// ----------------------------------------------------------------------------
 
 namespace memmap {
 

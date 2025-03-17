@@ -12,7 +12,7 @@
 #include "predictors/Int.hpp"
 
 namespace predictors {
-typedef helpers::Feature<Int> IntFeature;
-}
+using IntFeature = helpers::Feature<Int>;
+}  // namespace predictors
 
 #endif  // PREDICTORS_INTFEATURE_HPP_

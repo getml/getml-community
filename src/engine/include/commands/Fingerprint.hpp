@@ -8,6 +8,14 @@
 #ifndef COMMANDS_FINGERPRINT_HPP_
 #define COMMANDS_FINGERPRINT_HPP_
 
+#include "commands/DataFrameOrView.hpp"
+#include "commands/DataModel.hpp"
+#include "commands/LinearRegressionHyperparams.hpp"
+#include "commands/LogisticRegressionHyperparams.hpp"
+#include "commands/Preprocessor.hpp"
+#include "commands/XGBoostHyperparams.hpp"
+#include "fastprop/Hyperparameters.hpp"
+
 #include <rfl/Field.hpp>
 #include <rfl/Flatten.hpp>
 #include <rfl/Literal.hpp>
@@ -16,16 +24,9 @@
 #include <rfl/define_tagged_union.hpp>
 #include <rfl/define_variant.hpp>
 #include <rfl/json/Reader.hpp>
+
 #include <variant>
 #include <vector>
-
-#include "commands/DataFrameOrView.hpp"
-#include "commands/DataModel.hpp"
-#include "commands/LinearRegressionHyperparams.hpp"
-#include "commands/LogisticRegressionHyperparams.hpp"
-#include "commands/Preprocessor.hpp"
-#include "commands/XGBoostHyperparams.hpp"
-#include "fastprop/Hyperparameters.hpp"
 
 namespace commands {
 

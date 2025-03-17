@@ -8,9 +8,9 @@
 #ifndef FCT_RANGE_HPP_
 #define FCT_RANGE_HPP_
 
-#include <iterator>
-
 #include "debug/assert_true.hpp"
+
+#include <iterator>
 
 namespace fct {
 

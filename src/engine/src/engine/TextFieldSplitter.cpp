@@ -7,12 +7,13 @@
 
 #include "engine/preprocessors/TextFieldSplitter.hpp"
 
-#include <memory>
-#include <rfl/replace.hpp>
-
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/Loader.hpp"
 #include "helpers/Saver.hpp"
+
+#include <rfl/replace.hpp>
+
+#include <memory>
 
 namespace engine {
 namespace preprocessors {

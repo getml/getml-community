@@ -8,18 +8,12 @@
 #ifndef CONTAINERS_TSINDEX_INDEXPARAMS_HPP_
 #define CONTAINERS_TSINDEX_INDEXPARAMS_HPP_
 
-// ----------------------------------------------------------------------------
-
-#include <memory>
-#include <vector>
-
-// ----------------------------------------------------------------------------
-
 #include "fct/Range.hpp"
 #include "tsindex/Float.hpp"
 #include "tsindex/Int.hpp"
 
-// ----------------------------------------------------------------------------
+#include <memory>
+#include <vector>
 
 namespace tsindex {
 class IndexParams {

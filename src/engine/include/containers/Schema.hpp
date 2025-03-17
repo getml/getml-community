@@ -12,7 +12,7 @@
 
 namespace containers {
 
-typedef typename helpers::Schema Schema;
+using Schema = typename helpers::Schema;
 
 }  // namespace containers
 

@@ -8,19 +8,20 @@
 #ifndef SQL_SQLDIALECTGENERATOR_HPP_
 #define SQL_SQLDIALECTGENERATOR_HPP_
 
-#include <cstddef>
-#include <memory>
-#include <optional>
-#include <rfl/Ref.hpp>
-#include <string>
-#include <vector>
-
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/Schema.hpp"
 #include "helpers/enums/Aggregation.hpp"
 #include "transpilation/FeatureTableParams.hpp"
 #include "transpilation/SQLParams.hpp"
 #include "transpilation/TrimmingGenerator.hpp"
+
+#include <rfl/Ref.hpp>
+
+#include <cstddef>
+#include <memory>
+#include <optional>
+#include <string>
+#include <vector>
 
 namespace transpilation {
 

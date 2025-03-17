@@ -8,18 +8,19 @@
 #ifndef FASTPROP_CONTAINERS_CONDITION_HPP_
 #define FASTPROP_CONTAINERS_CONDITION_HPP_
 
-#include <cstddef>
-#include <memory>
-#include <rfl/Field.hpp>
-#include <rfl/NamedTuple.hpp>
-#include <string>
-
 #include "fastprop/Float.hpp"
 #include "fastprop/Int.hpp"
 #include "fastprop/enums/DataUsed.hpp"
 #include "helpers/Schema.hpp"
 #include "helpers/StringIterator.hpp"
 #include "transpilation/SQLDialectGenerator.hpp"
+
+#include <rfl/Field.hpp>
+#include <rfl/NamedTuple.hpp>
+
+#include <cstddef>
+#include <memory>
+#include <string>
 
 namespace fastprop {
 namespace containers {

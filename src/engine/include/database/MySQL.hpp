@@ -8,18 +8,16 @@
 #ifndef DATABASE_MYSQL_HPP_
 #define DATABASE_MYSQL_HPP_
 
+#include "database/Command.hpp"
+#include "database/Connector.hpp"
+#include "database/MySQLIterator.hpp"
+#include "database/TableContent.hpp"
+
 #include <mysql.h>
 
 #include <memory>
 #include <string>
 #include <vector>
-
-#include "database/Command.hpp"
-#include "database/Connector.hpp"
-#include "database/DatabaseParser.hpp"
-#include "database/MySQLIterator.hpp"
-#include "database/TableContent.hpp"
-#include "io/io.hpp"
 
 namespace database {
 
@@ -203,4 +201,3 @@ class MySQL : public Connector {
 }  // namespace database
 
 #endif  // DATABASE_MYSQL_HPP_
-

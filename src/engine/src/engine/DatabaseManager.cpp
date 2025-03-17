@@ -7,13 +7,6 @@
 
 #include "engine/handlers/DatabaseManager.hpp"
 
-#include <rfl/Field.hpp>
-#include <rfl/Literal.hpp>
-#include <rfl/Ref.hpp>
-#include <rfl/always_false.hpp>
-#include <rfl/json/write.hpp>
-#include <rfl/visit.hpp>
-
 #include "communication/Sender.hpp"
 #include "database/Command.hpp"
 #include "database/DatabaseParser.hpp"
@@ -21,7 +14,17 @@
 #include "database/QuerySplitter.hpp"
 #include "database/Sqlite3.hpp"
 #include "database/sniff.hpp"
+#include "io/CSVReader.hpp"
+#include "io/CSVSniffer.hpp"
 #include "io/Parser.hpp"
+#include "multithreading/WriteLock.hpp"
+
+#include <rfl/Field.hpp>
+#include <rfl/Literal.hpp>
+#include <rfl/Ref.hpp>
+#include <rfl/always_false.hpp>
+#include <rfl/json/write.hpp>
+#include <rfl/visit.hpp>
 
 namespace engine {
 namespace handlers {

@@ -8,15 +8,15 @@
 #ifndef COMMANDS_XGBOOSTHYPERPARMS_HPP_
 #define COMMANDS_XGBOOSTHYPERPARMS_HPP_
 
-#include <xgboost/c_api.h>
+#include "commands/Float.hpp"
+#include "commands/Int.hpp"
 
-#include <cstddef>
 #include <rfl/Field.hpp>
 #include <rfl/Literal.hpp>
 #include <rfl/named_tuple_t.hpp>
+#include <xgboost/c_api.h>
 
-#include "commands/Float.hpp"
-#include "commands/Int.hpp"
+#include <cstddef>
 
 namespace commands {
 

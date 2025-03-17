@@ -1,34 +1,22 @@
 // Copyright 2024 Code17 GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef DATABASE_MYSQLITERATOR_HPP_
 #define DATABASE_MYSQLITERATOR_HPP_
 
-// -----------------------------------------------------------------------------
+#include "database/Iterator.hpp"
+#include "debug/assert_true.hpp"
 
 #include <mysql.h>
-
-// -----------------------------------------------------------------------------
 
 #include <cmath>
 #include <memory>
 #include <string>
 #include <vector>
-
-// -----------------------------------------------------------------------------
-
-#include "debug/debug.hpp"
-
-// -----------------------------------------------------------------------------
-
-#include "database/Getter.hpp"
-#include "database/Iterator.hpp"
-
-// -----------------------------------------------------------------------------
 
 namespace database {
 // -----------------------------------------------------------------------------

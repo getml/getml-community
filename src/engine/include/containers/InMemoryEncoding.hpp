@@ -8,14 +8,15 @@
 #ifndef CONTAINERS_INMEMORYENCODING_HPP_
 #define CONTAINERS_INMEMORYENCODING_HPP_
 
+#include "containers/Int.hpp"
+#include "strings/String.hpp"
+#include "strings/StringHasher.hpp"
+
 #include <memory>
 #include <string>
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
-
-#include "containers/Int.hpp"
-#include "strings/strings.hpp"
 
 namespace containers {
 

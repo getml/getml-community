@@ -8,13 +8,13 @@
 #ifndef HELPERS_CREATESUBVIEWPARAMS_HPP_
 #define HELPERS_CREATESUBVIEWPARAMS_HPP_
 
+#include "helpers/ColumnView.hpp"
+#include "helpers/DataFrameParams.hpp"
+
 #include <functional>
 #include <optional>
 #include <string>
 #include <vector>
-
-#include "helpers/ColumnView.hpp"
-#include "helpers/DataFrameParams.hpp"
 
 namespace helpers {
 
@@ -62,4 +62,3 @@ struct CreateSubviewParams {
 // -------------------------------------------------------------------------
 
 #endif  // HELPERS_CREATESUBVIEWPARAMS_HPP_
-

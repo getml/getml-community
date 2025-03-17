@@ -8,13 +8,6 @@
 #ifndef PREDICTORS_LOGISTICREGRESSION_HPP_
 #define PREDICTORS_LOGISTICREGRESSION_HPP_
 
-#include <cmath>
-#include <memory>
-#include <optional>
-#include <rfl/NamedTuple.hpp>
-#include <rfl/Ref.hpp>
-#include <vector>
-
 #include "predictors/Fingerprint.hpp"
 #include "predictors/FloatFeature.hpp"
 #include "predictors/IntFeature.hpp"
@@ -22,6 +15,14 @@
 #include "predictors/Predictor.hpp"
 #include "predictors/PredictorImpl.hpp"
 #include "predictors/StandardScaler.hpp"
+
+#include <rfl/NamedTuple.hpp>
+#include <rfl/Ref.hpp>
+
+#include <cmath>
+#include <memory>
+#include <optional>
+#include <vector>
 
 namespace predictors {
 

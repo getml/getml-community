@@ -7,10 +7,10 @@
 
 #include "database/QuerySplitter.hpp"
 
-#include <ranges>
-
 #include "debug/assert_true.hpp"
 #include "io/Parser.hpp"
+
+#include <ranges>
 
 namespace database {
 

@@ -1,33 +1,20 @@
 // Copyright 2024 Code17 GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef OPTIMIZERS_BFGS_HPP_
 #define OPTIMIZERS_BFGS_HPP_
 
-// ----------------------------------------------------------------------------
-
-#include <Eigen/Dense>
-
-// ----------------------------------------------------------------------------
-
-#include <cmath>
-#include <vector>
-
-// ----------------------------------------------------------------------------
-
-#include "debug/debug.hpp"
-
-// ----------------------------------------------------------------------------
-
+#include "debug/assert_true.hpp"
 #include "optimizers/Float.hpp"
-#include "optimizers/Int.hpp"
 #include "optimizers/Optimizer.hpp"
 
-// ----------------------------------------------------------------------------
+#include <Eigen/Dense>
+#include <cmath>
+#include <vector>
 
 namespace optimizers {
 

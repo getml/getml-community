@@ -8,16 +8,16 @@
 #ifndef FASTPROP_CONTAINERS_SUBFEATURES_HPP_
 #define FASTPROP_CONTAINERS_SUBFEATURES_HPP_
 
-#include <map>
-
 #include "fastprop/Float.hpp"
 #include "fastprop/Int.hpp"
 #include "fastprop/containers/ColumnView.hpp"
 
+#include <map>
+
 namespace fastprop {
 namespace containers {
 
-typedef std::vector<ColumnView<Float, std::map<Int, Int>>> Subfeatures;
+using Subfeatures = std::vector<ColumnView<Float, std::map<Int, Int>>>;
 
 }  // namespace containers
 }  // namespace fastprop

@@ -8,14 +8,13 @@
 #ifndef METRICS_METRICIMPL_HPP_
 #define METRICS_METRICIMPL_HPP_
 
-#include <utility>
-#include <vector>
-
-#include "debug/debug.hpp"
 #include "metrics/Features.hpp"
 #include "metrics/Float.hpp"
-#include "metrics/Int.hpp"
-#include "multithreading/multithreading.hpp"
+#include "multithreading/Communicator.hpp"
+#include "multithreading/all_reduce.hpp"
+
+#include <utility>
+#include <vector>
 
 namespace metrics {
 

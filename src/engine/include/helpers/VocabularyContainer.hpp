@@ -8,13 +8,14 @@
 #ifndef HELPERS_VOCABULARYCONTAINER_HPP_
 #define HELPERS_VOCABULARYCONTAINER_HPP_
 
-#include <memory>
-#include <rfl/Field.hpp>
-#include <rfl/NamedTuple.hpp>
-#include <vector>
-
 #include "helpers/DataFrame.hpp"
 #include "helpers/StringIterator.hpp"
+
+#include <rfl/Field.hpp>
+#include <rfl/NamedTuple.hpp>
+
+#include <memory>
+#include <vector>
 
 namespace helpers {
 

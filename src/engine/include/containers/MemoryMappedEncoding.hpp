@@ -8,15 +8,15 @@
 #ifndef CONTAINERS_MEMORYMAPPEDENCODING_HPP_
 #define CONTAINERS_MEMORYMAPPEDENCODING_HPP_
 
+#include "containers/Int.hpp"
+#include "memmap/BTree.hpp"
+#include "memmap/StringVector.hpp"
+#include "strings/String.hpp"
+
 #include <memory>
 #include <string>
 #include <type_traits>
 #include <vector>
-
-#include "containers/Int.hpp"
-#include "debug/debug.hpp"
-#include "memmap/memmap.hpp"
-#include "strings/strings.hpp"
 
 namespace containers {
 

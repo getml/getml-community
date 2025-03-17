@@ -13,7 +13,7 @@
 namespace fastprop {
 namespace containers {
 
-typedef helpers::Index Index;
+using Index = helpers::Index;
 
 }  // namespace containers
 }  // namespace fastprop

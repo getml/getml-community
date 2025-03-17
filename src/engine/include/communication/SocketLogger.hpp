@@ -8,14 +8,12 @@
 #ifndef COMMUNICATION_SOCKETLOGGER_HPP_
 #define COMMUNICATION_SOCKETLOGGER_HPP_
 
+#include "communication/Sender.hpp"
+
 #include <Poco/Net/StreamSocket.h>
 
 #include <memory>
 #include <string>
-
-#include "communication/Sender.hpp"
-#include "debug/debug.hpp"
-#include "logging/logging.hpp"
 
 namespace communication {
 

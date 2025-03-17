@@ -8,16 +8,17 @@
 #ifndef PREDICTORS_PREDICTORIMPL_HPP_
 #define PREDICTORS_PREDICTORIMPL_HPP_
 
-#include <rfl/Field.hpp>
-#include <rfl/NamedTuple.hpp>
-#include <string>
-#include <vector>
-
 #include "helpers/Saver.hpp"
 #include "predictors/CSRMatrix.hpp"
 #include "predictors/Encoding.hpp"
 #include "predictors/FloatFeature.hpp"
 #include "predictors/IntFeature.hpp"
+
+#include <rfl/Field.hpp>
+#include <rfl/NamedTuple.hpp>
+
+#include <string>
+#include <vector>
 
 namespace predictors {
 

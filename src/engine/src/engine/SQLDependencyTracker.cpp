@@ -7,15 +7,16 @@
 
 #include "engine/utils/SQLDependencyTracker.hpp"
 
+#include "helpers/StringSplitter.hpp"
+#include "transpilation/SQLGenerator.hpp"
+
+#include <rfl/json/write.hpp>
+#include <rfl/make_named_tuple.hpp>
+
 #include <cstddef>
 #include <filesystem>
 #include <fstream>
 #include <ranges>
-#include <rfl/json/write.hpp>
-#include <rfl/make_named_tuple.hpp>
-
-#include "helpers/StringSplitter.hpp"
-#include "transpilation/SQLGenerator.hpp"
 
 namespace engine {
 namespace utils {

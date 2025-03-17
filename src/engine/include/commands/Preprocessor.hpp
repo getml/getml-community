@@ -8,15 +8,16 @@
 #ifndef COMMANDS_PREPROCESSOR_HPP_
 #define COMMANDS_PREPROCESSOR_HPP_
 
-#include <cstddef>
-#include <optional>
+#include "commands/NotSupportedInCommunity.hpp"
+
 #include <rfl/Field.hpp>
 #include <rfl/Literal.hpp>
 #include <rfl/NamedTuple.hpp>
 #include <rfl/TaggedUnion.hpp>
-#include <string>
 
-#include "commands/NotSupportedInCommunity.hpp"
+#include <cstddef>
+#include <optional>
+#include <string>
 
 namespace commands {
 

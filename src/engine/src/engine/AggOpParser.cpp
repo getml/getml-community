@@ -7,12 +7,13 @@
 
 #include "engine/handlers/AggOpParser.hpp"
 
-#include <rfl/visit.hpp>
-#include <string>
-
 #include "engine/handlers/FloatOpParser.hpp"
 #include "engine/handlers/StringOpParser.hpp"
 #include "engine/utils/Aggregations.hpp"
+
+#include <rfl/visit.hpp>
+
+#include <string>
 
 namespace engine {
 namespace handlers {

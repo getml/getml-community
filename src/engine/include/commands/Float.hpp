@@ -9,7 +9,7 @@
 #define COMMANDS_FLOAT_HPP_
 
 namespace commands {
-typedef double Float;
-}
+using Float = double;
+}  // namespace commands
 
 #endif  // COMMANDS_FLOAT_HPP_

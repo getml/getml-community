@@ -8,13 +8,6 @@
 #ifndef ENGINE_PIPELINES_SCORE_HPP_
 #define ENGINE_PIPELINES_SCORE_HPP_
 
-#include <Poco/Net/StreamSocket.h>
-
-#include <memory>
-#include <string>
-#include <utility>
-#include <vector>
-
 #include "containers/DataFrame.hpp"
 #include "containers/NumericalFeatures.hpp"
 #include "engine/Float.hpp"
@@ -22,6 +15,13 @@
 #include "engine/pipelines/Pipeline.hpp"
 #include "engine/pipelines/Predictors.hpp"
 #include "metrics/Scores.hpp"
+
+#include <Poco/Net/StreamSocket.h>
+
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace engine {
 namespace pipelines {

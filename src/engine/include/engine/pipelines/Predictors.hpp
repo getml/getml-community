@@ -8,11 +8,12 @@
 #ifndef ENGINE_PIPELINES_PREDICTORS_HPP_
 #define ENGINE_PIPELINES_PREDICTORS_HPP_
 
-#include <rfl/Ref.hpp>
-#include <vector>
-
 #include "predictors/Predictor.hpp"
 #include "predictors/PredictorImpl.hpp"
+
+#include <rfl/Ref.hpp>
+
+#include <vector>
 
 namespace engine {
 namespace pipelines {

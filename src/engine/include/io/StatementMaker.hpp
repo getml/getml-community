@@ -8,14 +8,15 @@
 #ifndef IO_STATEMENTMAKER_HPP_
 #define IO_STATEMENTMAKER_HPP_
 
-#include <range/v3/view/join.hpp>
-#include <ranges>
-#include <string>
-#include <vector>
-
 #include "debug/assert_true.hpp"
 #include "helpers/StringSplitter.hpp"
 #include "io/Datatype.hpp"
+
+#include <range/v3/view/join.hpp>
+
+#include <ranges>
+#include <string>
+#include <vector>
 
 namespace io {
 

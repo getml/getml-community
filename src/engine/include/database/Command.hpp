@@ -8,11 +8,12 @@
 #ifndef DATABASE_COMMAND_HPP_
 #define DATABASE_COMMAND_HPP_
 
-#include <optional>
 #include <rfl/Field.hpp>
 #include <rfl/Literal.hpp>
 #include <rfl/TaggedUnion.hpp>
 #include <rfl/define_named_tuple.hpp>
+
+#include <optional>
 #include <string>
 #include <vector>
 

@@ -11,7 +11,7 @@
 #include <cstdint>
 
 namespace commands {
-typedef std::int32_t Int;
-}
+using Int = std::int32_t;
+}  // namespace commands
 
 #endif  // COMMANDS_INT_HPP_

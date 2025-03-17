@@ -8,9 +8,10 @@
 #ifndef DATABASE_TABLECONTENT_HPP_
 #define DATABASE_TABLECONTENT_HPP_
 
-#include <cstdint>
 #include <rfl/Field.hpp>
 #include <rfl/NamedTuple.hpp>
+
+#include <cstdint>
 #include <string>
 #include <vector>
 

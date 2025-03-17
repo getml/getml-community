@@ -8,14 +8,15 @@
 #ifndef ENGINE_PIPELINES_MAKEPLACEHOLDER_HPP_
 #define ENGINE_PIPELINES_MAKEPLACEHOLDER_HPP_
 
-#include <memory>
-#include <rfl/Ref.hpp>
-#include <string>
-#include <vector>
-
 #include "commands/DataModel.hpp"
 #include "engine/Float.hpp"
 #include "helpers/Placeholder.hpp"
+
+#include <rfl/Ref.hpp>
+
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace engine {
 namespace pipelines {

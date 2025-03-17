@@ -7,15 +7,9 @@
 
 #include "engine/pipelines/fit.hpp"
 
-#include <rfl/Field.hpp>
-#include <rfl/as.hpp>
-#include <rfl/make_named_tuple.hpp>
-#include <rfl/replace.hpp>
-#include <rfl/to_named_tuple.hpp>
-#include <utility>
-
 #include "commands/FeatureLearner.hpp"
 #include "commands/Fingerprint.hpp"
+#include "engine/Int.hpp"
 #include "engine/pipelines/FeatureLearnerParser.hpp"
 #include "engine/pipelines/FitPredictorsParams.hpp"
 #include "engine/pipelines/MakeFeaturesParams.hpp"
@@ -23,9 +17,19 @@
 #include "engine/pipelines/score.hpp"
 #include "engine/pipelines/transform.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
+#include "engine/preprocessors/PreprocessorParser.hpp"
 #include "featurelearners/AbstractFeatureLearner.hpp"
 #include "helpers/StringReplacer.hpp"
 #include "predictors/Predictor.hpp"
+#include "predictors/PredictorParser.hpp"
+
+#include <rfl/Field.hpp>
+#include <rfl/as.hpp>
+#include <rfl/make_named_tuple.hpp>
+#include <rfl/replace.hpp>
+#include <rfl/to_named_tuple.hpp>
+
+#include <utility>
 
 namespace engine {
 namespace pipelines {

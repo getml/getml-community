@@ -8,19 +8,13 @@
 #ifndef ENGINE_HANDLERS_PROJECTMANAGERPARAMS_HPP_
 #define ENGINE_HANDLERS_PROJECTMANAGERPARAMS_HPP_
 
+#include "engine/handlers/DataFrameManager.hpp"
+#include "engine/handlers/PipelineManagerParams.hpp"
+
 #include <Poco/Net/StreamSocket.h>
 
 #include <map>
-#include <memory>
 #include <string>
-
-#include "communication/communication.hpp"
-#include "containers/containers.hpp"
-#include "debug/debug.hpp"
-#include "engine/config/config.hpp"
-#include "engine/handlers/DataFrameManager.hpp"
-#include "engine/handlers/PipelineManagerParams.hpp"
-#include "engine/pipelines/pipelines.hpp"
 
 namespace engine {
 namespace handlers {

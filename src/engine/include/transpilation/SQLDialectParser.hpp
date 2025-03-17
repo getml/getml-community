@@ -8,10 +8,10 @@
 #ifndef SQL_SQLDIALECTPARSER_HPP_
 #define SQL_SQLDIALECTPARSER_HPP_
 
-#include <rfl/Ref.hpp>
-
 #include "transpilation/SQLDialectGenerator.hpp"
 #include "transpilation/TranspilationParams.hpp"
+
+#include <rfl/Ref.hpp>
 
 namespace transpilation {
 

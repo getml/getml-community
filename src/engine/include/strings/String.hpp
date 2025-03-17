@@ -14,7 +14,6 @@
 #include <string>
 #include <utility>
 
-
 namespace strings {
 
 // String is an implementation of a string class that has

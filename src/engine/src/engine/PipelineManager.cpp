@@ -7,17 +7,29 @@
 
 #include "engine/handlers/PipelineManager.hpp"
 
+#include "commands/DataFramesOrViews.hpp"
+#include "containers/DataFrameReader.hpp"
+#include "containers/Roles.hpp"
+#include "engine/Int.hpp"
+#include "engine/handlers/ViewParser.hpp"
+#include "engine/pipelines/CheckParams.hpp"
+#include "engine/pipelines/FitParams.hpp"
+#include "engine/pipelines/ToSQLParams.hpp"
+#include "engine/pipelines/TransformParams.hpp"
+#include "engine/pipelines/check.hpp"
+#include "engine/pipelines/fit.hpp"
+#include "engine/pipelines/score.hpp"
+#include "engine/pipelines/to_sql.hpp"
+#include "engine/pipelines/transform.hpp"
+#include "io/StatementMaker.hpp"
+#include "transpilation/TranspilationParams.hpp"
+
 #include <rfl/Field.hpp>
 #include <rfl/always_false.hpp>
 #include <rfl/as.hpp>
 #include <rfl/make_named_tuple.hpp>
-#include <stdexcept>
 
-#include "commands/DataFramesOrViews.hpp"
-#include "containers/Roles.hpp"
-#include "engine/pipelines/ToSQLParams.hpp"
-#include "engine/pipelines/to_sql.hpp"
-#include "transpilation/TranspilationParams.hpp"
+#include <stdexcept>
 
 namespace engine {
 namespace handlers {

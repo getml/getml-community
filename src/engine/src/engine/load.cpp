@@ -7,13 +7,14 @@
 
 #include "engine/pipelines/load.hpp"
 
-#include <rfl/Field.hpp>
-#include <string>
-
 #include "commands/Pipeline.hpp"
 #include "engine/pipelines/PipelineJSON.hpp"
 #include "engine/pipelines/load_fitted.hpp"
 #include "helpers/Loader.hpp"
+
+#include <rfl/Field.hpp>
+
+#include <string>
 
 namespace engine {
 namespace pipelines {

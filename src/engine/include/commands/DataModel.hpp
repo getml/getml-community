@@ -8,15 +8,16 @@
 #ifndef COMMANDS_DATAMODEL_HPP_
 #define COMMANDS_DATAMODEL_HPP_
 
+#include "commands/Float.hpp"
+#include "commands/Roles.hpp"
+#include "helpers/Placeholder.hpp"
+
 #include <rfl/Field.hpp>
 #include <rfl/Literal.hpp>
 #include <rfl/define_named_tuple.hpp>
 #include <rfl/json/Reader.hpp>
-#include <vector>
 
-#include "commands/Float.hpp"
-#include "commands/Roles.hpp"
-#include "helpers/Placeholder.hpp"
+#include <vector>
 
 namespace commands {
 

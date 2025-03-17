@@ -8,13 +8,11 @@
 #ifndef MEMMAP_VECTOR_HPP_
 #define MEMMAP_VECTOR_HPP_
 
-#include <cstddef>
-#include <memory>
-#include <utility>
-
-#include "debug/debug.hpp"
 #include "memmap/Pool.hpp"
 #include "memmap/VectorImpl.hpp"
+
+#include <cstddef>
+#include <memory>
 
 namespace memmap {
 

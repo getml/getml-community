@@ -7,6 +7,8 @@
 
 #include "engine/pipelines/staging.hpp"
 
+#include "engine/Float.hpp"
+#include "engine/Int.hpp"
 #include "helpers/StringSplitter.hpp"
 
 namespace engine {

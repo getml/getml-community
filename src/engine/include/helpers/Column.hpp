@@ -8,14 +8,14 @@
 #ifndef HELPERS_COLUMN_HPP_
 #define HELPERS_COLUMN_HPP_
 
-#include <ranges>
-#include <type_traits>
-#include <variant>
-
 #include "fct/AccessIterator.hpp"
 #include "helpers/Subrole.hpp"
 #include "memmap/StringVector.hpp"
 #include "strings/String.hpp"
+
+#include <ranges>
+#include <type_traits>
+#include <variant>
 
 namespace helpers {
 

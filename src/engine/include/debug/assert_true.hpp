@@ -8,15 +8,14 @@
 #ifndef DEBUG_ASSERT_TRUE_HPP_
 #define DEBUG_ASSERT_TRUE_HPP_
 
-#include "debug/Assert.hpp"
-// ----------------------------------------------------------------------------
-
 // NDEBUG implies no assertions.
 #ifdef NDEBUG
 
 #define assert_true(EX)
 
 #else
+
+#include "debug/Assert.hpp"
 
 #define assert_true(EX) \
   (void)((EX) || (debug::Assert::throw_exception(#EX, __FILE__, __LINE__), 0))

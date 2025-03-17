@@ -9,7 +9,7 @@
 #define FEATURELEARNERS_FLOAT_HPP_
 
 namespace featurelearners {
-typedef double Float;
-}
+using Float = double;
+}  // namespace featurelearners
 
 #endif  // FEATURELEARNERS_FLOAT_HPP_

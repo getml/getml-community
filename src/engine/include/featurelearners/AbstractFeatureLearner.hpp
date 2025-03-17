@@ -8,16 +8,16 @@
 #ifndef FEATURELEARNERS_ABSTRACTFEATURELEARNER_HPP_
 #define FEATURELEARNERS_ABSTRACTFEATURELEARNER_HPP_
 
-#include <map>
-#include <memory>
-#include <vector>
-
 #include "commands/Fingerprint.hpp"
 #include "featurelearners/FitParams.hpp"
 #include "featurelearners/Float.hpp"
 #include "featurelearners/Int.hpp"
 #include "featurelearners/TransformParams.hpp"
 #include "helpers/Saver.hpp"
+
+#include <map>
+#include <memory>
+#include <vector>
 
 namespace featurelearners {
 

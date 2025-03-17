@@ -8,14 +8,15 @@
 #ifndef CONTAINERS_VIEWCONTENT_HPP_
 #define CONTAINERS_VIEWCONTENT_HPP_
 
-#include <cstdint>
+#include "containers/DataFrameContent.hpp"
+
 #include <rfl/Field.hpp>
 #include <rfl/NamedTuple.hpp>
+
+#include <cstdint>
 #include <string>
 #include <variant>
 #include <vector>
-
-#include "containers/DataFrameContent.hpp"
 
 namespace containers {
 

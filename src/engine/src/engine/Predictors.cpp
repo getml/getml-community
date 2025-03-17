@@ -8,7 +8,7 @@
 #include "engine/pipelines/Predictors.hpp"
 
 #include "helpers/Macros.hpp"
-#include "transpilation/transpilation.hpp"
+#include "transpilation/HumanReadableSQLGenerator.hpp"
 
 namespace engine {
 namespace pipelines {

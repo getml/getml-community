@@ -8,11 +8,12 @@
 #ifndef ENGINE_PREPROCESSORS_PREPROCESSORIMPL_HPP_
 #define ENGINE_PREPROCESSORS_PREPROCESSORIMPL_HPP_
 
-#include <rfl/Ref.hpp>
-#include <vector>
-
 #include "engine/preprocessors/data_model_checking.hpp"
 #include "helpers/ColumnDescription.hpp"
+
+#include <rfl/Ref.hpp>
+
+#include <vector>
 
 namespace engine {
 namespace preprocessors {

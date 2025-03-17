@@ -8,16 +8,6 @@
 #ifndef FEATURELEARNERS_FEATURELEARNER_HPP_
 #define FEATURELEARNERS_FEATURELEARNER_HPP_
 
-#include <cstddef>
-#include <map>
-#include <memory>
-#include <optional>
-#include <rfl/replace.hpp>
-#include <string>
-#include <tuple>
-#include <type_traits>
-#include <vector>
-
 #include "commands/Fingerprint.hpp"
 #include "fastprop/subfeatures/FastPropContainer.hpp"
 #include "fastprop/subfeatures/Maker.hpp"
@@ -36,6 +26,17 @@
 #include "helpers/StringIterator.hpp"
 #include "helpers/VocabularyContainer.hpp"
 #include "helpers/WordIndexContainer.hpp"
+
+#include <rfl/replace.hpp>
+
+#include <cstddef>
+#include <map>
+#include <memory>
+#include <optional>
+#include <string>
+#include <tuple>
+#include <type_traits>
+#include <vector>
 
 namespace featurelearners {
 

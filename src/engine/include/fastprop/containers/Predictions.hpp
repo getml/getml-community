@@ -8,10 +8,14 @@
 #ifndef FASTPROP_CONTAINERS_PREDICTIONS_HPP_
 #define FASTPROP_CONTAINERS_PREDICTIONS_HPP_
 
+#include "fastprop/Float.hpp"
+
+#include <vector>
+
 namespace fastprop {
 namespace containers {
 
-typedef std::vector<std::vector<Float>> Predictions;
+using Predictions = std::vector<std::vector<Float>>;
 
 }  // namespace containers
 }  // namespace fastprop

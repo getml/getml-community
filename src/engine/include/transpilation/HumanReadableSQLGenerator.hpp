@@ -8,14 +8,6 @@
 #ifndef SQL_HUMANREADABLESQLGENERATOR_HPP_
 #define SQL_HUMANREADABLESQLGENERATOR_HPP_
 
-#include <cstddef>
-#include <memory>
-#include <optional>
-#include <rfl/Ref.hpp>
-#include <string>
-#include <tuple>
-#include <vector>
-
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/Schema.hpp"
 #include "helpers/enums/Aggregation.hpp"
@@ -23,6 +15,15 @@
 #include "transpilation/HumanReadableTrimming.hpp"
 #include "transpilation/SQLDialectGenerator.hpp"
 #include "transpilation/SQLParams.hpp"
+
+#include <rfl/Ref.hpp>
+
+#include <cstddef>
+#include <memory>
+#include <optional>
+#include <string>
+#include <tuple>
+#include <vector>
 
 namespace transpilation {
 

@@ -8,14 +8,6 @@
 #ifndef ENGINE_PREPROCESSORS_TEXTFIELDSPLITTER_HPP_
 #define ENGINE_PREPROCESSORS_TEXTFIELDSPLITTER_HPP_
 
-#include <memory>
-#include <rfl/Field.hpp>
-#include <rfl/Literal.hpp>
-#include <rfl/NamedTuple.hpp>
-#include <rfl/Ref.hpp>
-#include <utility>
-#include <vector>
-
 #include "commands/Fingerprint.hpp"
 #include "commands/Preprocessor.hpp"
 #include "engine/Int.hpp"
@@ -23,6 +15,15 @@
 #include "engine/preprocessors/Preprocessor.hpp"
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/StringIterator.hpp"
+
+#include <rfl/Field.hpp>
+#include <rfl/Literal.hpp>
+#include <rfl/NamedTuple.hpp>
+#include <rfl/Ref.hpp>
+
+#include <memory>
+#include <utility>
+#include <vector>
 
 namespace engine {
 namespace preprocessors {

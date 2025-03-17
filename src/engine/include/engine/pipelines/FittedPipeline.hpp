@@ -8,12 +8,12 @@
 #ifndef ENGINE_PIPELINES_FITTEDPIPELINE_HPP_
 #define ENGINE_PIPELINES_FITTEDPIPELINE_HPP_
 
-#include <vector>
-
 #include "engine/pipelines/Fingerprints.hpp"
 #include "engine/pipelines/Predictors.hpp"
 #include "engine/preprocessors/Preprocessor.hpp"
 #include "featurelearners/AbstractFeatureLearner.hpp"
+
+#include <vector>
 
 namespace engine {
 namespace pipelines {

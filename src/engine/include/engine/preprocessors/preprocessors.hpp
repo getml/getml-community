@@ -13,4 +13,3 @@
 #include "engine/preprocessors/data_model_checking.hpp"
 
 #endif  // ENGINE_PREPROCESSORS_PREPROCESSORS_HPP_
-

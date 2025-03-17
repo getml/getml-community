@@ -8,18 +8,12 @@
 #ifndef TEXTMINING_ROWINDEX_HPP_
 #define TEXTMINING_ROWINDEX_HPP_
 
-// -------------------------------------------------------------------------
+#include "textmining/Int.hpp"
+#include "textmining/WordIndex.hpp"
 
 #include <memory>
 #include <utility>
 #include <vector>
-
-// -------------------------------------------------------------------------
-
-#include "textmining/Int.hpp"
-#include "textmining/WordIndex.hpp"
-
-// -------------------------------------------------------------------------
 
 namespace textmining {
 

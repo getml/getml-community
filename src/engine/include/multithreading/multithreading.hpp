@@ -8,8 +8,6 @@
 #ifndef MULTITHREADING_HPP_
 #define MULTITHREADING_HPP_
 
-// ----------------------------------------------------
-
 #include "multithreading/Communicator.hpp"
 #include "multithreading/ReadLock.hpp"
 #include "multithreading/ReadWriteLock.hpp"
@@ -20,7 +18,5 @@
 #include "multithreading/broadcast.hpp"
 #include "multithreading/maximum.hpp"
 #include "multithreading/minimum.hpp"
-
-// ----------------------------------------------------
 
 #endif  // MULTITHREADING_HPP_

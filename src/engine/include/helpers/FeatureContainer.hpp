@@ -8,14 +8,12 @@
 #ifndef HELPERS_FEATURECONTAINER_HPP_
 #define HELPERS_FEATURECONTAINER_HPP_
 
+#include "helpers/Column.hpp"
+#include "helpers/Float.hpp"
+
 #include <memory>
 #include <optional>
 #include <vector>
-
-#include "debug/debug.hpp"
-#include "helpers/Column.hpp"
-#include "helpers/Float.hpp"
-#include "helpers/Int.hpp"
 
 namespace helpers {
 
@@ -57,4 +55,3 @@ class FeatureContainer {
 }  // namespace helpers
 
 #endif  // HELPERS_FEATURECONTAINER_HPP_
-

@@ -8,11 +8,13 @@
 #ifndef ENGINE_PIPELINES_PREPROCESSED_HPP_
 #define ENGINE_PIPELINES_PREPROCESSED_HPP_
 
-#include <rfl/Ref.hpp>
-#include <vector>
-
 #include "commands/Fingerprint.hpp"
 #include "containers/DataFrame.hpp"
+#include "engine/preprocessors/Preprocessor.hpp"
+
+#include <rfl/Ref.hpp>
+
+#include <vector>
 
 namespace engine {
 namespace pipelines {

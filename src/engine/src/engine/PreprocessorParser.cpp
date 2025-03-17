@@ -7,15 +7,16 @@
 
 #include "engine/preprocessors/PreprocessorParser.hpp"
 
-#include <rfl/visit.hpp>
-#include <stdexcept>
-
 #include "engine/preprocessors/CategoryTrimmer.hpp"
 #include "engine/preprocessors/EMailDomain.hpp"
 #include "engine/preprocessors/Imputation.hpp"
 #include "engine/preprocessors/Seasonal.hpp"
 #include "engine/preprocessors/Substring.hpp"
 #include "engine/preprocessors/TextFieldSplitter.hpp"
+
+#include <rfl/visit.hpp>
+
+#include <stdexcept>
 
 namespace engine {
 namespace preprocessors {

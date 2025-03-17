@@ -12,7 +12,7 @@
 
 namespace containers {
 
-typedef Index<Int> DataFrameIndex;
+using DataFrameIndex = Index<Int>;
 
 }  // namespace containers
 

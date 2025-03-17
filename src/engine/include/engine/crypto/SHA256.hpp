@@ -1,37 +1,26 @@
 // Copyright 2024 Code17 GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef ENGINE_CRYPTO_SHA256_HPP_
 #define ENGINE_CRYPTO_SHA256_HPP_
 
-// ------------------------------------------------------------------------
-
-#if (defined(_WIN32) || defined(_WIN64))
-#define _WINSOCKAPI_  // stops windows.h including winsock.h
-#include <windows.h>
-#include <winsock2.h>
-// --------------------------------------------------------
-#include <openssl/ossl_typ.h>
-#endif
-
-// ------------------------------------------------------------------------
+#include "engine/crypto/SHA256Engine.hpp"
 
 #include <Poco/Crypto/DigestEngine.h>
 #include <Poco/HMACEngine.h>
 
-// ------------------------------------------------------------------------
+#if (defined(_WIN32) || defined(_WIN64))
+#define _WINSOCKAPI_  // stops windows.h including winsock.h
+#include <openssl/ossl_typ.h>
+#include <windows.h>
+#include <winsock2.h>
+#endif
 
 #include <string>
-
-// ------------------------------------------------------------------------
-
-#include "engine/crypto/SHA256Engine.hpp"
-
-// ------------------------------------------------------------------------
 
 namespace engine {
 namespace crypto {

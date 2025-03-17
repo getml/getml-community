@@ -8,14 +8,15 @@
 #ifndef FASTPROP_CONTAINERS_ABSTRACTFEATURE_HPP_
 #define FASTPROP_CONTAINERS_ABSTRACTFEATURE_HPP_
 
-#include <memory>
-#include <rfl/Field.hpp>
-#include <rfl/NamedTuple.hpp>
-#include <vector>
-
 #include "fastprop/Int.hpp"
 #include "fastprop/containers/Condition.hpp"
 #include "fastprop/enums/Aggregation.hpp"
+
+#include <rfl/Field.hpp>
+#include <rfl/NamedTuple.hpp>
+
+#include <memory>
+#include <vector>
 
 namespace fastprop {
 namespace containers {

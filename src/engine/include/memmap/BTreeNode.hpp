@@ -1,26 +1,17 @@
 // Copyright 2024 Code17 GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef MEMMAP_BTREENODE_HPP_
 #define MEMMAP_BTREENODE_HPP_
 
-// ----------------------------------------------------------------------------
-
-#include <cstddef>
-
-// ----------------------------------------------------------------------------
-
-#include <numeric>
-
-// ----------------------------------------------------------------------------
-
 #include "memmap/VectorImpl.hpp"
 
-// ----------------------------------------------------------------------------
+#include <cstddef>
+#include <numeric>
 
 namespace memmap {
 // ----------------------------------------------------------------------------

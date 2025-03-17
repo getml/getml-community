@@ -8,16 +8,16 @@
 #ifndef CONTAINERS_INDEX_HPP_
 #define CONTAINERS_INDEX_HPP_
 
-#include <cmath>
-#include <memory>
-#include <unordered_map>
-#include <variant>
-
 #include "containers/Column.hpp"
 #include "containers/Float.hpp"
 #include "containers/Int.hpp"
 #include "helpers/NullChecker.hpp"
 #include "memmap/Index.hpp"
+
+#include <cmath>
+#include <memory>
+#include <unordered_map>
+#include <variant>
 
 namespace containers {
 

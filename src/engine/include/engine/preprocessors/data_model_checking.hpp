@@ -8,17 +8,16 @@
 #ifndef ENGINE_PREPROCESSORS_DATAMODELCHECKING_HPP_
 #define ENGINE_PREPROCESSORS_DATAMODELCHECKING_HPP_
 
-#include <memory>
-#include <string>
-#include <vector>
-
 #include "communication/SocketLogger.hpp"
 #include "communication/Warner.hpp"
-#include "containers/containers.hpp"
 #include "engine/Float.hpp"
 #include "engine/Int.hpp"
 #include "featurelearners/AbstractFeatureLearner.hpp"
 #include "helpers/Placeholder.hpp"
+
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace engine {
 namespace preprocessors {

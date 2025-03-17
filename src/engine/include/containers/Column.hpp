@@ -8,6 +8,13 @@
 #ifndef CONTAINERS_COLUMN_HPP_
 #define CONTAINERS_COLUMN_HPP_
 
+#include "containers/ColumnViewIterator.hpp"
+#include "containers/ULong.hpp"
+#include "helpers/Column.hpp"
+#include "helpers/Endianness.hpp"
+#include "helpers/NullChecker.hpp"
+#include "helpers/SubroleParser.hpp"
+
 #include <cstddef>
 #include <fstream>
 #include <ranges>
@@ -16,13 +23,6 @@
 #include <type_traits>
 #include <variant>
 #include <vector>
-
-#include "containers/ColumnViewIterator.hpp"
-#include "containers/ULong.hpp"
-#include "helpers/Column.hpp"
-#include "helpers/Endianness.hpp"
-#include "helpers/NullChecker.hpp"
-#include "helpers/SubroleParser.hpp"
 
 namespace containers {
 

@@ -7,11 +7,12 @@
 
 #include "helpers/DataFrame.hpp"
 
-#include <cstddef>
-#include <range/v3/view/concat.hpp>
-#include <vector>
-
 #include "helpers/Macros.hpp"
+
+#include <range/v3/view/concat.hpp>
+
+#include <cstddef>
+#include <vector>
 
 namespace helpers {
 

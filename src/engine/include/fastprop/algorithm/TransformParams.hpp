@@ -13,7 +13,7 @@
 namespace fastprop {
 namespace algorithm {
 
-typedef typename helpers::TransformParams TransformParams;
+using TransformParams = typename helpers::TransformParams;
 
 }  // namespace algorithm
 }  // namespace fastprop

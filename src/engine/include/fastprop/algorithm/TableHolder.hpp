@@ -13,7 +13,7 @@
 namespace fastprop {
 namespace algorithm {
 
-typedef typename helpers::TableHolder TableHolder;
+using TableHolder = typename helpers::TableHolder;
 
 }  // namespace algorithm
 }  // namespace fastprop

@@ -8,16 +8,17 @@
 #ifndef ENGINE_PREPROCESSORS_PREPROCESSOR_HPP_
 #define ENGINE_PREPROCESSORS_PREPROCESSOR_HPP_
 
-#include <memory>
-#include <optional>
-#include <rfl/Ref.hpp>
-#include <utility>
-#include <vector>
-
 #include "commands/Fingerprint.hpp"
 #include "engine/preprocessors/Params.hpp"
 #include "helpers/Saver.hpp"
 #include "helpers/StringIterator.hpp"
+
+#include <rfl/Ref.hpp>
+
+#include <memory>
+#include <optional>
+#include <utility>
+#include <vector>
 
 namespace engine {
 namespace preprocessors {

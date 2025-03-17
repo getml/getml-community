@@ -7,6 +7,9 @@
 
 #include "commands/BooleanColumnView.hpp"
 
+#include "commands/FloatColumnOrFloatColumnView.hpp"
+#include "commands/StringColumnOrStringColumnView.hpp"
+
 #include <rfl/json/read.hpp>
 
 namespace commands {

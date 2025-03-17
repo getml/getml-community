@@ -8,19 +8,19 @@
 #ifndef ENGINE_HANDLERS_VIEWPARSER_HPP_
 #define ENGINE_HANDLERS_VIEWPARSER_HPP_
 
-#include <Poco/Net/StreamSocket.h>
-
-#include <map>
-#include <memory>
-#include <rfl/json/read.hpp>
-#include <string>
-
 #include "commands/DataFrameCommand.hpp"
 #include "commands/DataFrameOrView.hpp"
 #include "commands/DataFramesOrViews.hpp"
 #include "containers/ColumnView.hpp"
 #include "containers/ViewContent.hpp"
 #include "engine/handlers/ArrowHandler.hpp"
+
+#include <Poco/Net/StreamSocket.h>
+#include <rfl/json/read.hpp>
+
+#include <map>
+#include <memory>
+#include <string>
 
 namespace engine {
 namespace handlers {

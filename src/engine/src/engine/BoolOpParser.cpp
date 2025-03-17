@@ -7,9 +7,9 @@
 
 #include "engine/handlers/BoolOpParser.hpp"
 
-#include <rfl/visit.hpp>
-
 #include "engine/handlers/FloatOpParser.hpp"
+
+#include <rfl/visit.hpp>
 
 namespace engine {
 namespace handlers {

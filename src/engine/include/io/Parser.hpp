@@ -8,6 +8,9 @@
 #ifndef IO_PARSER_HPP_
 #define IO_PARSER_HPP_
 
+#include "io/Float.hpp"
+#include "io/Int.hpp"
+
 #include <Poco/DateTimeFormat.h>
 #include <Poco/DateTimeFormatter.h>
 #include <Poco/DateTimeParser.h>
@@ -21,9 +24,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
-#include "io/Float.hpp"
-#include "io/Int.hpp"
 
 namespace io {
 

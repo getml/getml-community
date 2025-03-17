@@ -8,16 +8,17 @@
 #ifndef METRICS_SUMMARIZER_HPP_
 #define METRICS_SUMMARIZER_HPP_
 
-#include <rfl/Field.hpp>
-#include <rfl/NamedTuple.hpp>
-#include <string>
-#include <utility>
-#include <vector>
-
 #include "metrics/Features.hpp"
 #include "metrics/Float.hpp"
 #include "metrics/Int.hpp"
 #include "metrics/Scores.hpp"
+
+#include <rfl/Field.hpp>
+#include <rfl/NamedTuple.hpp>
+
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace metrics {
 

@@ -9,7 +9,7 @@
 #define CONTAINERS_FLOAT_HPP_
 
 namespace containers {
-typedef double Float;
-}
+using Float = double;
+}  // namespace containers
 
 #endif  // CONTAINERS_FLOAT_HPP_

@@ -8,14 +8,13 @@
 #ifndef PREDICTORS_XGBOOSTMATRIX_HPP_
 #define PREDICTORS_XGBOOSTMATRIX_HPP_
 
-#include <xgboost/c_api.h>
-
-#include <functional>
-#include <memory>
-#include <variant>
-
 #include "predictors/XGBoostIteratorDense.hpp"
 #include "predictors/XGBoostIteratorSparse.hpp"
+
+#include <xgboost/c_api.h>
+
+#include <memory>
+#include <variant>
 
 namespace predictors {
 

@@ -7,11 +7,11 @@
 
 #include "database/DatabaseParser.hpp"
 
-#include <rfl/visit.hpp>
-
 #include "database/MySQL.hpp"
 #include "database/Postgres.hpp"
 #include "database/Sqlite3.hpp"
+
+#include <rfl/visit.hpp>
 
 namespace database {
 

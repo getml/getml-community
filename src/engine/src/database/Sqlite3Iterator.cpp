@@ -7,6 +7,8 @@
 
 #include "database/Sqlite3Iterator.hpp"
 
+#include "database/Getter.hpp"
+
 namespace database {
 // ----------------------------------------------------------------------------
 

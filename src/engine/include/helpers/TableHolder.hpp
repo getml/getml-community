@@ -8,11 +8,6 @@
 #ifndef HELPERS_TABLEHOLDER_HPP_
 #define HELPERS_TABLEHOLDER_HPP_
 
-#include <memory>
-#include <optional>
-#include <string>
-#include <vector>
-
 #include "helpers/DataFrame.hpp"
 #include "helpers/DataFrameView.hpp"
 #include "helpers/FeatureContainer.hpp"
@@ -20,6 +15,11 @@
 #include "helpers/RowIndexContainer.hpp"
 #include "helpers/TableHolderParams.hpp"
 #include "helpers/WordIndexContainer.hpp"
+
+#include <memory>
+#include <optional>
+#include <string>
+#include <vector>
 
 namespace helpers {
 

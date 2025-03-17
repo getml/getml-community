@@ -7,13 +7,13 @@
 
 #include "predictors/LinearRegression.hpp"
 
+#include "helpers/Loader.hpp"
+#include "helpers/Saver.hpp"
+#include "optimizers/Adam.hpp"
+
 #include <Eigen/Dense>
 #include <numeric>
 #include <random>
-
-#include "helpers/Loader.hpp"
-#include "helpers/Saver.hpp"
-#include "optimizers/optimizers.hpp"
 
 namespace predictors {
 

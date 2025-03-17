@@ -8,19 +8,19 @@
 #ifndef ENGINE_PIPELINES_FITPREPROCESSORSPARAMS_HPP_
 #define ENGINE_PIPELINES_FITPREPROCESSORSPARAMS_HPP_
 
-#include <Poco/Net/StreamSocket.h>
-
-#include <memory>
-#include <rfl/Field.hpp>
-#include <rfl/NamedTuple.hpp>
-#include <rfl/Ref.hpp>
-#include <vector>
-
 #include "commands/DataFramesOrViews.hpp"
 #include "communication/Logger.hpp"
 #include "containers/DataFrame.hpp"
 #include "containers/Encoding.hpp"
 #include "engine/dependency/PreprocessorTracker.hpp"
+
+#include <Poco/Net/StreamSocket.h>
+#include <rfl/Field.hpp>
+#include <rfl/NamedTuple.hpp>
+#include <rfl/Ref.hpp>
+
+#include <memory>
+#include <vector>
 
 namespace engine {
 namespace pipelines {

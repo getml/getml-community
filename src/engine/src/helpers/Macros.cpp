@@ -419,4 +419,3 @@ std::string Macros::remove_time_diff(const std::string& _from_colname) {
 }
 
 }  // namespace helpers
-

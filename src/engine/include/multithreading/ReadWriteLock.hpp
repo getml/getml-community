@@ -8,15 +8,12 @@
 #ifndef MULTITHREADING_READWRITELOCK_HPP_
 #define MULTITHREADING_READWRITELOCK_HPP_
 
-// ----------------------------------------------------------------------------
+#include "debug/assert_true.hpp"
+
+#include <rfl/Ref.hpp>
 
 #include <condition_variable>
 #include <mutex>
-#include <rfl/Ref.hpp>
-
-#include "debug/assert_true.hpp"
-
-// ----------------------------------------------------------------------------
 
 namespace multithreading {
 

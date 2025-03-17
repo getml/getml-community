@@ -13,7 +13,7 @@
 namespace engine {
 namespace utils {
 
-typedef typename helpers::NullChecker NullChecker;
+using NullChecker = typename helpers::NullChecker;
 
 }  // namespace utils
 }  // namespace engine

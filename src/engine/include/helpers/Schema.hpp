@@ -8,13 +8,14 @@
 #ifndef HELPERS_SCHEMA_HPP_
 #define HELPERS_SCHEMA_HPP_
 
-#include <rfl/Field.hpp>
-#include <rfl/NamedTuple.hpp>
-#include <string>
-#include <vector>
-
 #include "debug/assert_true.hpp"
 #include "helpers/SchemaImpl.hpp"
+
+#include <rfl/Field.hpp>
+#include <rfl/NamedTuple.hpp>
+
+#include <string>
+#include <vector>
 
 namespace helpers {
 

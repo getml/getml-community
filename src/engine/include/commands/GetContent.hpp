@@ -8,11 +8,12 @@
 #ifndef COMMANDS_GETCONTENT_HPP_
 #define COMMANDS_GETCONTENT_HPP_
 
-#include <cstddef>
+#include "commands/Int.hpp"
+
 #include <rfl/Field.hpp>
 #include <rfl/NamedTuple.hpp>
 
-#include "commands/Int.hpp"
+#include <cstddef>
 
 namespace commands {
 

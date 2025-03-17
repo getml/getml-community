@@ -8,15 +8,15 @@
 #ifndef HELPERS_TRANSFORMPARAMS_HPP_
 #define HELPERS_TRANSFORMPARAMS_HPP_
 
+#include "helpers/DataFrame.hpp"
+#include "helpers/FeatureContainer.hpp"
+#include "helpers/WordIndexContainer.hpp"
+#include "logging/AbstractLogger.hpp"
+
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
-
-#include "helpers/DataFrame.hpp"
-#include "helpers/FeatureContainer.hpp"
-#include "helpers/WordIndexContainer.hpp"
-#include "logging/logging.hpp"
 
 namespace helpers {
 
@@ -47,4 +47,3 @@ struct TransformParams {
 }  // namespace helpers
 
 #endif  // HELPERS_TRANSFORMPARAMS_HPP_
-

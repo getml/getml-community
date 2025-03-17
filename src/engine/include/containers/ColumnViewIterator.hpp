@@ -10,11 +10,8 @@
 
 #include <functional>
 #include <iterator>
-#include <memory>
 #include <optional>
 #include <utility>
-
-#include "debug/debug.hpp"
 
 namespace containers {
 
@@ -118,4 +115,3 @@ class ColumnViewIterator {
 }  // namespace containers
 
 #endif  // CONTAINERS_COLUMNVIEWITERATOR_HPP_
-

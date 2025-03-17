@@ -7,10 +7,9 @@
 
 #include "predictors/XGBoostIteratorDense.hpp"
 
-#include <unistd.h>
-
-#include "debug/debug.hpp"
 #include "helpers/Endianness.hpp"
+
+#include <unistd.h>
 
 namespace predictors {
 

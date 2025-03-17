@@ -8,13 +8,14 @@
 #ifndef FASTPROP_SUBFEATURES_FASTPROPCONTAINER_HPP_
 #define FASTPROP_SUBFEATURES_FASTPROPCONTAINER_HPP_
 
-#include <memory>
-#include <rfl/Field.hpp>
-#include <rfl/NamedTuple.hpp>
-#include <vector>
-
 #include "fastprop/algorithm/FastProp.hpp"
 #include "transpilation/SQLDialectGenerator.hpp"
+
+#include <rfl/Field.hpp>
+#include <rfl/NamedTuple.hpp>
+
+#include <memory>
+#include <vector>
 
 namespace fastprop {
 namespace subfeatures {

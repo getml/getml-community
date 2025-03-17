@@ -9,12 +9,12 @@
 #define ENGINE_DEPENDENCY_PREDTRACKER_HPP_
 
 #include "engine/dependency/Tracker.hpp"
-#include "predictors/predictors.hpp"
+#include "predictors/Predictor.hpp"
 
 namespace engine {
 namespace dependency {
 
-typedef Tracker<predictors::Predictor> PredTracker;
+using PredTracker = Tracker<predictors::Predictor>;
 
 }  // namespace dependency
 }  // namespace engine

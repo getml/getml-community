@@ -8,17 +8,17 @@
 #ifndef ENGINE_HANDLERS_DATABASEMANAGER_HPP_
 #define ENGINE_HANDLERS_DATABASEMANAGER_HPP_
 
-#include <Poco/Net/StreamSocket.h>
-
-#include <map>
-#include <rfl/Ref.hpp>
-#include <string>
-
 #include "commands/DatabaseCommand.hpp"
 #include "communication/Logger.hpp"
 #include "database/Connector.hpp"
 #include "engine/utils/Getter.hpp"
 #include "multithreading/ReadLock.hpp"
+
+#include <Poco/Net/StreamSocket.h>
+#include <rfl/Ref.hpp>
+
+#include <map>
+#include <string>
 
 namespace engine {
 namespace handlers {

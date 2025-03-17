@@ -10,8 +10,6 @@
 
 #include "debug/Assert.hpp"
 
-// ----------------------------------------------------------------------------
-
 // Throw an exception unless condition is true.
 #define throw_unless(_condition, _msg) \
   (void)((_condition) || (debug::Assert::throw_exception(_msg), 0))

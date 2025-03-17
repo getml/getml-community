@@ -7,11 +7,12 @@
 
 #include "predictors/LogisticRegression.hpp"
 
-#include <random>
-
 #include "helpers/Loader.hpp"
 #include "helpers/Saver.hpp"
-#include "optimizers/optimizers.hpp"
+#include "optimizers/Adam.hpp"
+#include "optimizers/BFGS.hpp"
+
+#include <random>
 
 namespace predictors {
 

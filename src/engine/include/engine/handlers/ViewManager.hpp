@@ -8,16 +8,16 @@
 #ifndef ENGINE_HANDLERS_VIEWMANAGER_HPP_
 #define ENGINE_HANDLERS_VIEWMANAGER_HPP_
 
-#include <Poco/Net/StreamSocket.h>
+#include "commands/ViewCommand.hpp"
+#include "engine/handlers/DataFrameManagerParams.hpp"
 
-#include <map>
+#include <Poco/Net/StreamSocket.h>
 #include <rfl/Field.hpp>
 #include <rfl/NamedTuple.hpp>
 #include <rfl/Ref.hpp>
-#include <string>
 
-#include "commands/ViewCommand.hpp"
-#include "engine/handlers/DataFrameManagerParams.hpp"
+#include <map>
+#include <string>
 
 namespace engine {
 namespace handlers {

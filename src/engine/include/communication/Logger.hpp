@@ -8,12 +8,11 @@
 #ifndef COMMUNICATION_LOGGER_HPP_
 #define COMMUNICATION_LOGGER_HPP_
 
+#include "communication/Monitor.hpp"
+#include "logging/AbstractLogger.hpp"
+
 #include <memory>
 #include <string>
-
-#include "communication/Monitor.hpp"
-#include "debug/debug.hpp"
-#include "logging/logging.hpp"
 
 namespace communication {
 

@@ -8,6 +8,10 @@
 #ifndef HELPERS_AGGREGATIONS_HPP_
 #define HELPERS_AGGREGATIONS_HPP_
 
+#include "fct/Range.hpp"
+#include "helpers/Float.hpp"
+#include "helpers/NullChecker.hpp"
+
 #include <algorithm>
 #include <cmath>
 #include <map>
@@ -18,10 +22,6 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-
-#include "fct/Range.hpp"
-#include "helpers/Float.hpp"
-#include "helpers/NullChecker.hpp"
 
 namespace helpers {
 

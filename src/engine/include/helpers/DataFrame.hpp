@@ -8,11 +8,6 @@
 #ifndef HELPERS_DATAFRAME_HPP_
 #define HELPERS_DATAFRAME_HPP_
 
-#include <memory>
-#include <string>
-#include <utility>
-#include <vector>
-
 #include "helpers/Column.hpp"
 #include "helpers/CreateSubviewParams.hpp"
 #include "helpers/DataFrameParams.hpp"
@@ -20,6 +15,11 @@
 #include "helpers/Index.hpp"
 #include "helpers/Int.hpp"
 #include "helpers/Schema.hpp"
+
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace helpers {
 

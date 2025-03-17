@@ -9,11 +9,8 @@
 #define CONTAINERS_DATAFRAMEPRINTER_HPP_
 
 #include <cstdint>
-#include <memory>
 #include <string>
 #include <vector>
-
-#include "debug/debug.hpp"
 
 namespace containers {
 

@@ -8,12 +8,6 @@
 #ifndef ENGINE_PIPELINES_FIT_HPP_
 #define ENGINE_PIPELINES_FIT_HPP_
 
-#include <Poco/Net/StreamSocket.h>
-
-#include <memory>
-#include <utility>
-#include <vector>
-
 #include "commands/Fingerprint.hpp"
 #include "containers/DataFrame.hpp"
 #include "engine/pipelines/FitParams.hpp"
@@ -22,7 +16,14 @@
 #include "engine/pipelines/Pipeline.hpp"
 #include "engine/pipelines/Preprocessed.hpp"
 #include "engine/pipelines/Purpose.hpp"
+#include "featurelearners/FeatureLearnerParams.hpp"
 #include "metrics/Scores.hpp"
+
+#include <Poco/Net/StreamSocket.h>
+
+#include <memory>
+#include <utility>
+#include <vector>
 
 namespace engine {
 namespace pipelines {

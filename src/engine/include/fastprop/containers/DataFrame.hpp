@@ -13,7 +13,7 @@
 namespace fastprop {
 namespace containers {
 
-typedef typename helpers::DataFrame DataFrame;
+using DataFrame = typename helpers::DataFrame;
 
 }  // namespace containers
 }  // namespace fastprop

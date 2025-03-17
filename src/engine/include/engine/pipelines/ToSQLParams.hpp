@@ -8,16 +8,16 @@
 #ifndef ENGINE_PIPELINES_TOSQLPARAMS_HPP_
 #define ENGINE_PIPELINES_TOSQLPARAMS_HPP_
 
-#include <Poco/Net/StreamSocket.h>
+#include "engine/pipelines/FittedPipeline.hpp"
+#include "engine/pipelines/Pipeline.hpp"
+#include "transpilation/TranspilationParams.hpp"
 
-#include <optional>
+#include <Poco/Net/StreamSocket.h>
 #include <rfl/Field.hpp>
 #include <rfl/NamedTuple.hpp>
 #include <rfl/Ref.hpp>
 
-#include "engine/pipelines/FittedPipeline.hpp"
-#include "engine/pipelines/Pipeline.hpp"
-#include "transpilation/TranspilationParams.hpp"
+#include <optional>
 
 namespace engine {
 namespace pipelines {

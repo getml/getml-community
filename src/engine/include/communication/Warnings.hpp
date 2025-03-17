@@ -8,13 +8,13 @@
 #ifndef COMMUNICATION_WARNINGS_HPP_
 #define COMMUNICATION_WARNINGS_HPP_
 
-#include <Poco/Net/StreamSocket.h>
-
-#include <rfl/Ref.hpp>
-#include <vector>
-
 #include "commands/WarningFingerprint.hpp"
 #include "communication/Warning.hpp"
+
+#include <Poco/Net/StreamSocket.h>
+#include <rfl/Ref.hpp>
+
+#include <vector>
 
 namespace communication {
 

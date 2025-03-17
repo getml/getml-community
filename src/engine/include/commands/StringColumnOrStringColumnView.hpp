@@ -13,11 +13,9 @@
 #include <rfl/Ref.hpp>
 #include <rfl/TaggedUnion.hpp>
 #include <rfl/json/Reader.hpp>
+
 #include <string>
 #include <variant>
-
-#include "commands/BooleanColumnView.hpp"
-#include "commands/FloatColumnOrFloatColumnView.hpp"
 
 namespace commands {
 

@@ -7,16 +7,17 @@
 
 #include "engine/pipelines/load_fitted.hpp"
 
-#include <rfl/Ref.hpp>
-#include <string>
-#include <utility>
-#include <vector>
-
 #include "engine/pipelines/FittedPipeline.hpp"
 #include "engine/pipelines/PipelineJSON.hpp"
 #include "engine/pipelines/Predictors.hpp"
 #include "engine/pipelines/fit.hpp"
 #include "helpers/Loader.hpp"
+
+#include <rfl/Ref.hpp>
+
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace engine {
 namespace pipelines {

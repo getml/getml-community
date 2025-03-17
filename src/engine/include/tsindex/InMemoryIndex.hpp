@@ -8,20 +8,14 @@
 #ifndef CONTAINERS_TSINDEX_INMEMORYINDEX_HPP_
 #define CONTAINERS_TSINDEX_INMEMORYINDEX_HPP_
 
-// ----------------------------------------------------------------------------
-
-#include <cstddef>
-#include <map>
-#include <vector>
-
-// ----------------------------------------------------------------------------
-
 #include "tsindex/Float.hpp"
 #include "tsindex/IndexParams.hpp"
 #include "tsindex/Int.hpp"
 #include "tsindex/Key.hpp"
 
-// ----------------------------------------------------------------------------
+#include <cstddef>
+#include <map>
+#include <vector>
 
 namespace tsindex {
 class InMemoryIndex {

@@ -7,6 +7,9 @@
 
 #include "metrics/Accuracy.hpp"
 
+#include "multithreading/maximum.hpp"
+#include "multithreading/minimum.hpp"
+
 #include <numeric>
 
 namespace metrics {

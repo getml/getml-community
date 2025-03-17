@@ -13,7 +13,7 @@
 namespace fastprop {
 namespace containers {
 
-typedef helpers::Features Features;
+using Features = helpers::Features;
 
 }  // namespace containers
 }  // namespace fastprop

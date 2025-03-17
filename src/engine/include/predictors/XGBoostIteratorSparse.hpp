@@ -8,6 +8,13 @@
 #ifndef PREDICTORS_XGBOOSTITERATORSPARSE_HPP_
 #define PREDICTORS_XGBOOSTITERATORSPARSE_HPP_
 
+#include "predictors/CSRMatrix.hpp"
+#include "predictors/FloatFeature.hpp"
+#include "predictors/IntFeature.hpp"
+#include "predictors/PredictorImpl.hpp"
+#include "predictors/XGBoostIteratorDense.hpp"
+
+#include <rfl/Ref.hpp>
 #include <unistd.h>
 #include <xgboost/c_api.h>
 
@@ -16,16 +23,9 @@
 #include <cstdio>
 #include <cstring>
 #include <memory>
-#include <rfl/Ref.hpp>
 #include <string>
 #include <tuple>
 #include <vector>
-
-#include "predictors/CSRMatrix.hpp"
-#include "predictors/FloatFeature.hpp"
-#include "predictors/IntFeature.hpp"
-#include "predictors/PredictorImpl.hpp"
-#include "predictors/XGBoostIteratorDense.hpp"
 
 namespace predictors {
 

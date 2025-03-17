@@ -8,13 +8,13 @@
 #ifndef ENGINE_DEPENDENCY_WARNINGTRACKER_HPP_
 #define ENGINE_DEPENDENCY_WARNINGTRACKER_HPP_
 
-#include "communication/communication.hpp"
+#include "communication/Warnings.hpp"
 #include "engine/dependency/Tracker.hpp"
 
 namespace engine {
 namespace dependency {
 
-typedef Tracker<communication::Warnings> WarningTracker;
+using WarningTracker = Tracker<communication::Warnings>;
 
 }  // namespace dependency
 }  // namespace engine

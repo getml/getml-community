@@ -8,7 +8,11 @@
 #ifndef COMMANDS_PROJECTCOMMAND_HPP_
 #define COMMANDS_PROJECTCOMMAND_HPP_
 
-#include <optional>
+#include "commands/DataContainer.hpp"
+#include "commands/DataFrameOrView.hpp"
+#include "commands/Pipeline.hpp"
+#include "helpers/Saver.hpp"
+
 #include <rfl/Field.hpp>
 #include <rfl/Flatten.hpp>
 #include <rfl/Literal.hpp>
@@ -16,13 +20,10 @@
 #include <rfl/Ref.hpp>
 #include <rfl/TaggedUnion.hpp>
 #include <rfl/define_named_tuple.hpp>
+
+#include <optional>
 #include <string>
 #include <vector>
-
-#include "commands/DataContainer.hpp"
-#include "commands/DataFrameOrView.hpp"
-#include "commands/Pipeline.hpp"
-#include "helpers/Saver.hpp"
 
 namespace commands {
 

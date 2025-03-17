@@ -7,6 +7,8 @@
 
 #include "metrics/Summarizer.hpp"
 
+#include "strings/StringHasher.hpp"
+
 #include <cmath>
 #include <numeric>
 

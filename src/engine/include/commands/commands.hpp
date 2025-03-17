@@ -12,4 +12,3 @@
 #include "commands/Command.hpp"
 
 #endif  // COMMANDS_COMMANDS_HPP_
-

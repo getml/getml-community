@@ -8,9 +8,9 @@
 #ifndef ENGINE_PIPELINES_TOSQL_HPP_
 #define ENGINE_PIPELINES_TOSQL_HPP_
 
-#include <string>
-
 #include "engine/pipelines/ToSQLParams.hpp"
+
+#include <string>
 
 namespace engine {
 namespace pipelines {

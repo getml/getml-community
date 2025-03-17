@@ -8,16 +8,16 @@
 #ifndef ENGINE_PIPELINES_FEATURESONLYPARAMS_HPP_
 #define ENGINE_PIPELINES_FEATURESONLYPARAMS_HPP_
 
-#include <Poco/Net/StreamSocket.h>
-
-#include <rfl/Field.hpp>
-#include <rfl/NamedTuple.hpp>
-#include <rfl/Ref.hpp>
-#include <vector>
-
 #include "commands/Fingerprint.hpp"
 #include "engine/pipelines/Pipeline.hpp"
 #include "engine/pipelines/TransformParams.hpp"
+
+#include <Poco/Net/StreamSocket.h>
+#include <rfl/Field.hpp>
+#include <rfl/NamedTuple.hpp>
+#include <rfl/Ref.hpp>
+
+#include <vector>
 
 namespace engine {
 namespace pipelines {

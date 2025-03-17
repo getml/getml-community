@@ -8,11 +8,11 @@
 #ifndef DATABASE_ITERATOR_HPP_
 #define DATABASE_ITERATOR_HPP_
 
-#include <string>
-#include <vector>
-
 #include "database/Float.hpp"
 #include "database/Int.hpp"
+
+#include <string>
+#include <vector>
 
 namespace database {
 

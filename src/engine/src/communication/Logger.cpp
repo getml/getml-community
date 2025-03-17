@@ -10,8 +10,6 @@
 #include <ctime>
 #include <iostream>
 
-#include "communication/Sender.hpp"
-
 namespace communication {
 
 void Logger::log(const std::string& _msg) const {

@@ -8,16 +8,15 @@
 #ifndef COMMANDS_FLOATCOLUMNORFLOATCOLUMNVIEW_HPP_
 #define COMMANDS_FLOATCOLUMNORFLOATCOLUMNVIEW_HPP_
 
+#include "commands/Float.hpp"
+
 #include <rfl/Field.hpp>
 #include <rfl/Literal.hpp>
 #include <rfl/Ref.hpp>
 #include <rfl/TaggedUnion.hpp>
 #include <rfl/json/Reader.hpp>
-#include <variant>
 
-#include "commands/BooleanColumnView.hpp"
-#include "commands/Float.hpp"
-#include "commands/StringColumnOrStringColumnView.hpp"
+#include <variant>
 
 namespace commands {
 

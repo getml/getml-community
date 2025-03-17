@@ -8,11 +8,11 @@
 #ifndef SQL_SQLGENERATOR_HPP_
 #define SQL_SQLGENERATOR_HPP_
 
-#include <string>
-#include <vector>
-
 #include "transpilation/Float.hpp"
 #include "transpilation/SQLDialectGenerator.hpp"
+
+#include <string>
+#include <vector>
 
 namespace transpilation {
 

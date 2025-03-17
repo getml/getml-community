@@ -8,10 +8,10 @@
 #ifndef METRICS_FEATURES_HPP_
 #define METRICS_FEATURES_HPP_
 
-#include <vector>
-
 #include "helpers/Features.hpp"
 #include "metrics/Float.hpp"
+
+#include <vector>
 
 namespace metrics {
 typedef std::vector<helpers::Feature<Float>> Features;

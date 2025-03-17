@@ -8,11 +8,11 @@
 #ifndef PREDICTORS_FLOATFEATURE_HPP_
 #define PREDICTORS_FLOATFEATURE_HPP_
 
-#include "helpers/Features.hpp"
+#include "helpers/Feature.hpp"
 #include "predictors/Float.hpp"
 
 namespace predictors {
-typedef helpers::Feature<Float> FloatFeature;
-}
+using FloatFeature = helpers::Feature<Float>;
+}  // namespace predictors
 
 #endif  // PREDICTORS_FLOATFEATURE_HPP_

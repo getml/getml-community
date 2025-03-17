@@ -7,15 +7,17 @@
 
 #include "engine/pipelines/transform.hpp"
 
-#include <rfl/as.hpp>
-#include <stdexcept>
-
+#include "engine/Int.hpp"
 #include "engine/pipelines/FittedPipeline.hpp"
 #include "engine/pipelines/make_placeholder.hpp"
 #include "engine/pipelines/modify_data_frames.hpp"
 #include "engine/pipelines/score.hpp"
 #include "engine/pipelines/staging.hpp"
 #include "metrics/Scores.hpp"
+
+#include <rfl/as.hpp>
+
+#include <stdexcept>
 
 namespace engine {
 namespace pipelines {

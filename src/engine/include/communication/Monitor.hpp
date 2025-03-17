@@ -8,16 +8,16 @@
 #ifndef COMMUNICATION_MONITOR_HPP_
 #define COMMUNICATION_MONITOR_HPP_
 
-#include <Poco/Net/StreamSocket.h>
+#include "engine/config/Options.hpp"
 
-#include <memory>
+#include <Poco/Net/StreamSocket.h>
 #include <rfl/Field.hpp>
 #include <rfl/NamedTuple.hpp>
 #include <rfl/json/write.hpp>
+
+#include <memory>
 #include <string>
 #include <thread>
-
-#include "engine/config/Options.hpp"
 
 namespace communication {
 

@@ -8,13 +8,9 @@
 #ifndef CONTAINERS_TSINDEX_INDEX_HPP_
 #define CONTAINERS_TSINDEX_INDEX_HPP_
 
-// ----------------------------------------------------------------------------
-
 #include "tsindex/Float.hpp"
 #include "tsindex/InMemoryIndex.hpp"
 #include "tsindex/Int.hpp"
-
-// ----------------------------------------------------------------------------
 
 namespace tsindex {
 class Index {

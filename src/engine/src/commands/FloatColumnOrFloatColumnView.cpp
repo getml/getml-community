@@ -4,8 +4,10 @@
 // Refer to the LICENSE.txt file in the root of the repository
 // for details.
 //
-
 #include "commands/FloatColumnOrFloatColumnView.hpp"
+
+#include "commands/BooleanColumnView.hpp"
+#include "commands/StringColumnOrStringColumnView.hpp"
 
 #include <rfl/json/read.hpp>
 

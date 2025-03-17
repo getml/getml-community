@@ -8,15 +8,13 @@
 #ifndef FASTPROP_CONTAINERS_SQLMAKER_HPP_
 #define FASTPROP_CONTAINERS_SQLMAKER_HPP_
 
+#include "fastprop/containers/AbstractFeature.hpp"
+#include "helpers/Schema.hpp"
+#include "helpers/StringIterator.hpp"
+
 #include <memory>
 #include <string>
 #include <utility>
-
-#include "fastprop/containers/AbstractFeature.hpp"
-#include "fastprop/enums/enums.hpp"
-#include "helpers/Schema.hpp"
-#include "helpers/StringIterator.hpp"
-#include "transpilation/transpilation.hpp"
 
 namespace fastprop {
 namespace containers {

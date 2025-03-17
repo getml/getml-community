@@ -7,9 +7,9 @@
 
 #include "helpers/TableHolder.hpp"
 
-#include <stdexcept>
-
 #include "helpers/Macros.hpp"
+
+#include <stdexcept>
 
 namespace helpers {
 

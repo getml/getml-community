@@ -8,23 +8,24 @@
 #ifndef ENGINE_HANDLERS_PIPELINEMANAGER_HPP_
 #define ENGINE_HANDLERS_PIPELINEMANAGER_HPP_
 
-#include <Poco/Net/StreamSocket.h>
-
-#include <map>
-#include <rfl/Literal.hpp>
-#include <rfl/NamedTuple.hpp>
-#include <rfl/define_named_tuple.hpp>
-#include <string>
-#include <variant>
-
 #include "commands/Pipeline.hpp"
 #include "commands/PipelineCommand.hpp"
+#include "containers/CategoricalFeatures.hpp"
 #include "containers/Roles.hpp"
 #include "engine/handlers/DatabaseManager.hpp"
 #include "engine/handlers/PipelineManagerParams.hpp"
 #include "engine/pipelines/FittedPipeline.hpp"
 #include "metrics/Scores.hpp"
 #include "multithreading/WeakWriteLock.hpp"
+
+#include <Poco/Net/StreamSocket.h>
+#include <rfl/Literal.hpp>
+#include <rfl/NamedTuple.hpp>
+#include <rfl/define_named_tuple.hpp>
+
+#include <map>
+#include <string>
+#include <variant>
 
 namespace engine {
 namespace handlers {

@@ -8,11 +8,12 @@
 #ifndef ENGINE_PIPELINES_FINGERPRINTS_HPP_
 #define ENGINE_PIPELINES_FINGERPRINTS_HPP_
 
+#include "commands/Fingerprint.hpp"
+
 #include <rfl/Field.hpp>
 #include <rfl/Ref.hpp>
-#include <vector>
 
-#include "commands/Fingerprint.hpp"
+#include <vector>
 
 namespace engine {
 namespace pipelines {

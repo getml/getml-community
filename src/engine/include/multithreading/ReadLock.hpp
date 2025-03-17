@@ -8,19 +8,11 @@
 #ifndef MULTIREL_MULTITHREADING_READLOCK_HPP_
 #define MULTIREL_MULTITHREADING_READLOCK_HPP_
 
-// ----------------------------------------------------------------------------
-
-#include <chrono>
-
-// ----------------------------------------------------------------------------
+#include "multithreading/ReadWriteLock.hpp"
 
 #include <rfl/Ref.hpp>
 
-// ----------------------------------------------------------------------------
-
-#include "multithreading/ReadWriteLock.hpp"
-
-// ----------------------------------------------------------------------------
+#include <chrono>
 
 namespace multithreading {
 

@@ -8,8 +8,9 @@
 #ifndef HELPERS_SCHEMAIMPL_HPP_
 #define HELPERS_SCHEMAIMPL_HPP_
 
-#include <optional>
 #include <rfl/Field.hpp>
+
+#include <optional>
 #include <string>
 #include <vector>
 

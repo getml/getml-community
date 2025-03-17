@@ -8,10 +8,10 @@
 #ifndef COMMANDS_FEATURELEARNER_HPP_
 #define COMMANDS_FEATURELEARNER_HPP_
 
-#include <rfl/TaggedUnion.hpp>
-
 #include "commands/NotSupportedInCommunity.hpp"
 #include "fastprop/Hyperparameters.hpp"
+
+#include <rfl/TaggedUnion.hpp>
 
 namespace commands {
 

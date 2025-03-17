@@ -8,15 +8,15 @@
 #ifndef HELPERS_FITPARAMS_HPP_
 #define HELPERS_FITPARAMS_HPP_
 
-#include <memory>
-#include <optional>
-#include <vector>
-
 #include "helpers/DataFrame.hpp"
 #include "helpers/FeatureContainer.hpp"
 #include "helpers/RowIndexContainer.hpp"
 #include "helpers/WordIndexContainer.hpp"
 #include "logging/AbstractLogger.hpp"
+
+#include <memory>
+#include <optional>
+#include <vector>
 
 namespace helpers {
 

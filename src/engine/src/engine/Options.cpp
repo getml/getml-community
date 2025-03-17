@@ -7,11 +7,11 @@
 
 #include "engine/config/Options.hpp"
 
+#include "helpers/Loader.hpp"
+
 #include <chrono>
 #include <fstream>
 #include <iostream>
-
-#include "helpers/Loader.hpp"
 
 namespace engine {
 namespace config {

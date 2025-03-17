@@ -8,18 +8,13 @@
 #ifndef MULTITHREADING_COMMUNICATOR_HPP_
 #define MULTITHREADING_COMMUNICATOR_HPP_
 
-// ----------------------------------------------------------------------------
+#include "multithreading/Barrier.hpp"
+#include "multithreading/Spinlock.hpp"
 
 #include <cstddef>
 #include <thread>
 #include <vector>
 
-// ----------------------------------------------------------------------------
-
-#include "multithreading/Barrier.hpp"
-#include "multithreading/Spinlock.hpp"
-
-// ----------------------------------------------------------------------------
 namespace multithreading {
 // ----------------------------------------------------------------------------
 

@@ -9,13 +9,12 @@
 #define HELPERS_MEMORYMAPPEDINDEX_HPP_
 
 #include "helpers/Int.hpp"
-#include "memmap/memmap.hpp"
+#include "memmap/Index.hpp"
 
 namespace helpers {
 
-typedef memmap::Index<Int> MemoryMappedIndex;
+using MemoryMappedIndex = memmap::Index<Int>;
 
 }  // namespace helpers
 
 #endif  // HELPERS_MEMORYMAPPEDINDEX_HPP_
-

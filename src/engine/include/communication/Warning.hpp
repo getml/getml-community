@@ -10,6 +10,6 @@ using Warning = rfl::NamedTuple<rfl::Field<"message_", std::string>,
                                 rfl::Field<"label_", std::string>,
                                 rfl::Field<"warning_type_", std::string>>;
 
-}
+}  // namespace communication
 
 #endif

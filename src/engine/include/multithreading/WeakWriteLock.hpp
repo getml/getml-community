@@ -8,13 +8,9 @@
 #ifndef MULTITHREADING_WEAKWRITELOCK_HPP_
 #define MULTITHREADING_WEAKWRITELOCK_HPP_
 
-// ----------------------------------------------------------------------------
-
-#include <rfl/Ref.hpp>
-
 #include "multithreading/ReadWriteLock.hpp"
 
-// ----------------------------------------------------------------------------
+#include <rfl/Ref.hpp>
 
 namespace multithreading {
 

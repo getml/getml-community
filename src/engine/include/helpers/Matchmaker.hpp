@@ -8,12 +8,12 @@
 #ifndef HELPERS_MATCHMAKER_HPP_
 #define HELPERS_MATCHMAKER_HPP_
 
+#include "helpers/DataFrame.hpp"
+#include "helpers/Float.hpp"
+
 #include <cmath>
 #include <memory>
 #include <vector>
-
-#include "helpers/DataFrame.hpp"
-#include "helpers/Float.hpp"
 
 namespace helpers {
 

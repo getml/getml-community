@@ -8,12 +8,7 @@
 #ifndef SQL_TRIMMINGGENERATOR_HPP_
 #define SQL_TRIMMINGGENERATOR_HPP_
 
-#include <cstddef>
-#include <memory>
-#include <optional>
 #include <string>
-#include <utility>
-#include <vector>
 
 namespace transpilation {
 

@@ -8,19 +8,13 @@
 #ifndef TEXTMINING_WORDINDEX_HPP_
 #define TEXTMINING_WORDINDEX_HPP_
 
-// -------------------------------------------------------------------------
-
-#include <memory>
-#include <utility>
-#include <vector>
-
-// -------------------------------------------------------------------------
-
 #include "debug/assert_msg.hpp"
 #include "textmining/Int.hpp"
 #include "textmining/Vocabulary.hpp"
 
-// -------------------------------------------------------------------------
+#include <memory>
+#include <utility>
+#include <vector>
 
 namespace textmining {
 

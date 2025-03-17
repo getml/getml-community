@@ -8,18 +8,12 @@
 #ifndef FASTPROP_ALGORITHM_CONDITIONPARSER_HPP_
 #define FASTPROP_ALGORITHM_CONDITIONPARSER_HPP_
 
-// ----------------------------------------------------------------------------
-
-#include <vector>
-
-// ----------------------------------------------------------------------------
-
 #include "fastprop/algorithm/TableHolder.hpp"
 #include "fastprop/containers/AbstractFeature.hpp"
 #include "fastprop/containers/DataFrame.hpp"
 #include "fastprop/containers/Match.hpp"
 
-// ----------------------------------------------------------------------------
+#include <vector>
 
 namespace fastprop {
 namespace algorithm {

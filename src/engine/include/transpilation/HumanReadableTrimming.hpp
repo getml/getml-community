@@ -8,17 +8,11 @@
 #ifndef SQL_HUMANREADABLETRIMMING_HPP_
 #define SQL_HUMANREADABLETRIMMING_HPP_
 
-#include <cstddef>
-#include <memory>
-#include <optional>
-#include <string>
-#include <tuple>
-#include <utility>
-#include <vector>
-
 #include "transpilation/SQLDialectGenerator.hpp"
 #include "transpilation/SQLGenerator.hpp"
 #include "transpilation/TrimmingGenerator.hpp"
+
+#include <string>
 
 namespace transpilation {
 

@@ -8,10 +8,10 @@
 #ifndef HELPERS_FEATURE_HPP_
 #define HELPERS_FEATURE_HPP_
 
-#include <memory>
-
 #include "helpers/Column.hpp"
 #include "memmap/Pool.hpp"
+
+#include <memory>
 
 namespace helpers {
 

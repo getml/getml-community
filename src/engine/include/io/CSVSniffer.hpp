@@ -12,7 +12,7 @@
 #include "io/Sniffer.hpp"
 
 namespace io {
-typedef Sniffer<CSVReader> CSVSniffer;
+using CSVSniffer = Sniffer<CSVReader>;
 }  // namespace io
 
 #endif  // IO_CSVSNIFFER_HPP_

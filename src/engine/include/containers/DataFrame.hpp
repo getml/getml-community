@@ -8,15 +8,6 @@
 #ifndef CONTAINERS_DATAFRAME_HPP_
 #define CONTAINERS_DATAFRAME_HPP_
 
-#include <Poco/DateTimeFormat.h>
-#include <Poco/DateTimeFormatter.h>
-#include <Poco/File.h>
-
-#include <memory>
-#include <optional>
-#include <string>
-#include <vector>
-
 #include "commands/DataFrameFromJSON.hpp"
 #include "commands/DataFrameOrView.hpp"
 #include "commands/Fingerprint.hpp"
@@ -32,6 +23,15 @@
 #include "helpers/DataFrameParams.hpp"
 #include "helpers/Macros.hpp"
 #include "transpilation/HumanReadableSQLGenerator.hpp"
+
+#include <Poco/DateTimeFormat.h>
+#include <Poco/DateTimeFormatter.h>
+#include <Poco/File.h>
+
+#include <memory>
+#include <optional>
+#include <string>
+#include <vector>
 
 namespace containers {
 

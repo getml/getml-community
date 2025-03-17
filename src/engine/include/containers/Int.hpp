@@ -11,7 +11,7 @@
 #include <cstdint>
 
 namespace containers {
-typedef std::int32_t Int;
-}
+using Int = std::int32_t;
+}  // namespace containers
 
 #endif  // CONTAINERS_INT_HPP_

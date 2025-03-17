@@ -5,10 +5,10 @@
 // for details.
 //
 
-#include <rfl/always_false.hpp>
-
 #include "containers/Roles.hpp"
 #include "engine/handlers/PipelineManager.hpp"
+
+#include <rfl/always_false.hpp>
 
 namespace engine {
 namespace handlers {

@@ -8,6 +8,15 @@
 #ifndef PREDICTORS_XGBOOSTPREDICTOR_HPP_
 #define PREDICTORS_XGBOOSTPREDICTOR_HPP_
 
+#include "commands/Fingerprint.hpp"
+#include "predictors/Fingerprint.hpp"
+#include "predictors/FloatFeature.hpp"
+#include "predictors/IntFeature.hpp"
+#include "predictors/Predictor.hpp"
+#include "predictors/PredictorImpl.hpp"
+#include "predictors/XGBoostHyperparams.hpp"
+#include "predictors/XGBoostMatrix.hpp"
+
 #include <xgboost/c_api.h>
 
 #include <cmath>
@@ -15,17 +24,6 @@
 #include <optional>
 #include <string>
 #include <vector>
-
-#include "commands/Fingerprint.hpp"
-#include "debug/debug.hpp"
-#include "predictors/Fingerprint.hpp"
-#include "predictors/FloatFeature.hpp"
-#include "predictors/IntFeature.hpp"
-#include "predictors/Predictor.hpp"
-#include "predictors/PredictorImpl.hpp"
-#include "predictors/StandardScaler.hpp"
-#include "predictors/XGBoostHyperparams.hpp"
-#include "predictors/XGBoostMatrix.hpp"
 
 namespace predictors {
 

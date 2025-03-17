@@ -8,14 +8,14 @@
 #ifndef CONTAINERS_NUMERICALFEATURES_HPP_
 #define CONTAINERS_NUMERICALFEATURES_HPP_
 
-#include <vector>
-
 #include "containers/Float.hpp"
 #include "helpers/Feature.hpp"
 
+#include <vector>
+
 namespace containers {
 
-typedef std::vector<helpers::Feature<Float>> NumericalFeatures;
+using NumericalFeatures = std::vector<helpers::Feature<Float>>;
 
 }  // namespace containers
 

@@ -7,16 +7,17 @@
 
 #include "transpilation/HumanReadableSQLGenerator.hpp"
 
-#include <range/v3/view/concat.hpp>
-#include <ranges>
-#include <sstream>
-
 #include "debug/assert_msg.hpp"
 #include "debug/throw_unless.hpp"
 #include "helpers/Macros.hpp"
 #include "helpers/StringReplacer.hpp"
 #include "helpers/enums/Aggregation.hpp"
 #include "transpilation/SQLGenerator.hpp"
+
+#include <range/v3/view/concat.hpp>
+
+#include <ranges>
+#include <sstream>
 
 namespace transpilation {
 

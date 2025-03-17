@@ -8,17 +8,16 @@
 #ifndef MEMMAP_BTREE_HPP_
 #define MEMMAP_BTREE_HPP_
 
+#include "memmap/BTreeNode.hpp"
+#include "memmap/Pool.hpp"
+#include "memmap/Vector.hpp"
+#include "memmap/VectorImpl.hpp"
+
 #include <unistd.h>
 
 #include <memory>
 #include <optional>
 #include <utility>
-
-#include "debug/debug.hpp"
-#include "memmap/BTreeNode.hpp"
-#include "memmap/Pool.hpp"
-#include "memmap/Vector.hpp"
-#include "memmap/VectorImpl.hpp"
 
 namespace memmap {
 

@@ -8,16 +8,23 @@
 #ifndef CONTAINERS_COLUMNVIEW_HPP_
 #define CONTAINERS_COLUMNVIEW_HPP_
 
-#include <arrow/api.h>
+#include "containers/ArrayMaker.hpp"
+#include "containers/Column.hpp"
+#include "containers/ColumnViewIterator.hpp"
+#include "helpers/NullChecker.hpp"
+#include "helpers/SubroleParser.hpp"
+#include "strings/String.hpp"
 
-#include <format>
-#include <memory>
-#include <optional>
+#include <arrow/api.h>
 #include <range/v3/algorithm/move.hpp>
 #include <range/v3/view/cache1.hpp>
 #include <range/v3/view/iota.hpp>
 #include <range/v3/view/take_while.hpp>
 #include <range/v3/view/transform.hpp>
+
+#include <format>
+#include <memory>
+#include <optional>
 #include <ranges>
 #include <set>
 #include <stdexcept>
@@ -25,13 +32,6 @@
 #include <type_traits>
 #include <variant>
 #include <vector>
-
-#include "containers/ArrayMaker.hpp"
-#include "containers/Column.hpp"
-#include "containers/ColumnViewIterator.hpp"
-#include "helpers/NullChecker.hpp"
-#include "helpers/SubroleParser.hpp"
-#include "strings/String.hpp"
 
 namespace containers {
 

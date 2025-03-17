@@ -8,18 +8,16 @@
 #ifndef DATABASE_POSTGRES_HPP_
 #define DATABASE_POSTGRES_HPP_
 
+#include "database/Command.hpp"
+#include "database/Connector.hpp"
+#include "database/PostgresIterator.hpp"
+#include "database/TableContent.hpp"
+#include "io/StatementMaker.hpp"
+
 #include <libpq-fe.h>
 
 #include <string>
 #include <vector>
-
-#include "database/Command.hpp"
-#include "database/Connector.hpp"
-#include "database/DatabaseParser.hpp"
-#include "database/PostgresIterator.hpp"
-#include "database/TableContent.hpp"
-#include "io/StatementMaker.hpp"
-#include "io/io.hpp"
 
 namespace database {
 

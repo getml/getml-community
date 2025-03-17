@@ -8,11 +8,11 @@
 #ifndef HELPERS_INTSET_HPP_
 #define HELPERS_INTSET_HPP_
 
+#include "debug/assert_true.hpp"
+
 #include <cstddef>
 #include <utility>
 #include <vector>
-
-#include "debug/assert_true.hpp"
 
 namespace helpers {
 

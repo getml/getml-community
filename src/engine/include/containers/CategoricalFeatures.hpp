@@ -13,7 +13,7 @@
 
 namespace containers {
 
-typedef std::vector<helpers::Feature<Int>> CategoricalFeatures;
+using CategoricalFeatures = std::vector<helpers::Feature<Int>>;
 
 }  // namespace containers
 

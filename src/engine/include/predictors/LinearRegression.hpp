@@ -8,14 +8,6 @@
 #ifndef PREDICTORS_LINEARREGRESSION_HPP_
 #define PREDICTORS_LINEARREGRESSION_HPP_
 
-#include <cmath>
-#include <memory>
-#include <optional>
-#include <rfl/NamedTuple.hpp>
-#include <rfl/Ref.hpp>
-#include <rfl/from_named_tuple.hpp>
-#include <vector>
-
 #include "predictors/Fingerprint.hpp"
 #include "predictors/FloatFeature.hpp"
 #include "predictors/IntFeature.hpp"
@@ -23,6 +15,15 @@
 #include "predictors/Predictor.hpp"
 #include "predictors/PredictorImpl.hpp"
 #include "predictors/StandardScaler.hpp"
+
+#include <rfl/NamedTuple.hpp>
+#include <rfl/Ref.hpp>
+#include <rfl/from_named_tuple.hpp>
+
+#include <cmath>
+#include <memory>
+#include <optional>
+#include <vector>
 
 namespace predictors {
 

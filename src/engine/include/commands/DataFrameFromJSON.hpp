@@ -8,12 +8,12 @@
 #ifndef COMMANDS_DATA_FRAME_FROM_JSON_HPP_
 #define COMMANDS_DATA_FRAME_FROM_JSON_HPP_
 
+#include "commands/Float.hpp"
+
 #include <map>
 #include <string>
 #include <variant>
 #include <vector>
-
-#include "commands/Float.hpp"
 
 namespace commands {
 

@@ -8,14 +8,6 @@
 #ifndef FASTPROP_ALGORITHM_FASTPROP_HPP_
 #define FASTPROP_ALGORITHM_FASTPROP_HPP_
 
-#include <map>
-#include <rfl/Field.hpp>
-#include <rfl/NamedTuple.hpp>
-#include <rfl/Ref.hpp>
-#include <string>
-#include <utility>
-#include <vector>
-
 #include "fastprop/Hyperparameters.hpp"
 #include "fastprop/algorithm/FitParams.hpp"
 #include "fastprop/algorithm/Memoization.hpp"
@@ -33,6 +25,15 @@
 #include "helpers/VocabularyContainer.hpp"
 #include "helpers/VocabularyTree.hpp"
 #include "multithreading/Communicator.hpp"
+
+#include <rfl/Field.hpp>
+#include <rfl/NamedTuple.hpp>
+#include <rfl/Ref.hpp>
+
+#include <map>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace fastprop {
 namespace algorithm {

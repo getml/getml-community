@@ -8,14 +8,10 @@
 #ifndef DATABASE_CSVBUFFER_HPP_
 #define DATABASE_CSVBUFFER_HPP_
 
-// ----------------------------------------------------------------------------
+#include "io/Datatype.hpp"
 
 #include <string>
 #include <vector>
-
-#include "io/Datatype.hpp"
-
-// ----------------------------------------------------------------------------
 
 namespace database {
 // ----------------------------------------------------------------------------

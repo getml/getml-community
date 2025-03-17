@@ -13,7 +13,7 @@
 namespace engine {
 namespace utils {
 
-typedef typename helpers::Aggregations Aggregations;
+using Aggregations = typename helpers::Aggregations;
 
 }  // namespace utils
 }  // namespace engine

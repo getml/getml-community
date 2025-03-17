@@ -8,14 +8,13 @@
 #ifndef HELPERS_MACROS_HPP_
 #define HELPERS_MACROS_HPP_
 
-#include <cstddef>
+#include "helpers/ImportanceMaker.hpp"
+
 #include <functional>
 #include <string>
 #include <tuple>
 #include <utility>
 #include <vector>
-
-#include "helpers/ImportanceMaker.hpp"
 
 namespace helpers {
 

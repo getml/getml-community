@@ -1,18 +1,14 @@
 // Copyright 2024 Code17 GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef FCT_IOTAITERATOR_HPP_
 #define FCT_IOTAITERATOR_HPP_
 
-// -------------------------------------------------------------------------
-
 #include <iterator>
-
-// -------------------------------------------------------------------------
 
 namespace fct {
 

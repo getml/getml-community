@@ -8,12 +8,12 @@
 #ifndef DATABASE_GETTER_HPP_
 #define DATABASE_GETTER_HPP_
 
-#include <string>
-#include <vector>
-
 #include "database/Float.hpp"
 #include "database/Int.hpp"
-#include "io/io.hpp"
+#include "io/Parser.hpp"
+
+#include <string>
+#include <vector>
 
 namespace database {
 

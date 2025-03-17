@@ -8,19 +8,18 @@
 #ifndef DATABASE_SQLITE3ITERATOR_HPP_
 #define DATABASE_SQLITE3ITERATOR_HPP_
 
+#include "multithreading/ReadLock.hpp"
 extern "C" {
 #include <sqlite3.h>
 }
 
+#include "database/Float.hpp"
+#include "database/Int.hpp"
+#include "database/Iterator.hpp"
+
 #include <memory>
 #include <string>
 #include <vector>
-
-#include "database/Float.hpp"
-#include "database/Getter.hpp"
-#include "database/Int.hpp"
-#include "database/Iterator.hpp"
-#include "multithreading/multithreading.hpp"
 
 namespace database {
 

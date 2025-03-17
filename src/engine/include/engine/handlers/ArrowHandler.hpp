@@ -8,24 +8,24 @@
 #ifndef ENGINE_HANDLERS_ARROWHANDLER_HPP_
 #define ENGINE_HANDLERS_ARROWHANDLER_HPP_
 
+#include "containers/DataFrame.hpp"
+#include "containers/Encoding.hpp"
+#include "engine/Float.hpp"
+#include "engine/config/Options.hpp"
+#include "strings/String.hpp"
+
 #include <Poco/Net/StreamSocket.h>
 #include <arrow/api.h>
 #include <arrow/io/api.h>
 #include <arrow/ipc/api.h>
 #include <parquet/arrow/reader.h>
 #include <parquet/arrow/writer.h>
+#include <rfl/Ref.hpp>
 
 #include <cctype>
 #include <memory>
 #include <optional>
-#include <rfl/Ref.hpp>
 #include <vector>
-
-#include "containers/DataFrame.hpp"
-#include "containers/Encoding.hpp"
-#include "engine/Float.hpp"
-#include "engine/config/Options.hpp"
-#include "strings/String.hpp"
 
 namespace engine {
 namespace handlers {

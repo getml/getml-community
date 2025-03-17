@@ -8,13 +8,14 @@
 #ifndef PREDICTORS_PREDICTORPARSER_HPP_
 #define PREDICTORS_PREDICTORPARSER_HPP_
 
-#include <rfl/Ref.hpp>
-#include <vector>
-
 #include "commands/Fingerprint.hpp"
 #include "predictors/Predictor.hpp"
 #include "predictors/PredictorHyperparams.hpp"
 #include "predictors/PredictorImpl.hpp"
+
+#include <rfl/Ref.hpp>
+
+#include <vector>
 
 namespace predictors {
 

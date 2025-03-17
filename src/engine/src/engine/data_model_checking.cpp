@@ -7,13 +7,14 @@
 
 #include "engine/preprocessors/data_model_checking.hpp"
 
-#include <algorithm>
-
 #include "engine/utils/Aggregations.hpp"
 #include "helpers/Column.hpp"
 #include "helpers/Macros.hpp"
+#include "logging/ProgressLogger.hpp"
 #include "transpilation/HumanReadableSQLGenerator.hpp"
 #include "transpilation/SQLGenerator.hpp"
+
+#include <algorithm>
 
 namespace engine {
 namespace preprocessors {

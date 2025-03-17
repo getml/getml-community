@@ -8,14 +8,14 @@
 #ifndef IO_SNIFFER_HPP_
 #define IO_SNIFFER_HPP_
 
-#include <optional>
-#include <string>
-#include <vector>
-
 #include "io/CSVReader.hpp"
 #include "io/Datatype.hpp"
 #include "io/Parser.hpp"
 #include "io/StatementMaker.hpp"
+
+#include <optional>
+#include <string>
+#include <vector>
 
 namespace io {
 

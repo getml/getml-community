@@ -8,13 +8,6 @@
 #ifndef ENGINE_PIPELINES_TRANSFORM_HPP_
 #define ENGINE_PIPELINES_TRANSFORM_HPP_
 
-#include <Poco/Net/StreamSocket.h>
-
-#include <memory>
-#include <optional>
-#include <utility>
-#include <vector>
-
 #include "commands/Fingerprint.hpp"
 #include "containers/CategoricalFeatures.hpp"
 #include "containers/DataFrame.hpp"
@@ -23,6 +16,13 @@
 #include "engine/pipelines/MakeFeaturesParams.hpp"
 #include "engine/pipelines/Pipeline.hpp"
 #include "engine/pipelines/TransformParams.hpp"
+
+#include <Poco/Net/StreamSocket.h>
+
+#include <memory>
+#include <optional>
+#include <utility>
+#include <vector>
 
 namespace engine {
 namespace pipelines {

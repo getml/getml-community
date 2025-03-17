@@ -8,16 +8,16 @@
 #ifndef ENGINE_HANDLERS_FLOATOPPARSER_HPP_
 #define ENGINE_HANDLERS_FLOATOPPARSER_HPP_
 
-#include <map>
-#include <random>
-#include <string>
-
 #include "commands/FloatColumnOrFloatColumnView.hpp"
 #include "communication/Logger.hpp"
 #include "containers/ColumnView.hpp"
 #include "containers/DataFrame.hpp"
 #include "containers/Encoding.hpp"
 #include "engine/Float.hpp"
+
+#include <map>
+#include <random>
+#include <string>
 
 namespace engine {
 namespace handlers {

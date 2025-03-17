@@ -8,15 +8,15 @@
 #ifndef ENGINE_HANDLERS_PROJECTMANAGER_HPP_
 #define ENGINE_HANDLERS_PROJECTMANAGER_HPP_
 
-#include <Poco/Net/StreamSocket.h>
-
-#include <map>
-#include <string>
-
 #include "commands/ProjectCommand.hpp"
 #include "engine/handlers/DataFrameManager.hpp"
 #include "engine/handlers/ProjectManagerParams.hpp"
 #include "multithreading/WriteLock.hpp"
+
+#include <Poco/Net/StreamSocket.h>
+
+#include <map>
+#include <string>
 
 namespace engine {
 namespace handlers {

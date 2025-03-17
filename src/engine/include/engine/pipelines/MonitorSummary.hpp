@@ -8,16 +8,17 @@
 #ifndef ENGINE_PIPELINES_MONITORSUMMARY_HPP_
 #define ENGINE_PIPELINES_MONITORSUMMARY_HPP_
 
-#include <cstddef>
+#include "commands/Pipeline.hpp"
+#include "helpers/Schema.hpp"
+
 #include <rfl/Field.hpp>
 #include <rfl/Flatten.hpp>
 #include <rfl/Ref.hpp>
+
+#include <cstddef>
 #include <string>
 #include <variant>
 #include <vector>
-
-#include "commands/Pipeline.hpp"
-#include "helpers/Schema.hpp"
 
 namespace engine {
 namespace pipelines {

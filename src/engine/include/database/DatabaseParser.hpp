@@ -8,12 +8,10 @@
 #ifndef DATABASE_DATABASEPARSER_HPP_
 #define DATABASE_DATABASEPARSER_HPP_
 
-#include <memory>
-#include <string>
-
 #include "database/Command.hpp"
 #include "database/Connector.hpp"
-#include "io/io.hpp"
+
+#include <string>
 
 namespace database {
 

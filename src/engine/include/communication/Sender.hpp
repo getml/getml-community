@@ -8,21 +8,18 @@
 #ifndef COMMUNICATION_SENDER_HPP_
 #define COMMUNICATION_SENDER_HPP_
 
-#include <algorithm>
-#include <memory>
-#include <stdexcept>
-#include <string>
-#include <type_traits>
-#include <vector>
-
 #include "communication/Float.hpp"
-#include "communication/Int.hpp"
-#include "communication/Logger.hpp"
 #include "communication/Receiver.hpp"
 #include "communication/ULong.hpp"
 #include "containers/Column.hpp"
 #include "containers/NumericalFeatures.hpp"
 #include "helpers/Endianness.hpp"
+
+#include <algorithm>
+#include <stdexcept>
+#include <string>
+#include <type_traits>
+#include <vector>
 
 namespace communication {
 

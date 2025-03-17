@@ -8,7 +8,9 @@
 #ifndef TEXTMINING_VOCABULARY_HPP_
 #define TEXTMINING_VOCABULARY_HPP_
 
-// -------------------------------------------------------------------------
+#include "fct/Range.hpp"
+#include "strings/String.hpp"
+#include "textmining/Int.hpp"
 
 #include <map>
 #include <memory>
@@ -17,12 +19,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
-#include "fct/Range.hpp"
-#include "strings/String.hpp"
-#include "textmining/Int.hpp"
-
-// -------------------------------------------------------------------------
 
 namespace textmining {
 // -------------------------------------------------------------------------

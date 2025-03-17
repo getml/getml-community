@@ -7,6 +7,8 @@
 
 #include "communication/Sender.hpp"
 
+#include "communication/Int.hpp"
+
 #include <numeric>
 
 namespace communication {

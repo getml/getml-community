@@ -1,31 +1,20 @@
 // Copyright 2024 Code17 GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef MEMMAP_STRINGVECTOR_HPP_
 #define MEMMAP_STRINGVECTOR_HPP_
 
-// ----------------------------------------------------------------------------
-
-#include <cstddef>
-
-// ----------------------------------------------------------------------------
-
-#include <memory>
-
-// ----------------------------------------------------------------------------
-
-#include "strings/strings.hpp"
-
-// ----------------------------------------------------------------------------
-
+#include "debug/throw_unless.hpp"
 #include "memmap/Pool.hpp"
 #include "memmap/Vector.hpp"
+#include "strings/String.hpp"
 
-// ----------------------------------------------------------------------------
+#include <cstddef>
+#include <memory>
 
 namespace memmap {
 

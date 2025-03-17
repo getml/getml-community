@@ -8,15 +8,15 @@
 #ifndef ENGINE_HANDLERS_ARROWSOCKETINPUTSTREAM_HPP_
 #define ENGINE_HANDLERS_ARROWSOCKETINPUTSTREAM_HPP_
 
+#include "communication/Receiver.hpp"
+#include "engine/ULong.hpp"
+
 #include <Poco/Net/StreamSocket.h>
 #include <arrow/api.h>
 #include <arrow/ipc/api.h>
 
 #include <cstdint>
 #include <stdexcept>
-
-#include "communication/communication.hpp"
-#include "engine/ULong.hpp"
 
 namespace engine {
 namespace handlers {

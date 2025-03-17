@@ -13,7 +13,7 @@
 namespace fastprop {
 namespace containers {
 
-typedef typename helpers::DataFrameView DataFrameView;
+using DataFrameView = typename helpers::DataFrameView;
 
 }  // namespace containers
 }  // namespace fastprop

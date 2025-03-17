@@ -7,13 +7,8 @@
 
 #include "tsindex/InMemoryIndex.hpp"
 
-// ----------------------------------------------------------------------------
-
 #include <algorithm>
 #include <cmath>
-#include <limits>
-
-// ----------------------------------------------------------------------------
 
 namespace tsindex {
 

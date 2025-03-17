@@ -8,15 +8,15 @@
 #ifndef COMMANDS_CHECK_PIPELINE_HPP_
 #define COMMANDS_CHECK_PIPELINE_HPP_
 
+#include "commands/DataFramesOrViews.hpp"
+
 #include <rfl/Field.hpp>
 #include <rfl/NamedTuple.hpp>
 #include <rfl/define_named_tuple.hpp>
 
-#include "commands/DataFramesOrViews.hpp"
-
 namespace commands {
 
-using CheckPipeline = typename rfl::define_named_tuple<
+using CheckPipeline = typename rfl::internal::define_named_tuple<
     rfl::Field<"type_", rfl::Literal<"Pipeline.check">>,
     rfl::Field<"name_", std::string>, DataFramesOrViews>::type;
 

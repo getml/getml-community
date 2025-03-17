@@ -7,10 +7,7 @@
 
 #include "engine/handlers/ColumnManager.hpp"
 
-#include <Poco/TemporaryFile.h>
-
-#include <rfl/as.hpp>
-
+#include "communication/Sender.hpp"
 #include "containers/Roles.hpp"
 #include "engine/handlers/AggOpParser.hpp"
 #include "engine/handlers/ArrowHandler.hpp"
@@ -19,6 +16,9 @@
 #include "engine/handlers/FloatOpParser.hpp"
 #include "engine/handlers/StringOpParser.hpp"
 #include "multithreading/WriteLock.hpp"
+
+#include <Poco/TemporaryFile.h>
+#include <rfl/as.hpp>
 
 namespace engine {
 namespace handlers {

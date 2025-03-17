@@ -8,11 +8,6 @@
 #ifndef FASTPROP_ALGORITHM_AGGREGATOR_HPP_
 #define FASTPROP_ALGORITHM_AGGREGATOR_HPP_
 
-#include <memory>
-#include <ranges>
-#include <rfl/Ref.hpp>
-#include <utility>
-
 #include "fastprop/Float.hpp"
 #include "fastprop/Int.hpp"
 #include "fastprop/algorithm/Memoization.hpp"
@@ -22,6 +17,12 @@
 #include "fastprop/containers/SQLMaker.hpp"
 #include "helpers/Aggregations.hpp"
 #include "textmining/WordIndex.hpp"
+
+#include <rfl/Ref.hpp>
+
+#include <memory>
+#include <ranges>
+#include <utility>
 
 namespace fastprop {
 namespace algorithm {

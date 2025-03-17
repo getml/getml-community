@@ -8,13 +8,12 @@
 #ifndef ENGINE_UTILS_TIME_HPP_
 #define ENGINE_UTILS_TIME_HPP_
 
+#include "engine/Float.hpp"
+
 #include <Poco/DateTime.h>
 #include <Poco/Timestamp.h>
 
 #include <cmath>
-
-#include "engine/Float.hpp"
-#include "engine/Int.hpp"
 
 namespace engine {
 namespace utils {

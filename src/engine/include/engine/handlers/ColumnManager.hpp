@@ -8,17 +8,17 @@
 #ifndef ENGINE_HANDLERS_COLUMNMANAGER_HPP_
 #define ENGINE_HANDLERS_COLUMNMANAGER_HPP_
 
-#include <Poco/Net/StreamSocket.h>
-
-#include <map>
-#include <rfl/Field.hpp>
-#include <rfl/NamedTuple.hpp>
-#include <rfl/Ref.hpp>
-#include <string>
-
 #include "commands/ColumnCommand.hpp"
 #include "engine/handlers/DataFrameManagerParams.hpp"
 #include "engine/handlers/DatabaseManager.hpp"
+
+#include <Poco/Net/StreamSocket.h>
+#include <rfl/Field.hpp>
+#include <rfl/NamedTuple.hpp>
+#include <rfl/Ref.hpp>
+
+#include <map>
+#include <string>
 
 namespace engine {
 namespace handlers {

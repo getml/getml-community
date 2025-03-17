@@ -8,15 +8,15 @@
 #ifndef HELPERS_DATAFRAMEVIEW_HPP_
 #define HELPERS_DATAFRAMEVIEW_HPP_
 
-#include <memory>
-#include <string>
-#include <vector>
-
 #include "helpers/Column.hpp"
 #include "helpers/ColumnView.hpp"
 #include "helpers/DataFrame.hpp"
 #include "helpers/Float.hpp"
 #include "helpers/Int.hpp"
+
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace helpers {
 

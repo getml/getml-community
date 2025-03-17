@@ -7,13 +7,14 @@
 
 #include "engine/pipelines/check.hpp"
 
-#include <rfl/Field.hpp>
-#include <rfl/as.hpp>
-
 #include "commands/Fingerprint.hpp"
 #include "commands/WarningFingerprint.hpp"
 #include "engine/pipelines/FitPreprocessorsParams.hpp"
 #include "engine/pipelines/fit.hpp"
+#include "engine/preprocessors/data_model_checking.hpp"
+
+#include <rfl/Field.hpp>
+#include <rfl/as.hpp>
 
 namespace engine {
 namespace pipelines {

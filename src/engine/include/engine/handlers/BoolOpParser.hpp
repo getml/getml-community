@@ -8,12 +8,12 @@
 #ifndef ENGINE_HANDLERS_BOOLOPPARSER_HPP_
 #define ENGINE_HANDLERS_BOOLOPPARSER_HPP_
 
-#include <map>
-#include <string>
-
 #include "commands/BooleanColumnView.hpp"
 #include "engine/handlers/FloatOpParser.hpp"
 #include "engine/handlers/StringOpParser.hpp"
+
+#include <map>
+#include <string>
 
 namespace engine {
 namespace handlers {

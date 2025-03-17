@@ -15,7 +15,7 @@ namespace pipelines {
 
 using Purpose = rfl::Literal<"feature_selectors_", "predictors_">;
 
-}
+}  // namespace pipelines
 }  // namespace engine
 
 #endif

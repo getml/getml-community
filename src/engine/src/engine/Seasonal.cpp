@@ -11,6 +11,7 @@
 #include "engine/utils/Time.hpp"
 #include "helpers/Loader.hpp"
 #include "helpers/Saver.hpp"
+#include "io/Parser.hpp"
 
 namespace engine {
 namespace preprocessors {

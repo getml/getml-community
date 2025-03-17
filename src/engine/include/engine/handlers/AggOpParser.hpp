@@ -8,13 +8,13 @@
 #ifndef ENGINE_HANDLERS_AGGOPPARSER_HPP_
 #define ENGINE_HANDLERS_AGGOPPARSER_HPP_
 
-#include <map>
-#include <string>
-
 #include "commands/Aggregation.hpp"
 #include "containers/DataFrame.hpp"
 #include "containers/Encoding.hpp"
 #include "engine/Float.hpp"
+
+#include <map>
+#include <string>
 
 namespace engine {
 namespace handlers {

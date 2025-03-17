@@ -22,4 +22,3 @@ struct StringReplacer {
 }  // namespace helpers
 
 #endif  // HELPERS_STRINGREPLACER_HPP_
-

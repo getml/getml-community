@@ -8,12 +8,13 @@
 #ifndef PREDICTORS_ENCODING_HPP_
 #define PREDICTORS_ENCODING_HPP_
 
-#include <memory>
+#include "predictors/Int.hpp"
+#include "predictors/IntFeature.hpp"
+
 #include <rfl/Field.hpp>
 #include <rfl/NamedTuple.hpp>
 
-#include "predictors/Int.hpp"
-#include "predictors/IntFeature.hpp"
+#include <memory>
 
 namespace predictors {
 

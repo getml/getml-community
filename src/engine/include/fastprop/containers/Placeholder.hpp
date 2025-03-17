@@ -13,7 +13,7 @@
 namespace fastprop {
 namespace containers {
 
-typedef typename helpers::Placeholder Placeholder;
+using Placeholder = typename helpers::Placeholder;
 
 }  // namespace containers
 }  // namespace fastprop

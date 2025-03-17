@@ -7,8 +7,6 @@
 
 #include "engine/handlers/ViewParser.hpp"
 
-#include <ranges>
-
 #include "commands/Fingerprint.hpp"
 #include "containers/DataFrameContent.hpp"
 #include "engine/handlers/BoolOpParser.hpp"
@@ -18,6 +16,8 @@
 #include "fct/compose.hpp"
 #include "helpers/Aggregations.hpp"
 #include "io/Parser.hpp"
+
+#include <ranges>
 
 namespace engine {
 namespace handlers {

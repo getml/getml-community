@@ -8,11 +8,10 @@
 #ifndef HELPERS_WORDINDEXCONTAINER_HPP_
 #define HELPERS_WORDINDEXCONTAINER_HPP_
 
+#include "helpers/VocabularyContainer.hpp"
+
 #include <memory>
 #include <vector>
-
-#include "helpers/VocabularyContainer.hpp"
-#include "textmining/textmining.hpp"
 
 namespace helpers {
 

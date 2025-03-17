@@ -8,17 +8,6 @@
 #ifndef ENGINE_PREPROCESSORS_CATEGORYTRIMMER_HPP_
 #define ENGINE_PREPROCESSORS_CATEGORYTRIMMER_HPP_
 
-#include <cstddef>
-#include <map>
-#include <memory>
-#include <rfl/Field.hpp>
-#include <rfl/Literal.hpp>
-#include <rfl/NamedTuple.hpp>
-#include <set>
-#include <string>
-#include <utility>
-#include <vector>
-
 #include "commands/Fingerprint.hpp"
 #include "commands/Preprocessor.hpp"
 #include "engine/Int.hpp"
@@ -26,6 +15,18 @@
 #include "engine/preprocessors/Preprocessor.hpp"
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/StringIterator.hpp"
+
+#include <rfl/Field.hpp>
+#include <rfl/Literal.hpp>
+#include <rfl/NamedTuple.hpp>
+
+#include <cstddef>
+#include <map>
+#include <memory>
+#include <set>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace engine {
 namespace preprocessors {

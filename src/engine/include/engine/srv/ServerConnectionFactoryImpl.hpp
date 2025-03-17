@@ -8,13 +8,13 @@
 #ifndef ENGINE_SRV_SERVERCONNECTIONFACTORYIMPL_HPP_
 #define ENGINE_SRV_SERVERCONNECTIONFACTORYIMPL_HPP_
 
+#include "engine/srv/RequestHandler.hpp"
+
 #include <Poco/Net/StreamSocket.h>
 #include <Poco/Net/TCPServerConnectionFactory.h>
-
-#include <atomic>
 #include <rfl/Ref.hpp>
 
-#include "engine/srv/RequestHandler.hpp"
+#include <atomic>
 
 namespace engine {
 namespace srv {

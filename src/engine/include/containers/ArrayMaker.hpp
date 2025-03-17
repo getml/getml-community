@@ -8,6 +8,10 @@
 #ifndef CONTAINERS_ARRAYMAKER_HPP_
 #define CONTAINERS_ARRAYMAKER_HPP_
 
+#include "containers/Float.hpp"
+#include "debug/throw_unless.hpp"
+#include "helpers/NullChecker.hpp"
+
 #include <arrow/api.h>
 #include <arrow/util/utf8.h>
 
@@ -15,10 +19,6 @@
 #include <memory>
 #include <utility>
 #include <vector>
-
-#include "containers/Float.hpp"
-#include "debug/throw_unless.hpp"
-#include "helpers/NullChecker.hpp"
 
 namespace containers {
 

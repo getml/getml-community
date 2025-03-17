@@ -8,14 +8,12 @@
 #ifndef CONTAINERS_DATAFRAMEREADER_HPP_
 #define CONTAINERS_DATAFRAMEREADER_HPP_
 
+#include "containers/DataFrame.hpp"
+#include "containers/Encoding.hpp"
+
 #include <memory>
 #include <string>
 #include <vector>
-
-#include "containers/DataFrame.hpp"
-#include "containers/Encoding.hpp"
-#include "debug/debug.hpp"
-#include "io/io.hpp"
 
 namespace containers {
 

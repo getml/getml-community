@@ -8,17 +8,16 @@
 #ifndef HELPERS_INMEMORYINDEX_HPP_
 #define HELPERS_INMEMORYINDEX_HPP_
 
+#include "helpers/Int.hpp"
+
 #include <cstddef>
 #include <unordered_map>
 #include <vector>
 
-#include "helpers/Int.hpp"
-
 namespace helpers {
 
-typedef std::unordered_map<Int, std::vector<size_t>> InMemoryIndex;
+using InMemoryIndex = std::unordered_map<Int, std::vector<size_t>>;
 
 }  // namespace helpers
 
 #endif  // HELPERS_INMEMORYINDEX_HPP_
-

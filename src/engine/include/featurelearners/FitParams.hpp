@@ -8,16 +8,17 @@
 #ifndef FEATURELEARNERS_FITPARAMS_HPP_
 #define FEATURELEARNERS_FITPARAMS_HPP_
 
-#include <memory>
-#include <optional>
-#include <rfl/Field.hpp>
-#include <rfl/NamedTuple.hpp>
-#include <string>
-#include <vector>
-
 #include "commands/DataFramesOrViews.hpp"
 #include "communication/SocketLogger.hpp"
 #include "containers/DataFrame.hpp"
+
+#include <rfl/Field.hpp>
+#include <rfl/NamedTuple.hpp>
+
+#include <memory>
+#include <optional>
+#include <string>
+#include <vector>
 
 namespace featurelearners {
 

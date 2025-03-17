@@ -9,7 +9,7 @@
 #define COMMUNICATION_FLOAT_HPP_
 
 namespace communication {
-typedef double Float;
-}
+using Float = double;
+}  // namespace communication
 
 #endif  // COMMUNICATION_FLOAT_HPP_

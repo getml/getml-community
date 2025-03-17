@@ -8,17 +8,6 @@
 #ifndef ENGINE_PIPELINES_FITPARAMS_HPP_
 #define ENGINE_PIPELINES_FITPARAMS_HPP_
 
-#include <Poco/Net/StreamSocket.h>
-
-#include <memory>
-#include <optional>
-#include <rfl/Field.hpp>
-#include <rfl/NamedTuple.hpp>
-#include <rfl/Ref.hpp>
-#include <rfl/named_tuple_t.hpp>
-#include <string>
-#include <vector>
-
 #include "commands/DataFramesOrViews.hpp"
 #include "commands/Fingerprint.hpp"
 #include "containers/DataFrame.hpp"
@@ -27,6 +16,17 @@
 #include "engine/dependency/FETracker.hpp"
 #include "engine/dependency/PredTracker.hpp"
 #include "engine/dependency/PreprocessorTracker.hpp"
+
+#include <Poco/Net/StreamSocket.h>
+#include <rfl/Field.hpp>
+#include <rfl/NamedTuple.hpp>
+#include <rfl/Ref.hpp>
+#include <rfl/named_tuple_t.hpp>
+
+#include <memory>
+#include <optional>
+#include <string>
+#include <vector>
 
 namespace engine {
 namespace pipelines {

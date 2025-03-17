@@ -7,15 +7,6 @@
 
 #include "engine/srv/RequestHandler.hpp"
 
-#include <Poco/JSON/Object.h>
-#include <Poco/JSON/Parser.h>
-
-#include <rfl/always_false.hpp>
-#include <rfl/extract_discriminators.hpp>
-#include <rfl/get.hpp>
-#include <rfl/json/read.hpp>
-#include <stdexcept>
-
 #include "commands/ColumnCommand.hpp"
 #include "commands/Command.hpp"
 #include "commands/DataFrameCommand.hpp"
@@ -23,6 +14,15 @@
 #include "commands/PipelineCommand.hpp"
 #include "commands/ProjectCommand.hpp"
 #include "commands/ViewCommand.hpp"
+
+#include <Poco/JSON/Object.h>
+#include <Poco/JSON/Parser.h>
+#include <rfl/always_false.hpp>
+#include <rfl/extract_discriminators.hpp>
+#include <rfl/get.hpp>
+#include <rfl/json/read.hpp>
+
+#include <stdexcept>
 
 namespace engine {
 namespace srv {

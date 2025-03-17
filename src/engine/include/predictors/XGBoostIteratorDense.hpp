@@ -8,11 +8,9 @@
 #ifndef PREDICTORS_XGBOOSTITERATORDENSE_HPP_
 #define PREDICTORS_XGBOOSTITERATORDENSE_HPP_
 
-// ------------------------------------------------------------------------
+#include "predictors/FloatFeature.hpp"
 
 #include <xgboost/c_api.h>
-
-// ------------------------------------------------------------------------
 
 #include <algorithm>
 #include <cstddef>
@@ -21,12 +19,6 @@
 #include <functional>
 #include <memory>
 #include <vector>
-
-// ------------------------------------------------------------------------
-
-#include "predictors/FloatFeature.hpp"
-
-// ------------------------------------------------------------------------
 
 namespace predictors {
 

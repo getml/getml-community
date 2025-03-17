@@ -8,14 +8,15 @@
 #ifndef METRICS_AUC_HPP_
 #define METRICS_AUC_HPP_
 
-#include <rfl/NamedTuple.hpp>
-#include <utility>
-#include <vector>
-
 #include "metrics/Features.hpp"
 #include "metrics/Float.hpp"
 #include "metrics/MetricImpl.hpp"
 #include "metrics/Scores.hpp"
+
+#include <rfl/NamedTuple.hpp>
+
+#include <utility>
+#include <vector>
 
 namespace metrics {
 

@@ -7,14 +7,15 @@
 
 #include "containers/DataFrame.hpp"
 
-#include <Poco/Path.h>
-#include <Poco/TemporaryFile.h>
-
-#include <rfl/Field.hpp>
-#include <stdexcept>
-
 #include "containers/DataFramePrinter.hpp"
 #include "database/Getter.hpp"
+#include "io/CSVReader.hpp"
+
+#include <Poco/Path.h>
+#include <Poco/TemporaryFile.h>
+#include <rfl/Field.hpp>
+
+#include <stdexcept>
 
 namespace containers {
 

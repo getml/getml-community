@@ -13,7 +13,7 @@
 namespace fastprop {
 namespace algorithm {
 
-typedef typename helpers::FitParams FitParams;
+using FitParams = typename helpers::FitParams;
 
 }  // namespace algorithm
 }  // namespace fastprop

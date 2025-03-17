@@ -1,22 +1,22 @@
 // Copyright 2024 Code17 GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef HELPERS_TABLEHOLDERPARAMS_HPP_
 #define HELPERS_TABLEHOLDERPARAMS_HPP_
-
-#include <functional>
-#include <string>
-#include <vector>
 
 #include "helpers/DataFrameView.hpp"
 #include "helpers/FeatureContainer.hpp"
 #include "helpers/Placeholder.hpp"
 #include "helpers/RowIndexContainer.hpp"
 #include "helpers/WordIndexContainer.hpp"
+
+#include <functional>
+#include <string>
+#include <vector>
 
 namespace helpers {
 
@@ -51,4 +51,3 @@ struct TableHolderParams {
 }  // namespace helpers
 
 #endif  // HELPERS_TABLEHOLDERPARAMS_HPP_
-

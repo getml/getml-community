@@ -13,7 +13,7 @@
 namespace fastprop {
 namespace containers {
 
-typedef typename helpers::IntSet IntSet;
+using IntSet = typename helpers::IntSet;
 
 }  // namespace containers
 }  // namespace fastprop

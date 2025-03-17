@@ -8,15 +8,15 @@
 #ifndef PREDICTORS_PREDICTOR_HPP_
 #define PREDICTORS_PREDICTOR_HPP_
 
-#include <memory>
-#include <optional>
-#include <vector>
-
 #include "helpers/Saver.hpp"
 #include "logging/AbstractLogger.hpp"
 #include "predictors/Fingerprint.hpp"
 #include "predictors/FloatFeature.hpp"
 #include "predictors/IntFeature.hpp"
+
+#include <memory>
+#include <optional>
+#include <vector>
 
 namespace predictors {
 

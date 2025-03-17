@@ -13,15 +13,16 @@ extern "C" {
 #include <sqlite3.h>
 }
 
-#include <memory>
-#include <rfl/Ref.hpp>
-#include <string>
-#include <vector>
-
 #include "database/Command.hpp"
 #include "database/Connector.hpp"
 #include "database/Sqlite3Iterator.hpp"
 #include "database/TableContent.hpp"
+
+#include <rfl/Ref.hpp>
+
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace database {
 

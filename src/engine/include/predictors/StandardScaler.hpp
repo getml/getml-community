@@ -8,13 +8,14 @@
 #ifndef PREDICTORS_STANDARDSCALER_HPP_
 #define PREDICTORS_STANDARDSCALER_HPP_
 
-#include <rfl/Field.hpp>
-#include <rfl/NamedTuple.hpp>
-#include <vector>
-
 #include "predictors/CSRMatrix.hpp"
 #include "predictors/Float.hpp"
 #include "predictors/FloatFeature.hpp"
+
+#include <rfl/Field.hpp>
+#include <rfl/NamedTuple.hpp>
+
+#include <vector>
 
 namespace predictors {
 

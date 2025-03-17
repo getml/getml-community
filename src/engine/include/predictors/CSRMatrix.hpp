@@ -8,14 +8,14 @@
 #ifndef PREDICTORS_CONTAINERS_CSRMATRIX_HPP_
 #define PREDICTORS_CONTAINERS_CSRMATRIX_HPP_
 
-#include <algorithm>
-#include <vector>
-
 #include "fct/Range.hpp"
 #include "predictors/Float.hpp"
 #include "predictors/FloatFeature.hpp"
 #include "predictors/Int.hpp"
 #include "predictors/IntFeature.hpp"
+
+#include <algorithm>
+#include <vector>
 
 namespace predictors {
 

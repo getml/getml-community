@@ -8,18 +8,18 @@
 #ifndef ENGINE_PIPELINES_MAKEFEATURESPARAMS_HPP_
 #define ENGINE_PIPELINES_MAKEFEATURESPARAMS_HPP_
 
-#include <Poco/Net/StreamSocket.h>
-
-#include <memory>
-#include <rfl/Ref.hpp>
-#include <vector>
-
 #include "commands/DataFramesOrViews.hpp"
 #include "commands/Fingerprint.hpp"
 #include "communication/Logger.hpp"
 #include "containers/Encoding.hpp"
 #include "engine/dependency/DataFrameTracker.hpp"
 #include "predictors/PredictorImpl.hpp"
+
+#include <Poco/Net/StreamSocket.h>
+#include <rfl/Ref.hpp>
+
+#include <memory>
+#include <vector>
 
 namespace engine {
 namespace pipelines {

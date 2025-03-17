@@ -8,10 +8,11 @@
 #ifndef ENGINE_DEPENDENCY_TRACKER_HPP_
 #define ENGINE_DEPENDENCY_TRACKER_HPP_
 
-#include <map>
-#include <optional>
 #include <rfl/Ref.hpp>
 #include <rfl/json/write.hpp>
+
+#include <map>
+#include <optional>
 #include <string>
 
 namespace engine {

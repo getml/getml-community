@@ -8,9 +8,6 @@
 #ifndef METRICS_SCORER_HPP_
 #define METRICS_SCORER_HPP_
 
-#include <rfl/define_named_tuple.hpp>
-#include <variant>
-
 #include "metrics/AUC.hpp"
 #include "metrics/Accuracy.hpp"
 #include "metrics/CrossEntropy.hpp"
@@ -18,6 +15,10 @@
 #include "metrics/MAE.hpp"
 #include "metrics/RMSE.hpp"
 #include "metrics/RSquared.hpp"
+
+#include <rfl/define_named_tuple.hpp>
+
+#include <variant>
 
 namespace metrics {
 

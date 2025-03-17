@@ -8,12 +8,12 @@
 #ifndef HELPERS_STRINGITERATOR_HPP_
 #define HELPERS_STRINGITERATOR_HPP_
 
-#include <cstddef>
-#include <functional>
-
 #include "debug/assert_true.hpp"
 #include "debug/throw_unless.hpp"
 #include "strings/String.hpp"
+
+#include <cstddef>
+#include <functional>
 
 namespace helpers {
 

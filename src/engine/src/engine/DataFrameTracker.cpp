@@ -7,10 +7,10 @@
 
 #include "engine/dependency/DataFrameTracker.hpp"
 
+#include "engine/utils/Getter.hpp"
+
 #include <range/v3/view/concat.hpp>
 #include <rfl/json/write.hpp>
-
-#include "engine/utils/Getter.hpp"
 
 namespace engine {
 namespace dependency {

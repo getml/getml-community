@@ -8,10 +8,9 @@
 #ifndef DATABASE_SNIFF_HPP_
 #define DATABASE_SNIFF_HPP_
 
-#include <memory>
-#include <string>
-
 #include "database/Connector.hpp"
+
+#include <string>
 
 namespace database::sniff {
 

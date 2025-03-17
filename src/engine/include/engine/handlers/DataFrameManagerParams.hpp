@@ -8,17 +8,14 @@
 #ifndef ENGINE_HANDLERS_DATAFRAMEMANAGERPARAMS_HPP_
 #define ENGINE_HANDLERS_DATAFRAMEMANAGERPARAMS_HPP_
 
+#include "containers/DataFrame.hpp"
+#include "containers/Encoding.hpp"
+#include "engine/handlers/DatabaseManager.hpp"
+
 #include <Poco/Net/StreamSocket.h>
 
 #include <map>
-#include <memory>
 #include <string>
-
-#include "communication/communication.hpp"
-#include "containers/containers.hpp"
-#include "debug/debug.hpp"
-#include "engine/config/config.hpp"
-#include "engine/handlers/DatabaseManager.hpp"
 
 namespace engine {
 namespace handlers {

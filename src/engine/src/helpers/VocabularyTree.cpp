@@ -7,11 +7,12 @@
 
 #include "helpers/VocabularyTree.hpp"
 
-#include <range/v3/view/concat.hpp>
-#include <ranges>
-
 #include "debug/assert_msg.hpp"
 #include "helpers/Macros.hpp"
+
+#include <range/v3/view/concat.hpp>
+
+#include <ranges>
 
 namespace helpers {
 

@@ -7,6 +7,8 @@
 
 #include "containers/DataFramePrinter.hpp"
 
+#include "debug/assert_true.hpp"
+
 #include <algorithm>
 #include <numeric>
 

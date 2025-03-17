@@ -8,15 +8,16 @@
 #ifndef FEATURELEARNERS_TRANSFORMPARAMS_HPP_
 #define FEATURELEARNERS_TRANSFORMPARAMS_HPP_
 
-#include <cstddef>
-#include <rfl/Field.hpp>
-#include <rfl/Flatten.hpp>
-#include <rfl/NamedTuple.hpp>
-#include <vector>
-
 #include "commands/DataFramesOrViews.hpp"
 #include "communication/SocketLogger.hpp"
 #include "containers/DataFrame.hpp"
+
+#include <rfl/Field.hpp>
+#include <rfl/Flatten.hpp>
+#include <rfl/NamedTuple.hpp>
+
+#include <cstddef>
+#include <vector>
 
 namespace featurelearners {
 

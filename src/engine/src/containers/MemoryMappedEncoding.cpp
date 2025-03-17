@@ -55,13 +55,12 @@ Int MemoryMappedEncoding::insert(const strings::String& _str,
   const auto hash = _str.hash();
 
   if (!_opt) [[likely]] {
-      auto p = std::make_pair(ix, memmap::VectorImpl<Int>());
-      rownums().push_back(p);
-      btree().insert(hash, rownums().size() - 1);
-      assert_true(btree()[hash]);
-      assert_true(*btree()[hash] == rownums().size() - 1);
-    }
-  else if (rownums()[*_opt].first != HASH_COLLISION) {
+    auto p = std::make_pair(ix, memmap::VectorImpl<Int>());
+    rownums().push_back(p);
+    btree().insert(hash, rownums().size() - 1);
+    assert_true(btree()[hash]);
+    assert_true(*btree()[hash] == rownums().size() - 1);
+  } else if (rownums()[*_opt].first != HASH_COLLISION) {
     // First hash collision
     assert_true(string_vector()[rownums()[*_opt].first - subsize_] != _str);
     auto p =

@@ -8,19 +8,19 @@
 #ifndef ENGINE_PIPELINES_FITPREDICTORSPARAMS_HPP_
 #define ENGINE_PIPELINES_FITPREDICTORSPARAMS_HPP_
 
-#include <Poco/Net/StreamSocket.h>
-
-#include <rfl/Field.hpp>
-#include <rfl/Literal.hpp>
-#include <rfl/NamedTuple.hpp>
-#include <rfl/Ref.hpp>
-#include <vector>
-
 #include "commands/Fingerprint.hpp"
 #include "engine/pipelines/FitParams.hpp"
 #include "engine/pipelines/Pipeline.hpp"
 #include "engine/pipelines/Purpose.hpp"
 #include "predictors/PredictorImpl.hpp"
+
+#include <Poco/Net/StreamSocket.h>
+#include <rfl/Field.hpp>
+#include <rfl/Literal.hpp>
+#include <rfl/NamedTuple.hpp>
+#include <rfl/Ref.hpp>
+
+#include <vector>
 
 namespace engine {
 namespace pipelines {

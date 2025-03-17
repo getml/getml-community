@@ -8,18 +8,19 @@
 #ifndef COMMANDS_COMMAND_HPP_
 #define COMMANDS_COMMAND_HPP_
 
-#include <rfl/Field.hpp>
-#include <rfl/Literal.hpp>
-#include <rfl/NamedTuple.hpp>
-#include <rfl/json/Reader.hpp>
-#include <variant>
-
 #include "commands/ColumnCommand.hpp"
 #include "commands/DataFrameCommand.hpp"
 #include "commands/DatabaseCommand.hpp"
 #include "commands/PipelineCommand.hpp"
 #include "commands/ProjectCommand.hpp"
 #include "commands/ViewCommand.hpp"
+
+#include <rfl/Field.hpp>
+#include <rfl/Literal.hpp>
+#include <rfl/NamedTuple.hpp>
+#include <rfl/json/Reader.hpp>
+
+#include <variant>
 
 namespace commands {
 

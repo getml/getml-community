@@ -7,10 +7,10 @@
 
 #include "database/MySQL.hpp"
 
-#include <rfl/json/write.hpp>
-
 #include "database/CSVBuffer.hpp"
 #include "database/ContentGetter.hpp"
+
+#include <rfl/json/write.hpp>
 
 namespace database {
 

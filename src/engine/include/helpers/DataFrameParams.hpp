@@ -8,16 +8,16 @@
 #ifndef HELPERS_DATAFRAMEPARAMS_HPP_
 #define HELPERS_DATAFRAMEPARAMS_HPP_
 
-#include <memory>
-#include <string>
-#include <vector>
-
 #include "helpers/Column.hpp"
 #include "helpers/Float.hpp"
 #include "helpers/Index.hpp"
 #include "helpers/Int.hpp"
 #include "textmining/RowIndex.hpp"
 #include "tsindex/Index.hpp"
+
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace helpers {
 

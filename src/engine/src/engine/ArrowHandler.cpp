@@ -7,13 +7,13 @@
 
 #include "engine/handlers/ArrowHandler.hpp"
 
-#include <range/v3/view/concat.hpp>
-
 #include "containers/ArrayMaker.hpp"
 #include "engine/Int.hpp"
 #include "engine/handlers/ArrowSocketInputStream.hpp"
 #include "engine/handlers/ArrowSocketOutputStream.hpp"
 #include "io/Parser.hpp"
+
+#include <range/v3/view/concat.hpp>
 
 namespace engine {
 namespace handlers {

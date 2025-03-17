@@ -8,14 +8,14 @@
 #ifndef HELPERS_IMPORTANCEMAKER_HPP_
 #define HELPERS_IMPORTANCEMAKER_HPP_
 
+#include "helpers/ColumnDescription.hpp"
+#include "helpers/Float.hpp"
+#include "helpers/Schema.hpp"
+
 #include <cstddef>
 #include <map>
 #include <string>
 #include <vector>
-
-#include "helpers/ColumnDescription.hpp"
-#include "helpers/Float.hpp"
-#include "helpers/Schema.hpp"
 
 namespace helpers {
 

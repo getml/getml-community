@@ -7,11 +7,11 @@
 
 #include "predictors/XGBoostPredictor.hpp"
 
+#include "predictors/XGBoostIteratorSparse.hpp"
+
 #include <numeric>
 #include <optional>
 #include <stdexcept>
-
-#include "predictors/XGBoostIteratorSparse.hpp"
 
 namespace predictors {
 

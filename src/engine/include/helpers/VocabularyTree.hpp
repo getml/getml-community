@@ -8,14 +8,14 @@
 #ifndef HELPERS_VOCABULARYTREE_HPP_
 #define HELPERS_VOCABULARYTREE_HPP_
 
+#include "helpers/Placeholder.hpp"
+#include "helpers/Schema.hpp"
+#include "strings/String.hpp"
+
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
-
-#include "helpers/Placeholder.hpp"
-#include "helpers/Schema.hpp"
-#include "strings/strings.hpp"
 
 namespace helpers {
 
@@ -87,4 +87,3 @@ class VocabularyTree {
 }  // namespace helpers
 
 #endif  // HELPERS_VOCABULARYTREE_HPP_
-

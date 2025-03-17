@@ -8,20 +8,14 @@
 #ifndef FASTPROP_ALGORITHM_MEMOIZATION_HPP_
 #define FASTPROP_ALGORITHM_MEMOIZATION_HPP_
 
-// ----------------------------------------------------------------------------
+#include "fastprop/Float.hpp"
+#include "fastprop/containers/AbstractFeature.hpp"
 
 #include <algorithm>
 #include <iterator>
 #include <optional>
 #include <utility>
 #include <vector>
-
-// ----------------------------------------------------------------------------
-
-#include "fastprop/Float.hpp"
-#include "fastprop/containers/AbstractFeature.hpp"
-
-// ----------------------------------------------------------------------------
 
 namespace fastprop {
 namespace algorithm {

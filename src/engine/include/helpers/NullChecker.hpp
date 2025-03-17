@@ -8,12 +8,12 @@
 #ifndef HELPERS_NULLCHECKER_HPP_
 #define HELPERS_NULLCHECKER_HPP_
 
-#include <cmath>
-#include <string>
-
 #include "helpers/Float.hpp"
 #include "helpers/Int.hpp"
 #include "strings/String.hpp"
+
+#include <cmath>
+#include <string>
 
 namespace helpers {
 

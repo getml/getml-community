@@ -8,10 +8,10 @@
 #ifndef COMMANDS_LINEARHYPERPARMS_HPP_
 #define COMMANDS_LINEARHYPERPARMS_HPP_
 
+#include "commands/Float.hpp"
+
 #include <rfl/Field.hpp>
 #include <rfl/NamedTuple.hpp>
-
-#include "commands/Float.hpp"
 
 namespace commands {
 

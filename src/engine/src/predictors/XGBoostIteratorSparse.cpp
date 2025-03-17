@@ -7,11 +7,11 @@
 
 #include "predictors/XGBoostIteratorSparse.hpp"
 
-#include <cstddef>
-#include <ranges>
-
 #include "helpers/Endianness.hpp"
 #include "predictors/FloatFeature.hpp"
+
+#include <cstddef>
+#include <ranges>
 
 namespace predictors {
 

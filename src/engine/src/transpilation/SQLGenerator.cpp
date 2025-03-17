@@ -7,15 +7,13 @@
 
 #include "transpilation/SQLGenerator.hpp"
 
-#include <ranges>
-#include <sstream>
-
 #include "debug/throw_unless.hpp"
 #include "helpers/Macros.hpp"
 #include "helpers/StringReplacer.hpp"
 #include "helpers/StringSplitter.hpp"
 
-// ----------------------------------------------------------------------------
+#include <ranges>
+#include <sstream>
 
 namespace transpilation {
 

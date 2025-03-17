@@ -7,6 +7,7 @@
 
 #include "engine/pipelines/modify_data_frames.hpp"
 
+#include "engine/Int.hpp"
 #include "engine/pipelines/make_placeholder.hpp"
 
 namespace engine {

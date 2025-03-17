@@ -9,6 +9,13 @@
 #ifndef ENGINE_PIPELINES_PIPELINE_HPP_
 #define ENGINE_PIPELINES_PIPELINE_HPP_
 
+#include "commands/Pipeline.hpp"
+#include "engine/pipelines/FittedPipeline.hpp"
+#include "engine/pipelines/MonitorSummary.hpp"
+#include "helpers/Placeholder.hpp"
+#include "helpers/StringIterator.hpp"
+#include "metrics/Scores.hpp"
+
 #include <Poco/DateTimeFormat.h>
 #include <Poco/DateTimeFormatter.h>
 #include <Poco/LocalDateTime.h>
@@ -19,13 +26,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
-#include "commands/Pipeline.hpp"
-#include "engine/pipelines/FittedPipeline.hpp"
-#include "engine/pipelines/MonitorSummary.hpp"
-#include "helpers/Placeholder.hpp"
-#include "helpers/StringIterator.hpp"
-#include "metrics/Scores.hpp"
 
 namespace engine {
 namespace pipelines {

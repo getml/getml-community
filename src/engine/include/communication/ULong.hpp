@@ -8,8 +8,9 @@
 #ifndef COMMUNICATION_ULONG_HPP_
 #define COMMUNICATION_ULONG_HPP_
 
+#include <cstdint>
 namespace communication {
-typedef std::uint64_t ULong;
-}
+using ULong = std::uint64_t;
+}  // namespace communication
 
 #endif  // COMMUNICATION_ULONG_HPP_

@@ -8,17 +8,15 @@
 #ifndef ENGINE_PIPELINES_MODIFYDATAFRAMES_HPP_
 #define ENGINE_PIPELINES_MODIFYDATAFRAMES_HPP_
 
+#include "commands/DataModel.hpp"
+#include "containers/DataFrame.hpp"
+
 #include <Poco/Net/StreamSocket.h>
 
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
-
-#include "commands/DataModel.hpp"
-#include "containers/DataFrame.hpp"
-#include "engine/Float.hpp"
-#include "engine/Int.hpp"
 
 namespace engine {
 namespace pipelines {

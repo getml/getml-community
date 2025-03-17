@@ -1,23 +1,17 @@
 // Copyright 2024 Code17 GmbH
-// 
-// This file is licensed under the Elastic License 2.0 (ELv2). 
-// Refer to the LICENSE.txt file in the root of the repository 
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
 // for details.
-// 
+//
 
 #ifndef MULTITHREADING_ALL_REDUCE_HPP_
 #define MULTITHREADING_ALL_REDUCE_HPP_
 
-// ----------------------------------------------------------------------------
+#include "multithreading/Communicator.hpp"
 
 #include <algorithm>
 #include <cstddef>
-
-// ----------------------------------------------------------------------------
-
-#include "multithreading/Communicator.hpp"
-
-// ----------------------------------------------------------------------------
 
 namespace multithreading {
 // ----------------------------------------------------------------------------

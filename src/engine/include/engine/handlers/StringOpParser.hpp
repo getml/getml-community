@@ -8,15 +8,15 @@
 #ifndef ENGINE_HANDLERS_STRINGOPPARSER_HPP_
 #define ENGINE_HANDLERS_STRINGOPPARSER_HPP_
 
-#include <map>
-#include <string>
-
 #include "commands/StringColumnOrStringColumnView.hpp"
 #include "communication/Logger.hpp"
 #include "containers/ColumnView.hpp"
 #include "containers/DataFrame.hpp"
 #include "containers/Encoding.hpp"
 #include "engine/Int.hpp"
+
+#include <map>
+#include <string>
 
 namespace engine {
 namespace handlers {

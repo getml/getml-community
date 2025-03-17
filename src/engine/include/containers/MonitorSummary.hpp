@@ -8,13 +8,14 @@
 #ifndef CONTAINERS_MONITORSUMMARY_HPP_
 #define CONTAINERS_MONITORSUMMARY_HPP_
 
-#include <cstddef>
+#include "containers/Float.hpp"
+
 #include <rfl/Field.hpp>
 #include <rfl/NamedTuple.hpp>
+
+#include <cstddef>
 #include <string>
 #include <vector>
-
-#include "containers/Float.hpp"
 
 namespace containers {
 

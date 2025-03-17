@@ -8,14 +8,14 @@
 #ifndef COMMUNICATION_WARNER_HPP_
 #define COMMUNICATION_WARNER_HPP_
 
-#include <Poco/Net/StreamSocket.h>
-
-#include <rfl/Ref.hpp>
-#include <vector>
-
 #include "commands/WarningFingerprint.hpp"
 #include "communication/Warning.hpp"
 #include "communication/Warnings.hpp"
+
+#include <Poco/Net/StreamSocket.h>
+#include <rfl/Ref.hpp>
+
+#include <vector>
 
 namespace communication {
 

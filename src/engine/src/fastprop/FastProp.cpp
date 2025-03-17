@@ -7,15 +7,15 @@
 
 #include "fastprop/algorithm/FastProp.hpp"
 
-#include <memory>
-#include <random>
-
 #include "fastprop/algorithm/Aggregator.hpp"
 #include "fastprop/algorithm/ConditionParser.hpp"
 #include "fastprop/algorithm/RSquared.hpp"
 #include "fastprop/algorithm/TableHolderParams.hpp"
 #include "helpers/Matchmaker.hpp"
 #include "transpilation/HumanReadableSQLGenerator.hpp"
+
+#include <memory>
+#include <random>
 
 namespace fastprop {
 namespace algorithm {

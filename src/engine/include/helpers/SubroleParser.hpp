@@ -8,10 +8,10 @@
 #ifndef HELPERS_SUBROLEPARSER_HPP_
 #define HELPERS_SUBROLEPARSER_HPP_
 
+#include "helpers/Subrole.hpp"
+
 #include <string>
 #include <vector>
-
-#include "helpers/Subrole.hpp"
 
 namespace helpers {
 

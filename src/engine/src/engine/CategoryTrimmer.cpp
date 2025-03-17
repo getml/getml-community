@@ -7,10 +7,6 @@
 
 #include "engine/preprocessors/CategoryTrimmer.hpp"
 
-#include <ranges>
-#include <rfl/replace.hpp>
-#include <set>
-
 #include "containers/Column.hpp"
 #include "containers/DataFrame.hpp"
 #include "helpers/ColumnDescription.hpp"
@@ -18,6 +14,11 @@
 #include "helpers/NullChecker.hpp"
 #include "helpers/Saver.hpp"
 #include "transpilation/SQLGenerator.hpp"
+
+#include <rfl/replace.hpp>
+
+#include <ranges>
+#include <set>
 
 namespace engine {
 namespace preprocessors {

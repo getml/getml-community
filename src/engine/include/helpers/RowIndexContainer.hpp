@@ -8,11 +8,11 @@
 #ifndef HELPERS_ROWINDEXCONTAINER_HPP_
 #define HELPERS_ROWINDEXCONTAINER_HPP_
 
-#include <memory>
-#include <vector>
-
 #include "helpers/VocabularyContainer.hpp"
 #include "helpers/WordIndexContainer.hpp"
+
+#include <memory>
+#include <vector>
 
 namespace helpers {
 

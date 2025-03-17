@@ -13,10 +13,8 @@
 #include <rfl/Ref.hpp>
 #include <rfl/TaggedUnion.hpp>
 #include <rfl/json/Reader.hpp>
-#include <variant>
 
-#include "commands/FloatColumnOrFloatColumnView.hpp"
-#include "commands/StringColumnOrStringColumnView.hpp"
+#include <variant>
 
 namespace commands {
 

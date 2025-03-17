@@ -7,15 +7,16 @@
 
 #include "engine/pipelines/to_sql.hpp"
 
-#include <algorithm>
-#include <range/v3/view/concat.hpp>
-#include <rfl/replace.hpp>
-#include <utility>
-#include <vector>
-
 #include "engine/pipelines/FittedPipeline.hpp"
 #include "transpilation/SQLDialectParser.hpp"
 #include "transpilation/SQLGenerator.hpp"
+
+#include <range/v3/view/concat.hpp>
+#include <rfl/replace.hpp>
+
+#include <algorithm>
+#include <utility>
+#include <vector>
 
 namespace engine {
 namespace pipelines {

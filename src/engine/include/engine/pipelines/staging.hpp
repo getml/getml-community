@@ -8,16 +8,12 @@
 #ifndef ENGINE_PIPELINES_STAGING_HPP_
 #define ENGINE_PIPELINES_STAGING_HPP_
 
+#include "containers/DataFrame.hpp"
+
 #include <Poco/Net/StreamSocket.h>
 
-#include <memory>
-#include <optional>
 #include <string>
 #include <vector>
-
-#include "containers/DataFrame.hpp"
-#include "engine/Float.hpp"
-#include "engine/Int.hpp"
 
 namespace engine {
 namespace pipelines {
@@ -36,4 +32,3 @@ void join_tables(const std::vector<std::string>& _origin_peripheral_names,
 }  // namespace engine
 
 #endif  // ENGINE_PIPELINES_STAGING_HPP_
-

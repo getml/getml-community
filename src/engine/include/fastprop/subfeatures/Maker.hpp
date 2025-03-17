@@ -8,13 +8,13 @@
 #ifndef FASTPROP_SUBFEATURES_MAKER_HPP_
 #define FASTPROP_SUBFEATURES_MAKER_HPP_
 
+#include "fastprop/subfeatures/FastPropContainer.hpp"
+#include "fastprop/subfeatures/MakerParams.hpp"
+
 #include <memory>
 #include <optional>
 #include <utility>
 #include <vector>
-
-#include "fastprop/subfeatures/FastPropContainer.hpp"
-#include "fastprop/subfeatures/MakerParams.hpp"
 
 namespace fastprop {
 namespace subfeatures {

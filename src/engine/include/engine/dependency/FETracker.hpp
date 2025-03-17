@@ -9,12 +9,12 @@
 #define ENGINE_DEPENDENCY_FETRACKER_HPP_
 
 #include "engine/dependency/Tracker.hpp"
-#include "featurelearners/featurelearners.hpp"
+#include "featurelearners/AbstractFeatureLearner.hpp"
 
 namespace engine {
 namespace dependency {
 
-typedef Tracker<featurelearners::AbstractFeatureLearner> FETracker;
+using FETracker = Tracker<featurelearners::AbstractFeatureLearner>;
 
 }  // namespace dependency
 }  // namespace engine

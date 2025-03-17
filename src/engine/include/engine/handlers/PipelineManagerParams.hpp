@@ -8,19 +8,18 @@
 #ifndef ENGINE_HANDLERS_PIPELINEMANAGERPARAMS_HPP_
 #define ENGINE_HANDLERS_PIPELINEMANAGERPARAMS_HPP_
 
+#include "engine/dependency/DataFrameTracker.hpp"
+#include "engine/dependency/FETracker.hpp"
+#include "engine/dependency/PredTracker.hpp"
+#include "engine/dependency/PreprocessorTracker.hpp"
+#include "engine/dependency/WarningTracker.hpp"
+#include "engine/handlers/DatabaseManager.hpp"
+#include "engine/pipelines/Pipeline.hpp"
+
 #include <Poco/Net/StreamSocket.h>
 
 #include <map>
-#include <memory>
 #include <string>
-
-#include "communication/communication.hpp"
-#include "debug/debug.hpp"
-#include "engine/config/config.hpp"
-#include "engine/handlers/DatabaseManager.hpp"
-#include "engine/handlers/ViewParser.hpp"
-#include "engine/pipelines/FittedPipeline.hpp"
-#include "engine/pipelines/pipelines.hpp"
 
 namespace engine {
 namespace handlers {

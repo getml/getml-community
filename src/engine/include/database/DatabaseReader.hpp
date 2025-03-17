@@ -8,11 +8,12 @@
 #ifndef DATABASE_DATABASEREADER_HPP_
 #define DATABASE_DATABASEREADER_HPP_
 
-#include <rfl/Ref.hpp>
-#include <vector>
-
 #include "database/Iterator.hpp"
 #include "io/Reader.hpp"
+
+#include <rfl/Ref.hpp>
+
+#include <vector>
 
 namespace database {
 

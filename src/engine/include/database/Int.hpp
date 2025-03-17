@@ -11,7 +11,7 @@
 #include <cstdint>
 
 namespace database {
-typedef std::int32_t Int;
-}
+using Int = std::int32_t;
+}  // namespace database
 
 #endif  // DATABASE_INT_HPP_

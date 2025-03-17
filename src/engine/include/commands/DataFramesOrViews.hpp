@@ -8,12 +8,13 @@
 #ifndef COMMANDS_DATA_FRAMES_OR_VIEW_HPP_
 #define COMMANDS_DATA_FRAMES_OR_VIEW_HPP_
 
-#include <optional>
+#include "commands/DataFrameOrView.hpp"
+
 #include <rfl/Field.hpp>
 #include <rfl/NamedTuple.hpp>
-#include <vector>
 
-#include "commands/DataFrameOrView.hpp"
+#include <optional>
+#include <vector>
 
 namespace commands {
 

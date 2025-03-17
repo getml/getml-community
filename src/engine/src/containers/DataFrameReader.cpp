@@ -7,6 +7,8 @@
 
 #include "containers/DataFrameReader.hpp"
 
+#include "io/Parser.hpp"
+
 namespace containers {
 
 std::vector<std::string> DataFrameReader::make_colnames(const DataFrame& _df,

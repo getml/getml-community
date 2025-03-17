@@ -8,13 +8,9 @@
 #ifndef FCT_ACCESSITERATOR_HPP_
 #define FCT_ACCESSITERATOR_HPP_
 
-// -------------------------------------------------------------------------
-
-#include <iterator>
-
 #include "debug/assert_true.hpp"
 
-// -------------------------------------------------------------------------
+#include <iterator>
 
 namespace fct {
 

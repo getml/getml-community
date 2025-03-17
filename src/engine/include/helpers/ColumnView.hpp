@@ -8,13 +8,13 @@
 #ifndef HELPERS_COLUMNVIEW_HPP_
 #define HELPERS_COLUMNVIEW_HPP_
 
+#include "helpers/Column.hpp"
+#include "helpers/Int.hpp"
+
 #include <map>
 #include <memory>
 #include <type_traits>
 #include <vector>
-
-#include "helpers/Column.hpp"
-#include "helpers/Int.hpp"
 
 namespace helpers {
 

@@ -8,18 +8,18 @@
 #ifndef COMMUNICATION_RECEIVER_HPP_
 #define COMMUNICATION_RECEIVER_HPP_
 
+#include "communication/Logger.hpp"
+#include "communication/ULong.hpp"
+#include "helpers/Endianness.hpp"
+
 #include <Poco/Net/StreamSocket.h>
+#include <rfl/Ref.hpp>
 
 #include <algorithm>
-#include <rfl/Ref.hpp>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <vector>
-
-#include "communication/Logger.hpp"
-#include "communication/ULong.hpp"
-#include "helpers/Endianness.hpp"
 
 namespace communication {
 

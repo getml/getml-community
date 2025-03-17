@@ -7,12 +7,13 @@
 
 #include "transpilation/SQLDialectParser.hpp"
 
-#include <rfl/always_false.hpp>
-#include <rfl/visit.hpp>
-#include <stdexcept>
-
 #include "transpilation/HumanReadableSQLGenerator.hpp"
 #include "transpilation/TranspilationParams.hpp"
+
+#include <rfl/always_false.hpp>
+#include <rfl/visit.hpp>
+
+#include <stdexcept>
 
 namespace transpilation {
 

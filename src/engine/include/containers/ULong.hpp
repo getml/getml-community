@@ -8,8 +8,10 @@
 #ifndef CONTAINERS_ULONG_HPP_
 #define CONTAINERS_ULONG_HPP_
 
+#include <cstdint>
+
 namespace containers {
-typedef std::uint64_t ULong;
-}
+using ULong = std::uint64_t;
+}  // namespace containers
 
 #endif  // CONTAINERS_ULONG_HPP_
