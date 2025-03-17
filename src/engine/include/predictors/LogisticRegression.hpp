@@ -27,7 +27,7 @@
 namespace predictors {
 
 /// LogisticRegression predictor.
-class LogisticRegression : public Predictor {
+class LogisticRegression final : public Predictor {
  public:
   struct SaveLoad {
     rfl::Field<"learning_rate_", Float> learning_rate;
@@ -41,13 +41,9 @@ class LogisticRegression : public Predictor {
  public:
   LogisticRegression(const LogisticRegressionHyperparams& _hyperparams,
                      const rfl::Ref<const PredictorImpl>& _impl,
-                     const std::vector<Fingerprint>& _dependencies)
-      : dependencies_(_dependencies),
-        hyperparams_(
-            rfl::Ref<LogisticRegressionHyperparams>::make(_hyperparams)),
-        impl_(_impl) {};
+                     const std::vector<Fingerprint>& _dependencies);
 
-  ~LogisticRegression() = default;
+  ~LogisticRegression() final = default;
 
  public:
   /// Returns an importance measure for the individual features.

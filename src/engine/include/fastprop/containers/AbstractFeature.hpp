@@ -56,7 +56,7 @@ struct AbstractFeature {
 
   AbstractFeature(const ReflectionType &_obj);
 
-  ~AbstractFeature();
+  ~AbstractFeature() = default;
 
   /// Necessary for the deserialization to work.
   ReflectionType reflection() const;

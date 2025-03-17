@@ -1,12 +1,18 @@
 target_sources(
   engine
   PRIVATE
+  ColumnDescription.cpp
   DataFrame.cpp
+  DataFrameView.cpp
+  FeatureContainer.cpp
+  Features.cpp
   ImportanceMaker.cpp
+  IntSet.cpp
   Macros.cpp
   Placeholder.cpp
   RowIndexContainer.cpp
   Schema.cpp
+  StringIterator.cpp
   StringReplacer.cpp
   StringSplitter.cpp
   SubroleParser.cpp

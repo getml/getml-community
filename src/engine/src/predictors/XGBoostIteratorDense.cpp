@@ -31,10 +31,6 @@ XGBoostIteratorDense::XGBoostIteratorDense(
 
 // ----------------------------------------------------------------------------
 
-XGBoostIteratorDense::~XGBoostIteratorDense() = default;
-
-// ----------------------------------------------------------------------------
-
 size_t XGBoostIteratorDense::calc_batch_size() {
   const auto page_size = static_cast<size_t>(getpagesize());
   return page_size / sizeof(float);

@@ -21,9 +21,9 @@ class CrossEntropy {
   using ResultType = rfl::Field<"cross_entropy_", std::vector<Float>>;
 
  public:
-  CrossEntropy() {}
+  CrossEntropy() = default;
 
-  CrossEntropy(multithreading::Communicator* _comm) : impl_(_comm) {}
+  explicit CrossEntropy(multithreading::Communicator* _comm);
 
   ~CrossEntropy() = default;
 

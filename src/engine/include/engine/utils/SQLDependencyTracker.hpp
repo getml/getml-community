@@ -28,7 +28,7 @@ class SQLDependencyTracker {
                       rfl::Field<"dependencies_", std::vector<size_t>>>;
 
  public:
-  SQLDependencyTracker(const std::string& _folder) : folder_(_folder) {}
+  explicit SQLDependencyTracker(const std::string& _folder);
 
   ~SQLDependencyTracker() = default;
 

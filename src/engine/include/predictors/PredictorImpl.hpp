@@ -46,7 +46,7 @@ class PredictorImpl {
 
   explicit PredictorImpl(const ReflectionType& _nt);
 
-  ~PredictorImpl();
+  ~PredictorImpl() = default;
 
  public:
   /// Compresses importances calculated for a CSR Matrix to aggregated

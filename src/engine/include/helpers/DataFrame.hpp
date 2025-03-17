@@ -42,7 +42,7 @@ struct DataFrame {
   // ---------------------------------------------------------------------
 
  public:
-  DataFrame(const DataFrameParams& _params);
+  explicit DataFrame(const DataFrameParams& _params);
 
   ~DataFrame() = default;
 

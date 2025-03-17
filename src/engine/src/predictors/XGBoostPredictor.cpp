@@ -15,6 +15,14 @@
 
 namespace predictors {
 
+XGBoostPredictor::XGBoostPredictor(
+    const XGBoostHyperparams &_hyperparams,
+    const rfl::Ref<const PredictorImpl> &_impl,
+    const std::vector<commands::Fingerprint> &_dependencies)
+    : dependencies_(_dependencies),
+      hyperparams_(rfl::Ref<XGBoostHyperparams>::make(_hyperparams)),
+      impl_(_impl) {}
+
 void XGBoostPredictor::add_target(const DMatrixPtr &_d_matrix,
                                   const FloatFeature &_y) const {
   std::vector<float> y_float(_y.size());

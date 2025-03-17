@@ -11,6 +11,8 @@
 
 namespace metrics {
 
+AUC::AUC(multithreading::Communicator* _comm) : impl_(_comm) {}
+
 Float AUC::calc_auc(const std::vector<Float>& _true_positive_rate,
                     const std::vector<Float>& _false_positive_rate) const {
   Float auc = 0.0;

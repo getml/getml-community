@@ -65,10 +65,6 @@ Condition::Condition(const ReflectionType &_obj)
 
 // ----------------------------------------------------------------------------
 
-Condition::~Condition() = default;
-
-// ----------------------------------------------------------------------------
-
 typename Condition::ReflectionType Condition::reflection() const {
   return rfl::make_field<"bound_lower_">(bound_lower_) *
          rfl::make_field<"bound_upper_">(bound_upper_) *

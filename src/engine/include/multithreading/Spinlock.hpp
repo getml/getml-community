@@ -14,7 +14,7 @@ namespace multithreading {
 // ----------------------------------------------------------------------------
 class Spinlock {
  public:
-  Spinlock() { flag_.clear(); }
+  Spinlock();
 
   ~Spinlock() = default;
 

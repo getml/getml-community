@@ -11,6 +11,11 @@
 
 namespace predictors {
 
+Encoding::Encoding() : max_(1), min_(0) {}
+
+Encoding::Encoding(const ReflectionType& _nt)
+    : max_(_nt.get<f_max>()), min_(_nt.get<f_min>()) {}
+
 void Encoding::fit(const IntFeature& _col) {
   min_ = *std::min_element(_col.begin(), _col.end());
   max_ = *std::max_element(_col.begin(), _col.end());

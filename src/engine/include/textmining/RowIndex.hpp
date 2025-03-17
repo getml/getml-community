@@ -19,9 +19,9 @@ namespace textmining {
 
 class RowIndex {
  public:
-  RowIndex(const WordIndex& _word_index);
+  explicit RowIndex(const WordIndex& _word_index);
 
-  ~RowIndex();
+  ~RowIndex() = default;
 
  public:
   /// Returns the range for the _i'th word in the vocabulary

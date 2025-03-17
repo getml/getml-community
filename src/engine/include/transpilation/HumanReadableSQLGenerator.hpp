@@ -27,20 +27,18 @@
 
 namespace transpilation {
 
-class HumanReadableSQLGenerator : public SQLDialectGenerator {
+class HumanReadableSQLGenerator final : public SQLDialectGenerator {
  public:
-  HumanReadableSQLGenerator() {}
+  HumanReadableSQLGenerator() = default;
 
-  ~HumanReadableSQLGenerator() = default;
+  ~HumanReadableSQLGenerator() final = default;
 
  public:
   /// Generates the GROUP BY statement for the feature (it is not needed for
   /// some aggregations in some dialects, therefore it needs to be abstracted
   /// away.)
   std::string group_by(const helpers::enums::Aggregation,
-                       const std::string& = "") const final {
-    return "GROUP BY t1.rowid";
-  }
+                       const std::string& = "") const final;
 
   /// The first quotechar.
   std::string quotechar1() const final { return "\""; }

@@ -33,7 +33,7 @@ class TableHolder {
 
   explicit TableHolder(const TableHolderParams& _params);
 
-  ~TableHolder();
+  ~TableHolder() = default;
 
  private:
   /// Adds the text fields to the peripheral tables.

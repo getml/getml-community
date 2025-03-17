@@ -24,10 +24,9 @@ struct EngineOptions {
   using ReflectionType = rfl::NamedTuple<rfl::Field<"port", size_t>>;
 
  public:
-  EngineOptions(const ReflectionType& _obj)
-      : in_memory_(IN_MEMORY), port_(_obj.get<"port">()) {}
+  explicit EngineOptions(const ReflectionType& _obj);
 
-  EngineOptions() : port_(1708) {}
+  EngineOptions();
 
   ~EngineOptions() = default;
 

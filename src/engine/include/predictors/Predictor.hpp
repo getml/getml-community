@@ -23,7 +23,7 @@ namespace predictors {
 /// Abstract base class for a predictor
 class Predictor {
  public:
-  Predictor() {};
+  Predictor() = default;
 
   virtual ~Predictor() = default;
 

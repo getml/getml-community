@@ -21,9 +21,7 @@ namespace helpers {
 /// speed-up when compared to std::unordered_set (let alone std::set).
 class IntSet {
  public:
-  explicit IntSet(const size_t _maximum_value)
-      : already_included_(std::vector<bool>(_maximum_value, false)),
-        maximum_value_(_maximum_value) {}
+  explicit IntSet(const size_t _maximum_value);
 
   ~IntSet() = default;
 

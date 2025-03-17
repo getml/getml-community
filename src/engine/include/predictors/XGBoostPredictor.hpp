@@ -28,7 +28,7 @@
 namespace predictors {
 
 /// Implements the XGBoostPredictors
-class XGBoostPredictor : public Predictor {
+class XGBoostPredictor final : public Predictor {
  private:
   typedef std::function<void(BoosterHandle*)> BoosterDestructor;
   typedef XGBoostMatrix::DMatrixDestructor DMatrixDestructor;
@@ -39,12 +39,9 @@ class XGBoostPredictor : public Predictor {
  public:
   XGBoostPredictor(const XGBoostHyperparams& _hyperparams,
                    const rfl::Ref<const PredictorImpl>& _impl,
-                   const std::vector<commands::Fingerprint>& _dependencies)
-      : dependencies_(_dependencies),
-        hyperparams_(rfl::Ref<XGBoostHyperparams>::make(_hyperparams)),
-        impl_(_impl) {}
+                   const std::vector<commands::Fingerprint>& _dependencies);
 
-  ~XGBoostPredictor() = default;
+  ~XGBoostPredictor() final = default;
 
  public:
   /// Returns an importance measure for the individual features

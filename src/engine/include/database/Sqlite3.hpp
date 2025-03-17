@@ -26,15 +26,11 @@ extern "C" {
 
 namespace database {
 
-class Sqlite3 : public Connector {
+class Sqlite3 final : public Connector {
  public:
-  Sqlite3(const typename Command::SQLite3Op& _obj)
-      : db_(make_db(_obj.name())),
-        name_(_obj.name()),
-        read_write_lock_(rfl::Ref<multithreading::ReadWriteLock>::make()),
-        time_formats_(_obj.time_formats()) {}
+  explicit Sqlite3(const typename Command::SQLite3Op& _obj);
 
-  ~Sqlite3() = default;
+  ~Sqlite3() final = default;
 
  public:
   /// Returns a std::string describing the connection.

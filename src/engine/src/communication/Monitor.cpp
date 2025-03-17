@@ -12,8 +12,14 @@
 
 #include <ctime>
 #include <iostream>
+#include <thread>
 
 namespace communication {
+
+Monitor::Monitor(const engine::config::Options& _options) : options_(_options) {
+  std::thread t(shutdown_when_monitor_dies, *this);
+  t.detach();
+}
 
 std::shared_ptr<Poco::Net::StreamSocket> Monitor::connect(
     const bool _timeout) const {
@@ -98,5 +104,4 @@ void Monitor::shutdown_when_monitor_dies(const Monitor _monitor) {
     }
   }
 }
-
 }  // namespace communication

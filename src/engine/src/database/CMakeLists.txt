@@ -4,6 +4,7 @@ target_sources(
   ContentGetter.cpp
   CSVBuffer.cpp
   DatabaseParser.cpp
+  DatabaseReader.cpp
   MySQL.cpp
   MySQLIterator.cpp
   Postgres.cpp

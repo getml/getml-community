@@ -663,4 +663,10 @@ std::string HumanReadableSQLGenerator::string_contains(
 }
 
 // ----------------------------------------------------------------------------
+
+std::string HumanReadableSQLGenerator::group_by(
+    const helpers::enums::Aggregation /*_agg*/,
+    const std::string& /*_value_to_be_aggregated*/) const {
+  return "GROUP BY t1.rowid";
+}
 }  // namespace transpilation

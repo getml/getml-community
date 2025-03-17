@@ -29,7 +29,7 @@
 namespace engine {
 namespace preprocessors {
 
-class Imputation : public Preprocessor {
+class Imputation final : public Preprocessor {
  private:
   typedef std::map<helpers::ColumnDescription, std::pair<Float, bool>>
       ImputationMapType;
@@ -50,15 +50,12 @@ class Imputation : public Preprocessor {
 
  public:
   Imputation(const ImputationOp& _op,
-             const std::vector<commands::Fingerprint>& _dependencies)
-      : add_dummies_(_op.add_dummies()),
-        cols_(rfl::Ref<ImputationMapType>::make()),
-        dependencies_(_dependencies) {}
+             const std::vector<commands::Fingerprint>& _dependencies);
 
-  ~Imputation() = default;
+  ~Imputation() final = default;
 
  private:
-  Imputation() : cols_(rfl::Ref<ImputationMapType>::make()) {}
+  Imputation();
 
  public:
   /// Identifies which features should be extracted from which time stamps.

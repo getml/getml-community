@@ -8,7 +8,10 @@
 #ifndef ENGINE_SRV_SERVERCONNECTIONFACTORYIMPL_HPP_
 #define ENGINE_SRV_SERVERCONNECTIONFACTORYIMPL_HPP_
 
-#include "engine/srv/RequestHandler.hpp"
+#include "engine/handlers/DataFrameManagerParams.hpp"
+#include "engine/handlers/DatabaseManager.hpp"
+#include "engine/handlers/PipelineManager.hpp"
+#include "engine/handlers/ProjectManager.hpp"
 
 #include <Poco/Net/StreamSocket.h>
 #include <Poco/Net/TCPServerConnectionFactory.h>
@@ -19,7 +22,7 @@
 namespace engine {
 namespace srv {
 
-class ServerConnectionFactoryImpl
+class ServerConnectionFactoryImpl final
     : public Poco::Net::TCPServerConnectionFactory {
  public:
   ServerConnectionFactoryImpl(
@@ -29,23 +32,12 @@ class ServerConnectionFactoryImpl
       const config::Options& _options,
       const rfl::Ref<handlers::PipelineManager>& _pipeline_manager,
       const rfl::Ref<handlers::ProjectManager>& _project_manager,
-      const rfl::Ref<std::atomic<bool>>& _shutdown)
-      : database_manager_(_database_manager),
-        data_params_(_data_params),
-        logger_(_logger),
-        options_(_options),
-        pipeline_manager_(_pipeline_manager),
-        project_manager_(_project_manager),
-        shutdown_(_shutdown) {}
+      const rfl::Ref<std::atomic<bool>>& _shutdown);
 
   /// Required by Poco::Net::TCPServerConnectionFactory. Does the actual
   /// handling.
   Poco::Net::TCPServerConnection* createConnection(
-      const Poco::Net::StreamSocket& _socket) {
-    return new RequestHandler(_socket, database_manager_, data_params_, logger_,
-                              pipeline_manager_, options_, project_manager_,
-                              shutdown_);
-  }
+      const Poco::Net::StreamSocket& _socket) final;
 
  private:
   /// Handles requests related to the database.

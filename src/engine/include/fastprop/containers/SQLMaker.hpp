@@ -30,14 +30,7 @@ class SQLMaker {
            const std::string& _feature_prefix, const helpers::Schema& _input,
            const helpers::Schema& _output,
            const std::shared_ptr<const transpilation::SQLDialectGenerator>&
-               _sql_dialect_generator)
-      : categories_(_categories),
-        feature_prefix_(_feature_prefix),
-        input_(_input),
-        output_(_output),
-        sql_dialect_generator_(_sql_dialect_generator) {
-    assert_true(sql_dialect_generator_);
-  }
+               _sql_dialect_generator);
 
   ~SQLMaker() = default;
 

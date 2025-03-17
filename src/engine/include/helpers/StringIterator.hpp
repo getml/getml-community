@@ -20,8 +20,7 @@ namespace helpers {
 class StringIterator {
  public:
   StringIterator(const std::function<strings::String(size_t)> _func,
-                 const size_t _size)
-      : func_(_func), size_(_size) {}
+                 const size_t _size);
 
   ~StringIterator() = default;
 

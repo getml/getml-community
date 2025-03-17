@@ -39,10 +39,6 @@ PredictorImpl::PredictorImpl(const ReflectionType& _nt)
 
 // -----------------------------------------------------------------------------
 
-PredictorImpl::~PredictorImpl() = default;
-
-// -----------------------------------------------------------------------------
-
 void PredictorImpl::compress_importances(
     const std::vector<Float>& _all_feature_importances,
     std::vector<Float>* _feature_importances) const {

@@ -20,15 +20,11 @@ namespace optimizers {
 
 // ----------------------------------------------------------------------------
 
-class BFGS : public Optimizer {
+class BFGS final : public Optimizer {
  public:
-  BFGS(const Float _learning_rate, const size_t _size)
-      : B_inv_(Eigen::MatrixXd::Identity(_size, _size)),
-        first_iteration_(true),
-        learning_rate_(_learning_rate),
-        size_(_size) {}
+  BFGS(const Float _learning_rate, const size_t _size);
 
-  ~BFGS() = default;
+  ~BFGS() final = default;
 
   // ----------------------------------------------------------------------------
 

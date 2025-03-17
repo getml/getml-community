@@ -14,7 +14,7 @@ namespace memmap {
 // ----------------------------------------------------------------------------
 
 struct Page {
-  Page() : block_size_(0), is_allocated_(false) {}
+  Page();
 
   ~Page() = default;
 

@@ -11,8 +11,6 @@
 #include "engine/dependency/PipelineTrackers.hpp"
 #include "engine/pipelines/Pipeline.hpp"
 
-#include <memory>
-
 namespace engine {
 namespace pipelines {
 namespace load_fitted {

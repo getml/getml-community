@@ -14,7 +14,7 @@ namespace multithreading {
 template <class T>
 struct maximum {
  public:
-  maximum() {}
+  maximum() = default;
 
   ~maximum() = default;
 

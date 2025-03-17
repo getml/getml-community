@@ -16,6 +16,10 @@ namespace optimizers {
 // ----------------------------------------------------------------------------
 
 class Optimizer {
+ protected:
+  virtual ~Optimizer() = default;
+
+ private:
   /// This member functions implements the updating strategy of the optimizer.
   virtual void update_weights(const Float _epoch_num,
                               const std::vector<Float>& _gradients,

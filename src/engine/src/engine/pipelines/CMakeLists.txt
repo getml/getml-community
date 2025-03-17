@@ -1,0 +1,19 @@
+target_sources(
+  engine
+  PRIVATE
+  FeatureLearnerParser.cpp
+  FittedPipeline.cpp
+  Pipeline.cpp
+  Predictors.cpp
+  check.cpp
+  fit.cpp
+  load.cpp
+  load_fitted.cpp
+  make_placeholder.cpp
+  modify_data_frames.cpp
+  save.cpp
+  score.cpp
+  staging.cpp
+  to_sql.cpp
+  transform.cpp
+)

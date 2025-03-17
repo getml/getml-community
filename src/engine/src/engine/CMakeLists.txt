@@ -1,53 +1,13 @@
+add_subdirectory(config)
+add_subdirectory(dependency)
+add_subdirectory(handlers)
+add_subdirectory(pipelines)
+add_subdirectory(preprocessors)
+add_subdirectory(srv)
+add_subdirectory(utils)
+
 target_sources(
   engine
   PRIVATE
-  AggOpParser.cpp
-  ArrowHandler.cpp
-  BoolOpParser.cpp
-  CategoryTrimmer.cpp
-  check.cpp
-  ColumnManager.cpp
-  ColumnManager_execute_command.cpp
-  DatabaseManager.cpp
-  DataFrameManager.cpp
-  DataFrameManager_execute_command.cpp
-  DataFrameManager_from_json.cpp
-  DataFrameManager_get_data_frame.cpp
-  DataFrameManager_receive_data.cpp
-  DataFrameTracker.cpp
-  data_model_checking.cpp
-  EMailDomain.cpp
-  FeatureLearnerParser.cpp
-  FileHandler.cpp
-  fit.cpp
-  FittedPipeline.cpp
-  FloatOpParser.cpp
-  Imputation.cpp
-  load.cpp
-  load_fitted.cpp
-  make_placeholder.cpp
-  modify_data_frames.cpp
-  Options.cpp
-  Pipeline.cpp
-  PipelineManager.cpp
-  PipelineManager_execute_command.cpp
-  PipelineManager_receive_data.cpp
-  Predictors.cpp
-  PreprocessorImpl.cpp
-  PreprocessorParser.cpp
-  ProjectManager.cpp
-  ProjectManager_execute_command.cpp
-  RequestHandler.cpp
-  save.cpp
-  Seasonal.cpp
-  score.cpp
-  SQLDependencyTracker.cpp
-  staging.cpp
-  StringOpParser.cpp
-  Substring.cpp
-  to_sql.cpp
-  transform.cpp
-  TextFieldSplitter.cpp
-  ViewManager.cpp
-  ViewParser.cpp
+  main.cpp
 )

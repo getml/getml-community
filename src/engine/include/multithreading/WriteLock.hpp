@@ -17,19 +17,13 @@ namespace multithreading {
 class WriteLock {
  public:
   /// WriteLock without a timeout.
-  explicit WriteLock(const rfl::Ref<ReadWriteLock>& _lock)
-      : lock_(_lock), released_(false) {
-    lock_->write_lock();
-  }
+  explicit WriteLock(const rfl::Ref<ReadWriteLock>& _lock);
 
   /// WriteLock with timeout.
   WriteLock(const rfl::Ref<ReadWriteLock>& _lock,
-            const std::chrono::milliseconds _duration)
-      : lock_(_lock), released_(false) {
-    lock_->write_lock(_duration);
-  }
+            const std::chrono::milliseconds _duration);
 
-  ~WriteLock() { unlock(); }
+  ~WriteLock();
 
   // -------------------------------
 

@@ -11,6 +11,7 @@ target_sources(
   FloatColumnOrFloatColumnView.cpp
   PipelineCommand.cpp
   ProjectCommand.cpp
+  Roles.cpp
   StringColumnOrStringColumnView.cpp
   ViewCommand.cpp
 )

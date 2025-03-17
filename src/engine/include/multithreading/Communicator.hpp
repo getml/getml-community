@@ -20,12 +20,7 @@ namespace multithreading {
 
 class Communicator {
  public:
-  explicit Communicator(size_t _num_threads)
-      : barrier_(_num_threads),
-        checkpoint_(true),
-        main_thread_id_(std::this_thread::get_id()),
-        num_threads_(_num_threads),
-        num_threads_left_(_num_threads) {}
+  explicit Communicator(size_t _num_threads);
 
   ~Communicator() = default;
 

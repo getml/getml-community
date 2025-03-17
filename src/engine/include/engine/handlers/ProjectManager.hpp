@@ -27,9 +27,7 @@ class ProjectManager {
   typedef commands::ProjectCommand Command;
 
  public:
-  ProjectManager(const ProjectManagerParams& _params) : params_(_params) {
-    set_project(_params.project_);
-  }
+  explicit ProjectManager(const ProjectManagerParams& _params);
 
   ~ProjectManager() = default;
 

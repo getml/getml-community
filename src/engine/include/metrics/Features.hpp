@@ -14,7 +14,7 @@
 #include <vector>
 
 namespace metrics {
-typedef std::vector<helpers::Feature<Float>> Features;
+using Features = std::vector<helpers::Feature<Float>>;
 }  // namespace metrics
 
 #endif  // METRICS_FEATURES_HPP_

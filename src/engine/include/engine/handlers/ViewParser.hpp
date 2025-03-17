@@ -51,11 +51,7 @@ class ViewParser {
              const rfl::Ref<containers::Encoding>& _join_keys_encoding,
              const rfl::Ref<const std::map<std::string, containers::DataFrame>>&
                  _data_frames,
-             const config::Options& _options)
-      : categories_(_categories),
-        data_frames_(_data_frames),
-        join_keys_encoding_(_join_keys_encoding),
-        options_(_options) {}
+             const config::Options& _options);
 
   ~ViewParser() = default;
 

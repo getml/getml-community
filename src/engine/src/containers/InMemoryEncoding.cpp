@@ -12,6 +12,13 @@
 
 namespace containers {
 
+InMemoryEncoding::InMemoryEncoding(
+    const std::shared_ptr<const InMemoryEncoding> _subencoding)
+    : null_value_("NULL"),
+      subencoding_(_subencoding),
+      subsize_(_subencoding ? _subencoding->size() : 0),
+      vector_(std::make_shared<std::vector<strings::String>>(0)) {}
+
 void InMemoryEncoding::append(const InMemoryEncoding& _other,
                               bool _include_subencoding) {
   for (auto& elem : *_other.vector_) {

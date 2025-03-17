@@ -32,8 +32,7 @@ class ViewManager {
   using Command = commands::ViewCommand;
 
  public:
-  explicit ViewManager(const DataFrameManagerParams& _params)
-      : params_(_params) {}
+  explicit ViewManager(const DataFrameManagerParams& _params);
 
   ~ViewManager() = default;
 

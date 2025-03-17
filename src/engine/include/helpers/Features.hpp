@@ -19,12 +19,10 @@ class Features {
   typedef typename Column<Float>::Variant Variant;
 
  public:
-  explicit Features(const std::vector<Feature<Float, false>>& _vec)
-      : vec_(_vec) {}
+  explicit Features(const std::vector<Feature<Float, false>>& _vec);
 
   Features(const size_t _nrows, const size_t _ncols,
-           std::optional<std::string> _temp_dir)
-      : Features(make_vec(_nrows, _ncols, _temp_dir)) {}
+           std::optional<std::string> _temp_dir);
 
   ~Features() = default;
 

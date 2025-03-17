@@ -5,6 +5,7 @@ target_sources(
   AUC.cpp
   CrossEntropy.cpp
   MAE.cpp
+  MetricImpl.cpp
   RMSE.cpp
   RSquared.cpp
   Scorer.cpp

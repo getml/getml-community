@@ -23,14 +23,7 @@ namespace multithreading {
 /// can be upgraded to a strong writer.
 class ReadWriteLock {
  public:
-  ReadWriteLock()
-      : active_weak_writer_exists_(false),
-        active_writer_exists_(false),
-        num_active_readers_(0),
-        num_waiting_weak_writers_(0),
-        num_waiting_writers_(0) {
-    assert_true(no_active_writers());
-  }
+  ReadWriteLock();
 
   ~ReadWriteLock() = default;
 

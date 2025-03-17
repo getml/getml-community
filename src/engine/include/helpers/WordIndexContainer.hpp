@@ -28,7 +28,7 @@ class WordIndexContainer {
   WordIndexContainer(const WordIndices& _population,
                      const std::vector<WordIndices>& _peripheral);
 
-  ~WordIndexContainer();
+  ~WordIndexContainer() = default;
 
  public:
   /// Trivial (const) accessor

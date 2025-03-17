@@ -12,6 +12,8 @@
 
 namespace commands {
 
+Fingerprint::Fingerprint(const ReflectionType& _val) : val_(_val) {}
+
 Fingerprint Fingerprint::from_json(const std::string& _json_str) {
   return Fingerprint(rfl::json::read<ReflectionType>(_json_str).value());
 }

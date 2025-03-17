@@ -14,10 +14,11 @@
 
 namespace communication {
 
+Warner::Warner() : warnings_(rfl::Ref<std::vector<Warning>>::make()) {}
+
 void Warner::send(Poco::Net::StreamSocket* _socket) const {
   const auto named_tuple =
       rfl::make_named_tuple(rfl::make_field<"warnings_">(warnings_));
   Sender::send_string(rfl::json::write(named_tuple), _socket);
 }
-
 }  // namespace communication

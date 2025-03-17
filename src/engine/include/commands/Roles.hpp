@@ -49,18 +49,7 @@ struct Roles {
                       f_time_stamp, f_unused_float, f_unused_string>;
 
   /// Retrieves the roles from the schema.
-  static Roles from_schema(const helpers::Schema& _schema) {
-    return Roles{.val_ =
-                     f_categorical(_schema.categoricals()) *
-                     f_join_key(_schema.join_keys()) *
-                     f_numerical(ranges::views::concat(_schema.discretes(),
-                                                       _schema.numericals()) |
-                                 std::ranges::to<std::vector>()) *
-                     f_target(_schema.targets()) * f_text(_schema.text()) *
-                     f_time_stamp(_schema.time_stamps()) *
-                     f_unused_float(_schema.unused_floats()) *
-                     f_unused_string(_schema.unused_strings())};
-  }
+  static Roles from_schema(const helpers::Schema& _schema);
 
   /// Normally used for recursion, but here it is used
   /// to support the static constructors.

@@ -5,6 +5,7 @@ target_sources(
   Monitor.cpp
   Receiver.cpp
   Sender.cpp
+  SocketLogger.cpp
   Warner.cpp
   Warnings.cpp
 )

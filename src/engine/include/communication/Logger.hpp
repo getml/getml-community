@@ -16,13 +16,11 @@
 
 namespace communication {
 
-class Logger : public logging::AbstractLogger {
+class Logger final : public logging::AbstractLogger {
  public:
-  Logger(const std::shared_ptr<const Monitor>& _monitor) : monitor_(_monitor) {
-    assert_true(monitor_);
-  }
+  explicit Logger(const std::shared_ptr<const Monitor>& _monitor);
 
-  ~Logger() = default;
+  ~Logger() final = default;
 
   /// Logs current events.
   void log(const std::string& _msg) const final;

@@ -33,9 +33,9 @@ class AUC {
       rfl::NamedTuple<f_auc, f_fpr, f_tpr, f_lift, f_precision, f_proportion>;
 
  public:
-  AUC() {}
+  AUC() = default;
 
-  AUC(multithreading::Communicator* _comm) : impl_(_comm) {}
+  explicit AUC(multithreading::Communicator* _comm);
 
   ~AUC() = default;
 

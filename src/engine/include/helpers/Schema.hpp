@@ -26,7 +26,7 @@ class Schema {
  public:
   Schema(const SchemaImpl& _impl);
 
-  ~Schema();
+  ~Schema() = default;
 
   Schema(Schema&&) = default;
   Schema(Schema const&) = default;

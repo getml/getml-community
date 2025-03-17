@@ -10,6 +10,32 @@
 #include "io/Parser.hpp"
 
 namespace io {
+
+CSVWriter::CSVWriter(const std::string& _fname, const size_t _batch_size,
+                     const std::vector<std::string>& _colnames,
+                     const std::string& _quotechar, const std::string& _sep)
+    : batch_size_(_batch_size),
+      colnames_(_colnames),
+      filestream_(std::make_shared<std::ofstream>(
+          std::ofstream(_fname, std::ofstream::out))),
+      quotechar_(_quotechar),
+      sep_(_sep) {
+  if (!filestream_->is_open()) {
+    throw std::runtime_error("'" + _fname + "' could not be opened!");
+  }
+
+  if (quotechar_.size() != 1) {
+    throw std::runtime_error(
+        "The quotechar must consist of exactly one "
+        "character!");
+  }
+
+  if (sep_.size() != 1) {
+    throw std::runtime_error(
+        "The separator must consist of exactly one "
+        "character!");
+  }
+}
 // ----------------------------------------------------------------------------
 
 std::string CSVWriter::make_buffer(

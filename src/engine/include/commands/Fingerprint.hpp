@@ -169,7 +169,7 @@ struct Fingerprint {
 
   // -----------------------------
 
-  Fingerprint(const ReflectionType& _val) : val_(_val) {}
+  explicit Fingerprint(const ReflectionType& _val);
 
   static Fingerprint from_json(const std::string& _json_str);
 

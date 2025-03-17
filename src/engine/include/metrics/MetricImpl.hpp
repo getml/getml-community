@@ -20,9 +20,9 @@ namespace metrics {
 
 class MetricImpl {
  public:
-  MetricImpl() : MetricImpl(nullptr) {}
+  MetricImpl();
 
-  explicit MetricImpl(multithreading::Communicator* _comm) : comm_(_comm) {}
+  explicit MetricImpl(multithreading::Communicator* _comm);
 
   ~MetricImpl() = default;
 

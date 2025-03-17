@@ -34,10 +34,6 @@ WordIndexContainer::WordIndexContainer(
 
 // ----------------------------------------------------------------------------
 
-WordIndexContainer::~WordIndexContainer() = default;
-
-// ----------------------------------------------------------------------------
-
 VocabularyContainer WordIndexContainer::vocabulary() const {
   const auto get_vocab =
       [](const std::shared_ptr<const textmining::WordIndex>& _word_index) {

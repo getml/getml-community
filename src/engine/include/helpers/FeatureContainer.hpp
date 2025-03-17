@@ -22,11 +22,7 @@ class FeatureContainer {
   FeatureContainer(
       const std::shared_ptr<const std::vector<Column<Float>>> _features,
       const std::shared_ptr<const std::vector<std::optional<FeatureContainer>>>
-          _subcontainers)
-      : features_(_features), subcontainers_(_subcontainers) {
-    assert_true(features_);
-    assert_true(subcontainers_);
-  }
+          _subcontainers);
 
   ~FeatureContainer() = default;
 

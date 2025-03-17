@@ -14,6 +14,8 @@
 
 namespace metrics {
 
+Accuracy::Accuracy(multithreading::Communicator* _comm) : impl_(_comm) {}
+
 typename Accuracy::ResultType Accuracy::score(const Features _yhat,
                                               const Features _y) {
   impl_.set_data(_yhat, _y);
@@ -111,5 +113,4 @@ typename Accuracy::ResultType Accuracy::score(const Features _yhat,
          f_prediction_min(prediction_min) *
          f_prediction_step_size(prediction_step_size);
 }
-
 }  // namespace metrics

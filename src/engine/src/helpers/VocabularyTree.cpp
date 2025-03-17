@@ -31,10 +31,6 @@ VocabularyTree::VocabularyTree(
 
 // ----------------------------------------------------------------------------
 
-VocabularyTree::~VocabularyTree() = default;
-
-// ----------------------------------------------------------------------------
-
 typename VocabularyTree::VocabForDf VocabularyTree::find_peripheral(
     const std::vector<VocabForDf>& _peripheral, const Placeholder& _placeholder,
     const std::vector<std::string>& _peripheral_names) {

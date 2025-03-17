@@ -14,6 +14,8 @@
 
 namespace containers {
 
+DataFramePrinter::DataFramePrinter(const size_t _ncols) : ncols_(_ncols) {}
+
 std::vector<size_t> DataFramePrinter::calc_max_sizes(
     const std::vector<size_t> &_max_sizes,
     const std::vector<std::string> &_row) const {
@@ -211,5 +213,4 @@ std::vector<std::string> DataFramePrinter::truncate_row(
 
   return truncated;
 }
-
 }  // namespace containers

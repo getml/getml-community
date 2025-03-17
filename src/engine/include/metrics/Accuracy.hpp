@@ -28,9 +28,9 @@ class Accuracy {
                                      f_prediction_min, f_prediction_step_size>;
 
  public:
-  Accuracy() {}
+  Accuracy() = default;
 
-  Accuracy(multithreading::Communicator* _comm) : impl_(_comm) {}
+  explicit Accuracy(multithreading::Communicator* _comm);
 
   ~Accuracy() = default;
 

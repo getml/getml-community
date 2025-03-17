@@ -15,6 +15,12 @@
 
 namespace database {
 
+Sqlite3::Sqlite3(const typename Command::SQLite3Op& _obj)
+    : db_(make_db(_obj.name())),
+      name_(_obj.name()),
+      read_write_lock_(rfl::Ref<multithreading::ReadWriteLock>::make()),
+      time_formats_(_obj.time_formats()) {}
+
 void Sqlite3::check_colnames(const std::vector<std::string>& _colnames,
                              io::Reader* _reader) {
   const auto csv_colnames = _reader->colnames();

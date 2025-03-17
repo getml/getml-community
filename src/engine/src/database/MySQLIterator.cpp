@@ -55,10 +55,6 @@ MySQLIterator::MySQLIterator(const std::shared_ptr<MYSQL>& _connection,
 
 // ----------------------------------------------------------------------------
 
-MySQLIterator::~MySQLIterator() {}
-
-// ----------------------------------------------------------------------------
-
 std::vector<std::string> MySQLIterator::colnames() const {
   auto colnames = std::vector<std::string>(num_cols_);
 

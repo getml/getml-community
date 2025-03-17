@@ -21,9 +21,9 @@ class RMSE {
   using ResultType = rfl::Field<"rmse_", std::vector<Float>>;
 
  public:
-  RMSE() {}
+  RMSE() = default;
 
-  RMSE(multithreading::Communicator* _comm) : impl_(_comm) {}
+  explicit RMSE(multithreading::Communicator* _comm);
 
   ~RMSE() = default;
 

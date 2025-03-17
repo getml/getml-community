@@ -50,25 +50,12 @@ class DataFrame {
   using ViewOp = typename commands::DataFrameOrView::ViewOp;
 
  public:
-  DataFrame(const std::shared_ptr<memmap::Pool> &_pool = nullptr)
-      : categories_(std::shared_ptr<Encoding>()),
-        frozen_(false),
-        join_keys_encoding_(std::shared_ptr<Encoding>()),
-        pool_(_pool) {
-    update_last_change();
-  }
+  explicit DataFrame(const std::shared_ptr<memmap::Pool> &_pool = nullptr);
 
   DataFrame(const std::string &_name,
             const std::shared_ptr<Encoding> &_categories,
             const std::shared_ptr<Encoding> &_join_keys_encoding,
-            const std::shared_ptr<memmap::Pool> &_pool)
-      : categories_(_categories),
-        frozen_(false),
-        join_keys_encoding_(_join_keys_encoding),
-        name_(_name),
-        pool_(_pool) {
-    update_last_change();
-  }
+            const std::shared_ptr<memmap::Pool> &_pool);
 
   ~DataFrame() = default;
 
@@ -203,9 +190,7 @@ class DataFrame {
   void where(const std::vector<bool> &_condition);
 
   /// Trivial accessor
-  std::optional<commands::Fingerprint> build_history() const {
-    return build_history_;
-  }
+  [[nodiscard]] std::optional<commands::Fingerprint> build_history() const;
 
   /// Trivial accessor
   template <typename T,
@@ -500,9 +485,7 @@ class DataFrame {
   const std::shared_ptr<memmap::Pool> &pool() const { return pool_; }
 
   /// Trivial setter
-  void set_build_history(const commands::Fingerprint &_build_history) {
-    build_history_ = _build_history;
-  }
+  void set_build_history(const commands::Fingerprint &_build_history);
 
   /// Trivial setter
   void set_categories(const std::shared_ptr<Encoding> &_categories) {

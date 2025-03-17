@@ -23,16 +23,11 @@ class ImportanceMaker {
   using MarkerType = typename helpers::ColumnDescription::MarkerType;
 
  public:
-  explicit ImportanceMaker(const size_t _num_subfeatures = 0)
-      : importance_factors_avg_(std::vector<Float>(_num_subfeatures)),
-        importance_factors_sum_(std::vector<Float>(_num_subfeatures)) {}
+  explicit ImportanceMaker(const size_t _num_subfeatures = 0);
 
   explicit ImportanceMaker(
       const std::map<ColumnDescription, Float>& _importances,
-      const size_t _num_subfeatures = 0)
-      : ImportanceMaker(_num_subfeatures) {
-    importances_ = _importances;
-  }
+      const size_t _num_subfeatures = 0);
 
   ~ImportanceMaker() = default;
 

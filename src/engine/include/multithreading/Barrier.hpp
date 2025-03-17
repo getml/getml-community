@@ -16,10 +16,7 @@ namespace multithreading {
 
 class Barrier {
  public:
-  explicit Barrier(size_t _num_threads)
-      : generation_(0),
-        num_threads_(_num_threads),
-        num_threads_left_(_num_threads) {}
+  explicit Barrier(size_t _num_threads);
 
   ~Barrier() = default;
 

@@ -21,16 +21,14 @@
 
 namespace database {
 
-class Postgres : public Connector {
+class Postgres final : public Connector {
  public:
-  Postgres(const typename Command::PostgresOp& _obj, const std::string& _passwd)
-      : connection_string_(make_connection_string(_obj, _passwd)),
-        time_formats_(_obj.time_formats()) {}
+  Postgres(const typename Command::PostgresOp& _obj,
+           const std::string& _passwd);
 
-  explicit Postgres(const std::vector<std::string>& _time_formats)
-      : time_formats_(_time_formats) {}
+  explicit Postgres(const std::vector<std::string>& _time_formats);
 
-  ~Postgres() = default;
+  ~Postgres() final = default;
 
  public:
   /// Returns a std::string describing the connection.

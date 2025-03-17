@@ -34,10 +34,6 @@ XGBoostIteratorSparse::XGBoostIteratorSparse(
 
 // ----------------------------------------------------------------------------
 
-XGBoostIteratorSparse::~XGBoostIteratorSparse() = default;
-
-// ----------------------------------------------------------------------------
-
 size_t XGBoostIteratorSparse::calc_batch_size() {
   const auto page_size = static_cast<size_t>(getpagesize());
   return page_size / sizeof(float);

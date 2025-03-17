@@ -20,9 +20,9 @@
 namespace tsindex {
 class InMemoryIndex {
  public:
-  InMemoryIndex(const IndexParams& _params);
+  explicit InMemoryIndex(const IndexParams& _params);
 
-  ~InMemoryIndex();
+  ~InMemoryIndex() = default;
 
  public:
   /// Finds a range of rownums for which .join_key_ == _join_key and

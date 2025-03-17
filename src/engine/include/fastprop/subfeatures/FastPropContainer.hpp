@@ -33,11 +33,9 @@ class FastPropContainer {
       const std::shared_ptr<const algorithm::FastProp>& _fast_prop,
       const std::shared_ptr<const Subcontainers>& _subcontainers);
 
-  FastPropContainer(const ReflectionType& _val)
-      : fast_prop_(_val.get<"fast_prop_">()),
-        subcontainers_(_val.get<"subcontainers_">()) {}
+  explicit FastPropContainer(const ReflectionType& _val);
 
-  ~FastPropContainer();
+  ~FastPropContainer() = default;
 
  public:
   /// Trivial (const) accessor.

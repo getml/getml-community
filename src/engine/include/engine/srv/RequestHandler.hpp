@@ -26,7 +26,7 @@ namespace engine {
 namespace srv {
 
 /// A RequestHandler handles all request in deploy mode.
-class RequestHandler : public Poco::Net::TCPServerConnection {
+class RequestHandler final : public Poco::Net::TCPServerConnection {
  public:
   static constexpr const char* FLOAT_COLUMN =
       containers::Column<bool>::FLOAT_COLUMN;
@@ -41,17 +41,9 @@ class RequestHandler : public Poco::Net::TCPServerConnection {
                  const rfl::Ref<handlers::PipelineManager>& _pipeline_manager,
                  const config::Options& _options,
                  const rfl::Ref<handlers::ProjectManager>& _project_manager,
-                 const rfl::Ref<std::atomic<bool>>& _shutdown)
-      : Poco::Net::TCPServerConnection(_socket),
-        database_manager_(_database_manager),
-        data_params_(_data_params),
-        logger_(_logger),
-        pipeline_manager_(_pipeline_manager),
-        options_(_options),
-        project_manager_(_project_manager),
-        shutdown_(_shutdown) {}
+                 const rfl::Ref<std::atomic<bool>>& _shutdown);
 
-  ~RequestHandler() = default;
+  ~RequestHandler() final = default;
 
   /// Required by Poco::Net::TCPServerConnection. Does the actual handling.
   void run();

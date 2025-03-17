@@ -11,6 +11,10 @@
 
 namespace fastprop {
 namespace subfeatures {
+
+FastPropContainer::FastPropContainer(const ReflectionType& _val)
+    : fast_prop_(_val.get<"fast_prop_">()),
+      subcontainers_(_val.get<"subcontainers_">()) {}
 // ----------------------------------------------------------------------------
 
 FastPropContainer::FastPropContainer(
@@ -19,10 +23,6 @@ FastPropContainer::FastPropContainer(
     : fast_prop_(_fast_prop), subcontainers_(_subcontainers) {
   assert_true(subcontainers_);
 }
-
-// ----------------------------------------------------------------------------
-
-FastPropContainer::~FastPropContainer() = default;
 
 // ----------------------------------------------------------------------------
 

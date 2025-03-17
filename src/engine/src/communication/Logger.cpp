@@ -12,6 +12,11 @@
 
 namespace communication {
 
+Logger::Logger(const std::shared_ptr<const Monitor>& _monitor)
+    : monitor_(_monitor) {
+  assert_true(monitor_);
+}
+
 void Logger::log(const std::string& _msg) const {
   assert_true(monitor_);
 
@@ -21,5 +26,4 @@ void Logger::log(const std::string& _msg) const {
 
   std::cout << std::ctime(&current_time) << _msg << std::endl << std::endl;
 }
-
 }  // namespace communication

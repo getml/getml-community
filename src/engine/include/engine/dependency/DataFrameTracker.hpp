@@ -24,9 +24,9 @@ namespace dependency {
 
 class DataFrameTracker {
  public:
-  DataFrameTracker(const rfl::Ref<std::map<std::string, containers::DataFrame>>&
-                       _data_frames)
-      : data_frames_(_data_frames) {}
+  explicit DataFrameTracker(
+      const rfl::Ref<std::map<std::string, containers::DataFrame>>&
+          _data_frames);
 
   ~DataFrameTracker() = default;
 

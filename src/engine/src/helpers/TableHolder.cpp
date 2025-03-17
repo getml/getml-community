@@ -26,10 +26,6 @@ TableHolder::TableHolder(const TableHolderParams& _params)
 
 // ----------------------------------------------------------------------------
 
-TableHolder::~TableHolder() = default;
-
-// ----------------------------------------------------------------------------
-
 std::vector<DataFrame> TableHolder::add_text_fields_to_peripheral_tables(
     const std::vector<DataFrame>& _original, const TableHolderParams& _params) {
   auto result = _original;

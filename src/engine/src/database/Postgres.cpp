@@ -14,6 +14,14 @@
 
 namespace database {
 
+Postgres::Postgres(const typename Command::PostgresOp& _obj,
+                   const std::string& _passwd)
+    : connection_string_(make_connection_string(_obj, _passwd)),
+      time_formats_(_obj.time_formats()) {}
+
+Postgres::Postgres(const std::vector<std::string>& _time_formats)
+    : time_formats_(_time_formats) {}
+
 void Postgres::check_colnames(const std::vector<std::string>& _colnames,
                               io::Reader* _reader) {
   const auto csv_colnames = _reader->colnames();

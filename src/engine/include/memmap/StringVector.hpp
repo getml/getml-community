@@ -20,10 +20,7 @@ namespace memmap {
 
 class StringVector {
  public:
-  explicit StringVector(const std::shared_ptr<Pool> &_pool)
-      : data_(Vector<char>(_pool)), indptr_(Vector<size_t>(_pool)) {
-    indptr_.push_back(0);
-  }
+  explicit StringVector(const std::shared_ptr<Pool> &_pool);
 
   template <class IteratorType>
   StringVector(const std::shared_ptr<Pool> &_pool, IteratorType _begin,

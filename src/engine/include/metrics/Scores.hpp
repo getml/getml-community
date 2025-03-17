@@ -155,7 +155,7 @@ class Scores {
 
   explicit Scores(const ReflectionType& _val);
 
-  ~Scores();
+  ~Scores() = default;
 
  public:
   /// Saves the scores to a JSON file.

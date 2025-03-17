@@ -69,10 +69,6 @@ AbstractFeature::AbstractFeature(const ReflectionType &_obj)
 
 // ----------------------------------------------------------------------------
 
-AbstractFeature::~AbstractFeature() = default;
-
-// ----------------------------------------------------------------------------
-
 typename AbstractFeature::ReflectionType AbstractFeature::reflection() const {
   return rfl::make_field<"aggregation_">(aggregation_) *
          rfl::make_field<"categorical_value_">(categorical_value_) *

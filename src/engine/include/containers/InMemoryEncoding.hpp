@@ -22,12 +22,9 @@ namespace containers {
 
 class InMemoryEncoding {
  public:
-  InMemoryEncoding(const std::shared_ptr<const InMemoryEncoding> _subencoding =
-                       std::shared_ptr<const InMemoryEncoding>())
-      : null_value_("NULL"),
-        subencoding_(_subencoding),
-        subsize_(_subencoding ? _subencoding->size() : 0),
-        vector_(std::make_shared<std::vector<strings::String>>(0)) {}
+  explicit InMemoryEncoding(
+      const std::shared_ptr<const InMemoryEncoding> _subencoding =
+          std::shared_ptr<const InMemoryEncoding>());
 
   ~InMemoryEncoding() = default;
 

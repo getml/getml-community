@@ -28,17 +28,10 @@ class MemoryMappedEncoding {
   constexpr static Int HASH_COLLISION = -2;
 
  public:
-  MemoryMappedEncoding(
+  explicit MemoryMappedEncoding(
       const std::shared_ptr<memmap::Pool>& _pool,
       const std::shared_ptr<const MemoryMappedEncoding> _subencoding =
-          std::shared_ptr<const MemoryMappedEncoding>())
-      : null_value_("NULL"),
-        pool_(_pool),
-        subencoding_(_subencoding),
-        subsize_(_subencoding ? _subencoding->size() : 0) {
-    assert_true(pool_);
-    allocate();
-  }
+          std::shared_ptr<const MemoryMappedEncoding>());
 
   /// Move constructor
   MemoryMappedEncoding(MemoryMappedEncoding&& _other) noexcept = delete;
@@ -46,7 +39,7 @@ class MemoryMappedEncoding {
   /// Copy constructor.
   MemoryMappedEncoding(const MemoryMappedEncoding& _other) = delete;
 
-  ~MemoryMappedEncoding() { deallocate(); };
+  ~MemoryMappedEncoding();
 
   // -------------------------------
 

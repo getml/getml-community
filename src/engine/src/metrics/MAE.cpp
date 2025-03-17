@@ -9,6 +9,8 @@
 
 namespace metrics {
 
+MAE::MAE(multithreading::Communicator* _comm) : impl_(_comm) {}
+
 typename MAE::ResultType MAE::score(const Features _yhat, const Features _y) {
   impl_.set_data(_yhat, _y);
 
@@ -34,5 +36,4 @@ typename MAE::ResultType MAE::score(const Features _yhat, const Features _y) {
 
   return rfl::make_field<"mae_">(mae);
 }
-
 }  // namespace metrics

@@ -8,6 +8,17 @@
 #include "helpers/ImportanceMaker.hpp"
 
 namespace helpers {
+
+ImportanceMaker::ImportanceMaker(const size_t _num_subfeatures)
+    : importance_factors_avg_(std::vector<Float>(_num_subfeatures)),
+      importance_factors_sum_(std::vector<Float>(_num_subfeatures)) {}
+
+ImportanceMaker::ImportanceMaker(
+    const std::map<ColumnDescription, Float>& _importances,
+    const size_t _num_subfeatures)
+    : ImportanceMaker(_num_subfeatures) {
+  importances_ = _importances;
+}
 // ----------------------------------------------------------------------------
 
 void ImportanceMaker::add_to_importances(const ColumnDescription& _desc,

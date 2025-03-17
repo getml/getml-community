@@ -27,10 +27,9 @@ class Encoding {
   using ReflectionType = rfl::NamedTuple<f_max, f_min>;
 
  public:
-  Encoding() : max_(1), min_(0) {}
+  Encoding();
 
-  explicit Encoding(const ReflectionType& _nt)
-      : max_(_nt.get<f_max>()), min_(_nt.get<f_min>()) {}
+  explicit Encoding(const ReflectionType& _nt);
 
   ~Encoding() = default;
 

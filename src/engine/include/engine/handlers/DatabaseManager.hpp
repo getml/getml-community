@@ -33,7 +33,7 @@ class DatabaseManager {
                   const rfl::Ref<const communication::Monitor>& _monitor,
                   const config::Options& _options);
 
-  ~DatabaseManager();
+  ~DatabaseManager() = default;
 
  public:
   /// Executes a command related to a database operation.

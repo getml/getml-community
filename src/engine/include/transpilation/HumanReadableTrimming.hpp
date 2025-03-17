@@ -16,13 +16,12 @@
 
 namespace transpilation {
 
-class HumanReadableTrimming : public TrimmingGenerator {
+class HumanReadableTrimming final : public TrimmingGenerator {
  public:
   explicit HumanReadableTrimming(
-      const SQLDialectGenerator* _sql_dialect_generator)
-      : sql_dialect_generator_(_sql_dialect_generator) {}
+      const SQLDialectGenerator* _sql_dialect_generator);
 
-  ~HumanReadableTrimming() = default;
+  ~HumanReadableTrimming() final = default;
 
  public:
   /// Generates the SQL code necessary for joining the trimming tables onto the

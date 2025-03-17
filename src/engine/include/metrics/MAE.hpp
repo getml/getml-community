@@ -21,9 +21,9 @@ class MAE {
   using ResultType = rfl::Field<"mae_", std::vector<Float>>;
 
  public:
-  MAE() {}
+  MAE() = default;
 
-  MAE(multithreading::Communicator* _comm) : impl_(_comm) {}
+  explicit MAE(multithreading::Communicator* _comm);
 
   ~MAE() = default;
 

@@ -12,6 +12,8 @@
 
 namespace memmap {
 
+FreeBlocksTracker::FreeBlocksTracker() : pool_size_(0) {}
+
 // ----------------------------------------------------------------------------
 
 std::pair<size_t, bool> FreeBlocksTracker::allocate_block(
@@ -149,5 +151,4 @@ void FreeBlocksTracker::increase_pool_size(const size_t _new_pool_size) {
 }
 
 // ----------------------------------------------------------------------------
-
 }  // namespace memmap

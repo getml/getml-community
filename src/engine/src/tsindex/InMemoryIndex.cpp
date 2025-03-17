@@ -21,10 +21,6 @@ InMemoryIndex::InMemoryIndex(const IndexParams& _params)
 
 // ----------------------------------------------------------------------------
 
-InMemoryIndex::~InMemoryIndex() = default;
-
-// ----------------------------------------------------------------------------
-
 std::map<Key, size_t> InMemoryIndex::make_key_map(
     const IndexParams& _params, const std::vector<size_t>& _row_indices) {
   assert_true(_params.join_keys_.end() >= _params.join_keys_.begin());

@@ -19,7 +19,7 @@ namespace memmap {
 /// Keeps track of free blocks, so we can find them more quickly.
 class FreeBlocksTracker {
  public:
-  FreeBlocksTracker() : pool_size_(0) {}
+  FreeBlocksTracker();
 
   ~FreeBlocksTracker() = default;
 

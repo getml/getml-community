@@ -40,7 +40,7 @@ class XGBoostIteratorDense {
                        const std::optional<FloatFeature> &_y,
                        const std::shared_ptr<memmap::Pool> &_pool);
 
-  ~XGBoostIteratorDense();
+  ~XGBoostIteratorDense() = default;
 
  public:
   /// Moves to the next batch.

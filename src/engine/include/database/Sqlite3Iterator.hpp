@@ -23,7 +23,7 @@ extern "C" {
 
 namespace database {
 
-class Sqlite3Iterator : public Iterator {
+class Sqlite3Iterator final : public Iterator {
  public:
   Sqlite3Iterator(
       const std::shared_ptr<sqlite3>& _db, const std::string& _sql,
@@ -37,7 +37,7 @@ class Sqlite3Iterator : public Iterator {
       const std::vector<std::string>& _time_formats, const std::string& _tname,
       const std::string& _where);
 
-  ~Sqlite3Iterator() = default;
+  ~Sqlite3Iterator() final = default;
 
   // -------------------------------
 

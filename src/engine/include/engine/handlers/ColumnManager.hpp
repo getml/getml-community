@@ -33,8 +33,7 @@ class ColumnManager {
   using Command = commands::ColumnCommand;
 
  public:
-  explicit ColumnManager(const DataFrameManagerParams& _params)
-      : params_(_params) {}
+  explicit ColumnManager(const DataFrameManagerParams& _params);
 
   ~ColumnManager() = default;
 

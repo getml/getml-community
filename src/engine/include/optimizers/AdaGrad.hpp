@@ -18,14 +18,11 @@
 namespace optimizers {
 // ----------------------------------------------------------------------------
 
-class AdaGrad : public Optimizer {
+class AdaGrad final : public Optimizer {
  public:
-  AdaGrad(const Float _learning_rate, const Float _offset, const size_t _size)
-      : learning_rate_(_learning_rate),
-        offset_(_offset),
-        sum_squared_gradients_(std::vector<Float>(_size)) {}
+  AdaGrad(const Float _learning_rate, const Float _offset, const size_t _size);
 
-  ~AdaGrad() = default;
+  ~AdaGrad() final = default;
 
   // ----------------------------------------------------------------------------
 

@@ -36,8 +36,7 @@ class DataFrameView {
 
  public:
   DataFrameView(const DataFrame& _df,
-                const std::shared_ptr<const std::vector<size_t>>& _rows)
-      : df_(_df), rows_(_rows) {}
+                const std::shared_ptr<const std::vector<size_t>>& _rows);
 
   ~DataFrameView() = default;
 

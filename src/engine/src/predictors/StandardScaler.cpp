@@ -11,6 +11,12 @@
 #include <numeric>
 
 namespace predictors {
+
+StandardScaler::StandardScaler()
+    : val_(ReflectionType{.mean = std::vector<Float>(),
+                          .std = std::vector<Float>()}) {};
+
+StandardScaler::StandardScaler(const ReflectionType& _val) : val_(_val) {}
 // -----------------------------------------------------------------------------
 
 void StandardScaler::fit(const std::vector<FloatFeature>& _X_numerical) {

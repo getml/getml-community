@@ -11,6 +11,19 @@
 
 namespace containers {
 
+MemoryMappedEncoding::MemoryMappedEncoding(
+    const std::shared_ptr<memmap::Pool>& _pool,
+    const std::shared_ptr<const MemoryMappedEncoding> _subencoding)
+    : null_value_("NULL"),
+      pool_(_pool),
+      subencoding_(_subencoding),
+      subsize_(_subencoding ? _subencoding->size() : 0) {
+  assert_true(pool_);
+  allocate();
+}
+
+MemoryMappedEncoding::~MemoryMappedEncoding() { deallocate(); };
+
 void MemoryMappedEncoding::allocate() {
   btree_ = std::make_shared<BTreeType>(pool_);
   rownums_ = std::make_shared<RownumsType>(pool_);

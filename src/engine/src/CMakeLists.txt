@@ -1,6 +1,5 @@
 add_executable(
   engine
-  engine/main.cpp
 )
 
 if(is_ipo_supported AND ${CMAKE_BUILD_TYPE} STREQUAL "Release")
@@ -74,9 +73,13 @@ add_subdirectory(engine)
 add_subdirectory(fastprop)
 add_subdirectory(helpers)
 add_subdirectory(io)
+add_subdirectory(logging)
 add_subdirectory(metrics)
 add_subdirectory(memmap)
+add_subdirectory(multithreading)
+add_subdirectory(optimizers)
 add_subdirectory(predictors)
+add_subdirectory(strings)
 add_subdirectory(textmining)
 add_subdirectory(transpilation)
 add_subdirectory(tsindex)

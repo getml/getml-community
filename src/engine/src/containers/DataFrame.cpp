@@ -19,6 +19,26 @@
 
 namespace containers {
 
+DataFrame::DataFrame(const std::shared_ptr<memmap::Pool> &_pool)
+    : categories_(std::shared_ptr<Encoding>()),
+      frozen_(false),
+      join_keys_encoding_(std::shared_ptr<Encoding>()),
+      pool_(_pool) {
+  update_last_change();
+}
+
+DataFrame::DataFrame(const std::string &_name,
+                     const std::shared_ptr<Encoding> &_categories,
+                     const std::shared_ptr<Encoding> &_join_keys_encoding,
+                     const std::shared_ptr<memmap::Pool> &_pool)
+    : categories_(_categories),
+      frozen_(false),
+      join_keys_encoding_(_join_keys_encoding),
+      name_(_name),
+      pool_(_pool) {
+  update_last_change();
+}
+
 void DataFrame::add_float_column(const Column<Float> &_col,
                                  const std::string &_role) {
   check_if_frozen();
@@ -1860,5 +1880,11 @@ void DataFrame::where(const std::vector<bool> &_condition) {
   *this = std::move(df);
 }
 
-// ----------------------------------------------------------------------------
+std::optional<commands::Fingerprint> DataFrame::build_history() const {
+  return build_history_;
+}
+
+void DataFrame::set_build_history(const commands::Fingerprint &_build_history) {
+  build_history_ = _build_history;
+}
 }  // namespace containers

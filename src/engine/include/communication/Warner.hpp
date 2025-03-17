@@ -21,7 +21,7 @@ namespace communication {
 
 class Warner {
  public:
-  Warner() : warnings_(rfl::Ref<std::vector<Warning>>::make()) {}
+  Warner();
 
   ~Warner() = default;
 

@@ -18,10 +18,6 @@ RowIndex::RowIndex(const WordIndex& _word_index)
 
 // ----------------------------------------------------------------------------
 
-RowIndex::~RowIndex() = default;
-
-// ----------------------------------------------------------------------------
-
 std::pair<std::vector<size_t>, std::vector<size_t>>
 RowIndex::make_indptr_and_rownums(const WordIndex& _word_index) const {
   auto indptr = std::vector<size_t>(vocabulary().size() + 1);

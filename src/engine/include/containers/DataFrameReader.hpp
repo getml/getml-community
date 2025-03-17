@@ -17,25 +17,15 @@
 
 namespace containers {
 
-class DataFrameReader : public io::Reader {
+class DataFrameReader final : public io::Reader {
  public:
   DataFrameReader(
       const DataFrame& _df,
       const std::shared_ptr<containers::Encoding>& _categories,
       const std::shared_ptr<containers::Encoding>& _join_keys_encoding,
-      const char _quotechar, const char _sep)
-      : categories_(_categories),
-        colnames_(make_colnames(_df, _quotechar)),
-        coltypes_(make_coltypes(_df)),
-        df_(_df),
-        join_keys_encoding_(_join_keys_encoding),
-        rownum_(0),
-        quotechar_(_quotechar),
-        sep_(_sep) {
-    assert_true(colnames().size() == coltypes().size());
-  }
+      const char _quotechar, const char _sep);
 
-  ~DataFrameReader() = default;
+  ~DataFrameReader() final = default;
 
   // -------------------------------
 

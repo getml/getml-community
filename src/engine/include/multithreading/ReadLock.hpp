@@ -19,17 +19,11 @@ namespace multithreading {
 class ReadLock {
  public:
   /// ReadLock without a timeout.
-  explicit ReadLock(const rfl::Ref<ReadWriteLock>& _lock)
-      : lock_(_lock), released_(false) {
-    lock_->read_lock();
-  }
+  explicit ReadLock(const rfl::Ref<ReadWriteLock>& _lock);
 
   /// Read lock with timeout.
   ReadLock(const rfl::Ref<ReadWriteLock>& _lock,
-           const std::chrono::milliseconds _duration)
-      : lock_(_lock), released_(false) {
-    lock_->read_lock(_duration);
-  }
+           const std::chrono::milliseconds _duration);
 
   ~ReadLock() { unlock(); }
 

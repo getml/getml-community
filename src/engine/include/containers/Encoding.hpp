@@ -27,15 +27,9 @@ class Encoding {
   using ConstMemoryMappedType = std::shared_ptr<const MemoryMappedEncoding>;
 
  public:
-  Encoding(const std::shared_ptr<memmap::Pool>& _pool,
-           const std::shared_ptr<const Encoding> _subencoding =
-               std::shared_ptr<const Encoding>()) {
-    if (_pool) {
-      init<MemoryMappedEncoding>(_pool, _subencoding);
-    } else {
-      init<InMemoryEncoding>(_pool, _subencoding);
-    }
-  }
+  explicit Encoding(const std::shared_ptr<memmap::Pool>& _pool,
+                    const std::shared_ptr<const Encoding> _subencoding =
+                        std::shared_ptr<const Encoding>());
 
   ~Encoding() = default;
 

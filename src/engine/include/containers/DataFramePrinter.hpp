@@ -16,7 +16,7 @@ namespace containers {
 
 class DataFramePrinter {
  public:
-  DataFramePrinter(const size_t _ncols) : ncols_(_ncols) {}
+  explicit DataFramePrinter(const size_t _ncols);
 
   ~DataFramePrinter() = default;
 

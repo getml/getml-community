@@ -31,10 +31,9 @@ struct ColumnDescription {
   using ReflectionType = rfl::NamedTuple<f_marker, f_name, f_table>;
 
   ColumnDescription(const MarkerType& _marker, const std::string& _table,
-                    const std::string& _name)
-      : val_(f_marker(_marker) * f_name(_name) * f_table(_table)) {}
+                    const std::string& _name);
 
-  explicit ColumnDescription(const ReflectionType& _val) : val_(_val) {}
+  explicit ColumnDescription(const ReflectionType& _val);
 
   ~ColumnDescription() = default;
 

@@ -23,12 +23,9 @@ struct MonitorOptions {
                                          rfl::Field<"tcpPort", size_t> >;
 
  public:
-  MonitorOptions(const ReflectionType& _obj)
-      : http_port_(_obj.get<"httpPort">()),
-        proxy_url_(_obj.get<"proxyUrl">()),
-        tcp_port_(_obj.get<"tcpPort">()) {}
+  explicit MonitorOptions(const ReflectionType& _obj);
 
-  MonitorOptions() : http_port_(1709), tcp_port_(1711) {}
+  MonitorOptions();
 
   ~MonitorOptions() = default;
 

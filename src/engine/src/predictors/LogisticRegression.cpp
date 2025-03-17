@@ -16,6 +16,14 @@
 
 namespace predictors {
 
+LogisticRegression::LogisticRegression(
+    const LogisticRegressionHyperparams& _hyperparams,
+    const rfl::Ref<const PredictorImpl>& _impl,
+    const std::vector<Fingerprint>& _dependencies)
+    : dependencies_(_dependencies),
+      hyperparams_(rfl::Ref<LogisticRegressionHyperparams>::make(_hyperparams)),
+      impl_(_impl) {};
+
 std::vector<Float> LogisticRegression::feature_importances(
     const size_t _num_features) const {
   if (weights_.size() == 0) {

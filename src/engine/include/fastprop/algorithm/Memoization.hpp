@@ -22,7 +22,7 @@ namespace algorithm {
 
 class Memoization {
  public:
-  Memoization() {}
+  Memoization() = default;
 
   ~Memoization() = default;
 

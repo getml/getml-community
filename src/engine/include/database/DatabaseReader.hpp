@@ -19,12 +19,11 @@ namespace database {
 
 /// DatabaseReader implements the io::Reader interface to a table from a
 /// database.
-class DatabaseReader : public io::Reader {
+class DatabaseReader final : public io::Reader {
  public:
-  explicit DatabaseReader(const rfl::Ref<Iterator>& _iterator)
-      : iterator_(_iterator), ncols_(iterator()->colnames().size()) {}
+  explicit DatabaseReader(const rfl::Ref<Iterator>& _iterator);
 
-  ~DatabaseReader() {}
+  ~DatabaseReader() final = default;
 
  public:
   /// Returns the colnames.

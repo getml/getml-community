@@ -37,10 +37,7 @@ class ArrowHandler {
  public:
   ArrowHandler(const rfl::Ref<containers::Encoding>& _categories,
                const rfl::Ref<containers::Encoding>& _join_keys_encoding,
-               const config::Options& _options)
-      : categories_(_categories),
-        join_keys_encoding_(_join_keys_encoding),
-        options_(_options) {}
+               const config::Options& _options);
 
   ~ArrowHandler() = default;
 

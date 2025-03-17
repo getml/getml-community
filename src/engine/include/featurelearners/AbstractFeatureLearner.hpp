@@ -32,7 +32,7 @@ class AbstractFeatureLearner {
   static constexpr const char* RELMT = "RelMT";
 
  public:
-  AbstractFeatureLearner() {}
+  AbstractFeatureLearner() = default;
 
   virtual ~AbstractFeatureLearner() = default;
 

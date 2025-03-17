@@ -10,6 +10,21 @@
 #include "io/Parser.hpp"
 
 namespace io {
+
+CSVReader::CSVReader(const std::optional<std::vector<std::string>>& _colnames,
+                     const std::string& _fname, const size_t _limit,
+                     const char _quotechar, const char _sep)
+    : colnames_(_colnames),
+      filestream_(std::make_shared<std::ifstream>(
+          std::ifstream(_fname, std::ifstream::in))),
+      limit_(_limit),
+      num_lines_read_(0),
+      quotechar_(_quotechar),
+      sep_(_sep) {
+  if (!filestream_->is_open()) {
+    throw std::runtime_error("'" + _fname + "' could not be opened!");
+  }
+}
 // ----------------------------------------------------------------------------
 
 std::vector<std::string> CSVReader::next_line() {

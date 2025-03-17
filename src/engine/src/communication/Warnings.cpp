@@ -14,10 +14,13 @@
 
 namespace communication {
 
+Warnings::Warnings(const commands::WarningFingerprint& _fingerprint,
+                   const rfl::Ref<const std::vector<Warning>>& _warnings)
+    : fingerprint_(_fingerprint), warnings_(_warnings) {}
+
 void Warnings::send(Poco::Net::StreamSocket* _socket) const {
   const auto named_tuple =
       rfl::make_named_tuple(rfl::make_field<"warnings_">(warnings_));
   Sender::send_string(rfl::json::write(named_tuple), _socket);
 }
-
 }  // namespace communication

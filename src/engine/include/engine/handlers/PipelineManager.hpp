@@ -74,7 +74,7 @@ class PipelineManager {
       std::variant<RefreshFittedPipelineType, RefreshUnfittedPipelineType>;
 
  public:
-  PipelineManager(const PipelineManagerParams& _params) : params_(_params) {}
+  explicit PipelineManager(const PipelineManagerParams& _params);
 
   ~PipelineManager() = default;
 

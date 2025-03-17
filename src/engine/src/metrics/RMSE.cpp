@@ -11,6 +11,8 @@
 
 namespace metrics {
 
+RMSE::RMSE(multithreading::Communicator* _comm) : impl_(_comm) {}
+
 typename RMSE::ResultType RMSE::score(const Features _yhat, const Features _y) {
   impl_.set_data(_yhat, _y);
 
@@ -38,5 +40,4 @@ typename RMSE::ResultType RMSE::score(const Features _yhat, const Features _y) {
 
   return rfl::make_field<"rmse_">(rmse);
 }
-
 }  // namespace metrics

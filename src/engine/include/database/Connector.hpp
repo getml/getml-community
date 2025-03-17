@@ -22,7 +22,7 @@ namespace database {
 
 class Connector {
  public:
-  Connector() {}
+  Connector() = default;
 
   virtual ~Connector() = default;
 

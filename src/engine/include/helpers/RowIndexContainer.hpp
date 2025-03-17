@@ -30,7 +30,7 @@ class RowIndexContainer {
   RowIndexContainer(const RowIndices& _population,
                     const std::vector<RowIndices>& _peripheral);
 
-  ~RowIndexContainer();
+  ~RowIndexContainer() = default;
 
  public:
   /// Trivial (const) accessor

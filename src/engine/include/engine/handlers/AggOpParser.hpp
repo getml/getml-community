@@ -29,10 +29,7 @@ class AggOpParser {
       const rfl::Ref<const containers::Encoding>& _categories,
       const rfl::Ref<const containers::Encoding>& _join_keys_encoding,
       const rfl::Ref<const std::map<std::string, containers::DataFrame>>&
-          _data_frames)
-      : categories_(_categories),
-        data_frames_(_data_frames),
-        join_keys_encoding_(_join_keys_encoding) {}
+          _data_frames);
 
   ~AggOpParser() = default;
 

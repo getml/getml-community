@@ -4,6 +4,7 @@ target_sources(
   DataFrame.cpp
   DataFramePrinter.cpp
   DataFrameReader.cpp
+  Encoding.cpp
   InMemoryEncoding.cpp
   MemoryMappedEncoding.cpp
 )

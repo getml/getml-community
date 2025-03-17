@@ -21,8 +21,7 @@ namespace communication {
 class Warnings {
  public:
   Warnings(const commands::WarningFingerprint& _fingerprint,
-           const rfl::Ref<const std::vector<Warning>>& _warnings)
-      : fingerprint_(_fingerprint), warnings_(_warnings) {}
+           const rfl::Ref<const std::vector<Warning>>& _warnings);
 
   ~Warnings() = default;
 

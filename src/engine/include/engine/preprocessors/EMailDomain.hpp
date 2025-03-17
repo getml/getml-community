@@ -29,7 +29,7 @@
 namespace engine {
 namespace preprocessors {
 
-class EMailDomain : public Preprocessor {
+class EMailDomain final : public Preprocessor {
   using MarkerType = typename helpers::ColumnDescription::MarkerType;
 
  public:
@@ -43,10 +43,9 @@ class EMailDomain : public Preprocessor {
 
  public:
   EMailDomain(const EMailDomainOp&,
-              const std::vector<commands::Fingerprint>& _dependencies)
-      : dependencies_(_dependencies) {}
+              const std::vector<commands::Fingerprint>& _dependencies);
 
-  ~EMailDomain() = default;
+  ~EMailDomain() final = default;
 
  public:
   /// Identifies which features should be extracted from which time stamps.

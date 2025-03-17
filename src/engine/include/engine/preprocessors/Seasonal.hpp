@@ -30,7 +30,7 @@
 namespace engine {
 namespace preprocessors {
 
-class Seasonal : public Preprocessor {
+class Seasonal final : public Preprocessor {
   using MarkerType = typename helpers::ColumnDescription::MarkerType;
 
  public:
@@ -55,10 +55,9 @@ class Seasonal : public Preprocessor {
 
  public:
   Seasonal(const SeasonalOp& _op,
-           const std::vector<commands::Fingerprint>& _dependencies)
-      : dependencies_(_dependencies), op_(_op) {}
+           const std::vector<commands::Fingerprint>& _dependencies);
 
-  ~Seasonal() = default;
+  ~Seasonal() final = default;
 
  public:
   /// Returns the fingerprint of the preprocessor (necessary to build

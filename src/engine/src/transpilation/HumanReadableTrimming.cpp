@@ -11,6 +11,10 @@
 
 namespace transpilation {
 
+HumanReadableTrimming::HumanReadableTrimming(
+    const SQLDialectGenerator* _sql_dialect_generator)
+    : sql_dialect_generator_(_sql_dialect_generator) {}
+
 // ----------------------------------------------------------------------------
 
 std::string HumanReadableTrimming::join(const std::string& _staging_table,

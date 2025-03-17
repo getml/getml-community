@@ -30,7 +30,7 @@
 namespace engine {
 namespace preprocessors {
 
-class Substring : public Preprocessor {
+class Substring final : public Preprocessor {
  public:
   using MarkerType = typename helpers::ColumnDescription::MarkerType;
 
@@ -44,13 +44,9 @@ class Substring : public Preprocessor {
 
  public:
   Substring(const SubstringOp& _op,
-            const std::vector<commands::Fingerprint>& _dependencies)
-      : begin_(_op.begin()),
-        dependencies_(_dependencies),
-        length_(_op.length()),
-        unit_(_op.unit()) {}
+            const std::vector<commands::Fingerprint>& _dependencies);
 
-  ~Substring() = default;
+  ~Substring() final = default;
 
  public:
   /// Identifies which features should be extracted from which time stamps.

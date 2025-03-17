@@ -15,7 +15,7 @@
 namespace tsindex {
 class Index {
  public:
-  Index(const IndexParams& _params) : impl_(InMemoryIndex(_params)) {}
+  explicit Index(const IndexParams& _params);
 
   ~Index() = default;
 

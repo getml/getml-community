@@ -21,30 +21,16 @@
 
 namespace database {
 
-class MySQL : public Connector {
+class MySQL final : public Connector {
  public:
-  MySQL(const typename Command::MySQLOp& _obj, const std::string& _passwd)
-      : dbname_(_obj.dbname()),
-        host_(_obj.host()),
-        passwd_(_passwd),
-        port_(_obj.port()),
-        time_formats_(_obj.time_formats()),
-        unix_socket_(_obj.unix_socket()),
-        user_(_obj.user()) {}
+  MySQL(const typename Command::MySQLOp& _obj, const std::string& _passwd);
 
   MySQL(const std::string& _dbname, const std::string& _host,
         const std::string& _passwd, const unsigned int _port,
         const std::string& _unix_socket, const std::string& _user,
-        const std::vector<std::string>& _time_formats)
-      : dbname_(_dbname),
-        host_(_host),
-        passwd_(_passwd),
-        port_(_port),
-        time_formats_(_time_formats),
-        unix_socket_(_unix_socket),
-        user_(_user) {}
+        const std::vector<std::string>& _time_formats);
 
-  ~MySQL() = default;
+  ~MySQL() final = default;
 
  public:
   /// Returns a std::string describing the connection.

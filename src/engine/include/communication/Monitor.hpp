@@ -17,7 +17,6 @@
 
 #include <memory>
 #include <string>
-#include <thread>
 
 namespace communication {
 
@@ -27,13 +26,9 @@ class Monitor {
   static constexpr bool TIMEOUT_OFF = false;
 
  public:
-  explicit Monitor(const engine::config::Options& _options)
-      : options_(_options) {
-    std::thread t(shutdown_when_monitor_dies, *this);
-    t.detach();
-  }
+  explicit Monitor(const engine::config::Options& _options);
 
-  ~Monitor() {}
+  ~Monitor() = default;
 
   /// Connects to the TCP port of the monitor.
   std::shared_ptr<Poco::Net::StreamSocket> connect(const bool _timeout) const;

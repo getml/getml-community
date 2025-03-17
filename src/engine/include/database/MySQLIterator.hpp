@@ -21,7 +21,7 @@
 namespace database {
 // -----------------------------------------------------------------------------
 
-class MySQLIterator : public Iterator {
+class MySQLIterator final : public Iterator {
   // -------------------------------------------------------------------------
 
  public:
@@ -34,7 +34,7 @@ class MySQLIterator : public Iterator {
                 const std::vector<std::string>& _time_formats,
                 const std::string& _tname, const std::string& _where);
 
-  ~MySQLIterator();
+  ~MySQLIterator() final = default;
 
   // -------------------------------------------------------------------------
 

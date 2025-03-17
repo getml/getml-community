@@ -47,8 +47,7 @@ class DataFrameManager {
   };
 
  public:
-  explicit DataFrameManager(const DataFrameManagerParams& _params)
-      : params_(_params) {}
+  explicit DataFrameManager(const DataFrameManagerParams& _params);
 
   ~DataFrameManager() = default;
 

@@ -11,6 +11,8 @@
 
 namespace metrics {
 
+RSquared::RSquared(multithreading::Communicator* _comm) : impl_(_comm) {}
+
 typename RSquared::ResultType RSquared::score(const Features _yhat,
                                               const Features _y) {
   impl_.set_data(_yhat, _y);
@@ -77,5 +79,4 @@ typename RSquared::ResultType RSquared::score(const Features _yhat,
 
   return rfl::make_field<"rsquared_">(rsquared);
 }
-
 }  // namespace metrics

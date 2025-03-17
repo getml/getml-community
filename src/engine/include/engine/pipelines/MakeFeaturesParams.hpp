@@ -12,6 +12,7 @@
 #include "commands/Fingerprint.hpp"
 #include "communication/Logger.hpp"
 #include "containers/Encoding.hpp"
+#include "containers/NumericalFeatures.hpp"
 #include "engine/dependency/DataFrameTracker.hpp"
 #include "predictors/PredictorImpl.hpp"
 

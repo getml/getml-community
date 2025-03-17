@@ -28,7 +28,7 @@
 namespace engine {
 namespace preprocessors {
 
-class TextFieldSplitter : public Preprocessor {
+class TextFieldSplitter final : public Preprocessor {
  public:
   using MarkerType = typename helpers::ColumnDescription::MarkerType;
 
@@ -43,10 +43,9 @@ class TextFieldSplitter : public Preprocessor {
 
  public:
   TextFieldSplitter(const TextFieldSplitterOp&,
-                    const std::vector<commands::Fingerprint>& _dependencies)
-      : dependencies_(_dependencies) {}
+                    const std::vector<commands::Fingerprint>& _dependencies);
 
-  ~TextFieldSplitter() = default;
+  ~TextFieldSplitter() final = default;
 
  public:
   /// Identifies which features should be extracted from which time stamps.

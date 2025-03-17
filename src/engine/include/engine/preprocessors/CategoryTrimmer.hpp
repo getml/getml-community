@@ -31,7 +31,7 @@
 namespace engine {
 namespace preprocessors {
 
-class CategoryTrimmer : public Preprocessor {
+class CategoryTrimmer final : public Preprocessor {
   using MarkerType = typename helpers::ColumnDescription::MarkerType;
 
  public:
@@ -52,12 +52,9 @@ class CategoryTrimmer : public Preprocessor {
 
  public:
   CategoryTrimmer(const CategoryTrimmerOp& _op,
-                  const std::vector<commands::Fingerprint>& _dependencies)
-      : dependencies_(_dependencies),
-        max_num_categories_(_op.max_num_categories()),
-        min_freq_(_op.min_freq()) {}
+                  const std::vector<commands::Fingerprint>& _dependencies);
 
-  ~CategoryTrimmer() = default;
+  ~CategoryTrimmer() final = default;
 
  public:
   /// Identifies which features should be extracted from which time stamps.

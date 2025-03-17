@@ -21,7 +21,7 @@ namespace dependency {
 template <class T>
 class Tracker {
  public:
-  Tracker() {}
+  Tracker() = default;
 
   ~Tracker() = default;
 

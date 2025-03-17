@@ -21,12 +21,11 @@
 namespace engine {
 namespace handlers {
 
-class ArrowSocketInputStream : public arrow::io::InputStream {
+class ArrowSocketInputStream final : public arrow::io::InputStream {
  public:
-  ArrowSocketInputStream(Poco::Net::StreamSocket *_socket)
-      : closed_(false), position_(0), socket_(_socket) {}
+  explicit ArrowSocketInputStream(Poco::Net::StreamSocket *_socket);
 
-  virtual ~ArrowSocketInputStream() {}
+  ~ArrowSocketInputStream() final = default;
 
  public:
   /// Close the stream cleanly.

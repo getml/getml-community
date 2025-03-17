@@ -41,7 +41,7 @@
 namespace featurelearners {
 
 template <class FeatureLearnerType>
-class FeatureLearner : public AbstractFeatureLearner {
+class FeatureLearner final : public AbstractFeatureLearner {
  public:
   using ReflectionType = rfl::define_named_tuple_t<
       typename FeatureLearnerType::ReflectionType,
@@ -81,7 +81,7 @@ class FeatureLearner : public AbstractFeatureLearner {
         population_schema_(_params.population_schema()),
         target_num_(_params.target_num()) {}
 
-  ~FeatureLearner() = default;
+  ~FeatureLearner() final = default;
 
  public:
   /// Calculates the column importances for this ensemble.

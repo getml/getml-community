@@ -32,11 +32,11 @@ namespace pipelines {
 
 class Pipeline {
  public:
-  Pipeline(const rfl::Ref<const commands::Pipeline>& _obj);
+  explicit Pipeline(const rfl::Ref<const commands::Pipeline>& _obj);
 
-  Pipeline(const commands::Pipeline& _obj);
+  explicit Pipeline(const commands::Pipeline& _obj);
 
-  ~Pipeline();
+  ~Pipeline() = default;
 
  public:
   /// Expresses the Pipeline in a form the monitor can understand.

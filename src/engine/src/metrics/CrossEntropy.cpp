@@ -11,6 +11,9 @@
 
 namespace metrics {
 
+CrossEntropy::CrossEntropy(multithreading::Communicator* _comm)
+    : impl_(_comm) {}
+
 typename CrossEntropy::ResultType CrossEntropy::score(const Features _yhat,
                                                       const Features _y) {
   impl_.set_data(_yhat, _y);
@@ -51,5 +54,4 @@ typename CrossEntropy::ResultType CrossEntropy::score(const Features _yhat,
 
   return rfl::make_field<"cross_entropy_">(cross_entropy);
 }
-
 }  // namespace metrics

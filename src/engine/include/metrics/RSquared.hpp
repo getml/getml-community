@@ -21,9 +21,9 @@ class RSquared {
   using ResultType = rfl::Field<"rsquared_", std::vector<Float>>;
 
  public:
-  RSquared() {}
+  RSquared() = default;
 
-  explicit RSquared(multithreading::Communicator* _comm) : impl_(_comm) {}
+  explicit RSquared(multithreading::Communicator* _comm);
 
   ~RSquared() = default;
 

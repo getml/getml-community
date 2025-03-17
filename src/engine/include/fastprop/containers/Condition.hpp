@@ -46,7 +46,7 @@ struct Condition {
 
   explicit Condition(const ReflectionType &_obj);
 
-  ~Condition();
+  ~Condition() = default;
 
   /// Necessary for the automated serialization.
   ReflectionType reflection() const;

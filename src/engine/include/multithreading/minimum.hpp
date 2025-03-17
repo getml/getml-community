@@ -14,7 +14,7 @@ namespace multithreading {
 template <class T>
 struct minimum {
  public:
-  minimum() {}
+  minimum() = default;
 
   ~minimum() = default;
 

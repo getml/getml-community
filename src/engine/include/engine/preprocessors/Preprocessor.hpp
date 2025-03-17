@@ -34,7 +34,7 @@ class Preprocessor {
   static constexpr const char* TEXT_FIELD_SPLITTER = "TextFieldSplitter";
 
  public:
-  Preprocessor() {};
+  Preprocessor() = default;
 
   virtual ~Preprocessor() = default;
 

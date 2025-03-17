@@ -17,15 +17,12 @@
 
 namespace communication {
 
-class SocketLogger : public logging::AbstractLogger {
+class SocketLogger final : public logging::AbstractLogger {
  public:
   SocketLogger(const std::shared_ptr<const communication::Logger>& _logger,
-               const bool _silent, Poco::Net::StreamSocket* _socket)
-      : logger_(_logger), silent_(_silent), socket_(_socket) {
-    assert_true(logger_);
-  }
+               const bool _silent, Poco::Net::StreamSocket* _socket);
 
-  ~SocketLogger() = default;
+  ~SocketLogger() final = default;
 
   // --------------------------------------------------------
 

@@ -31,10 +31,6 @@ Scores::Scores(const ReflectionType& _val) : val_(_val) {}
 
 // ----------------------------------------------------------------------------
 
-Scores::~Scores() = default;
-
-// ----------------------------------------------------------------------------
-
 void Scores::save(const std::string& _fname,
                   const typename helpers::Saver::Format _format) const {
   helpers::Saver::save(_fname, *this, _format);

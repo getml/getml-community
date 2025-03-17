@@ -51,7 +51,7 @@ class XGBoostIteratorSparse {
                         const std::optional<FloatFeature> &_y,
                         const rfl::Ref<const PredictorImpl> &_impl);
 
-  ~XGBoostIteratorSparse();
+  ~XGBoostIteratorSparse() = default;
 
  public:
   /// Moves to the next batch.

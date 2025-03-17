@@ -18,7 +18,7 @@ namespace database {
 
 class Iterator {
  public:
-  Iterator() {}
+  Iterator() = default;
 
   virtual ~Iterator() = default;
 

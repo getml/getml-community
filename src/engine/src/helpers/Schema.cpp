@@ -24,10 +24,6 @@ Schema::Schema(const SchemaImpl& _impl)
 
 // ----------------------------------------------------------------------------
 
-Schema::~Schema() = default;
-
-// ----------------------------------------------------------------------------
-
 typename Schema::ReflectionType Schema::reflection() const {
   return SchemaImpl{.categoricals = categoricals_,
                     .discretes = discretes_,

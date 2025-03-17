@@ -19,18 +19,12 @@ namespace optimizers {
 
 // ----------------------------------------------------------------------------
 
-class Adam : public Optimizer {
+class Adam final : public Optimizer {
  public:
   Adam(const Float _decay_mom1, const Float _decay_mom2,
-       const Float _learning_rate, const Float _offset, const size_t _size)
-      : decay_mom1_(_decay_mom1),
-        decay_mom2_(_decay_mom2),
-        first_moment_(std::vector<Float>(_size)),
-        learning_rate_(_learning_rate),
-        offset_(_offset),
-        second_moment_(std::vector<Float>(_size)) {}
+       const Float _learning_rate, const Float _offset, const size_t _size);
 
-  ~Adam() = default;
+  ~Adam() final = default;
 
   // ----------------------------------------------------------------------------
 

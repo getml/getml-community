@@ -27,10 +27,6 @@ RowIndexContainer::RowIndexContainer(const RowIndices& _population,
 
 // ----------------------------------------------------------------------------
 
-RowIndexContainer::~RowIndexContainer() = default;
-
-// ----------------------------------------------------------------------------
-
 typename RowIndexContainer::RowIndices RowIndexContainer::make_row_indices(
     const WordIndices& _word_indices) const {
   const auto make_row_index =

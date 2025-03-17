@@ -27,15 +27,9 @@ class Options {
                       rfl::Field<"monitor", MonitorOptions>>;
 
  public:
-  explicit Options(const ReflectionType& _obj)
-      : all_projects_directory_(_obj.get<"projectDirectory">()),
-        engine_(_obj.get<"engine">()),
-        monitor_(_obj.get<"monitor">()) {}
+  explicit Options(const ReflectionType& _obj);
 
-  Options()
-      : all_projects_directory_("../projects/"),
-        engine_(EngineOptions()),
-        monitor_(MonitorOptions()) {}
+  Options();
 
   ~Options() = default;
 

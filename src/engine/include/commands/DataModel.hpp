@@ -53,17 +53,7 @@ struct DataModel {
 
   /// The DataModel requires additional checks after parsing,
   /// which is why we have a default constructor.
-  DataModel(const ReflectionType& _val) : val_(_val) {
-    check_length<"allow_lagged_targets_">();
-    check_length<"join_keys_used_">();
-    check_length<"other_join_keys_used_">();
-    check_length<"time_stamps_used_">();
-    check_length<"other_time_stamps_used_">();
-    check_length<"upper_time_stamps_used_">();
-    check_length<"horizon_">();
-    check_length<"memory_">();
-    check_length<"relationship_">();
-  }
+  explicit DataModel(const ReflectionType& _val);
 
   using InputVarType = typename rfl::json::Reader::InputVarType;
 

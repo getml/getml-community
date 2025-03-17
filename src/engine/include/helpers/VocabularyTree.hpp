@@ -31,7 +31,7 @@ class VocabularyTree {
                  const std::vector<std::string>& _peripheral_names,
                  const std::vector<Schema>& _peripheral_schema);
 
-  ~VocabularyTree();
+  ~VocabularyTree() = default;
 
  public:
   /// Trivial (const) accessor

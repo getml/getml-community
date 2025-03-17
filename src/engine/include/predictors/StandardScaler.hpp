@@ -30,11 +30,9 @@ class StandardScaler {
   using ReflectionType = SaveLoad;
 
  public:
-  StandardScaler()
-      : val_(ReflectionType{.mean = std::vector<Float>(),
-                            .std = std::vector<Float>()}) {};
+  StandardScaler();
 
-  StandardScaler(const ReflectionType& _val) : val_(_val) {}
+  explicit StandardScaler(const ReflectionType& _val);
 
   ~StandardScaler() = default;
 

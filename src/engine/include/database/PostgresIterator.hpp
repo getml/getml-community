@@ -21,7 +21,7 @@
 
 namespace database {
 
-class PostgresIterator : public Iterator {
+class PostgresIterator final : public Iterator {
  public:
   PostgresIterator(const std::shared_ptr<PGconn>& _connection,
                    const std::string& _sql,
@@ -36,7 +36,7 @@ class PostgresIterator : public Iterator {
                    const std::int32_t _begin = -1,
                    const std::int32_t _end = -1);
 
-  ~PostgresIterator();
+  ~PostgresIterator() final;
 
  public:
   /// Returns the column names of the query.
