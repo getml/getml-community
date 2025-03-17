@@ -9,7 +9,6 @@
 #define COMMANDS_DATACONTAINER_HPP_
 
 #include "commands/DataFrameOrView.hpp"
-#include "commands/StringColumnOrStringColumnView.hpp"
 
 #include <rfl/Field.hpp>
 #include <rfl/NamedTuple.hpp>
@@ -26,23 +25,12 @@ using DataContainerPeripheralType =
     std::variant<DataFrameOrView, std::vector<DataFrameOrView>,
                  std::map<std::string, DataFrameOrView>>;
 
-using DataContainerBase =
-    rfl::NamedTuple<rfl::Field<"id_", std::string>,
-                    rfl::Field<"deep_copy_", bool>,
-                    rfl::Field<"last_change_", std::string>,
-                    rfl::Field<"frozen_time_", std::optional<std::string>>>;
-
-using DataContainerWithSplit = rfl::define_named_tuple_t<
-    rfl::Field<"population_", DataFrameOrView>,
-    rfl::Field<"split_", commands::StringColumnOrStringColumnView>,
-    rfl::Field<"peripheral_", DataContainerPeripheralType>, DataContainerBase>;
-
-using DataContainerWithSubsets = rfl::define_named_tuple_t<
+using DataContainer = rfl::define_named_tuple_t<
+    rfl::Field<"id_", std::string>, rfl::Field<"deep_copy_", bool>,
+    rfl::Field<"last_change_", std::string>,
+    rfl::Field<"frozen_time_", std::optional<std::string>>,
     rfl::Field<"subsets_", std::map<std::string, DataFrameOrView>>,
-    rfl::Field<"peripheral_", DataContainerPeripheralType>, DataContainerBase>;
-
-using DataContainer =
-    std::variant<DataContainerWithSplit, DataContainerWithSubsets>;
+    rfl::Field<"peripheral_", DataContainerPeripheralType>>;
 
 }  // namespace commands
 
