@@ -115,6 +115,18 @@ TIMEZONE_NON_UTC_ERROR_TEMPLATE = cleandoc(
     """
 ).format(timestamp_encoding_hints=TIMESTAMP_ENCODING_HINTS_PARTIAL)
 
+UNSUPPORTED_TYPE_PREDICATES = (
+    pa.types.is_dictionary,
+    pa.types.is_large_list,
+    pa.types.is_list,
+    pa.types.is_map,
+    pa.types.is_struct,
+    pa.types.is_union,
+)
+"""
+Arrow predicates identifying unsupported types.
+"""
+
 UNSUPPORTED_TYPE_WARNING_TEMPLATE = cleandoc(
     """
     Column '{column_name}' has an unsupported type: {type}. The column will be ignored.
@@ -264,16 +276,7 @@ def _is_numerical_type_arrow(coltype: pa.DataType) -> bool:
 
 
 def _is_unsupported_type_arrow(coltype: pa.DataType) -> bool:
-    return any(
-        [
-            pa.types.is_dictionary(coltype),
-            pa.types.is_large_list(coltype),
-            pa.types.is_list(coltype),
-            pa.types.is_map(coltype),
-            pa.types.is_struct(coltype),
-            pa.types.is_union(coltype),
-        ]
-    )
+    return any(predicate(coltype) for predicate in UNSUPPORTED_TYPE_PREDICATES)
 
 
 @arrow_schema_field_preprocessor(roles=roles_sets.all_)
@@ -462,13 +465,29 @@ def to_arrow_batches(
         )
 
 
-@arrow_cast_exception_handler(pa.float64())
-def handle_float64_exc(exc: ArrowInvalid, field: pa.Field) -> None:
+@arrow_cast_exception_handler(source_type=pa.int64(), target_type=pa.float64())
+def handle_int64_to_float64_exc(
+    exc: ArrowInvalid, source_array: pa.Array, target_field: pa.Field
+):
     if re.match(r"Integer value \d+ not in range", str(exc)):
         raise OverflowError(
-            INT64_EXCEEDS_FLOAT64_BOUNDS_ERROR_TEMPLATE.format(column_name=field.name)
+            INT64_EXCEEDS_FLOAT64_BOUNDS_ERROR_TEMPLATE.format(
+                column_name=target_field.name
+            )
         ) from exc
     raise exc
+
+
+@arrow_cast_exception_handler(source_type=pa.binary(), target_type=pa.string())
+def handle_binary_to_string_exc(
+    exc: ArrowInvalid, source_array: pa.Array, target_field: pa.Field
+):
+    if re.match(r"Invalid UTF8 payload", str(exc)):
+        raise ValueError(
+            f"Binary column '{target_field.name}' contains invalid UTF-8 characters.\n"
+            "First 5 rows of the column:\n"
+            f"{source_array.slice(0, 5)}"
+        )
 
 
 def cast_arrow_batch(
@@ -488,8 +507,10 @@ def cast_arrow_batch(
             try:
                 target_arrays.append(source_array.cast(options=cast_options))
             except ArrowInvalid as e:
-                handler = arrow_cast_exception_handler.retrieve(target_field.type)
-                handler(e, target_field)
+                handler = arrow_cast_exception_handler.retrieve(
+                    source_type=source_array.type, target_type=target_field.type
+                )
+                handler(e, source_array, target_field)
         else:
             target_arrays.append(source_array)
     return pa.RecordBatch.from_arrays(target_arrays, schema=target_schema)

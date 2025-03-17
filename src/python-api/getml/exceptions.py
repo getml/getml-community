@@ -7,12 +7,19 @@
 
 import re
 from inspect import cleandoc
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, Protocol
 
 import pyarrow as pa
 from pyarrow.lib import ArrowInvalid
 
 from getml.constants import ENTERPRISE_DOCS_URL
+
+
+class ArrowExceptionHandler(Protocol):
+    def __call__(
+        self, exc: ArrowInvalid, source_array: pa.Array, target_field: pa.Field
+    ) -> None: ...
+
 
 ENTERPRISE_FEATURE_NOT_AVAILABLE_REGEX = re.compile(
     r"The (.*) (.*) is not supported in the community edition. Please upgrade "
@@ -49,37 +56,34 @@ class ArrowCastExceptionHandlerRegistry:
     the handlers have to parse the exception themselves.
     """
 
-    handlers: Dict[pa.DataType, Callable[[ArrowInvalid, pa.Field], None]] = {}
+    handlers: Dict[tuple[pa.DataType, pa.DataType], ArrowExceptionHandler] = {}
 
     def __call__(
         self,
+        source_type: pa.DataType,
         target_type: pa.DataType,
-    ) -> Callable[
-        [Callable[[ArrowInvalid, pa.Field], None]],
-        Callable[[pa.Array, pa.DataType], pa.Array],
-    ]:
-        return self.register(target_type)
+    ) -> Callable[[ArrowExceptionHandler], ArrowExceptionHandler]:
+        return self.register(source_type, target_type)
 
     @classmethod
     def register(
-        cls, target_type: pa.DataType
-    ) -> Callable[
-        [Callable[[ArrowInvalid, pa.Field], None]],
-        Callable[[pa.Array, pa.DataType], pa.Array],
-    ]:
-        def decorator(handler: Callable[[ArrowInvalid, pa.Field], None]):
-            cls.handlers[target_type] = handler
+        cls,
+        source_type: pa.DataType,
+        target_type: pa.DataType,
+    ) -> Callable[[ArrowExceptionHandler], ArrowExceptionHandler]:
+        def decorator(handler: ArrowExceptionHandler):
+            cls.handlers[(source_type, target_type)] = handler
             return handler
 
         return decorator
 
     @classmethod
     def retrieve(
-        cls, target_type: pa.DataType
-    ) -> Callable[[pa.Array, pa.DataType], pa.Array]:
-        if target_type not in cls.handlers:
+        cls, source_type: pa.DataType, target_type: pa.DataType
+    ) -> ArrowExceptionHandler:
+        if (source_type, target_type) not in cls.handlers:
             return _nop_arrow_cast_exception_handler
-        return cls.handlers[target_type]
+        return cls.handlers[(source_type, target_type)]
 
 
 arrow_cast_exception_handler = ArrowCastExceptionHandlerRegistry()
