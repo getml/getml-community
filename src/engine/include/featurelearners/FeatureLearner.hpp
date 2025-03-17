@@ -22,7 +22,6 @@
 #include "fastprop/subfeatures/FastPropContainer.hpp"
 #include "fastprop/subfeatures/Maker.hpp"
 #include "fastprop/subfeatures/MakerParams.hpp"
-#include "fct/to.hpp"
 #include "featurelearners/AbstractFeatureLearner.hpp"
 #include "featurelearners/FeatureLearnerParams.hpp"
 #include "featurelearners/FitParams.hpp"
@@ -354,7 +353,7 @@ FeatureLearner<FeatureLearnerType>::column_importances(
 
   const auto filter_non_zeros = [is_non_zero](const auto& _importances) {
     return _importances | std::views::filter(is_non_zero) |
-           fct::ranges::to<std::map>();
+           std::ranges::to<std::map>();
   };
 
   if constexpr (!has_propositionalization_) {
@@ -406,7 +405,7 @@ FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
   };
 
   const auto targets = _schema.targets() | std::views::filter(include_target) |
-                       fct::ranges::to<std::vector>();
+                       std::ranges::to<std::vector>();
 
   const auto include = [this, &_df](const std::string& _colname) -> bool {
     return parse_subroles(_df.subroles(_colname));
@@ -414,22 +413,22 @@ FeatureLearner<FeatureLearnerType>::extract_table_by_colnames(
 
   const auto categoricals = _apply_subroles ? _schema.categoricals() |
                                                   std::views::filter(include) |
-                                                  fct::ranges::to<std::vector>()
+                                                  std::ranges::to<std::vector>()
                                             : _schema.categoricals();
 
   const auto discretes = _apply_subroles ? _schema.discretes() |
                                                std::views::filter(include) |
-                                               fct::ranges::to<std::vector>()
+                                               std::ranges::to<std::vector>()
                                          : _schema.discretes();
 
   const auto numericals = _apply_subroles ? _schema.numericals() |
                                                 std::views::filter(include) |
-                                                fct::ranges::to<std::vector>()
+                                                std::ranges::to<std::vector>()
                                           : _schema.numericals();
 
   const auto text = _apply_subroles
                         ? _schema.text() | std::views::filter(include) |
-                              fct::ranges::to<std::vector>()
+                              std::ranges::to<std::vector>()
                         : _schema.text();
 
   const auto schema = rfl::replace(
@@ -483,7 +482,7 @@ FeatureLearner<FeatureLearnerType>::extract_tables_by_colnames(
 
   const auto peripheral_tables =
       std::views::iota(0uz, _peripheral_schema.size()) |
-      std::views::transform(to_peripheral) | fct::ranges::to<std::vector>();
+      std::views::transform(to_peripheral) | std::ranges::to<std::vector>();
 
   return std::make_pair(population_table, peripheral_tables);
 }

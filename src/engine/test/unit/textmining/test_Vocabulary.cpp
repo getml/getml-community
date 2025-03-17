@@ -4,7 +4,6 @@
 #include <tuple>
 
 #include "fct/Range.hpp"
-#include "fct/to.hpp"
 #include "gtest/gtest.h"
 #include "gwt.h"
 #include "strings/String.hpp"
@@ -33,9 +32,9 @@ inline auto make_parameter(std::size_t const min_df, std::size_t const max_df,
                            std::vector<std::string> const& expected) {
   return std::make_tuple(min_df, max_df,
                          given | std::views::transform(&toStringsString) |
-                             fct::ranges::to<std::vector>(),
+                             std::ranges::to<std::vector>(),
                          expected | std::views::transform(toStringsString) |
-                             fct::ranges::to<std::vector>());
+                             std::ranges::to<std::vector>());
 }
 
 TEST_P(TestVocabulary, TestGenerate) {

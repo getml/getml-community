@@ -9,11 +9,11 @@
 #define IO_STATEMENTMAKER_HPP_
 
 #include <range/v3/view/join.hpp>
+#include <ranges>
 #include <string>
 #include <vector>
 
 #include "debug/assert_true.hpp"
-#include "fct/to.hpp"
 #include "helpers/StringSplitter.hpp"
 #include "io/Datatype.hpp"
 
@@ -38,7 +38,7 @@ class StatementMaker {
         helpers::StringSplitter::split(_table_name, ".");
     return splitted_table_names |
            ranges::views::join(_quotechar2 + "." + _quotechar1) |
-           fct::ranges::to<std::string>();
+           std::ranges::to<std::string>();
   }
 
  public:

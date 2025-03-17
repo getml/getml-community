@@ -7,13 +7,13 @@
 
 #include "fastprop/algorithm/FastProp.hpp"
 
+#include <memory>
 #include <random>
 
 #include "fastprop/algorithm/Aggregator.hpp"
 #include "fastprop/algorithm/ConditionParser.hpp"
 #include "fastprop/algorithm/RSquared.hpp"
 #include "fastprop/algorithm/TableHolderParams.hpp"
-#include "fct/to.hpp"
 #include "helpers/Matchmaker.hpp"
 #include "transpilation/HumanReadableSQLGenerator.hpp"
 
@@ -281,7 +281,7 @@ std::vector<Float> FastProp::calc_r_squared(
     const auto end = std::min(abstract_features().size(), begin + batch_size);
 
     const auto index =
-        std::views::iota(begin, end) | fct::ranges::to<std::vector>();
+        std::views::iota(begin, end) | std::ranges::to<std::vector>();
 
     const auto params = TransformParams{.feature_container_ = std::nullopt,
                                         .index_ = index,
@@ -451,7 +451,7 @@ std::vector<Int> FastProp::find_most_frequent_categories(
 
   return pairs | std::views::keys | std::views::filter(is_not_null) |
          std::views::take(hyperparameters().n_most_frequent()) |
-         fct::ranges::to<std::vector>();
+         std::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------------------------------
@@ -1125,7 +1125,7 @@ std::vector<std::vector<Float>> FastProp::init_subimportance_factors() const {
   };
 
   return subfeatures() | std::views::transform(make_factors) |
-         fct::ranges::to<std::vector>();
+         std::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------------------------------
@@ -1335,8 +1335,8 @@ std::vector<size_t> FastProp::make_subfeature_index(
 
   return _index | std::views::transform(get_feature) |
          std::views::filter(is_relevant_feature) |
-         std::views::transform(get_input_col) | fct::ranges::to<std::set>() |
-         fct::ranges::to<std::vector>();
+         std::views::transform(get_input_col) | std::ranges::to<std::set>() |
+         std::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------------------------------
@@ -1470,8 +1470,9 @@ std::shared_ptr<std::vector<size_t>> FastProp::sample_from_population(
     return dist(rng) < hyperparameters().sampling_factor();
   };
 
-  return std::views::iota(0uz, _nrows) | std::views::filter(include) |
-         fct::ranges::to<fct::shared_ptr::vector>();
+  return std::make_shared<std::vector<std::size_t>>(
+      std::views::iota(0uz, _nrows) | std::views::filter(include) |
+      std::ranges::to<std::vector>());
 }
 
 // ----------------------------------------------------------------------------
@@ -1502,10 +1503,10 @@ FastProp::select_features(
 
   assert_true(r_squared.size() == abstract_features().size());
 
-  return std::views::iota(0uz, r_squared.size()) |
-         std::views::filter(r_greater_threshold) |
-         std::views::transform(get_feature) |
-         fct::ranges::to<fct::shared_ptr::vector>();
+  return std::make_shared<const std::vector<containers::AbstractFeature>>(
+      std::views::iota(0uz, r_squared.size()) |
+      std::views::filter(r_greater_threshold) |
+      std::views::transform(get_feature) | std::ranges::to<std::vector>());
 }
 
 // ----------------------------------------------------------------------------

@@ -302,7 +302,7 @@ void DatabaseManager::list_connections(
   multithreading::ReadLock read_lock(read_write_lock_);
 
   const auto connections =
-      connector_map_ | std::views::keys | fct::ranges::to<std::vector>();
+      connector_map_ | std::views::keys | std::ranges::to<std::vector>();
 
   read_lock.unlock();
 

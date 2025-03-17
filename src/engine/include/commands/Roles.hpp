@@ -6,11 +6,11 @@
 //
 
 #include <range/v3/view/concat.hpp>
+#include <ranges>
 #include <rfl/NamedTuple.hpp>
 #include <string>
 #include <vector>
 
-#include "fct/to.hpp"
 #include "helpers/Schema.hpp"
 
 #ifndef COMMANDS_ROLES_HPP_
@@ -54,7 +54,7 @@ struct Roles {
                      f_join_key(_schema.join_keys()) *
                      f_numerical(ranges::views::concat(_schema.discretes(),
                                                        _schema.numericals()) |
-                                 fct::ranges::to<std::vector>()) *
+                                 std::ranges::to<std::vector>()) *
                      f_target(_schema.targets()) * f_text(_schema.text()) *
                      f_time_stamp(_schema.time_stamps()) *
                      f_unused_float(_schema.unused_floats()) *

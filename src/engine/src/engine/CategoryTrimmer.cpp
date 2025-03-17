@@ -7,7 +7,9 @@
 
 #include "engine/preprocessors/CategoryTrimmer.hpp"
 
+#include <ranges>
 #include <rfl/replace.hpp>
+#include <set>
 
 #include "containers/Column.hpp"
 #include "containers/DataFrame.hpp"
@@ -88,7 +90,7 @@ CategoryTrimmer::fit_transform(const Params& _params) {
 
   peripheral_sets_ = _params.peripheral_dfs() |
                      std::views::transform(fit_peripheral) |
-                     fct::ranges::to<std::vector>();
+                     std::ranges::to<std::vector>();
 
   (*_params.categories())[strings::String(TRIMMED)];
 
@@ -127,7 +129,7 @@ std::vector<typename CategoryTrimmer::CategoryPair> CategoryTrimmer::fit_df(
   };
 
   return _df.categoricals() | std::views::filter(include) |
-         std::views::transform(to_pair) | fct::ranges::to<std::vector>();
+         std::views::transform(to_pair) | std::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------
@@ -155,7 +157,7 @@ rfl::Ref<const std::set<Int>> CategoryTrimmer::make_category_set(
   const auto range = counts | std::views::filter(count_greater_than_min_freq) |
                      std::views::transform(get_first) |
                      std::views::take(max_num_categories_) |
-                     fct::ranges::to<std::set>();
+                     std::views::common | std::ranges::to<std::set>();
 
   return rfl::Ref<const std::set<Int>>::make(range);
 }
@@ -257,7 +259,7 @@ CategoryTrimmer::transform(const Params& _params) const {
 
   const auto peripheral_dfs = std::views::iota(0uz, peripheral_sets_.size()) |
                               std::views::transform(make_peripheral_df) |
-                              fct::ranges::to<std::vector>();
+                              std::ranges::to<std::vector>();
 
   return std::make_pair(population_df, peripheral_dfs);
 }

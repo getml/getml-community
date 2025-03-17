@@ -48,14 +48,14 @@ VocabularyContainer WordIndexContainer::vocabulary() const {
   const auto extract_vocab_for_df =
       [get_vocab](const WordIndices& _word_indices) {
         return _word_indices | std::views::transform(get_vocab) |
-               fct::ranges::to<std::vector>();
+               std::ranges::to<std::vector>();
       };
 
   const auto population = extract_vocab_for_df(population_);
 
   const auto peripheral = peripheral_ |
                           std::views::transform(extract_vocab_for_df) |
-                          fct::ranges::to<std::vector>();
+                          std::ranges::to<std::vector>();
 
   return VocabularyContainer(population, peripheral);
 }
@@ -75,7 +75,7 @@ typename WordIndexContainer::WordIndices WordIndexContainer::make_word_indices(
   };
 
   return std::views::iota(0uz, _df.text_.size()) |
-         std::views::transform(make_index) | fct::ranges::to<std::vector>();
+         std::views::transform(make_index) | std::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------------------------------

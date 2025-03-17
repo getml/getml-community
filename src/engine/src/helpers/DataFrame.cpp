@@ -7,9 +7,10 @@
 
 #include "helpers/DataFrame.hpp"
 
+#include <cstddef>
 #include <range/v3/view/concat.hpp>
+#include <vector>
 
-#include "fct/to.hpp"
 #include "helpers/Macros.hpp"
 
 namespace helpers {
@@ -189,7 +190,7 @@ size_t DataFrame::find_ix_join_key(
   };
 
   auto names = join_keys_ | std::views::transform(get_name) | std::views::join |
-               fct::ranges::to<std::string>();
+               std::ranges::to<std::string>();
 
   if (names.size() > 0) {
     names.back() = '.';
@@ -231,7 +232,7 @@ size_t DataFrame::find_ix_time_stamp(
   };
 
   auto names = time_stamps_ | std::views::transform(get_name) |
-               std::views::join | fct::ranges::to<std::string>();
+               std::views::join | std::ranges::to<std::string>();
 
   if (names.size() > 0) {
     names.back() = '.';
@@ -261,10 +262,10 @@ std::vector<Column<Float>> DataFrame::make_numericals_and_time_stamps(
   };
 
   const auto time_stamps = time_stamps_ | std::views::filter(is_not_upper) |
-                           fct::ranges::to<std::vector>();
+                           std::ranges::to<std::vector>();
 
   return ranges::views::concat(numericals_, _additional, targets, time_stamps) |
-         fct::ranges::to<std::vector>();
+         std::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------------------------------
@@ -305,7 +306,7 @@ std::shared_ptr<tsindex::Index> DataFrame::make_ts_index(
   const auto memory = upper_ts[0] - lower_ts.begin()[0];
 
   const auto unique_join_keys =
-      *_params.population_join_keys_ | fct::ranges::to<std::set>();
+      *_params.population_join_keys_ | std::ranges::to<std::set>();
 
   const auto find_rownums =
       [this, _ix_join_key](const Int jk) -> fct::Range<const size_t*> {
@@ -313,9 +314,9 @@ std::shared_ptr<tsindex::Index> DataFrame::make_ts_index(
     return fct::Range<const size_t*>(p.first, p.second);
   };
 
-  const auto rownums = unique_join_keys | std::views::transform(find_rownums) |
-                       std::views::join |
-                       fct::ranges::to<fct::shared_ptr::vector>();
+  const auto rownums = std::make_shared<std::vector<std::size_t>>(
+      unique_join_keys | std::views::transform(find_rownums) |
+      std::views::join | std::ranges::to<std::vector>());
 
   const auto params = tsindex::IndexParams{.join_keys_ = join_keys,
                                            .lower_ts_ = lower_ts,

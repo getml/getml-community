@@ -7,8 +7,6 @@
 
 #include "fastprop/algorithm/ConditionParser.hpp"
 
-#include "fct/to.hpp"
-
 namespace fastprop {
 namespace algorithm {
 // ----------------------------------------------------------------------------
@@ -25,7 +23,7 @@ ConditionParser::make_condition_functions(
   };
 
   return _index | std::views::transform(make_function) |
-         fct::ranges::to<std::vector>();
+         std::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------------------------------
@@ -134,7 +132,7 @@ ConditionParser::parse_conditions(
   };
 
   return _abstract_feature.conditions_ | std::views::transform(parse) |
-         fct::ranges::to<std::vector>();
+         std::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------------------------------

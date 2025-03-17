@@ -19,7 +19,6 @@
 
 #include "containers/ColumnViewIterator.hpp"
 #include "containers/ULong.hpp"
-#include "fct/to.hpp"
 #include "helpers/Column.hpp"
 #include "helpers/Endianness.hpp"
 #include "helpers/NullChecker.hpp"
@@ -681,10 +680,10 @@ Column<T> Column<T>::where(const std::vector<bool> &_condition) const {
   auto range = std::views::iota(0uz, nrows()) | std::views::filter(include) |
                std::views::transform(get_val);
 
-  const auto data_ptr =
-      pool() ? Variant(std::make_shared<MemmapVector>(pool(), range.begin(),
-                                                      range.end()))
-             : Variant(range | fct::ranges::to<fct::shared_ptr::vector>());
+  const auto data_ptr = pool() ? Variant(std::make_shared<MemmapVector>(
+                                     pool(), range.begin(), range.end()))
+                               : Variant(std::make_shared<std::vector<T>>(
+                                     range | std::ranges::to<std::vector>()));
 
   Column<T> trimmed(data_ptr);
 

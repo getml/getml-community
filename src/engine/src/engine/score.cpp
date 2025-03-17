@@ -12,7 +12,6 @@
 #include <rfl/Field.hpp>
 
 #include "engine/pipelines/FittedPipeline.hpp"
-#include "fct/to.hpp"
 #include "metrics/Scorer.hpp"
 #include "metrics/Scores.hpp"
 #include "metrics/Summarizer.hpp"
@@ -91,7 +90,7 @@ std::shared_ptr<const metrics::Scores> calculate_feature_stats(
   const auto [n1, n2, n3] = _fitted.feature_names();
 
   scores->update(rfl::make_field<"feature_names_">(
-      ranges::views::concat(n1, n2, n3) | fct::ranges::to<std::vector>()));
+      ranges::views::concat(n1, n2, n3) | std::ranges::to<std::vector>()));
 
   return scores;
 }
@@ -342,7 +341,7 @@ rfl::Ref<const metrics::Scores> score(
   };
 
   const auto y = _population_df.targets() | std::views::transform(get_feature) |
-                 fct::ranges::to<std::vector>();
+                 std::ranges::to<std::vector>();
 
   if (_yhat.size() != y.size()) {
     throw std::runtime_error(

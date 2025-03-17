@@ -87,7 +87,7 @@ inline std::vector<rfl::Ref<const T>> to_const(
     return rfl::Ref<const T>(_o);
   };
   return _orig | std::views::transform(as_const_ref) |
-         fct::ranges::to<std::vector>();
+         std::ranges::to<std::vector>();
 }
 
 /// Transforms to a vector of const references.
@@ -96,7 +96,7 @@ inline std::vector<std::vector<rfl::Ref<const T>>> to_const(
     const std::vector<std::vector<rfl::Ref<T>>>& _orig) {
   const auto as_const_ref = [](const auto& _o) { return fit::to_const(_o); };
   return _orig | std::views::transform(as_const_ref) |
-         fct::ranges::to<std::vector>();
+         std::ranges::to<std::vector>();
 }
 
 /// Transforms to a vector of shared_ptrs to a vector of
@@ -107,7 +107,7 @@ inline std::vector<rfl::Ref<T>> to_ref(
   const auto as_ref = [](const auto& _o) {
     return rfl::Ref<T>::make(_o).value();
   };
-  return _orig | std::views::transform(as_ref) | fct::ranges::to<std::vector>();
+  return _orig | std::views::transform(as_ref) | std::ranges::to<std::vector>();
 }
 
 /// Transforms to a vector of references.
@@ -116,7 +116,7 @@ inline std::vector<std::vector<rfl::Ref<T>>> to_ref(
     const std::vector<std::vector<std::shared_ptr<T>>>& _orig) {
   const auto as_const_ref = [](const auto& _o) { return fit::to_ref(_o); };
   return _orig | std::views::transform(as_const_ref) |
-         fct::ranges::to<std::vector>();
+         std::ranges::to<std::vector>();
 }
 
 }  // namespace fit

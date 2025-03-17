@@ -13,8 +13,6 @@
 #include <ranges>
 #include <stdexcept>
 
-#include "fct/to.hpp"
-
 // ----------------------------------------------------------------------------
 namespace helpers {
 // ----------------------------------------------------------------------------
@@ -122,7 +120,7 @@ std::vector<Subrole> SubroleParser::parse(
   };
 
   return _vec | std::views::transform(to_subrole) |
-         fct::ranges::to<std::vector>();
+         std::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------------------------------

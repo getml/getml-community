@@ -7,9 +7,9 @@
 
 #include "engine/preprocessors/TextFieldSplitter.hpp"
 
+#include <memory>
 #include <rfl/replace.hpp>
 
-#include "fct/to.hpp"
 #include "helpers/ColumnDescription.hpp"
 #include "helpers/Loader.hpp"
 #include "helpers/Saver.hpp"
@@ -20,8 +20,9 @@ namespace preprocessors {
 containers::DataFrame TextFieldSplitter::add_rowid(
     const containers::DataFrame& _df) const {
   // FIXME: _df.nrows() can be bigger than Int
-  const auto ptr = std::views::iota(Int{0}, static_cast<Int>(_df.nrows())) |
-                   fct::ranges::to<fct::shared_ptr::vector>();
+  const auto ptr = std::make_shared<std::vector<Int>>(
+      std::views::iota(Int{0}, static_cast<Int>(_df.nrows())) |
+      std::ranges::to<std::vector>());
 
   const auto rowid = containers::Column<Int>(ptr, helpers::Macros::rowid());
 
@@ -87,7 +88,7 @@ std::vector<rfl::Ref<helpers::ColumnDescription>> TextFieldSplitter::fit_df(
 
   return std::views::iota(0uz, _df.num_text()) |
          std::views::transform(to_column_description) |
-         fct::ranges::to<std::vector>();
+         std::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------
@@ -162,7 +163,7 @@ std::vector<std::string> TextFieldSplitter::to_sql(
     return _sql_dialect_generator->split_text_fields(_desc.ptr());
   };
 
-  return cols_ | std::views::transform(split) | fct::ranges::to<std::vector>();
+  return cols_ | std::views::transform(split) | std::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------
@@ -178,7 +179,7 @@ TextFieldSplitter::transform(const Params& _params) const {
 
   auto peripheral_dfs = _params.peripheral_dfs() |
                         std::views::transform(modify_if_applicable) |
-                        fct::ranges::to<std::vector>();
+                        std::ranges::to<std::vector>();
 
   transform_df(MarkerType::make<"[POPULATION]">(), _params.population_df(),
                &peripheral_dfs);

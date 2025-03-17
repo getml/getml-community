@@ -431,7 +431,7 @@ WordIndexContainer TableHolder::word_indices() const {
 
   const auto peripheral = peripheral_tables_ |
                           std::views::transform(extract_word_indices) |
-                          fct::ranges::to<std::vector>();
+                          std::ranges::to<std::vector>();
 
   return WordIndexContainer(population, peripheral);
 }

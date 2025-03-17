@@ -7,7 +7,6 @@
 
 #include "fastprop/algorithm/RSquared.hpp"
 
-#include "fct/to.hpp"
 #include "helpers/Aggregations.hpp"
 
 namespace fastprop {
@@ -30,7 +29,7 @@ std::vector<Float> RSquared::calculate(
   };
 
   return _features | std::views::transform(calc_r) |
-         fct::ranges::to<std::vector>();
+         std::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------------------------------
@@ -134,7 +133,7 @@ std::vector<Float> RSquared::calc_mean_targets(
   };
 
   return _targets | std::views::transform(calc_mean) |
-         fct::ranges::to<std::vector>();
+         std::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------------------------------
@@ -155,7 +154,7 @@ std::vector<Float> RSquared::calc_var_targets(
   };
 
   return _targets | std::views::transform(calc_var) |
-         fct::ranges::to<std::vector>();
+         std::ranges::to<std::vector>();
 }
 
 // ----------------------------------------------------------------------------

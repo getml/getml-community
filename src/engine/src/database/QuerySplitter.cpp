@@ -10,7 +10,6 @@
 #include <ranges>
 
 #include "debug/assert_true.hpp"
-#include "fct/to.hpp"
 #include "io/Parser.hpp"
 
 namespace database {
@@ -72,7 +71,7 @@ std::vector<std::string> QuerySplitter::sanitize(
   };
 
   return _splitted | std::views::transform(io::Parser::trim) |
-         std::views::filter(is_not_empty) | fct::ranges::to<std::vector>();
+         std::views::filter(is_not_empty) | std::ranges::to<std::vector>();
 }
 
 }  // namespace database

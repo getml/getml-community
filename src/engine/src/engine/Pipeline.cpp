@@ -55,7 +55,7 @@ rfl::Ref<std::vector<std::string>> Pipeline::parse_peripheral() const {
   };
   return rfl::Ref<std::vector<std::string>>::make(
       *obj().peripheral() | std::views::transform(get_name) |
-      fct::ranges::to<std::vector>());
+      std::ranges::to<std::vector>());
 }
 
 // ----------------------------------------------------------------------
