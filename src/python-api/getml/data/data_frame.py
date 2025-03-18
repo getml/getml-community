@@ -2845,8 +2845,12 @@ class DataFrame:
         for reader in readers:
             inferred_schema = reader.schema_arrow
             preprocessed_schema = preprocess_arrow_schema(inferred_schema, self.roles)
+            cast_batches = (
+                cast_arrow_batch(batch, preprocessed_schema)
+                for batch in reader.iter_batches(columns=colnames)
+            )
             read_arrow_batches(
-                reader.iter_batches(columns=colnames),
+                cast_batches,
                 preprocessed_schema,
                 self,
                 append,
