@@ -815,7 +815,7 @@ class View:
                 Supported values are "brotli", "gzip", "lz4", "snappy", "zstd"
             coerce_timestamps:
                 Cast time stamps to a particular resolution.
-                For detailes, refer to [pyarrow.parquet.ParquetWriter][pyarrow.parquet.ParquetWriter].
+                For details, refer to `pyarrow.parquet.ParquetWriter` docs.
         """
         to_parquet(self, fname, compression, coerce_timestamps=coerce_timestamps)
 
