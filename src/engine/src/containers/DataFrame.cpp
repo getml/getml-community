@@ -52,7 +52,9 @@ void DataFrame::add_float_column(const Column<Float> &_col,
     update_last_change();
   } else if (_role == ROLE_TIME_STAMP) {
     auto col = _col;
-    if (col.unit() == "") col.set_unit("time stamp");
+    if (col.unit() == "") {
+      col.set_unit("time stamp, comparison only");
+    }
     add_column(col, &time_stamps_);
     update_last_change();
   } else if (_role == ROLE_UNUSED || _role == ROLE_UNUSED_FLOAT) {
