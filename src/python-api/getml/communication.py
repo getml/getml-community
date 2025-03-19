@@ -327,11 +327,11 @@ def recv_float_matrix(sock: socket.socket) -> np.ndarray:
     # By default, numeric data sent over the socket is big endian,
     # also referred to as network-byte-order!
     if sys.byteorder == "little":
-        shape_str = recv_data(sock, np.nbytes[np.int32] * 2)
+        shape_str = recv_data(sock, np.dtype(np.int32).itemsize * 2)
 
         shape = np.frombuffer(shape_str, dtype=np.int32).byteswap().astype(np.uint64)
 
-        size = shape[0] * shape[1] * np.uint64(np.nbytes[np.float64])
+        size = shape[0] * shape[1] * np.uint64(np.dtype(np.float64).itemsize)
 
         matrix = recv_data(sock, size)
 
@@ -340,11 +340,11 @@ def recv_float_matrix(sock: socket.socket) -> np.ndarray:
         matrix = matrix.reshape(shape[0], shape[1])
 
     else:
-        shape_str = recv_data(sock, np.nbytes[np.int32] * 2)
+        shape_str = recv_data(sock, np.dtype(np.int32).itemsize * 2)
 
         shape = np.frombuffer(shape_str, dtype=np.int32).astype(np.uint64)
 
-        size = shape[0] * shape[1] * np.uint64(np.nbytes[np.float64])
+        size = shape[0] * shape[1] * np.uint64(np.dtype(np.float64).itemsize)
 
         matrix = recv_data(sock, size)
 
@@ -366,7 +366,7 @@ def recv_bytes(sock: socket.socket) -> bytes:
     if not isinstance(sock, socket.socket):
         raise TypeError("'sock' must be a socket.")
 
-    size_str = recv_data(sock, np.nbytes[np.uint64])
+    size_str = recv_data(sock, np.dtype(np.uint64).itemsize)
 
     size = (
         np.frombuffer(size_str, dtype=np.uint64).byteswap()[0]
@@ -395,12 +395,12 @@ def recv_string(sock: socket.socket) -> str:
     # By default, numeric data sent over the socket is big endian,
     # also referred to as network-byte-order!
     if sys.byteorder == "little":
-        size_str = recv_data(sock, np.nbytes[np.int32])
+        size_str = recv_data(sock, np.dtype(np.int32).itemsize)
 
         size = np.frombuffer(size_str, dtype=np.int32).byteswap()[0]
 
     else:
-        size_str = recv_data(sock, np.nbytes[np.int32])
+        size_str = recv_data(sock, np.dtype(np.int32).itemsize)
 
         size = np.frombuffer(size_str, dtype=np.int32)[0]
 
@@ -426,7 +426,7 @@ def recv_string_column(sock: socket.socket) -> np.ndarray:
     if not isinstance(sock, socket.socket):
         raise TypeError("'sock' must be a socket.")
 
-    nbytes_str = recv_data(sock, np.nbytes[np.uint64])
+    nbytes_str = recv_data(sock, np.dtype(np.uint64).itemsize)
 
     if sys.byteorder == "little":
         nbytes = np.frombuffer(nbytes_str, dtype=np.uint64).byteswap()[0]
