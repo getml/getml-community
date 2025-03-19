@@ -173,10 +173,10 @@ class Features:
             correlations = _attach_empty(
                 self.correlations(target_num, sort=False)[1].tolist(),
                 len(names),
-                np.NaN,
+                np.nan,
             )
             importances = _attach_empty(
-                self.importances(target_num, sort=False)[1].tolist(), len(names), np.NaN
+                self.importances(target_num, sort=False)[1].tolist(), len(names), np.nan
             )
             sql_transpilations = _attach_empty(
                 self.to_sql(subfeatures=False).code[:-1], len(names), ""
