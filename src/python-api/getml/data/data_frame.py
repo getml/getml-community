@@ -1632,7 +1632,9 @@ class DataFrame:
 
         # ------------------------------------------------------------
 
-        sniffed_roles = sniff_schema(pa.Schema.from_pandas(pandas_df))
+        sniffed_roles = sniff_schema(
+            pa.Schema.from_pandas(pandas_df, preserve_index=False)
+        )
 
         roles = _prepare_roles(roles, sniffed_roles, ignore_sniffed_roles=ignore)
 
