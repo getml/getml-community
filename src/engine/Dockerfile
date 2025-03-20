@@ -112,7 +112,7 @@ COPY $ENGINE_REPO_SOURCE $ENGINE_DIR
 
 WORKDIR $ENGINE_DIR
 ENV CMAKE_BUILD_RPATH=$GCC_HOME/lib64
-ENV CPACK_EXCLUDE_RUNTIME_DEPENDENCIES=/lib64/libgcc_s.so.1;/lib64/libstdc++.so.6;/lib64/libgomp.so.1
+ENV CPACK_EXCLUDE_RUNTIME_DEPENDENCIES=/lib64/libgcc_s.so.1;/lib64/libstdc++.so.6
 
 RUN --mount=type=cache,target=$CCACHE_PATH,id="$CCACHE_PATH-b088bb31-d9ff-442c-a877-89dfc6a34642" \
     --mount=type=cache,target=$CONAN_P,id="$CONAN_P-b088bb31-d9ff-442c-a877-89dfc6a34642",sharing=locked \
