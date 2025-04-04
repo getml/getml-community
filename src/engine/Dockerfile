@@ -45,7 +45,7 @@ RUN pipx install ninja
 # Image with necessary tools for building the engine
 FROM engine-base-tools AS engine-tools
 
-RUN pipx install "conan==2.10.1"
+RUN pipx install "conan==2.15.0"
 ENV CONAN_P=/root/.conan2/p
 ENV CONAN_BINARY=/usr/local/bin/conan
 RUN mkdir -p /root/.conan2/profiles
@@ -66,7 +66,7 @@ EOF
 RUN git clone --depth 1 --branch v4.10.2 https://github.com/ccache/ccache.git /src/ccache
 
 RUN source scl_source enable gcc-toolset-14 \
-    && cmake -DCMAKE_BUILD_TYPE=Release -S /src/ccache -B /src/ccache/build -G Ninja -D CMAKE_INSTALL_RPATH=$GCC_HOME/lib64 \
+    && cmake -DCMAKE_BUILD_TYPE=Release -S /src/ccache -B /src/ccache/build -G Ninja \
     && cmake --build /src/ccache/build \
     && cmake --install /src/ccache/build \
     && rm -r /src/ccache
@@ -81,6 +81,7 @@ ENV CONAN_INSTALLED_DIR="/src/conan_installed"
 FROM engine-tools AS engine-dependencies
 ARG ENGINE_REPO_SOURCE
 ARG ENGINE_DIR
+ENV CACHE_ID="b088bb31-d9ff-442c-a877-89dfc6a34642"
 
 RUN mkdir -p $ENGINE_DIR $CONAN_INSTALLED_DIR
 COPY $ENGINE_REPO_SOURCE/conanfile.py $ENGINE_DIR
@@ -88,8 +89,8 @@ COPY $ENGINE_REPO_SOURCE/conan-repository $ENGINE_DIR/conan-repository
 
 WORKDIR $ENGINE_DIR
 
-RUN --mount=type=cache,target=$CCACHE_PATH,id="$CCACHE_PATH-b088bb31-d9ff-442c-a877-89dfc6a34642" \
-    --mount=type=cache,target=$CONAN_P,id="$CONAN_P-b088bb31-d9ff-442c-a877-89dfc6a34642",sharing=locked \
+RUN --mount=type=cache,target=$CCACHE_PATH,id="$CCACHE_PATH-$CACHE_ID" \
+    --mount=type=cache,target=$CONAN_P,id="$CONAN_P-$CACHE_ID",sharing=locked \
     conan remote add getml-conan-repository $ENGINE_DIR/conan-repository \
     && source scl_source enable gcc-toolset-14 \
     && conan install $ENGINE_DIR --output-folder=$CONAN_INSTALLED_DIR --build missing --settings build_type=Release \
@@ -111,12 +112,10 @@ ENV ENGINE_BUILD_PATH="$ENGINE_DIR/build/release-conan-build"
 COPY $ENGINE_REPO_SOURCE $ENGINE_DIR
 
 WORKDIR $ENGINE_DIR
-ENV CMAKE_BUILD_RPATH=$GCC_HOME/lib64
-ENV CPACK_EXCLUDE_RUNTIME_DEPENDENCIES=/lib64/libgcc_s.so.1;/lib64/libstdc++.so.6
 
-RUN --mount=type=cache,target=$CCACHE_PATH,id="$CCACHE_PATH-b088bb31-d9ff-442c-a877-89dfc6a34642" \
-    --mount=type=cache,target=$CONAN_P,id="$CONAN_P-b088bb31-d9ff-442c-a877-89dfc6a34642",sharing=locked \
-    --mount=type=cache,target=$ENGINE_BUILD_PATH,id="$ENGINE_BUILD_PATH-b088bb31-d9ff-442c-a877-89dfc6a34642",sharing=locked \
+RUN --mount=type=cache,target=$CCACHE_PATH,id="$CCACHE_PATH-$CACHE_ID" \
+    --mount=type=cache,target=$CONAN_P,id="$CONAN_P-$CACHE_ID",sharing=locked \
+    --mount=type=cache,target=$ENGINE_BUILD_PATH,id="$ENGINE_BUILD_PATH-$CACHE_ID",sharing=locked \
     if [ -n "$NJOBS" ]; then export CMAKE_BUILD_PARALLEL_LEVEL="$NJOBS"; fi \
     && source scl_source enable gcc-toolset-14 \
     && ccache --zero-stats \
@@ -132,8 +131,8 @@ FROM engine-build AS engine-package
 ARG TARGETARCH
 ARG PACKAGE_NAME="getml-community-$GETML_VERSION-$TARGETARCH-linux"
 
-RUN --mount=type=cache,target=$CONAN_P,id="$CONAN_P-b088bb31-d9ff-442c-a877-89dfc6a34642",sharing=locked \
-    --mount=type=cache,target=$ENGINE_BUILD_PATH,id="$ENGINE_BUILD_PATH-b088bb31-d9ff-442c-a877-89dfc6a34642",sharing=locked \
+RUN --mount=type=cache,target=$CONAN_P,id="$CONAN_P-$CACHE_ID",sharing=locked \
+    --mount=type=cache,target=$ENGINE_BUILD_PATH,id="$ENGINE_BUILD_PATH-$CACHE_ID",sharing=locked \
     mkdir -p /engine-package/$PACKAGE_NAME/ \
     && cmake --install $ENGINE_BUILD_PATH --prefix /engine-package/$PACKAGE_NAME/ --strip
 
