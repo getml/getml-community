@@ -238,9 +238,9 @@ Older versions of CMake can use the `CMAKE_EXE_LINKER_FLAGS` and `CMAKE_SHARED_L
 See ['How to try out the new mold linker with your CMake C/C++ project'](https://gist.github.com/MawKKe/b8af6c1555f1c7aa4c2760350ed97fff).
 
 ```bash
-$ cmake --preset debug-conan -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=gold -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=gold"
-$ cmake --preset debug-conan -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld"
-$ cmake --preset debug-conan -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=mold -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=mold"
+$ cmake --preset debug-conan -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=gold" -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=gold"
+$ cmake --preset debug-conan -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld" -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld"
+$ cmake --preset debug-conan -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=mold" -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=mold"
 ```
 
 Especially `mold` is very fast and can be used as a drop-in replacement for `ld` while developing.

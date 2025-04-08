@@ -323,7 +323,8 @@ std::string XGBoostPredictor::fit(
 
   bst_ulong len = 0;
 
-  if (XGBoosterGetModelRaw(*handle, &len, &out_dptr) != 0) {
+  if (XGBoosterSaveModelToBuffer(*handle, R"({"format": "deprecated"})", &len,
+                                 &out_dptr) != 0) {
     throw std::runtime_error("Storing of booster failed!");
   }
 
@@ -427,7 +428,8 @@ void XGBoostPredictor::load(const std::string &_fname) {
 
   bst_ulong len = 0;
 
-  if (XGBoosterGetModelRaw(*handle, &len, &out_dptr) != 0) {
+  if (XGBoosterSaveModelToBuffer(*handle, R"({"format": "deprecated"})", &len,
+                                 &out_dptr) != 0) {
     throw std::runtime_error("Storing of booster failed!");
   }
 
