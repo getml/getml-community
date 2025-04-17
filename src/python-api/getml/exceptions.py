@@ -7,7 +7,7 @@
 
 import re
 from inspect import cleandoc
-from typing import Any, Callable, Dict, Optional, Protocol
+from typing import Any, Callable, Dict, Optional, Protocol, Tuple
 
 import pyarrow as pa
 from pyarrow.lib import ArrowInvalid
@@ -56,7 +56,7 @@ class ArrowCastExceptionHandlerRegistry:
     the handlers have to parse the exception themselves.
     """
 
-    handlers: Dict[tuple[pa.DataType, pa.DataType], ArrowExceptionHandler] = {}
+    handlers: Dict[Tuple[pa.DataType, pa.DataType], ArrowExceptionHandler] = {}
 
     def __call__(
         self,
