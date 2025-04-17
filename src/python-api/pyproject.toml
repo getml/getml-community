@@ -37,12 +37,9 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "pandas>=2.0.3,<2.3; python_version < '3.13'",
-    "pandas>=2.2,<2.3; python_version >= '3.13'",
-    "pyarrow>=16.0,<20.0; python_version < '3.13'",
-    "pyarrow>=18.0,<20.0; python_version >= '3.13'",
-    "numpy>=1.24.4,<2.3; python_version < '3.13'",
-    "numpy>=2.1.0,<2.3; python_version >= '3.13'",
+    "pandas>=2.0.3,<2.3",
+    "pyarrow>=16.0,<20.0",
+    "numpy>=1.24.4,<2.3",
     "jinja2~=3.1.0",
     "rich~=13.0",
     "typing-extensions~=4.0",
