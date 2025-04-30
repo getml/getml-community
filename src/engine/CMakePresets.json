@@ -53,15 +53,6 @@
       }
     },
     {
-      "name": "release-conan",
-      "displayName": "Release (conan)",
-      "description": "Release configuration using conan",
-      "inherits": "release",
-      "cacheVariables": {
-        "USE_CONAN": true
-      }
-    },
-    {
       "name": "debug",
       "displayName": "Debug",
       "description": "Debug configuration",
@@ -84,15 +75,6 @@
         "HIDE_DEBUG_INFO": false,
         "USE_PROFILING": true
       }
-    },
-    {
-      "name": "debug-conan",
-      "displayName": "Debug (conan)",
-      "description": "Debug configuration using conan",
-      "inherits": "debug",
-      "cacheVariables": {
-        "USE_CONAN": true
-      }
     }
   ],
   "buildPresets": [
@@ -106,20 +88,15 @@
       "name": "release-native",
       "displayName": "Release native",
       "description": "Release build with native optimizations",
-      "configurePreset": "release-native"
+      "configurePreset": "release-native",
+	  "inherits": "release"
     },
     {
       "name": "release-original",
       "displayName": "Release (original)",
       "description": "Release build with original optimizations",
-      "configurePreset": "release-original"
-    },
-    {
-      "name": "release-conan",
-      "displayName": "Release (conan)",
-      "description": "Release build using conan",
-      "inherits": "release",
-      "configurePreset": "release-conan"
+      "configurePreset": "release-original",
+	  "inherits": "release"
     },
     {
       "name": "debug",
@@ -131,14 +108,8 @@
       "name": "debug-full",
       "displayName": "Debug with full information",
       "description": "Debug build with full debug information",
-      "configurePreset": "debug-full"
-    },
-    {
-      "name": "debug-conan",
-      "displayName": "Debug (conan)",
-      "description": "Debug build using conan",
-      "inherits": "debug",
-      "configurePreset": "debug-conan"
+      "configurePreset": "debug-full",
+	  "inherits": "debug"
     }
   ],
   "testPresets": [
@@ -161,13 +132,6 @@
         "shortProgress": false,
         "outputOnFailure": true
       }
-    },
-    {
-      "name": "debug-conan",
-      "displayName": "Debug (conan)",
-      "description": "Debug test using conan",
-      "configurePreset": "debug-conan",
-      "inherits": "debug"
     }
   ],
   "packagePresets": [
@@ -192,13 +156,6 @@
       "displayName": "Release original",
       "description": "Release original package",
       "configurePreset": "release-original",
-      "inherits": "release"
-    },
-    {
-      "name": "release-conan",
-      "displayName": "Release (conan)",
-      "description": "Release package using conan",
-      "configurePreset": "release-conan",
       "inherits": "release"
     }
   ],
@@ -261,25 +218,6 @@
       ]
     },
     {
-      "name": "release-conan",
-      "displayName": "Release (conan)",
-      "description": "Release workflow using conan",
-      "steps": [
-        {
-          "type": "configure",
-          "name": "release-conan"
-        },
-        {
-          "type": "build",
-          "name": "release-conan"
-        },
-        {
-          "type": "package",
-          "name": "release-conan"
-        }
-      ]
-    },
-    {
       "name": "debug",
       "displayName": "Debug",
       "description": "Debug workflow",
@@ -306,21 +244,6 @@
         {
           "type": "build",
           "name": "debug-full"
-        }
-      ]
-    },
-    {
-      "name": "debug-conan",
-      "displayName": "Debug (conan)",
-      "description": "Debug workflow using conan",
-      "steps": [
-        {
-          "type": "configure",
-          "name": "debug-conan"
-        },
-        {
-          "type": "build",
-          "name": "debug-conan"
         }
       ]
     }

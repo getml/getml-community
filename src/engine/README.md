@@ -27,10 +27,7 @@ $ cmake --build --preset $PRESET_NAME
 
 ### Requirements
 
-For dependencies either
-
-* [Conan](https://docs.conan.io/2/installation.html) (see [conanfile.py](./conanfile.py)) or
-* system packages (check [CMakeLists.txt](CMakeLists.txt)) can be used.
+This project uses [Conan](https://docs.conan.io/2/installation.html) for its dependency management. See [`conanfile.py`](./conanfile.py) for configuration details.
 
 
 #### AlmaLinux
@@ -109,10 +106,8 @@ Available configure presets:
   "release"          - Release
   "release-native"   - Release native
   "release-original" - Release (original)
-  "release-conan"    - Release (conan)
   "debug"            - Debug
   "debug-full"       - Debug with full information
-  "debug-conan"      - Debug (conan)
 ```
 
 
@@ -125,10 +120,8 @@ Available build presets:
   "release"          - Release
   "release-native"   - Release native
   "release-original" - Release (original)
-  "release-conan"    - Release (conan)
   "debug"            - Debug
   "debug-full"       - Debug with full information
-  "debug-conan"      - Debug (conan)
 ```
 
 
@@ -140,7 +133,6 @@ Available test presets:
 
   "release"     - Release
   "debug"       - Debug
-  "debug-conan" - Debug (conan)
 ```
 
 
@@ -153,7 +145,6 @@ Available package presets:
   "release"          - Release
   "release-native"   - Release native
   "release-original" - Release original
-  "release-conan"    - Release (conan)
 ```
 
 
@@ -166,10 +157,8 @@ Available workflow presets:
   "release"          - Release
   "release-native"   - Release native
   "release-original" - Release (original)
-  "release-conan"    - Release (conan)
   "debug"            - Debug
   "debug-full"       - Debug with full information
-  "debug-conan"      - Debug (conan)
 ```
 
 
@@ -178,40 +167,19 @@ Available workflow presets:
 A CMake workflow consists at least of a `configuration` and can have steps for `build`, `test`, `package`.
 
 
-### Using system packages
+Make sure to have conan installed: [https://conan.io/](https://conan.io/)
 
 ```bash
 $ cmake --workflow --preset debug
 $ cmake --workflow --preset release
 ```
 
-
-### Using CONAN
-
-Make sure to install conan: [https://conan.io/](https://conan.io/)
-
-```bash
-$ CONAN_BINARY=$(which conan) cmake --workflow --preset debug-conan
-$ CONAN_BINARY=$(which conan) cmake --workflow --preset release-conan
-```
-
 For setting a specific profile, use the `CONAN_PROFILE` variable. The profile must be available in the conan profiles
 under `~/.conan2/profiles/`.
 
 ```bash
-$ CONAN_BINARY=$(which conan) CONAN_PROFILE=debug-clang18 cmake --workflow --preset debug-conan
-$ CONAN_BINARY=$(which conan) CONAN_PROFILE=release-gcc cmake --workflow --preset release-conan
-```
-
-
-### Creating a publishable release
-
-To get a publishable release package, the right combination of flags and libraries must be used.
-
-The current available preset for it is `release-conan-x86_64-linux`
-
-```bash
-$ CONAN_BINARY=$(which conan) cmake --workflow --preset release-conan-x86_64-linux
+$ CONAN_PROFILE=debug-clang18 cmake --workflow --preset debug
+$ CONAN_PROFILE=release-gcc cmake --workflow --preset release
 ```
 
 
@@ -226,9 +194,9 @@ To speed up link time, for example the following linkers can be used
 - [`mold`](https://github.com/rui314/mold)
 
 ```bash
-$ cmake --preset debug-conan -DCMAKE_LINKER_TYPE=GOLD
-$ cmake --preset debug-conan -DCMAKE_LINKER_TYPE=LLD
-$ cmake --preset debug-conan -DCMAKE_LINKER_TYPE=MOLD
+$ cmake --preset debug -DCMAKE_LINKER_TYPE=GOLD
+$ cmake --preset debug -DCMAKE_LINKER_TYPE=LLD
+$ cmake --preset debug -DCMAKE_LINKER_TYPE=MOLD
 ```
 
 This works since [CMake 3.29](https://cmake.org/cmake/help/latest/variable/CMAKE_LINKER_TYPE.html).
@@ -238,9 +206,9 @@ Older versions of CMake can use the `CMAKE_EXE_LINKER_FLAGS` and `CMAKE_SHARED_L
 See ['How to try out the new mold linker with your CMake C/C++ project'](https://gist.github.com/MawKKe/b8af6c1555f1c7aa4c2760350ed97fff).
 
 ```bash
-$ cmake --preset debug-conan -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=gold" -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=gold"
-$ cmake --preset debug-conan -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld" -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld"
-$ cmake --preset debug-conan -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=mold" -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=mold"
+$ cmake --preset debug -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=gold" -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=gold"
+$ cmake --preset debug -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld" -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld"
+$ cmake --preset debug -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=mold" -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=mold"
 ```
 
 Especially `mold` is very fast and can be used as a drop-in replacement for `ld` while developing.
@@ -251,7 +219,7 @@ Especially `mold` is very fast and can be used as a drop-in replacement for `ld`
 Use the environment variable `CMAKE_BUILD_PARALLEL_LEVEL` to limit the number of jobs or threads used by the build.
 
 ```bash
-$ CMAKE_BUILD_PARALLEL_LEVEL=4 cmake --workflow --preset debug-conan
+$ CMAKE_BUILD_PARALLEL_LEVEL=4 cmake --workflow --preset debug
 ```
 
 This is especially useful when building on a machine with limited resources.
@@ -339,22 +307,22 @@ $ docker run -it engine-run-debian
 For running tests, first they need to be enabled and built. Then they can be ran via `ctest`.
 
 ```bash
-$ cmake --preset debug-conan -DBUILD_TESTS=ON
-$ cmake --build --preset debug-conan
-$ ctest --preset debug-conan
+$ cmake --preset debug -DBUILD_TESTS=ON
+$ cmake --build --preset debug
+$ ctest --preset debug
 ```
 
 Alternatively, each test suite can be executed from its own executable.
 
 ```bash
-$ ./build/debug-conan-build/test/unit/fct/test_to
+$ ./build/debug-build/test/unit/fct/test_to
 ```
 
 On failures, GDB, LLDB or other debuggers can be used.
 
 ```bash
-$ gdb --tui --args ./build/debug-conan-build/test/unit/fct/test_to --gtest_break_on_failure
-$ lldb ./build/debug-conan-build/test/unit/fct/test_to -- --gtest_break_on_failure
+$ gdb --tui --args ./build/debug-build/test/unit/fct/test_to --gtest_break_on_failure
+$ lldb ./build/debug-build/test/unit/fct/test_to -- --gtest_break_on_failure
 ```
 
 ### Code Coverage
@@ -375,7 +343,7 @@ To generate code coverage, the `lcov` and `genhtml` tools can be used as follows
 
 ```bash
 $ lcov --zerocounters --directory .
-$ ctest --preset debug-conan
+$ ctest --preset debug
 $ lcov --capture --directory . --output-file coverage.info --ignore-errors inconsistent
 $ genhtml coverage.info --output-directory coverage
 $ python3 -m http.server --directory coverage
@@ -393,6 +361,6 @@ To use the LSP, a `compile_commands.json` file is needed. This can be generated 
 It is enabled in debug presets.
 
 ```bash
-$ CONAN_BINRAY=$(which conan) cmake --preset debug-conan
-$ ln -s build/engine-debug-conan-build/compile_commands.json compile_commands.json
+$ cmake --preset debug
+$ ln -s build/engine-debug-build/compile_commands.json compile_commands.json
 ```

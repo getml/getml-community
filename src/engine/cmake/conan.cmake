@@ -1,11 +1,4 @@
 function(install_conan)
-  execute_process(
-    COMMAND ${CONAN_EXECUTABLE} --version
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    OUTPUT_VARIABLE CONAN_VERSION
-  )
-  message(STATUS "Using Conan version: ${CONAN_VERSION}")
-
   if(NOT $ENV{CONAN_PROFILE} STREQUAL "")
     message(STATUS "Using Conan profile: $ENV{CONAN_PROFILE}")
     set(USE_CONAN_PROFILE --profile:all $ENV{CONAN_PROFILE} CACHE STRING "Conan profile")
@@ -82,52 +75,16 @@ endfunction(uninstall_local_conan_repository)
 
 
 function(prepare_conan)
-  set(
-    USE_CONAN
-      OFF
-    CACHE
-    BOOL
-    "Use conan to install dependencies")
-
-  if(NOT USE_CONAN)
-    message(STATUS "Not using Conan to install dependencies.")
-    return()
-  endif()
-
   message(STATUS "Using Conan to install dependencies.")
 
-  if(DEFINED ENV{CONAN_BINARY})
-    if(NOT EXISTS $ENV{CONAN_BINARY})
-      message(FATAL_ERROR "Variable CONAN_BINARY must be set to the binary with its full path.")
-      return()
-    endif()
+  find_program(CONAN_EXECUTABLE conan REQUIRED)
 
-    message(STATUS "Using CONAN_BINARY from environment variable $ENV{CONAN_BINARY}.")
-    set(
-      CONAN_BINARY
-        $ENV{CONAN_BINARY}
-      CACHE
-      FILEPATH
-      "Conan binary with its full path"
-      FORCE)
-
-  else()
-    set(
-      CONAN_BINARY
-        "CONAN_BINARY_NOT_FOUND"
-      CACHE
-      FILEPATH
-      "Conan binary with its full path")
-
-    if("${CONAN_BINARY}" STREQUAL "CONAN_BINARY_NOT_FOUND" OR "${CONAN_BINARY}" STREQUAL "")
-      message(FATAL_ERROR "Variable CONAN_BINARY must be set when using conan via USE_CONAN=ON.")
-      return()
-    endif()
-
-    message(STATUS "Using CONAN_BINARY from cache variable ${CONAN_BINARY}.")
-  endif()
-
-  find_program(CONAN_EXECUTABLE ${CONAN_BINARY} NO_CACHE REQUIRED)
+  execute_process(
+    COMMAND ${CONAN_EXECUTABLE} --version
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    OUTPUT_VARIABLE CONAN_VERSION
+  )
+  message(STATUS "Using Conan (${CONAN_EXECUTABLE}) version: ${CONAN_VERSION}")
 
   install_local_conan_repository()
   install_conan()

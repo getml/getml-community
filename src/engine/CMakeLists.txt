@@ -47,44 +47,14 @@ find_package(range-v3 REQUIRED)
 find_package(reflectcpp REQUIRED)
 find_package(yyjson REQUIRED)
 
+message(STATUS "Using Conan specific packages")
+message(STATUS "-> mariadb")
+find_package(mariadb-connector-c REQUIRED)
+add_library(libmariadb::libmariadb ALIAS mariadb-connector-c::mariadb-connector-c)
 
-if(NOT ${USE_CONAN})
+message(STATUS "-> Parquet")
+add_library(parquet::parquet ALIAS Parquet::parquet_static)
 
-  message(STATUS "Using system packages")
-
-  find_package(PkgConfig REQUIRED)
-
-  message(STATUS "-> mariadb")
-  pkg_check_modules(libmariadb REQUIRED IMPORTED_TARGET libmariadb)
-  add_library(libmariadb::libmariadb ALIAS PkgConfig::libmariadb)
-
-  message(STATUS "-> Arrow")
-  if(${ARROW_BUILD_STATIC})
-    add_library(arrow::arrow ALIAS Arrow::arrow_static)
-  else()
-    add_library(arrow::arrow ALIAS Arrow::arrow_shared)
-  endif()
-
-  message(STATUS "-> Parquet")
-  find_package(Parquet REQUIRED)
-  if(${ARROW_BUILD_STATIC})
-    add_library(parquet::parquet ALIAS Parquet::parquet_static)
-  else()
-    add_library(parquet::parquet ALIAS Parquet::parquet_shared)
-  endif()
-
-else()
-
-  message(STATUS "Using Conan packages")
-
-  message(STATUS "-> mariadb")
-  find_package(mariadb-connector-c REQUIRED)
-  add_library(libmariadb::libmariadb ALIAS mariadb-connector-c::mariadb-connector-c)
-
-  message(STATUS "-> Parquet")
-  add_library(parquet::parquet ALIAS Parquet::parquet_static)
-
-endif()
 
 if(DEFINED ENV{CMAKE_BUILD_RPATH})
   set(
