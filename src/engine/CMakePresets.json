@@ -61,8 +61,9 @@
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_EXPORT_COMPILE_COMMANDS": true,
         "USE_STATIC_ANALYSIS": false,
-        "HIDE_DEBUG_INFO": true,
-        "USE_PROFILING": false
+        "HIDE_DEBUG_INFO": false,
+        "USE_PROFILING": false,
+        "BUILD_TESTS": true
       }
     },
     {
@@ -89,14 +90,14 @@
       "displayName": "Release native",
       "description": "Release build with native optimizations",
       "configurePreset": "release-native",
-	  "inherits": "release"
+      "inherits": "release"
     },
     {
       "name": "release-original",
       "displayName": "Release (original)",
       "description": "Release build with original optimizations",
       "configurePreset": "release-original",
-	  "inherits": "release"
+      "inherits": "release"
     },
     {
       "name": "debug",
@@ -109,7 +110,7 @@
       "displayName": "Debug with full information",
       "description": "Debug build with full debug information",
       "configurePreset": "debug-full",
-	  "inherits": "debug"
+      "inherits": "debug"
     }
   ],
   "testPresets": [

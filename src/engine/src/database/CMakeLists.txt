@@ -1,5 +1,5 @@
 target_sources(
-  engine
+  engine-base
   PRIVATE
   ContentGetter.cpp
   CSVBuffer.cpp

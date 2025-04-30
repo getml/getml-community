@@ -17,6 +17,8 @@
 
 #else
 
+#include "debug/Assert.hpp"
+
 #define assert_msg(EX, CUSTOM_MSG)                                             \
   (void)((EX) ||                                                               \
          (debug::Assert::throw_exception(#EX, __FILE__, __LINE__, CUSTOM_MSG), \

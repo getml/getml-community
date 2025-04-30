@@ -1,18 +1,19 @@
-add_executable(
-  engine
-)
+add_library(engine-base OBJECT)
+add_executable(engine)
 
 if(is_ipo_supported AND ${CMAKE_BUILD_TYPE} STREQUAL "Release")
+  set_target_properties(engine-base PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
   set_target_properties(engine PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif()
 
-target_compile_features(engine PRIVATE cxx_std_23)
+target_compile_features(engine-base PUBLIC cxx_std_23)
+set_target_properties(engine-base PROPERTIES CXX_EXTENSIONS OFF)
 set_target_properties(engine PROPERTIES CXX_EXTENSIONS OFF)
 
-target_include_directories(engine PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_include_directories(engine-base PUBLIC ${CMAKE_SOURCE_DIR}/include)
 target_link_libraries(
-  engine
-  PRIVATE
+  engine-base
+  PUBLIC
   $<$<BOOL:${USE_PROFILING}>:PkgConfig::libprofiler>
   $<$<BOOL:${USE_PROFILING}>:PkgConfig::libunwind>
   $<$<BOOL:${OpenMP_CXX_FOUND}>:OpenMP::OpenMP_CXX>
@@ -31,12 +32,14 @@ target_link_libraries(
 )
 
 target_compile_definitions(
-  engine
-  PRIVATE
+  engine-base
+  PUBLIC
   $<$<BOOL:${USE_PROFILING}>:GETML_PROFILING=1>
   $<$<NOT:$<BOOL:${EIGEN_PARALLELIZE}>>:EIGEN_DONT_PARALLELIZE=1>
   $<$<BOOL:${HIDE_DEBUG_INFO}>:NDEBUG=1>
 )
+
+target_link_libraries(engine PRIVATE engine-base)
 
 set_target_properties(
   engine

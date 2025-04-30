@@ -311,7 +311,7 @@ void fill_zeros(std::vector<helpers::ImportanceMaker>* _f_importances) {
 std::vector<Float> make_importance_factors(
     const size_t _num_features, const std::vector<size_t>& _autofeatures,
     const std::vector<Float>::const_iterator _begin,
-    const std::vector<Float>::const_iterator) {
+    [[maybe_unused]] const std::vector<Float>::const_iterator _end) {
   auto importance_factors = std::vector<Float>(_num_features);
 
   assert_true(_end >= _begin);

@@ -339,7 +339,8 @@ CSRMatrix<DataType, IndicesType, IndptrType>::update_indices_from_int(
 
 template <typename DataType, typename IndicesType, typename IndptrType>
 void CSRMatrix<DataType, IndicesType, IndptrType>::update_indptr_from_int(
-    const fct::Range<const Int*>& _col, const size_t) {
+    const fct::Range<const Int*>& _col,
+    [[maybe_unused]] const size_t _num_non_negative) {
   assert_true(_col.size() + 1 == indptr_.size());
 
   IndptrType num_added = 0;
