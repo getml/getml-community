@@ -107,6 +107,7 @@ ENV GETML_VERSION=$VERSION
 ARG ENGINE_PRESET="release"
 ARG ENGINE_REPO_SOURCE
 ARG ENGINE_DIR
+ARG CMAKE_FRESH_PRESET=""
 ENV ENGINE_BUILD_PATH="$ENGINE_DIR/build/release-build"
 
 COPY $ENGINE_REPO_SOURCE $ENGINE_DIR
@@ -119,7 +120,7 @@ RUN --mount=type=cache,target=$CCACHE_PATH,id="$CCACHE_PATH-$CACHE_ID" \
     if [ -n "$NJOBS" ]; then export CMAKE_BUILD_PARALLEL_LEVEL="$NJOBS"; fi \
     && source scl_source enable gcc-toolset-14 \
     && ccache --zero-stats \
-    && cmake --preset ${ENGINE_PRESET} -D CMAKE_UNITY_BUILD=ON -D CMAKE_UNITY_BUILD_BATCH_SIZE=0 \
+    && cmake --preset ${ENGINE_PRESET} -D CMAKE_UNITY_BUILD=ON -D CMAKE_UNITY_BUILD_BATCH_SIZE=0 ${CMAKE_FRESH_PRESET:+ --fresh} \
     && cmake --build --preset ${ENGINE_PRESET} \
     && ccache --show-stats -v -v
 

@@ -285,6 +285,18 @@ $ docker build \
   .
 ```
 
+Sometimes the cmake cache is not updated correctly. In that case, use the `CMAKE_FRESH_PRESET` flag to force a fresh preset.
+
+```bash
+$ docker build \
+  -f Dockerfile \
+  --target package \
+  --build-arg VERSION=1.5.0 \
+  --build-arg CMAKE_FRESH_PRESET=true \
+  --output type=local,dest=$(pwd)/build-docker \
+  .
+```
+
 
 ### Quick check of Docker built engine
 
