@@ -9,6 +9,7 @@ import json
 from typing import Any, Dict
 
 import numpy as np
+import pyarrow as pa
 import pytest
 
 import getml
@@ -43,6 +44,22 @@ def test_from_pandas_with_roles(getml_project, pandas_df):
 # --------------------------------------------------------------------
 
 
+def test_from_pandas_round_trip_roles(getml_project, pandas_df):
+    roles = {
+        "join_key": ["join_key"],
+        "time_stamp": ["time_stamp"],
+        "numerical": ["col"],
+    }
+
+    df = getml.DataFrame.from_pandas(name="databert", pandas_df=pandas_df, roles=roles)
+    pandas_df = df.to_pandas()
+    df_reload = getml.DataFrame.from_pandas(name="databert_reload", pandas_df=pandas_df)
+    assert df_reload.roles == df.roles
+
+
+# --------------------------------------------------------------------
+
+
 def test_to_pandas(getml_project, pandas_df):
     df = getml.DataFrame.from_pandas(name="databert", pandas_df=pandas_df)
 
@@ -50,6 +67,87 @@ def test_to_pandas(getml_project, pandas_df):
     assert all(pandas_df["join_key"] == pandas_df_reload["join_key"])
     assert all(pandas_df["col"].astype(int) == pandas_df_reload["col"].astype(int))
     assert pandas_df.shape == pandas_df_reload.shape
+
+
+# --------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("df", ["df1", "df2", "df3"], indirect=True)
+def test_to_pandas_metadata(getml_project, df):
+    pandas_df = df.to_pandas()
+    metadata = pandas_df.attrs["getml"]
+    assert metadata["name"] == df.name
+    assert metadata["last_change"] == df.last_change
+    assert metadata["roles"] == df.roles.to_dict()
+
+
+# --------------------------------------------------------------------
+
+
+def test_from_arrow(getml_project, arrow_table):
+    df = getml.DataFrame.from_arrow(arrow_table, name="databert")
+    assert getml.data.list_data_frames()["in_memory"] == ["databert"]
+    assert set(df.roles.unused) == set(arrow_table.column_names)
+    assert df.shape == arrow_table.shape
+
+
+# --------------------------------------------------------------------
+
+
+def test_from_arrow_with_roles(getml_project, arrow_table):
+    roles = {
+        "join_key": ["join_key"],
+        "time_stamp": ["time_stamp"],
+        "numerical": ["col"],
+    }
+
+    df = getml.DataFrame.from_arrow(arrow_table, name="databert", roles=roles)
+
+    assert getml.data.list_data_frames()["in_memory"] == ["databert"]
+    assert df._time_stamp_names == ["time_stamp"]
+    assert df._numerical_names == ["col"]
+    assert df.shape == arrow_table.shape
+
+
+# --------------------------------------------------------------------
+
+
+def test_from_arrow_round_trip_roles(getml_project, arrow_table):
+    roles = {
+        "join_key": ["join_key"],
+        "time_stamp": ["time_stamp"],
+        "numerical": ["col"],
+    }
+
+    df = getml.DataFrame.from_arrow(arrow_table, name="databert", roles=roles)
+    arrow_table = df.to_arrow()
+    df_reload = getml.DataFrame.from_arrow(arrow_table, name="databert_reload")
+    assert df_reload.roles == df.roles
+
+
+# --------------------------------------------------------------------
+
+
+def test_to_arrow(getml_project, arrow_table):
+    df = getml.DataFrame.from_arrow(arrow_table, name="databert")
+
+    arrow_table_reload = df.to_arrow()
+    assert arrow_table.shape == arrow_table_reload.shape
+    assert set(arrow_table.column_names) == set(arrow_table_reload.column_names)
+    assert arrow_table.equals(arrow_table_reload)
+
+
+# --------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("df", ["df1", "df2", "df3"], indirect=True)
+def test_to_arrow_metadata(getml_project, df):
+    arrow_table = df.to_arrow()
+    metadata = arrow_table.schema.metadata[b"getml"]
+    metadata_unmarshaled = json.loads(metadata)
+    assert metadata_unmarshaled["name"] == df.name
+    assert metadata_unmarshaled["last_change"] == df.last_change
+    assert metadata_unmarshaled["roles"] == df.roles.to_dict()
 
 
 # --------------------------------------------------------------------

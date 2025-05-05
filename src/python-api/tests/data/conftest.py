@@ -83,6 +83,19 @@ def pandas_df():
 
 
 @pytest.fixture
+def arrow_table(pandas_df):
+    return pa.Table.from_pandas(pandas_df).cast(
+        pa.schema(
+            {
+                "col": pa.float64(),
+                "join_key": pa.string(),
+                "time_stamp": pa.string(),
+            }
+        )
+    )
+
+
+@pytest.fixture
 def df1():
     json_str1 = """{
         "names": ["patrick", "alex", "phil", "ulrike"],

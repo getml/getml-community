@@ -11,6 +11,7 @@ Utilities for handling Arrow data structures.
 
 from __future__ import annotations
 
+import json
 import re
 import warnings
 from dataclasses import dataclass, field
@@ -396,7 +397,18 @@ def preprocess_arrow_schema(schema: pa.Schema, roles: Roles) -> pa.Schema:
 
 
 def sniff_schema(schema: pa.Schema, colnames: Iterable[str] = ()) -> Roles:
-    roles: Dict[Role, List[str]] = {}
+    arrow_metadata = schema.metadata or {}
+    if metadata := arrow_metadata.get(b"getml"):
+        metadata_unmarshaled = json.loads(metadata)
+        roles = metadata_unmarshaled["roles"]
+        return Roles.from_dict(roles)
+
+    if metadata := arrow_metadata.get(b"PANDAS_ATTRS", {}).get(b"getml"):
+        metadata_unmarshaled = json.loads(metadata)
+        roles = metadata_unmarshaled["roles"]
+        return Roles.from_dict(roles)
+
+    roles: Dict[str, List[str]] = {}
     roles["unused_float"] = []
     roles["unused_string"] = []
 
@@ -431,6 +443,14 @@ def to_arrow(df_or_view: Union[DataFrame, View]) -> pa.Table:
         "name_": df_or_view.name if typename == "DataFrame" else "",
     }
 
+    metadata = {
+        "name": df_or_view.name,
+        "last_change": df_or_view.last_change,
+        "roles": df_or_view.roles.to_dict(),
+    }
+
+    metadata_encoded = {"getml": json.dumps(metadata)}
+
     if typename == "View":
         cmd["view_"] = df_or_view._getml_deserialize()
 
@@ -440,7 +460,7 @@ def to_arrow(df_or_view: Union[DataFrame, View]) -> pa.Table:
             comm.handle_engine_exception(msg)
         with sock.makefile(mode="rb") as stream:
             with pa.ipc.open_stream(stream) as reader:
-                return reader.read_all()
+                return reader.read_all().replace_schema_metadata(metadata_encoded)
 
 
 def to_arrow_batches(

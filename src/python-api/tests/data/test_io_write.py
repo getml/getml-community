@@ -1,3 +1,8 @@
+import json
+
+import pyarrow.parquet as pq
+import pytest
+
 import getml
 from tests.conftest import workdir
 
@@ -32,3 +37,15 @@ def test_write_parquet(getml_project, tmpdir):
         assert df2.shape == (3, 2)
         assert df2.columns == ["a", "b"]
         assert df2["a"].to_numpy().tolist() == [1, 2, 3]  # type: ignore
+
+
+@pytest.mark.parametrize("df", ["df1", "df2", "df3"], indirect=True)
+def test_to_parquet_metadata(getml_project, df, tmpdir):
+    with workdir(tmpdir):
+        df.to_parquet("test.parquet")
+        schema = pq.read_schema("test.parquet")
+        metadata = schema.metadata[b"getml"]
+        metadata_unmarshaled = json.loads(metadata)
+        assert metadata_unmarshaled["name"] == df.name
+        assert metadata_unmarshaled["last_change"] == df.last_change
+        assert metadata_unmarshaled["roles"] == df.roles.to_dict()

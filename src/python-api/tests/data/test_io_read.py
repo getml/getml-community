@@ -1,3 +1,5 @@
+from tempfile import NamedTemporaryFile
+
 import pytest
 
 import getml
@@ -11,6 +13,14 @@ def test_read_parquet(getml_project, parquet_file):
     assert df.columns == ["a", "b"]
     assert df["a"].to_numpy().tolist() == [1, 2, 3]  # type: ignore
     assert df["b"].to_numpy().tolist() == [4, 5, 6]  # type: ignore
+
+
+@pytest.mark.parametrize("df", ["df1", "df2", "df3"], indirect=True)
+def test_read_parquet_round_trip_roles(getml_project, df):
+    with NamedTemporaryFile() as f:
+        df.to_parquet(f"{f.name}.parquet")
+        df_read = getml.DataFrame.from_parquet(f"{f.name}.parquet", name="_")
+        assert df.roles == df_read.roles
 
 
 def test_read_csv(getml_project, csv_file):

@@ -27,11 +27,16 @@ if TYPE_CHECKING:
 
 
 def sniff_parquet(fnames: Iterable[str], colnames: Iterable[str]) -> Roles:
-    schema, *deviating = set(
-        pq.read_schema(fname).remove_metadata() for fname in fnames
-    )
-    if deviating:
-        raise ValueError("All Parquet files must have the same schema!")
+    first_fname = next(iter(fnames))
+    schema = pq.read_schema(first_fname)
+
+    for fname in it.islice(fnames, 1, None):
+        if pq.read_schema(fname) != schema:
+            raise ValueError(
+                "All Parquet files must have the same schema."
+                f"Expected: {schema} (from {first_fname!r}) got {pq.read_schema(fname)} (from {fname!r})"
+            )
+
     return sniff_schema(schema, colnames)
 
 

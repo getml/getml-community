@@ -1632,9 +1632,12 @@ class DataFrame:
 
         # ------------------------------------------------------------
 
-        sniffed_roles = sniff_schema(
-            pa.Schema.from_pandas(pandas_df, preserve_index=False)
-        )
+        if metadata := pandas_df.attrs.get("getml"):
+            sniffed_roles = Roles.from_dict(metadata["roles"])
+        else:
+            sniffed_roles = sniff_schema(
+                pa.Schema.from_pandas(pandas_df, preserve_index=False)
+            )
 
         roles = _prepare_roles(roles, sniffed_roles, ignore_sniffed_roles=ignore)
 
@@ -3768,7 +3771,10 @@ class DataFrame:
                 its underlying data.
 
         """
-        return to_arrow(self).to_pandas()
+        table = to_arrow(self)
+        df = table.to_pandas()
+        df.attrs = {"getml": json.loads(table.schema.metadata[b"getml"])}
+        return df
 
     # ------------------------------------------------------------
 
