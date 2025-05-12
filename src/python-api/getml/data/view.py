@@ -15,6 +15,7 @@ import numbers
 import warnings
 from collections import namedtuple
 from collections.abc import Iterator
+from contextlib import contextmanager
 from copy import deepcopy
 from typing import (
     TYPE_CHECKING,
@@ -31,12 +32,12 @@ from typing import (
 
 import numpy as np
 import pandas as pd
-import pyarrow
+import pyarrow as pa
 
 import getml.communication as comm
 from getml import data
 from getml.constants import DEFAULT_BATCH_SIZE
-from getml.data._io.arrow import to_arrow
+from getml.data._io.arrow import to_arrow, to_arrow_stream
 from getml.data._io.csv import to_csv
 from getml.data._io.parquet import to_parquet
 from getml.data.columns import (
@@ -633,7 +634,7 @@ class View:
         return self.nrows(), self.ncols()
 
     # ------------------------------------------------------------
-    def to_arrow(self) -> pyarrow.Table:
+    def to_arrow(self) -> pa.Table:
         """Creates a `pyarrow.Table` from the view.
 
         Loads the underlying data from the getML Engine and constructs
@@ -644,6 +645,13 @@ class View:
                 its underlying data.
         """
         return to_arrow(self)
+
+    # ------------------------------------------------------------
+
+    @contextmanager
+    def to_arrow_stream(self) -> Iterator[pa.RecordBatchReader]:
+        with to_arrow_stream(self) as stream:
+            yield stream
 
     # ------------------------------------------------------------
 
@@ -658,8 +666,6 @@ class View:
                 underlying data.
         """
         return self.to_pandas().to_json()
-
-    # ------------------------------------------------------------
 
     def to_csv(
         self,
@@ -808,7 +814,6 @@ class View:
         Args:
             fname:
                 The name of the parquet file.
-                The ending ".parquet" will be added automatically.
 
             compression:
                 The compression format to use.

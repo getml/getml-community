@@ -17,7 +17,6 @@ from typing import TYPE_CHECKING, Iterable, Optional, Union
 
 import pyarrow.parquet as pq
 
-from getml.constants import DEFAULT_BATCH_SIZE
 from getml.data._io.arrow import sniff_schema
 from getml.data.roles.container import Roles
 
@@ -44,7 +43,6 @@ def to_parquet(
     df_or_view: Union[DataFrame, View],
     fname: str,
     compression: str,
-    batch_size: int = DEFAULT_BATCH_SIZE,
     coerce_timestamps: Optional[bool] = None,
 ):
     df_or_view.refresh()
@@ -57,17 +55,12 @@ def to_parquet(
 
     sink = Path(fname)
 
-    batches = (batch.to_arrow() for batch in df_or_view.iter_batches(batch_size))
-
-    first_batch = next(batches)
-    schema = first_batch.schema
-
-    writer = pq.ParquetWriter(
-        sink,
-        schema,
-        compression=compression,
-        coerce_timestamps=coerce_timestamps,
-    )
-
-    for batch in it.chain([first_batch], batches):
-        writer.write(batch)
+    with df_or_view.to_arrow_stream() as reader:
+        with pq.ParquetWriter(
+            sink,
+            reader.schema,
+            compression=compression,
+            coerce_timestamps=coerce_timestamps,
+        ) as writer:
+            for batch in reader:
+                writer.write_batch(batch)

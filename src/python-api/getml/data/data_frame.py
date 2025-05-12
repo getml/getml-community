@@ -15,6 +15,7 @@ import os
 import shutil
 import warnings
 from collections import namedtuple
+from contextlib import contextmanager
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
@@ -47,6 +48,7 @@ from getml.data._io.arrow import (
     sniff_schema,
     to_arrow,
     to_arrow_batches,
+    to_arrow_stream,
 )
 from getml.data._io.csv import (
     DEFAULT_CSV_READ_BLOCK_SIZE,
@@ -3639,6 +3641,13 @@ class DataFrame:
 
     # ------------------------------------------------------------
 
+    @contextmanager
+    def to_arrow_stream(self) -> Iterator[pa.RecordBatchReader]:
+        with to_arrow_stream(self) as stream:
+            yield stream
+
+    # ------------------------------------------------------------
+
     def to_csv(
         self,
         fname: str,
@@ -3790,7 +3799,6 @@ class DataFrame:
         Args:
             fname:
                 The name of the parquet file.
-                The ending ".parquet" will be added automatically.
 
             compression:
                 The compression format to use.

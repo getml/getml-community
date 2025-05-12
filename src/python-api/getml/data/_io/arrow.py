@@ -13,7 +13,9 @@ from __future__ import annotations
 
 import json
 import re
+import socket
 import warnings
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from functools import wraps
 from inspect import cleandoc
@@ -266,6 +268,45 @@ dropped only when the timestamp is going to be parsed.
 """
 
 
+def _create_arrow_metadata(
+    df_or_view: Union[DataFrame, View],
+) -> Dict[str, str]:
+    metadata = {
+        "name": df_or_view.name,
+        "last_change": df_or_view.last_change,
+        "roles": df_or_view.roles.to_dict(),
+    }
+    metadata_encoded = {"getml": json.dumps(metadata)}
+    return metadata_encoded
+
+
+@contextmanager
+def _establish_arrow_stream(
+    df_or_view: Union[DataFrame, View],
+) -> Tuple[socket.socket, pa.BufferReader, pa.RecordBatchReader]:
+    df_or_view.refresh()
+
+    typename = type(df_or_view).__name__
+
+    cmd = {
+        "type_": f"{typename}.to_arrow",
+        "name_": df_or_view.name if typename == "DataFrame" else "",
+    }
+
+    if typename == "View":
+        cmd["view_"] = df_or_view._getml_deserialize()
+
+    sock = comm.send_and_get_socket(cmd)
+    msg = comm.recv_string(sock)
+    if msg != "Success!":
+        comm.handle_engine_exception(msg)
+    stream = sock.makefile(mode="rb")
+    reader = pa.ipc.open_stream(stream)
+
+    with sock, stream, reader:
+        yield sock, stream, reader
+
+
 def _is_numerical_type_arrow(coltype: pa.DataType) -> bool:
     return any(
         [
@@ -434,35 +475,17 @@ def sniff_schema(schema: pa.Schema, colnames: Iterable[str] = ()) -> Roles:
 
 
 def to_arrow(df_or_view: Union[DataFrame, View]) -> pa.Table:
-    df_or_view.refresh()
+    metadata = _create_arrow_metadata(df_or_view)
+    with to_arrow_stream(df_or_view) as reader:
+        return reader.read_all().replace_schema_metadata(metadata)
 
-    typename = type(df_or_view).__name__
-
-    cmd = {
-        "type_": f"{typename}.to_arrow",
-        "name_": df_or_view.name if typename == "DataFrame" else "",
-    }
-
-    metadata = {
-        "name": df_or_view.name,
-        "last_change": df_or_view.last_change,
-        "roles": df_or_view.roles.to_dict(),
-    }
-
-    metadata_encoded = {"getml": json.dumps(metadata)}
-
-    if typename == "View":
-        cmd["view_"] = df_or_view._getml_deserialize()
-
-    with comm.send_and_get_socket(cmd) as sock:
-        msg = comm.recv_string(sock)
-        if msg != "Success!":
-            comm.handle_engine_exception(msg)
-        with sock.makefile(mode="rb") as stream:
-            with pa.ipc.open_stream(stream) as reader:
-                return reader.read_all().replace_schema_metadata(metadata_encoded)
-
-
+@contextmanager
+def to_arrow_stream(
+    df_or_view: Union[DataFrame, View],
+) -> Iterator[pa.RecordBatchReader]:
+    with _establish_arrow_stream(df_or_view) as (sock, stream, reader):
+        yield reader
+        
 def to_arrow_batches(
     batch_or_batches: Union[pa.RecordBatch, pa.Table, Iterable[pa.RecordBatch]],
 ) -> Tuple[pa.Schema, Iterator[pa.RecordBatch]]:
