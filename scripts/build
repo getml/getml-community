@@ -132,6 +132,8 @@ done
 
 (
   export GETML_VERSION=${GETML_VERSION:-$(<"$SCRIPTS_DIR/../VERSION")}
+  export GETML_CMAKE_FRESH_PRESET=${GETML_CMAKE_FRESH_PRESET:-false}
+
   if [[ -n $PLATFORM ]]; then
     build_args+=" --set $target.platform=$PLATFORM"
   fi

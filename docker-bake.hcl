@@ -6,6 +6,10 @@ variable "GETML_BUILD_OUTPUT_DIR" {
   default = "build"
 }
 
+variable "GETML_CMAKE_FRESH_PRESET" {
+  default = "false"
+}
+
 target "cli" {
   args = {
     VERSION="${GETML_VERSION}"
@@ -16,6 +20,7 @@ target "cli" {
 
 target "engine" {
   args = {
+    CMAKE_FRESH_PRESET="${GETML_CMAKE_FRESH_PRESET}"
     ENGINE_REPO_SOURCE="src/engine",
     OUTPUT_DIR="${GETML_BUILD_OUTPUT_DIR}"
     VERSION="${GETML_VERSION}"
@@ -27,6 +32,7 @@ target "engine" {
 
 target "package" {
   args = {
+    CMAKE_FRESH_PRESET="${GETML_CMAKE_FRESH_PRESET}"
     OUTPUT_DIR="${GETML_BUILD_OUTPUT_DIR}"
     VERSION="${GETML_VERSION}"
   }
@@ -45,6 +51,7 @@ target "package" {
 target "docker" {
   args = {
     BUILD_OR_COPY_ARTIFACTS="build"
+    CMAKE_FRESH_PRESET="${GETML_CMAKE_FRESH_PRESET}"
     OUTPUT_DIR="${GETML_BUILD_OUTPUT_DIR}"
     VERSION="${GETML_VERSION}"
   }
@@ -102,6 +109,7 @@ target "archive-copy-artifacts" {
 
 target "archive" {
   args = {
+    CMAKE_FRESH_PRESET="${GETML_CMAKE_FRESH_PRESET}"
     OUTPUT_DIR="${GETML_BUILD_OUTPUT_DIR}"
     VERSION="${GETML_VERSION}"
   }
@@ -114,6 +122,7 @@ target "archive" {
 
 target "all" {
   args = {
+    CMAKE_FRESH_PRESET="${GETML_CMAKE_FRESH_PRESET}"
     OUTPUT_DIR="${GETML_BUILD_OUTPUT_DIR}"
     VERSION="${GETML_VERSION}"
   }

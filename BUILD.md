@@ -66,17 +66,27 @@ Within the `build` subcommand, you can build various components of getML:
 ./scripts/build <subcommand> [options]
 ```
 
-| Subcommand      | Description                                           |
-| --------------- | ----------------------------------------------------- |
-| `all`           | Build the entire package, including CLI, Engine, Python API, and tarball archive. |
-| `cli`           | Build the CLI (Command Line Interface).               |
-| `engine`        | Build the C++ Engine.                                 |
-| `package`       | Export runnable Engine + CLI package.                 |
-| `python`        | Package the Python API.                               |
-| `runtime`       | Build the Docker runtime image.                       |
-| `archive`       | Create a tarball (`.tar.gz`) archive of the package.  |
+| Subcommand               | Description                                                                              |
+|--------------------------|------------------------------------------------------------------------------------------|
+| `all`                    | Build the entire package, including CLI, Engine, Python API, and tarball archive.        |
+| `cli`                    | Build the CLI (Command Line Interface).                                                  |
+| `engine`                 | Build the C++ Engine.                                                                    |
+| `package`                | Export runnable Engine + CLI package.                                                    |
+| `python`                 | Package the Python API.                                                                  |
+| `python-copy-artifacts`  | Package the Python API, copying engine build artifacts.                                  |
+| `docker`                 | Build the Docker runtime image.                                                          |
+| `docker-copy-artifacts`  | Build the Docker runtime image, copying the engine build artifacts.                      |
+| `archive`                | Create a tarball (`.tar.gz`) archive of the package.                                     |
+| `archive-copy-artifacts` | Create a tarball (`.tar.gz`) archive of the package, copying the engine build artifacts. |
 
 #### Common Build Options
+
+> [!NOTE]
+> Sometimes, the CMake build preset is cached in dangling state. [If you want to reset the CMake build preset](src/engine/README.md#build-using-docker), set `GETML_CMAKE_FRESH_FRESET=true`:
+> 
+> ```bash
+> GETML_CMAKE_FRESH_PRESET=true ./scripts/build <subcommand> [options]
+> ```
 
 | Option         | Description                                                               |
 | -------------- | ------------------------------------------------------------------------- |
