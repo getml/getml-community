@@ -57,22 +57,20 @@ scipy = ["scipy"]
 pyspark = ["pyspark"]
 jupyter = ["jupyterlab", "ipywidgets"]
 
-[tool.hatch.version]
-source = "code"
-path = "getml/version.py"
-expression = "__version__"
-
-[tool.hatch.envs.default]
-installer = "uv"
-dependencies = [
+[dependency-groups]
+dev = [
   "hatchling",
   "keyring",
   "keyrings.google-artifactregistry-auth",
   "pyright",
   "pytest",
   "ruff",
-  "uv",
 ]
+
+[tool.hatch.version]
+source = "code"
+path = "getml/version.py"
+expression = "__version__"
 
 [tool.hatch.envs.test]
 installer = "uv"
