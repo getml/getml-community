@@ -43,6 +43,16 @@ As getML is available on [PyPI](https://pypi.org/project/getml), you can install
 pip install getml
 ```
 
+> [!NOTE]
+> To get started on macOS and Windows, you first need to [start the getML docker service](https://getml.com/latest/install/packages/docker/):
+> ```sh
+> # run the lastest version
+> curl -L https://raw.githubusercontent.com/getml/getml-community/refs/heads/main/runtime/docker-compose.yml | docker compose -f - up
+> 
+> # run a specific version, e.g. 1.5.1
+> # curl https://raw.githubusercontent.com/getml/getml-community/1.5.1/runtime/docker-compose.yml | docker compose -f - up
+> ```
+
 Check out [the Example](#example) and the [demonstrational notebooks](https://getml.com/latest/examples) to get started with getML. A [detailed walkthrough guide](https://getml.com/latest/user_guide/walkthrough) and [the documentation](https://getml.com/latest) will also help you on your way with getML.
 
 To learn, how to build and contribute to getML, check out [BUILD.md](BUILD.md) for instructions on how to build getML from source.
@@ -202,7 +212,7 @@ environment will be activated automatically whenever you your prompt is reloaded
 inside the project. If you don't have mise hooked into your shell, you can drop
 into a shell populated with the environment by running `mise en`.
 
-> ![NOTE]
+> [!NOTE]
 > mise doesn't pick up the environment automatically after creating the environment with `uv sync`.
 > To create and activate the environment in one go run:
 > ```sh
