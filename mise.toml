@@ -2,3 +2,10 @@
 _.path = [
     "scripts"
 ]
+_.python.venv = "src/python-api/.venv"
+
+UV_PROJECT = "{{ config_root }}/src/python-api"
+
+[tools]
+"pipx:hatch" = "latest"
+uv = "latest"

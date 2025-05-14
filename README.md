@@ -26,13 +26,14 @@ This results in a speedup between _60_ to _1000_ times (see [Benchmarks](#benchm
 * [Introduction](#introduction)
 * [Table of Contents](#table-of-contents)
 * [Quick Start](#quick-start)
-* [Key benefits for using getML](#key-benefits-for-using-getml)
+* [Key benefits of using getML](#key-benefits-of-using-getml)
   * [Features generate by getML](#features-generate-by-getml)
   * [Documentation](#documentation)
 * [Benchmarks](#benchmarks)
 * [Demo notebooks](#demo-notebooks)
 * [Example](#example)
 * [Release Notes](#release-notes)
+* [Development](#development)
 
 ## Quick Start
 
@@ -46,7 +47,7 @@ Check out [the Example](#example) and the [demonstrational notebooks](https://ge
 
 To learn, how to build and contribute to getML, check out [BUILD.md](BUILD.md) for instructions on how to build getML from source.
 
-## Key benefits for using getML
+## Key benefits of using getML
 
 One big key feature over other tools like [featuretools](https://www.featuretools.com), [tsfresh](https://tsfresh.com) and [prophet](https://facebook.github.io/prophet) is the runtime performance. Our own implementation of propositionalization, FastProp (short for fast propositionalization), reaches improvements of about _60_ to _1000_ times faster run times (see specifically [FastProp Benchmarks](https://getml.com/latest/examples/enterprise-notebooks/fastprop_benchmark) within our notebooks). This leads to faster iterations for data scientists, giving them more time to tweak variables to achieve even better results.
 
@@ -191,3 +192,22 @@ To see the full example, check out the Interstate94 notebook ([interstate94.ipyn
 
 ## Release Notes
 See [CHANGELOG.md](CHANGELOG.md) for release notes.
+
+## Development
+### Python venv
+To create the virtual environment for the [python api](src/python-api) just run
+`uv sync` from anywhere in the project. If you have 
+[mise hooked into your shell](https://mise.jdx.dev/getting-started.html#activate-mise) the 
+environment will be activated automatically whenever you your prompt is reloaded
+inside the project. If you don't have mise hooked into your shell, you can drop
+into a shell populated with the environment by running `mise en`.
+
+> ![NOTE]
+> mise doesn't pick up the environment automatically after creating the environment with `uv sync`.
+> To create and activate the environment in one go run:
+> ```sh
+> uv sync && mise en
+> ```
+
+### Building getml
+Refer to [BUILD.md](BUILD.md) for build instructions.
