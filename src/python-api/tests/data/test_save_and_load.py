@@ -32,11 +32,11 @@ def make_target_columns(data_frame, class_label):
 
 def test_save_and_load(getml_project):
     getml.database.connect_mysql(
-        host="db.relational-data.org",
+        host="relational.fel.cvut.cz",
         dbname="CORA",
         port=3306,
         user="guest",
-        password="relational",
+        password="ctu-relational",
     )
 
     paper = load_if_needed("paper")

@@ -23,11 +23,11 @@ def test_adventure_works(getml_project):
     """
 
     conn = getml.database.connect_mysql(
-        host="db.relational-data.org",
+        host="relational.fel.cvut.cz",
         dbname="AdventureWorks2014",
         port=3306,
         user="guest",
-        password="relational",
+        password="ctu-relational",
     )
 
     container = _make_container(conn)
