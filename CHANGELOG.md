@@ -2,6 +2,24 @@
 
 ## For getML Enterprise & Community editions 
 
+### 1.5.1   <small>May 15, 2025</small>
+#### Features
+- Expose arrow streams
+- Preserve metadata (roles) of getml dataframes when converting to pandas, arrow, parquet
+- Support python 3.13
+#### Developer-focused
+- More efficient build chain
+- Expose `GETML_CMAKE_FRESH_PRESET`
+- Use uv for env mangement
+- Introduce mise
+#### Bug fixes
+- Fix slow parquet writing (by using the exposed arrow stream instead of materializing batches as arrow tables on the engine side)
+- Fix XGBoost deprecation warnings
+- Support numpy>=2.0.0
+- Fix parquet reader for parquet files containing custom metadata
+- Set unit when setting time_stamp role directly in `from_...` factories
+
+
 ### 1.5.0   <small>Sep 24, 2024</small>
 #### Features
 - Overhaul and better integration of API documentation and web page:
