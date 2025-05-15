@@ -3643,6 +3643,64 @@ class DataFrame:
 
     @contextmanager
     def to_arrow_stream(self) -> Iterator[pa.RecordBatchReader]:
+        """
+        Streams the dataframe as an Apache Arrow `pa.RecordBatchReader`.
+
+        This method provides a way to access the dataframe as an Apache Arrow
+        stream. Apache Arrow is a cross-language development platform for
+        in-memory data that specifies a standardized language-independent
+        columnar memory format. Using `to_arrow_stream` allows for efficient,
+        zero-copy (or near zero-copy) data exchange with other systems that
+        support Arrow, such as DuckDB, Pandas, Polars, and various data
+        processing engines.
+
+        The method is a context manager (used with a `with` statement). This
+        ensures that any underlying resources associated with the stream,
+        such as network connections or temporary files, are properly initialized
+        when entering the `with` block and cleaned up when exiting.
+
+        The `pa.RecordBatchReader` yielded by this context manager allows you to
+        read the dataset iteratively as a sequence of Arrow `RecordBatch` objects.
+        Each `RecordBatch` represents a chunk of the dataset's columns.
+
+        Yields:
+            pa.RecordBatchReader: An iterator-like object that yields Apache
+            Arrow `RecordBatch` instances.
+
+        Example:
+            Integrating with DuckDB for SQL-based analysis:
+
+            >>> import getml
+            >>> import duckdb
+
+            >>> getml.set_project("arrow_stream")
+
+            >>> generated, _ = getml.datasets.make_numerical()
+
+            >>> con = duckdb.connect()
+
+            >>> # Use the context manager to get the Arrow stream
+            >>> with generated.to_arrow_stream() as arrow_stream_reader:
+            ...     # Register the Arrow stream as a duckdb relation
+            ...     con.register("generated", arrow_stream_reader)
+            ...
+            ...     # Now you can query the data using SQL
+            ...     count = con.execute("SELECT COUNT(*) FROM generated").df()
+            ...     print(count)
+            # count_star()
+            # 500
+
+            >>> with generated.to_arrow_stream() as arrow_stream_reader:
+            ...     summary = con.execute("SUMMARIZE generated").df()
+            ...     print(summary)
+            #   column_name   column_type                            min                            max  ...                         q50                         q75 count null_percentage
+            # 0    join_key       varchar                              0                             99  ...                        none                        none   500             0.0
+            # 1   column_01        double            -0.9939631176936072             0.9966827171572035  ...       -0.012749915265777218         0.49808863342423293   500             0.0
+            # 2     targets        double                            0.0                          152.0  ...          111.92857142857143          126.16666666666667   500             0.0
+            # 3  time_stamp  timestamp_ns  1970-01-01 00:00:00.003686084  1970-01-01 00:00:00.998338199  ...  1970-01-01 00:00:00.497298  1970-01-01 00:00:00.747046   500             0.0
+
+            # [4 rows x 12 columns]
+        """
         with to_arrow_stream(self) as stream:
             yield stream
 
