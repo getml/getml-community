@@ -1,0 +1,7 @@
+find_program(CLANG_TIDY clang-tidy)
+if(CLANG_TIDY)
+  message(STATUS "Found clang-tidy: ${CLANG_TIDY}. Will be using it to check the code")
+  set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY}" CACHE FILEPATH "Path to clang-tidy executable")
+else()
+  message(STATUS "clang-tidy not found. Please install it to check the code")
+endif()
