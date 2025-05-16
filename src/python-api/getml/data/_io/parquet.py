@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, Iterable, Optional, Union
 
 import pyarrow.parquet as pq
 
-from getml.data._io.arrow import sniff_schema
+from getml.data._io.arrow import _create_arrow_metadata, sniff_schema
 from getml.data.roles.container import Roles
 
 if TYPE_CHECKING:
@@ -55,10 +55,13 @@ def to_parquet(
 
     sink = Path(fname)
 
+    metadata = _create_arrow_metadata(df_or_view)
+
     with df_or_view.to_arrow_stream() as reader:
+        schema = reader.schema.with_metadata(metadata)
         with pq.ParquetWriter(
             sink,
-            reader.schema,
+            schema,
             compression=compression,
             coerce_timestamps=coerce_timestamps,
         ) as writer:
