@@ -3665,41 +3665,42 @@ class DataFrame:
 
         Yields:
             pa.RecordBatchReader: An iterator-like object that yields Apache
-            Arrow `RecordBatch` instances.
+                Arrow `RecordBatch` instances.
 
-        Example:
+        ??? example
             Integrating with DuckDB for SQL-based analysis:
+            ```python
+            import getml
+            import duckdb
 
-            >>> import getml
-            >>> import duckdb
+            getml.set_project("arrow_stream")
 
-            >>> getml.set_project("arrow_stream")
+            generated, _ = getml.datasets.make_numerical()
 
-            >>> generated, _ = getml.datasets.make_numerical()
+            con = duckdb.connect()
 
-            >>> con = duckdb.connect()
+            # Use the context manager to get the Arrow stream
+            with generated.to_arrow_stream() as arrow_stream_reader:
+                # Register the Arrow stream as a duckdb relation
+                con.register("generated", arrow_stream_reader)
 
-            >>> # Use the context manager to get the Arrow stream
-            >>> with generated.to_arrow_stream() as arrow_stream_reader:
-            ...     # Register the Arrow stream as a duckdb relation
-            ...     con.register("generated", arrow_stream_reader)
-            ...
-            ...     # Now you can query the data using SQL
-            ...     count = con.execute("SELECT COUNT(*) FROM generated").df()
-            ...     print(count)
+                # Now you can query the data using SQL
+                count = con.execute("SELECT COUNT(*) FROM generated").df()
+                print(count)
             # count_star()
             # 500
 
-            >>> with generated.to_arrow_stream() as arrow_stream_reader:
-            ...     summary = con.execute("SUMMARIZE generated").df()
-            ...     print(summary)
-            #   column_name   column_type                            min                            max  ...                         q50                         q75 count null_percentage
-            # 0    join_key       varchar                              0                             99  ...                        none                        none   500             0.0
-            # 1   column_01        double            -0.9939631176936072             0.9966827171572035  ...       -0.012749915265777218         0.49808863342423293   500             0.0
-            # 2     targets        double                            0.0                          152.0  ...          111.92857142857143          126.16666666666667   500             0.0
-            # 3  time_stamp  timestamp_ns  1970-01-01 00:00:00.003686084  1970-01-01 00:00:00.998338199  ...  1970-01-01 00:00:00.497298  1970-01-01 00:00:00.747046   500             0.0
+            with generated.to_arrow_stream() as arrow_stream_reader:
+                summary = con.execute("SUMMARIZE generated").df()
+                print(summary)
+            #   column_name   column_type                            min                            max                           q50                         q75 count null_percentage
+            # 0    join_key       varchar                              0                             99                          none                        none   500             0.0
+            # 1   column_01        double            -0.9939631176936072             0.9966827171572035         -0.012749915265777218         0.49808863342423293   500             0.0
+            # 2     targets        double                            0.0                          152.0            111.92857142857143          126.16666666666667   500             0.0
+            # 3  time_stamp  timestamp_ns  1970-01-01 00:00:00.003686084  1970-01-01 00:00:00.998338199    1970-01-01 00:00:00.497298  1970-01-01 00:00:00.747046   500             0.0
 
             # [4 rows x 12 columns]
+            ```
         """
         with to_arrow_stream(self) as stream:
             yield stream

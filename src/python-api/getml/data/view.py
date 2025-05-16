@@ -672,31 +672,33 @@ class View:
 
         Yields:
             pa.RecordBatchReader: An iterator-like object that yields Apache
-            Arrow `RecordBatch` instances.
+                Arrow `RecordBatch` instances.
 
-        Example:
+        ??? Example
+            ```python
             Integrating with DuckDB for SQL-based analysis:
 
-            >>> import getml
-            >>> import duckdb
+            import getml
+            import duckdb
 
-            >>> getml.set_project("arrow_stream")
+            getml.set_project("arrow_stream")
 
-            >>> generated, _ = getml.datasets.make_numerical()
-            >>> generated_view = generated[:100]
+            generated, _ = getml.datasets.make_numerical()
+            generated_view = generated[:100]
 
-            >>> con = duckdb.connect()
+            con = duckdb.connect()
 
-            >>> # Use the context manager to get the Arrow stream
-            >>> with generated_view.to_arrow_stream() as arrow_stream_reader:
-            ...     # Register the Arrow stream as a duckdb relation
-            ...     con.register("generated", arrow_stream_reader)
-            ...
-            ...     # Now you can query the data using SQL
-            ...     count = con.execute("SELECT COUNT(*) FROM generated").df()
-            ...     print(count)
+            # Use the context manager to get the Arrow stream
+            with generated_view.to_arrow_stream() as arrow_stream_reader:
+                # Register the Arrow stream as a duckdb relation
+                con.register("generated", arrow_stream_reader)
+
+                # Now you can query the data using SQL
+                count = con.execute("SELECT COUNT(*) FROM generated").df()
+                print(count)
             # count_star()
             # 100
+            ```
         """
         with to_arrow_stream(self) as stream:
             yield stream
