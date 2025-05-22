@@ -28,20 +28,23 @@ _PIPELINE_PREPROCESS_START = re.compile(r"Preprocessing...")
 
 
 class EventMessageRegex(Enum):
+    PIPELINE_CHECK_STAGE_START = _PIPELINE_STAGE_START
+    PIPELINE_CHECK_CHECK_START = _PIPELINE_CHECK_START
+    PIPELINE_CHECK_PREPROCESS_START = _PIPELINE_PREPROCESS_START
     PIPELINE_FIT_STAGE_START = _PIPELINE_STAGE_START
     PIPELINE_FIT_CHECK_START = _PIPELINE_CHECK_START
     PIPELINE_FIT_PREPROCESS_START = _PIPELINE_PREPROCESS_START
     PIPELINE_FIT_FEATURE_LEARNER_TRAIN_START = re.compile(
         r"(?P<model>FastProp|Multirel|Relboost|Fastboost|RelMT): "
-        r"(Training features|Trying (?P<n_features>\d+) features...)"
+        r"(Training (features|subfeatures)|Trying (?P<n_features>\d+) features...)"
     )
     PIPELINE_FIT_FEATURE_LEARNER_TRAIN_PROGRESS = re.compile(
-        r"(Trained (?P<feature>FEATURE_\d+)|Built (?P<n_features>\d+) features). "
+        r"(Trained (?P<feature>FEATURE_\d+)|Built (?P<n_features>\d+) features). |Trained new features. "
         r"Progress: (?P<progress>\d+)%."
     )
     PIPELINE_FIT_FEATURE_LEARNER_BUILD_START = re.compile(
         r"(?P<model>FastProp|Multirel|Relboost|Fastboost|RelMT): "
-        r"Building features..."
+        r"Building (features|subfeatures)..."
     )
     PIPELINE_FIT_FEATURE_LEARNER_BUILD_PROGRESS = re.compile(
         r"Built ((?P<feature>FEATURE_\d+)|(?P<n_rows>\d+) rows). "
@@ -57,6 +60,14 @@ class EventMessageRegex(Enum):
     )
     PIPELINE_TRANSFORM_STAGE_START = _PIPELINE_STAGE_START
     PIPELINE_TRANSFORM_PREPROCESS_START = _PIPELINE_PREPROCESS_START
+    PIPELINE_TRANSFORM_FEATURE_LEARNER_BUILD_START = re.compile(
+        r"(?P<model>FastProp|Multirel|Relboost|Fastboost|RelMT): "
+        r"Building (features|subfeatures)..."
+    )
+    PIPELINE_TRANSFORM_FEATURE_LEARNER_BUILD_PROGRESS = re.compile(
+        r"Built ((?P<feature>FEATURE_\d+)|(?P<n_rows>\d+) rows). "
+        r"Progress: (?P<progress>\d+)%."
+    )
     HYPEROPT_TUNE_FEATURE_LEARNER_START = re.compile(
         r"Tuning (?P<model>FastProp|Multirel|Relboost|Fastboost|RelMT)..."
     )

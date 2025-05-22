@@ -30,6 +30,15 @@ class EventTypeState(str, Enum):
 
 
 class EventType(str, Enum):
+    PIPELINE_CHECK_STAGE_START = "pipeline.check.stage.start"
+    PIPELINE_CHECK_STAGE_PROGRESS = "pipeline.check.stage.progress"
+    PIPELINE_CHECK_STAGE_END = "pipeline.check.stage.end"
+    PIPELINE_CHECK_CHECK_START = "pipeline.check.check.start"
+    PIPELINE_CHECK_CHECK_PROGRESS = "pipeline.check.check.progress"
+    PIPELINE_CHECK_CHECK_END = "pipeline.check.check.end"
+    PIPELINE_CHECK_PREPROCESS_START = "pipeline.check.preprocess.start"
+    PIPELINE_CHECK_PREPROCESS_PROGRESS = "pipeline.check.preprocess.progress"
+    PIPELINE_CHECK_PREPROCESS_END = "pipeline.check.preprocess.end"
     PIPELINE_FIT_STAGE_START = "pipeline.fit.stage.start"
     PIPELINE_FIT_STAGE_PROGRESS = "pipeline.fit.stage.progress"
     PIPELINE_FIT_STAGE_END = "pipeline.fit.stage.end"
@@ -62,6 +71,15 @@ class EventType(str, Enum):
     PIPELINE_TRANSFORM_PREPROCESS_START = "pipeline.transform.preprocess.start"
     PIPELINE_TRANSFORM_PREPROCESS_PROGRESS = "pipeline.transform.preprocess.progress"
     PIPELINE_TRANSFORM_PREPROCESS_END = "pipeline.transform.preprocess.end"
+    PIPELINE_TRANSFORM_FEATURE_LEARNER_BUILD_START = (
+        "pipeline.transform.feature_learner.build.start"
+    )
+    PIPELINE_TRANSFORM_FEATURE_LEARNER_BUILD_PROGRESS = (
+        "pipeline.transform.feature_learner.build.progress"
+    )
+    PIPELINE_TRANSFORM_FEATURE_LEARNER_BUILD_END = (
+        "pipeline.transform.feature_learner.build.end"
+    )
     HYPEROPT_TUNE_FEATURE_LEARNER_START = "hyperopt.tune.feature_learner.start"
     HYPEROPT_TUNE_FEATURE_LEARNER_PROGRESS = "hyperopt.tune.feature_learner.progress"
     HYPEROPT_TUNE_FEATURE_LEARNER_END = "hyperopt.tune.feature_learner.end"
