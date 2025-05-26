@@ -159,6 +159,8 @@ class Event:
 
 
 class EventParser(Protocol):
+    context: EventContext
+
     def parse(self, message: str) -> Sequence[Event]: ...
 
 

@@ -16,7 +16,7 @@ from contextlib import contextmanager
 from enum import Enum
 from pathlib import Path
 from types import TracebackType
-from typing import Iterator, Optional, Type
+from typing import Optional, Type
 
 from rich.console import Console
 from rich.live import Live
@@ -70,36 +70,51 @@ def _is_jupyter_without_ipywidgets() -> bool:
 
 _ENV_VAR_TRUTHY_VALUES = ("1", "t", "true", "True")
 
+
+def _should_enforce_textual_output() -> bool:
+    if env_value := os.getenv("GETML_PROGRESS_FORCE_TEXTUAL_OUTPUT"):
+        return env_value in _ENV_VAR_TRUTHY_VALUES
+    if not _is_jupyter():
+        return False
+    if _is_jupyter_without_ipywidgets():
+        return True
+    if _is_emacs_kernel():
+        return True
+    if _is_vscode():
+        return True
+    return False
+
+
+def _should_enforce_monochrome_output() -> bool:
+    if env_value := os.getenv("GETML_PROGRESS_FORCE_MONOCHROME_OUTPUT"):
+        return env_value in _ENV_VAR_TRUTHY_VALUES
+    return False
+
+
+def _should_show_ipywidgets_warning() -> bool:
+    if env_value := os.getenv("GETML_SHOW_IPYWIDGETS_WARNING"):
+        return env_value in _ENV_VAR_TRUTHY_VALUES
+    return True
+
+
 SPEED_ESTIMATE_PERIOD = 300
 TASK_FAILED_DESCRIPTION = "[danger]Failed[/danger]"
-FORCE_TEXTUAL_OUTPUT = (
-    os.getenv("GETML_PROGRESS_FORCE_TEXTUAL_OUTPUT") in _ENV_VAR_TRUTHY_VALUES
-    or _is_emacs_kernel()
-    or _is_vscode()
-    or _is_jupyter_without_ipywidgets()
-)
+FORCE_TEXTUAL_OUTPUT = _should_enforce_textual_output()
 """
 If set to True, forces the progress bar to be displayed in textual form.
 Neccessary because terminal-based environments communicating with jupyter
 kernels over zmq are falsely detected as jupyter environments with ipywidget
 support by rich.
 """
-FORCE_MONOCHROME_OUTPUT = (
-    os.getenv("GETML_PROGRESS_FORCE_MONOCHROME_OUTPUT") in _ENV_VAR_TRUTHY_VALUES
-    or FORCE_TEXTUAL_OUTPUT
-    and not _is_emacs_kernel()
-)
+FORCE_MONOCHROME_OUTPUT = _should_enforce_monochrome_output()
 """
 If set to True, forces the progress bar to be displayed in monochrome form.
 """
-SHOW_IPYWIDGETS_WARNING = (
-    os.getenv("GETML_SHOW_IPYWIDGETS_WARNING", "True") in _ENV_VAR_TRUTHY_VALUES
-)
+SHOW_IPYWIDGETS_WARNING = _should_show_ipywidgets_warning()
 """
 If set to True, shows a warning when ipywidgets are not available in a jupyter
 environment.
 """
-
 
 if SHOW_IPYWIDGETS_WARNING and _is_jupyter_without_ipywidgets():
     warnings.warn(
@@ -241,6 +256,10 @@ class Progress:
             self.finish(task.id)
 
     @property
+    def finished(self):
+        return self._progress.finished
+
+    @property
     def live(self):
         return self._progress.live
 
@@ -261,7 +280,7 @@ class Progress:
         )
         return task_id
 
-    def new_task_and_reconstruct_renderable_maybe(
+    def new_task_with_reconstructed_renderable(
         self,
         description: str,
         *,
@@ -271,16 +290,10 @@ class Progress:
     ) -> TaskID:
         """
         Adds a new task and finishes all other tasks. Reconstructs the
-        renderable if FORCE_TEXTUAL_OUTPUT is True.
+        renderable to ensure that the progress bar is displayed correctly
+        with interleaved `print` statements.
         """
-        if FORCE_TEXTUAL_OUTPUT and self.tasks:
-            self.stop()
-            self._progress = RichProgress(
-                *self.progress_type.columns,
-                speed_estimate_period=SPEED_ESTIMATE_PERIOD,
-                console=self.console,
-            )
-            self.start()
+        self._reconstruct_renderable()
         task_id = self.new_task(
             description, total=total, completed=completed, visible=visible
         )
@@ -288,6 +301,15 @@ class Progress:
 
     def refresh(self):
         self._progress.refresh()
+
+    def _reconstruct_renderable(self):
+        self.stop()
+        self._progress = RichProgress(
+            *self.progress_type.columns,
+            speed_estimate_period=SPEED_ESTIMATE_PERIOD,
+            console=self.console,
+        )
+        self.start()
 
     def _reset_description(self, task_id: TaskID):
         if (
@@ -376,7 +398,7 @@ class ProgressEventHandler:
 
         with self.live_renderable(event):
             if event.type.state is EventTypeState.START:
-                task_id = self.progress.new_task_and_reconstruct_renderable_maybe(
+                task_id = self.progress.new_task_with_reconstructed_renderable(
                     event.attributes["description"]
                 )
             elif event.type.state is EventTypeState.PROGRESS and self.progress.tasks:

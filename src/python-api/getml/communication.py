@@ -34,7 +34,6 @@ from typing import (
 
 import numpy as np
 from rich import print
-from rich.progress import TaskID
 
 import getml
 from getml.events import (
