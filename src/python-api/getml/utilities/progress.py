@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import os
 import warnings
+from collections.abc import Iterator
 from contextlib import contextmanager
 from enum import Enum
 from pathlib import Path
@@ -99,6 +100,8 @@ def _should_show_ipywidgets_warning() -> bool:
 
 SPEED_ESTIMATE_PERIOD = 300
 TASK_FAILED_DESCRIPTION = "[danger]Failed[/danger]"
+DESCRIPTION_COLUMN_WIDTH = 34
+BAR_COLUMN_WIDTH = DESCRIPTION_COLUMN_WIDTH // 3
 FORCE_TEXTUAL_OUTPUT = _should_enforce_textual_output()
 """
 If set to True, forces the progress bar to be displayed in textual form.
@@ -160,6 +163,7 @@ class ProgressBarColumns(Enum):
             complete_style=ProgressBarStyle.COMPLETE.value,
             finished_style=ProgressBarStyle.FINISHED.value,
             pulse_style=ProgressBarStyle.PULSE.value,
+            bar_width=BAR_COLUMN_WIDTH,
         ),
         TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
     )
