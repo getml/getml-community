@@ -128,6 +128,16 @@ if SHOW_IPYWIDGETS_WARNING and _is_jupyter_without_ipywidgets():
     )
 
 
+def _pad_description_maybe(description: Optional[str]) -> Optional[str]:
+    """
+    Pads the description to a fixed width for consistent display in the
+    progress bar.
+    """
+    if description is None:
+        return None
+    return f"{description:<{DESCRIPTION_COLUMN_WIDTH}}"
+
+
 class ProgressBarStyle(Enum):
     """
     Enum mapping progress bar styles to rich style specifications.
@@ -223,7 +233,7 @@ class Progress:
 
     def add_task(
         self,
-        description: str,
+        description_padded: str,
         *,
         total: int = 100,
         completed: int = 0,
@@ -231,10 +241,16 @@ class Progress:
     ) -> TaskID:
         if not self.live.is_started:
             self.start()
+
+        description_padded = _pad_description_maybe(description_padded)
+
         task_id = self._progress.add_task(
-            description, total=total, completed=completed, visible=visible
+            description=description_padded,
+            total=total,
+            completed=completed,
+            visible=visible,
         )
-        self.descriptions[task_id] = description
+        self.descriptions[task_id] = description_padded
         return task_id
 
     def advance(self, task_id: TaskID, *, steps: float = 1):
@@ -353,10 +369,12 @@ class Progress:
         description: Optional[str] = None,
         refresh: bool = True,
     ):
+        description_padded = _pad_description_maybe(description)
+
         if task_id in self.task_ids:
             self._progress.update(
                 task_id,
-                description=description,
+                description=description_padded,
                 completed=completed,
                 refresh=refresh,
             )
