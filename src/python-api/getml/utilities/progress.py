@@ -111,8 +111,8 @@ def _should_disable_progress_bars() -> bool:
 
 SPEED_ESTIMATE_PERIOD = 300
 TASK_FAILED_DESCRIPTION = "[danger]Failed[/danger]"
-DESCRIPTION_COLUMN_WIDTH = 34
-BAR_COLUMN_WIDTH = DESCRIPTION_COLUMN_WIDTH // 3
+DESCRIPTION_COLUMN_WIDTH = 40
+BAR_COLUMN_WIDTH = 15
 FORCE_TEXTUAL_OUTPUT = _should_enforce_textual_output()
 """
 If set to True, forces the progress bar to be displayed in textual form.
@@ -456,4 +456,9 @@ progress_event_handler = ProgressEventHandler(progress=Progress())
 def show_progress(event: Event):
     if DISABLE_PROGRESS_BARS:
         return
-    progress_event_handler.create_or_update_progress(event)
+    try:
+        progress_event_handler.create_or_update_progress(event)
+    except Exception as e:
+        progress_event_handler.progress.set_all_failed()
+        message = f"An error occurred while displaying the progress bar: {e!r}"
+        raise OSError(message) from e
