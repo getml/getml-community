@@ -98,6 +98,17 @@ def _should_show_ipywidgets_warning() -> bool:
     return True
 
 
+def _should_disable_progress_bars() -> bool:
+    """
+    Returns True if progress bars should be disabled.
+    This is the case if the environment variable
+    GETML_DISABLE_PROGRESS_BARS is set to a truthy value.
+    """
+    if env_value := os.getenv("GETML_PROGRESS_DISABLE"):
+        return env_value in _ENV_VAR_TRUTHY_VALUES
+    return False
+
+
 SPEED_ESTIMATE_PERIOD = 300
 TASK_FAILED_DESCRIPTION = "[danger]Failed[/danger]"
 DESCRIPTION_COLUMN_WIDTH = 34
@@ -117,6 +128,11 @@ SHOW_IPYWIDGETS_WARNING = _should_show_ipywidgets_warning()
 """
 If set to True, shows a warning when ipywidgets are not available in a jupyter
 environment.
+"""
+
+DISABLE_PROGRESS_BARS = _should_disable_progress_bars()
+"""
+If set to True, disables the progress bar completely.
 """
 
 if SHOW_IPYWIDGETS_WARNING and _is_jupyter_without_ipywidgets():
@@ -438,4 +454,6 @@ progress_event_handler = ProgressEventHandler(progress=Progress())
 @monitor_event_handler
 @engine_event_handler
 def show_progress(event: Event):
+    if DISABLE_PROGRESS_BARS:
+        return
     progress_event_handler.create_or_update_progress(event)
