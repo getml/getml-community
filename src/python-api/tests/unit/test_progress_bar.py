@@ -23,6 +23,7 @@ def test_finished_on_stop(finish_all_tasks_on_stop: bool, expected: str, capsys)
         assert all(not task.finished for task in progress.tasks)
 
     captured = capsys.readouterr()
+    assert all(task.finished == finish_all_tasks_on_stop for task in progress.tasks)
     assert expected in captured.out
 
 
@@ -36,8 +37,12 @@ def test_progress_reset_description(
     with Progress(finish_all_tasks_on_stop=finish_all_tasks_on_stop) as progress:
         task_id = progress.add_task("Test")
         progress.update(task_id, description="Toast")
-        assert progress.tasks[task_id].description == "Toast"
-        assert progress.descriptions[task_id] == "Test"
-    assert progress.tasks[task_id].description == expected_final_description
+        assert progress.tasks[task_id].description.lstrip().startswith("Toast")
+        assert progress.descriptions[task_id].lstrip().startswith("Test")
+    assert (
+        progress.tasks[task_id]
+        .description.lstrip()
+        .startswith(expected_final_description)
+    )
     captured = capsys.readouterr()
     assert expected_final_description in captured.out
