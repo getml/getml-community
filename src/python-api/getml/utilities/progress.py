@@ -360,7 +360,8 @@ class Progress:
 
     def set_all_failed(self):
         for task in self.tasks:
-            self.update(task.id, description=TASK_FAILED_DESCRIPTION)
+            if not task.finished:
+                self.update(task.id, description=TASK_FAILED_DESCRIPTION)
 
     @property
     def tasks(self):
