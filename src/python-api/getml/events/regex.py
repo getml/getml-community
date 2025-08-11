@@ -28,44 +28,55 @@ _PIPELINE_PREPROCESS_START = re.compile(r"Preprocessing...")
 
 
 class EventMessageRegex(Enum):
+    PIPELINE_CHECK_STAGE_START = _PIPELINE_STAGE_START
+    PIPELINE_CHECK_CHECK_START = _PIPELINE_CHECK_START
+    PIPELINE_CHECK_PREPROCESS_START = _PIPELINE_PREPROCESS_START
     PIPELINE_FIT_STAGE_START = _PIPELINE_STAGE_START
     PIPELINE_FIT_CHECK_START = _PIPELINE_CHECK_START
     PIPELINE_FIT_PREPROCESS_START = _PIPELINE_PREPROCESS_START
     PIPELINE_FIT_FEATURE_LEARNER_TRAIN_START = re.compile(
         r"(?P<model>FastProp|Multirel|Relboost|Fastboost|RelMT): "
-        r"(Training features|Trying (?P<n_features>\d+) features...)"
+        r"(Training (features|subfeatures)|Trying (?P<n_features>\d+) features\.\.\.)"
     )
     PIPELINE_FIT_FEATURE_LEARNER_TRAIN_PROGRESS = re.compile(
-        r"(Trained (?P<feature>FEATURE_\d+)|Built (?P<n_features>\d+) features). "
-        r"Progress: (?P<progress>\d+)%."
+        r"(Trained (?P<feature>FEATURE_\d+)|Built (?P<n_features>\d+) features|Trained new features)\. "
+        r"Progress: (?P<progress>\d+)%\."
     )
     PIPELINE_FIT_FEATURE_LEARNER_BUILD_START = re.compile(
         r"(?P<model>FastProp|Multirel|Relboost|Fastboost|RelMT): "
-        r"Building features..."
+        r"Building (features|subfeatures)\.\.\."
     )
     PIPELINE_FIT_FEATURE_LEARNER_BUILD_PROGRESS = re.compile(
-        r"Built ((?P<feature>FEATURE_\d+)|(?P<n_rows>\d+) rows). "
-        r"Progress: (?P<progress>\d+)%."
+        r"Built ((?P<feature>FEATURE_\d+)|(?P<n_rows>\d+) rows)\. "
+        r"Progress: (?P<progress>\d+)%\."
     )
     PIPELINE_FIT_PREDICTOR_TRAIN_START = re.compile(
         r"(?P<model>XGBoost|ScaleGBM|LinearRegression|LogisticRegression): Training as "
-        r"(?P<type>feature selector|predictor)..."
+        r"(?P<type>feature selector|predictor)\.\.\."
     )
     PIPELINE_FIT_PREDICTOR_TRAIN_PROGRESS = re.compile(
-        r"(?P<model>XGBoost|ScaleGBM): Trained tree (?P<tree>\d+). "
-        r"Progress: (?P<progress>\d+)%."
+        r"(?P<model>XGBoost|ScaleGBM): Trained tree (?P<tree>\d+)\. "
+        r"Progress: (?P<progress>\d+)%\."
     )
     PIPELINE_TRANSFORM_STAGE_START = _PIPELINE_STAGE_START
     PIPELINE_TRANSFORM_PREPROCESS_START = _PIPELINE_PREPROCESS_START
+    PIPELINE_TRANSFORM_FEATURE_LEARNER_BUILD_START = re.compile(
+        r"(?P<model>FastProp|Multirel|Relboost|Fastboost|RelMT): "
+        r"Building (features|subfeatures)\.\.\."
+    )
+    PIPELINE_TRANSFORM_FEATURE_LEARNER_BUILD_PROGRESS = re.compile(
+        r"Built ((?P<feature>FEATURE_\d+)|(?P<n_rows>\d+) rows)\. "
+        r"Progress: (?P<progress>\d+)%\."
+    )
     HYPEROPT_TUNE_FEATURE_LEARNER_START = re.compile(
-        r"Tuning (?P<model>FastProp|Multirel|Relboost|Fastboost|RelMT)..."
+        r"Tuning (?P<model>FastProp|Multirel|Relboost|Fastboost|RelMT)\.\.\."
     )
     HYPEROPT_TUNE_PREDICTOR_START = re.compile(
-        r"Tuning (?P<model>XGBoost|ScaleGBM|LinearRegression|LogisticRegression)..."
+        r"Tuning (?P<model>XGBoost|ScaleGBM|LinearRegression|LogisticRegression)\.\.\."
     )
-    SETPROJECT_LOADING_PIPELINES_START = re.compile(r"Loading pipelines...")
-    SETPROJECT_LOADING_HYPEROPTS_START = re.compile(r"Loading hyperopts...")
-    LOADPROJECTBUNDLE_LOADING_PROJECT_START = re.compile(r"Loading project...")
+    SETPROJECT_LOADING_PIPELINES_START = re.compile(r"Loading pipelines\.\.\.")
+    SETPROJECT_LOADING_HYPEROPTS_START = re.compile(r"Loading hyperopts\.\.\.")
+    LOADPROJECTBUNDLE_LOADING_PROJECT_START = re.compile(r"Loading project\.\.\.")
 
     @classmethod
     def with_prefix(cls, prefix: str) -> Iterator[Tuple[EventType, re.Pattern]]:
