@@ -130,7 +130,7 @@ If set to True, shows a warning when ipywidgets are not available in a jupyter
 environment.
 """
 
-DISABLE_PROGRESS_BARS = _should_disable_progress_bars()
+DISABLE = _should_disable_progress_bars()
 """
 If set to True, disables the progress bar completely.
 """
@@ -453,7 +453,7 @@ progress_event_handler = ProgressEventHandler(progress=Progress())
 @monitor_event_handler
 @engine_event_handler
 def show_progress(event: Event):
-    if DISABLE_PROGRESS_BARS:
+    if DISABLE:
         return
     try:
         progress_event_handler.create_or_update_progress(event)
