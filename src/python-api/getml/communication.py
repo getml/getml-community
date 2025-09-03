@@ -22,6 +22,7 @@ from os import PathLike
 from time import sleep
 from types import TracebackType
 from typing import (
+    AbstractSet,
     Any,
     Callable,
     Dict,
@@ -242,6 +243,8 @@ class _GetmlEncoder(json.JSONEncoder):
             return int(obj)
         if isinstance(obj, np.floating):
             return float(obj)
+        if isinstance(obj, AbstractSet):
+            return sorted(obj)
         if _is_iterable_not_str(obj):
             return list(obj)
 
