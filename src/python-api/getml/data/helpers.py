@@ -287,7 +287,6 @@ def _is_numerical_type_numpy(coltype) -> bool:
         np.uint16,
         np.uint32,
         np.uint64,
-        np.float_,
         np.float16,
         np.float32,
         np.float64,

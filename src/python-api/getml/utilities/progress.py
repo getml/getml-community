@@ -374,8 +374,10 @@ class Progress:
     def start(self):
         self._progress.start()
 
-    def stop(self):
-        if self.finish_all_tasks_on_stop:
+    def stop(self, failed: bool = False):
+        if failed:
+            self.set_all_failed()
+        elif self.finish_all_tasks_on_stop:
             self.finish_all()
         self._progress.stop()
 
@@ -412,10 +414,9 @@ class Progress:
         exc_val: Optional[BaseException] = None,
         exc_tb: Optional[TracebackType] = None,
     ):
-        if exc_type is not None:
-            self.set_all_failed()
+        failed = exc_type is not None
 
-        self.stop()
+        self.stop(failed=failed)
 
 
 class ProgressEventHandler:
