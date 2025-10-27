@@ -1,0 +1,24 @@
+// Copyright 2024 Code17 GmbH
+//
+// This file is licensed under the Elastic License 2.0 (ELv2).
+// Refer to the LICENSE.txt file in the root of the repository
+// for details.
+//
+
+#include "multithreading/ReadLock.hpp"
+
+namespace multithreading {
+
+ReadLock::ReadLock(const rfl::Ref<ReadWriteLock>& _lock)
+    : lock_(_lock), released_(false) {
+  lock_->read_lock();
+}
+
+/// Read lock with timeout.
+ReadLock::ReadLock(const rfl::Ref<ReadWriteLock>& _lock,
+                   const std::chrono::milliseconds _duration)
+    : lock_(_lock), released_(false) {
+  lock_->read_lock(_duration);
+}
+
+}  // namespace multithreading

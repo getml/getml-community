@@ -1,0 +1,13 @@
+target_sources(
+  engine-base
+  PRIVATE
+  Encoding.cpp
+  LinearRegression.cpp
+  LogisticRegression.cpp
+  PredictorImpl.cpp
+  PredictorParser.cpp
+  StandardScaler.cpp
+  XGBoostIteratorDense.cpp
+  XGBoostIteratorSparse.cpp
+  XGBoostPredictor.cpp
+)

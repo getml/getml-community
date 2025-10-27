@@ -1,0 +1,16 @@
+target_sources(
+  engine-base
+  PRIVATE
+  ContentGetter.cpp
+  CSVBuffer.cpp
+  DatabaseParser.cpp
+  DatabaseReader.cpp
+  MySQL.cpp
+  MySQLIterator.cpp
+  Postgres.cpp
+  PostgresIterator.cpp
+  QuerySplitter.cpp
+  Sqlite3.cpp
+  Sqlite3Iterator.cpp
+  sniff.cpp
+)

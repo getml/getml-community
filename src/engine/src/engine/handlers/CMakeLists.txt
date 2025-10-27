@@ -1,0 +1,27 @@
+target_sources(
+  engine-base
+  PRIVATE
+  AggOpParser.cpp
+  ArrowHandler.cpp
+  ArrowSocketInputStream.cpp
+  ArrowSocketOutputStream.cpp
+  BoolOpParser.cpp
+  ColumnManager.cpp
+  ColumnManager_execute_command.cpp
+  DataFrameManager.cpp
+  DataFrameManager_execute_command.cpp
+  DataFrameManager_from_json.cpp
+  DataFrameManager_get_data_frame.cpp
+  DataFrameManager_receive_data.cpp
+  DatabaseManager.cpp
+  FileHandler.cpp
+  FloatOpParser.cpp
+  PipelineManager.cpp
+  PipelineManager_execute_command.cpp
+  PipelineManager_receive_data.cpp
+  ProjectManager.cpp
+  ProjectManager_execute_command.cpp
+  StringOpParser.cpp
+  ViewManager.cpp
+  ViewParser.cpp
+)

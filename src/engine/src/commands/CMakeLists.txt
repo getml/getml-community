@@ -1,0 +1,17 @@
+target_sources(
+  engine-base
+  PRIVATE
+  BooleanColumnView.cpp
+  ColumnCommand.cpp
+  Command.cpp
+  DatabaseCommand.cpp
+  DataFrameCommand.cpp
+  DataModel.cpp
+  Fingerprint.cpp
+  FloatColumnOrFloatColumnView.cpp
+  PipelineCommand.cpp
+  ProjectCommand.cpp
+  Roles.cpp
+  StringColumnOrStringColumnView.cpp
+  ViewCommand.cpp
+)

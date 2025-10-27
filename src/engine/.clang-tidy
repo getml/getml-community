@@ -1,0 +1,21 @@
+---
+Checks:          '*,-fuchsia-*,fuchsia-statically-constructed-objects,-llvmlibc-*,-llvm-header-guard,-altera-*'
+WarningsAsErrors: ''
+HeaderFileExtensions:
+  - ''
+  - h
+  - hh
+  - hpp
+  - hxx
+ImplementationFileExtensions:
+  - c
+  - cc
+  - cpp
+  - cxx
+HeaderFilterRegex: ''
+ExcludeHeaderFilterRegex: ''
+FormatStyle:     file
+CheckOptions:
+  misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic: 'true'
+...
+

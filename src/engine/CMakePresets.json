@@ -1,0 +1,252 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 25,
+    "patch": 0
+  },
+  "include": [],
+  "configurePresets": [
+    {
+      "name": "base",
+      "displayName": "Base",
+      "description": "Base configuration",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}-build",
+      "installDir": "${sourceDir}/build/${presetName}-install",
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": "-fdiagnostics-color=always",
+        "CMAKE_CXX_FLAGS_RELEASE": "-O2",
+        "CMAKE_CXX_FLAGS_DEBUG": "-Wall -Wextra -Wpedantic -Wcast-align -Wcast-qual -Wconversion -Wdouble-promotion -Wduplicated-branches -Wduplicated-cond -Wfloat-equal -Winline -Wlogical-op -Wmissing-include-dirs -Wold-style-cast -Wpointer-arith -Wredundant-decls -Wshadow -Wtrampolines -Wundef -Wunused -O0 -g3 -ggdb3",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": false,
+        "USE_STATIC_ANALYSIS": false,
+        "HIDE_DEBUG_INFO": true,
+        "USE_PROFILING": false
+      }
+    },
+    {
+      "name": "release",
+      "displayName": "Release",
+      "description": "Release configuration",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "release-native",
+      "displayName": "Release native",
+      "description": "Release configuration with native optimizations",
+      "inherits": "release",
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS_RELEASE": "-O3 -march=native -mtune=native"
+      }
+    },
+    {
+      "name": "release-original",
+      "displayName": "Release (original)",
+      "description": "Release configuration with original optimizations",
+      "inherits": "release",
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS_RELEASE": "-Wall -Wno-sign-compare -Wno-missing-braces -pthread -fno-strict-aliasing -fwrapv -ftemplate-backtrace-limit=0 -O2",
+        "CMAKE_EXE_LINKER_FLAGS": "-s -O2"
+      }
+    },
+    {
+      "name": "debug",
+      "displayName": "Debug",
+      "description": "Debug configuration",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+        "USE_STATIC_ANALYSIS": false,
+        "HIDE_DEBUG_INFO": false,
+        "USE_PROFILING": false,
+        "BUILD_TESTS": true
+      }
+    },
+    {
+      "name": "debug-full",
+      "displayName": "Debug with full information",
+      "description": "Debug configuration with full debug information",
+      "inherits": "debug",
+      "cacheVariables": {
+        "USE_STATIC_ANALYSIS": true,
+        "HIDE_DEBUG_INFO": false,
+        "USE_PROFILING": true
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "release",
+      "displayName": "Release",
+      "description": "Release build",
+      "configurePreset": "release"
+    },
+    {
+      "name": "release-native",
+      "displayName": "Release native",
+      "description": "Release build with native optimizations",
+      "configurePreset": "release-native",
+      "inherits": "release"
+    },
+    {
+      "name": "release-original",
+      "displayName": "Release (original)",
+      "description": "Release build with original optimizations",
+      "configurePreset": "release-original",
+      "inherits": "release"
+    },
+    {
+      "name": "debug",
+      "displayName": "Debug",
+      "description": "Debug build",
+      "configurePreset": "debug"
+    },
+    {
+      "name": "debug-full",
+      "displayName": "Debug with full information",
+      "description": "Debug build with full debug information",
+      "configurePreset": "debug-full",
+      "inherits": "debug"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "release",
+      "displayName": "Release",
+      "description": "Release test",
+      "configurePreset": "release",
+      "output": {
+        "shortProgress": true,
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "debug",
+      "displayName": "Debug",
+      "description": "Debug test",
+      "configurePreset": "debug",
+      "output": {
+        "shortProgress": false,
+        "outputOnFailure": true
+      }
+    }
+  ],
+  "packagePresets": [
+    {
+      "name": "release",
+      "displayName": "Release",
+      "description": "Release package",
+      "configurePreset": "release",
+      "generators": [
+        "TGZ"
+      ]
+    },
+    {
+      "name": "release-native",
+      "displayName": "Release native",
+      "description": "Release native package",
+      "configurePreset": "release-native",
+      "inherits": "release"
+    },
+    {
+      "name": "release-original",
+      "displayName": "Release original",
+      "description": "Release original package",
+      "configurePreset": "release-original",
+      "inherits": "release"
+    }
+  ],
+  "workflowPresets": [
+    {
+      "name": "release",
+      "displayName": "Release",
+      "description": "Release workflow",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "release"
+        },
+        {
+          "type": "build",
+          "name": "release"
+        },
+        {
+          "type": "package",
+          "name": "release"
+        }
+      ]
+    },
+    {
+      "name": "release-native",
+      "displayName": "Release native",
+      "description": "Release workflow with native optimizations",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "release-native"
+        },
+        {
+          "type": "build",
+          "name": "release-native"
+        },
+        {
+          "type": "package",
+          "name": "release-native"
+        }
+      ]
+    },
+    {
+      "name": "release-original",
+      "displayName": "Release (original)",
+      "description": "Release workflow with original optimizations",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "release-original"
+        },
+        {
+          "type": "build",
+          "name": "release-original"
+        },
+        {
+          "type": "package",
+          "name": "release-original"
+        }
+      ]
+    },
+    {
+      "name": "debug",
+      "displayName": "Debug",
+      "description": "Debug workflow",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "debug"
+        },
+        {
+          "type": "build",
+          "name": "debug"
+        }
+      ]
+    },
+    {
+      "name": "debug-full",
+      "displayName": "Debug with full information",
+      "description": "Debug workflow with full debug information",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "debug-full"
+        },
+        {
+          "type": "build",
+          "name": "debug-full"
+        }
+      ]
+    }
+  ]
+}

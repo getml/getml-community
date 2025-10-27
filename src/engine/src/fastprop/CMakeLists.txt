@@ -1,0 +1,13 @@
+target_sources(
+  engine-base
+  PRIVATE
+  AbstractFeature.cpp
+  Aggregator.cpp
+  Condition.cpp
+  ConditionParser.cpp
+  FastProp.cpp
+  FastPropContainer.cpp
+  Maker.cpp
+  RSquared.cpp
+  SQLMaker.cpp
+)
