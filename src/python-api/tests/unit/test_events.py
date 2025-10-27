@@ -34,7 +34,7 @@ def tracked_events():
         emitted_events.append(event)
 
     yield emitted_events
-    EventHandlerRegistry.handlers[EventSource.ENGINE].remove(track_event)
+    EventHandlerRegistry.unregister_handler(EventSource.ENGINE, track_event)
     EventHandlerRegistry.handlers = orginal_handlers
 
 
@@ -64,16 +64,17 @@ def test_log_stream_listener(monkeypatch, pipeline_context, tracked_events):
     assert len(tracked_events) >= len(
         [msg for msg in socketlike.messages if msg.startswith("log: ")]
     )
-    assert len(tracked_events) == len(parsed_events) * len(
-        [
-            handler
-            for source in EventSource
-            for handler in EventHandlerRegistry.handlers[source]
-        ]
+
+    # Account for the extra COMMAND_FINISHED event added by the listener
+    num_handlers = sum(
+        len(handlers) for handlers in EventHandlerRegistry.handlers.values()
     )
-    assert set(event.type for event in tracked_events) == set(
-        type for type in EventType if type.name.startswith(prefix)
-    )
+    assert len(tracked_events) == (len(parsed_events) + 1) * num_handlers
+
+    # Check that we have the expected event types plus COMMAND_FINISHED
+    expected_types = set(type for type in EventType if type.name.startswith(prefix))
+    expected_types.add(EventType.COMMAND_FINISHED)
+    assert set(event.type for event in tracked_events) == expected_types
 
 
 @pytest.fixture
@@ -86,7 +87,7 @@ def failing_event_handler():
         raise Exception("This is a test exception.")
 
     yield failing_handler
-    EventHandlerRegistry.handlers[EventSource.ENGINE].remove(failing_handler)
+    EventHandlerRegistry.unregister_handler(EventSource.ENGINE, failing_handler)
     EventHandlerRegistry.handlers = orginal_handlers
 
 
@@ -109,3 +110,47 @@ def test_event_handler_exception(failing_event_handler):
     )
     assert failing_event_handler.__name__ in str(warnings[0].message)
     assert str(event) in str(warnings[0].message)
+
+
+def test_sync_handler_execution():
+    """Test that handlers with sync=True execute synchronously in the calling thread."""
+    import threading
+
+    orginal_handlers = EventHandlerRegistry.handlers
+    EventHandlerRegistry.handlers = {source: [] for source in EventSource}
+
+    sync_thread_id = None
+    async_thread_id = None
+    main_thread_id = threading.current_thread().ident
+
+    @engine_event_handler(sync=True)
+    def sync_handler(event: Event):
+        nonlocal sync_thread_id
+        sync_thread_id = threading.current_thread().ident
+
+    @engine_event_handler(sync=False)
+    def async_handler(event: Event):
+        nonlocal async_thread_id
+        async_thread_id = threading.current_thread().ident
+
+    event = Event(
+        type=EventType.PIPELINE_FIT_STAGE_START,
+        source=EventSource.ENGINE,
+        attributes={},
+    )
+
+    dispatcher = PoolEventDispatcher()
+    emitter = DispatcherEventEmitter(dispatcher)
+
+    with dispatcher:
+        emitter.emit([event])
+
+    # Sync handler should execute in main thread
+    assert sync_thread_id == main_thread_id
+
+    # Async handler should execute in a worker thread
+    assert async_thread_id != main_thread_id
+
+    EventHandlerRegistry.unregister_handler(EventSource.ENGINE, sync_handler)
+    EventHandlerRegistry.unregister_handler(EventSource.ENGINE, async_handler)
+    EventHandlerRegistry.handlers = orginal_handlers

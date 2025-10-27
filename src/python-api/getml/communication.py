@@ -43,10 +43,12 @@ from getml.events import (
     PoolEventDispatcher,
 )
 from getml.events.types import (
+    Event,
     EventContext,
     EventEmitter,
     EventParser,
     EventSource,
+    EventType,
 )
 from getml.exceptions import handle_engine_exception
 from getml.helpers import _is_iterable_not_str
@@ -95,6 +97,12 @@ class LogStreamListener:
                 self.emitter.emit(events)
 
             if exit_on(exit_status := message):
+                finished_event = Event(
+                    source=self.parser.context.source,
+                    type=EventType.COMMAND_FINISHED,
+                    attributes={},
+                )
+                self.emitter.emit([finished_event])
                 return exit_status
 
 

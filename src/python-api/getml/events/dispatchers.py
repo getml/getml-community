@@ -16,9 +16,9 @@ import queue
 import warnings
 from concurrent.futures import Executor, Future, ThreadPoolExecutor
 from types import TracebackType
-from typing import Callable, Dict, Optional, Sequence, Type, Union
+from typing import Dict, Optional, Sequence, Type, Union
 
-from getml.events.handlers import EventHandlerRegistry
+from getml.events.handlers import EventHandlerRegistry, HandlerMetadata
 from getml.events.types import Event, EventSource, Shutdown
 
 
@@ -40,8 +40,8 @@ class PoolEventDispatcher:
     ):
         self.queues = {
             source: {
-                handler: queue.Queue()
-                for handler in EventHandlerRegistry.handlers[source]
+                metadata: queue.Queue()
+                for metadata in EventHandlerRegistry.handlers[source]
             }
             for source in EventSource
         }
@@ -50,7 +50,7 @@ class PoolEventDispatcher:
             executor = ThreadPoolExecutor()
         self.executor = executor
 
-        self.futures: Dict[Callable[[Event], None], Future] = {}
+        self.futures: Dict[HandlerMetadata, Future] = {}
 
     def __enter__(self):
         self.start()
@@ -69,12 +69,23 @@ class PoolEventDispatcher:
 
     def dispatch(self, events: Sequence[Event]):
         for event in events:
-            for queue in self.queues[event.source].values():
-                queue.put(event)
+            for metadata, handler_queue in self.queues[event.source].items():
+                if metadata.sync:
+                    # Execute synchronously in the calling thread
+                    try:
+                        metadata.handler(event)  # type: ignore
+                    except Exception as e:
+                        warnings.warn(
+                            f"An exception occurred while dispatching event {event} to handler {metadata.handler}: {e}",
+                            RuntimeWarning,
+                        )
+                else:
+                    # Dispatch to worker thread via queue
+                    handler_queue.put(event)
 
     def process(
         self,
-        handler: Callable[[Event], None],
+        metadata: HandlerMetadata,
         handler_queue: queue.Queue[Union[Event, Shutdown]],
     ):
         while True:
@@ -88,10 +99,10 @@ class PoolEventDispatcher:
                 return
 
             try:
-                handler(event)  # type: ignore
+                metadata.handler(event)  # type: ignore
             except Exception as e:
                 warnings.warn(
-                    f"An exception occurred while dispatching event {event} to handler {handler}: {e}",
+                    f"An exception occurred while dispatching event {event} to handler {metadata.handler}: {e}",
                     RuntimeWarning,
                 )
             finally:
@@ -99,10 +110,12 @@ class PoolEventDispatcher:
 
     def start(self):
         for source in self.queues:
-            for handler, queue in self.queues[source].items():
-                self.futures[handler] = self.executor.submit(
-                    self.process, handler, queue
-                )
+            for metadata, handler_queue in self.queues[source].items():
+                if not metadata.sync:
+                    # Only submit async handlers to the thread pool
+                    self.futures[metadata] = self.executor.submit(
+                        self.process, metadata, handler_queue
+                    )
 
     def stop(self, wait: bool = True):
         if not wait:
@@ -110,7 +123,9 @@ class PoolEventDispatcher:
             return
 
         for source in self.queues:
-            for queue in self.queues[source].values():
-                queue.join()
-                queue.put(Shutdown)
+            for metadata, handler_queue in self.queues[source].items():
+                if not metadata.sync:
+                    # Only wait for and shutdown async handlers
+                    handler_queue.join()
+                    handler_queue.put(Shutdown)
         self.executor.shutdown(wait=True)

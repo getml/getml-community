@@ -33,7 +33,7 @@ from rich.progress import Progress as RichProgress
 from rich.style import Style
 
 from getml.events.handlers import engine_event_handler, monitor_event_handler
-from getml.events.types import Event, EventTypeState
+from getml.events.types import Event, EventType, EventTypeState
 
 
 def _is_emacs_kernel() -> bool:
@@ -89,6 +89,8 @@ def _should_enforce_textual_output() -> bool:
 def _should_enforce_monochrome_output() -> bool:
     if env_value := os.getenv("GETML_PROGRESS_FORCE_MONOCHROME_OUTPUT"):
         return env_value in _ENV_VAR_TRUTHY_VALUES
+    if _is_vscode():
+        return True
     return False
 
 
@@ -314,7 +316,7 @@ class Progress:
         )
         return task_id
 
-    def new_task_with_reconstructed_renderable(
+    def new_task_and_reconstruct_renderable_maybe(
         self,
         description: str,
         *,
@@ -327,7 +329,9 @@ class Progress:
         renderable to ensure that the progress bar is displayed correctly
         with interleaved `print` statements.
         """
-        self._reconstruct_renderable()
+        if _should_enforce_textual_output():
+            self._reconstruct_renderable()
+
         task_id = self.new_task(
             description, total=total, completed=completed, visible=visible
         )
@@ -426,17 +430,22 @@ class ProgressEventHandler:
     @contextmanager
     def live_renderable(self, event: Event) -> Iterator[Live]:
         yield self.progress.live
-        if event.type.state is EventTypeState.END:
+        if event.type is EventType.COMMAND_FINISHED:
             self.progress.stop()
+            self.progress = Progress()
 
     def create_or_update_progress(self, event: Event):
         """
         Create a new progress task or update an existing one.
+
+        A new Progress is created lazily if all previous tasks have finished. Progresses
+        cannot be created eagerly, because construction a live renderable in a
+        textual environment results in control characters being printed to the output.
         """
 
         with self.live_renderable(event):
             if event.type.state is EventTypeState.START:
-                task_id = self.progress.new_task_with_reconstructed_renderable(
+                task_id = self.progress.new_task_and_reconstruct_renderable_maybe(
                     event.attributes["description"]
                 )
             elif event.type.state is EventTypeState.PROGRESS and self.progress.tasks:
@@ -451,8 +460,8 @@ class ProgressEventHandler:
 progress_event_handler = ProgressEventHandler(progress=Progress())
 
 
-@monitor_event_handler
-@engine_event_handler
+@monitor_event_handler(sync=True)
+@engine_event_handler(sync=True)
 def show_progress(event: Event):
     if DISABLE:
         return

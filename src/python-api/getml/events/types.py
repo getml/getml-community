@@ -30,6 +30,7 @@ class EventTypeState(str, Enum):
 
 
 class EventType(str, Enum):
+    COMMAND_FINISHED = "command.finished"
     PIPELINE_CHECK_STAGE_START = "pipeline.check.stage.start"
     PIPELINE_CHECK_STAGE_PROGRESS = "pipeline.check.stage.progress"
     PIPELINE_CHECK_STAGE_END = "pipeline.check.stage.end"
